@@ -22,3 +22,7 @@ Abra o arquivo `index.html` diretamente no navegador — não requer servidor.
 ## Dados
 
 Todos os dados são armazenados no `localStorage` do navegador sob a chave `DAR_NS63_v3`. Use as funções de Exportar/Importar em cada seção do Banco de Dados para backup.
+
+## EARL — Engenharia (avulso)
+
+A pasta [`engenharia/`](engenharia/) traz a Engenharia do EARL num HTML próprio (`EARL_Engenharia.html`): sem login, funciona sem internet, e o handover sai como e-mail (.eml) para o Outlook. Veja o [README da pasta](engenharia/README.md).
