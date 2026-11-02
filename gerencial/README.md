@@ -18,22 +18,32 @@ App de gestão que junta os arquivos dos engenheiros e mostra o consolidado de *
 
 ## O que mostra
 
+Tudo é **realizado + previsto**, com o risco de cada operação aplicado:
+- **Realizado:** operações com consumo lançado.
+- **Previsto:** operações ainda sem consumo, pelo que a engenharia planejou.
+
 - **Filtros:** período do serviço, cliente, contrato, região e tipo de contrato.
-- **Indicadores:** receita em R$ e em US$, operações com consumo, homem-dia e lançamentos sem valor.
-- **Contratos:** receita por contrato, com o engenheiro e a data do arquivo, as operações e o uso do contrato em valor. Clique no contrato para filtrar.
-- **Receita:** por mês, por cliente e por região.
-- **Itens PPU:** contratado, consumido, saldo, % usado, consumido no período, receita e valor vigente, por contrato e item.
-- **Químicas** e **Casing equipment:** previsto × lançado por SAP, com o número de operações e os contratos.
-- **Pessoal:** por função, pessoas e homem-dia previsto × lançado.
-- **Operações:** todas as operações, com situação (planejada, handover enviado, consumo lançado), receita e o que foi lançado; tem busca.
+- **Indicadores:**
+  - receita em US$ e em R$ (realizado · previsto);
+  - COGS e margem;
+  - operações (realizadas, previstas e "fora", com risco 100%);
+  - homem-dia lançado e previsto a realizar.
+- **Contratos:** receita, COGS e margem por contrato, com o engenheiro e a data do arquivo, as operações e o uso do contrato em valor. Clique no contrato para filtrar.
+- **Receita e margem:** por mês, por cliente e por região.
+- **Itens PPU:** contratado, consumido, saldo, % usado, a realizar, receita e valor vigente, por contrato e item.
+- **Químicas** e **Casing equipment:** planejado × lançado por SAP, com o COGS, o número de operações e os contratos.
+- **Pessoal:** por função, pessoas e homem-dia planejado × lançado.
+- **Operações:** todas as operações, com situação (realizada ou prevista), risco, receita bruta e com risco, COGS e margem. Tem busca.
 - **Arquivos:** os arquivos carregados e se estão em uso.
-- **⬇ Excel consolidado:** abas Contratos, Receita por mês, Itens PPU, Químicas, Casing, Pessoal, Operações e Lançamentos (cada linha lançada).
+- **⬇ Excel consolidado:** abas Contratos, Por mês, Itens PPU, Químicas, Casing, Pessoal, Operações e Lançamentos (cada linha lançada).
 
 ## Regras de cálculo
 
-- **Receita:** a quantidade lançada × o valor do item vigente na **data do serviço**, com os reajustes. O app de Engenharia calcula e grava no arquivo; o Gerencial soma. Se um reajuste mudar valores já lançados, o engenheiro gera um arquivo novo.
+- **Receita realizada:** a quantidade lançada × o valor do item vigente na **data do serviço**, com os reajustes. O app de Engenharia calcula e grava no arquivo; o Gerencial soma. Se um reajuste mudar valores já lançados, o engenheiro gera um arquivo novo.
+- **Receita prevista:** os itens PPU previstos × o valor do contrato na data da operação, só para as operações ainda sem consumo.
+- **COGS:** quantidade (lançada, ou prevista se ainda não houver consumo) × COGS unitário do SAP, cadastrado na Engenharia em Contratos → Custos (COGS).
+- **Risco da operação (0–100%):** receita e COGS contam × (1 − risco). Com 100%, a operação aparece, mas fica fora da receita e do COGS.
 - **Saldo do item:** contratado (com aditivos) − tudo o que foi lançado no contrato (sem filtro de data).
-- **Previsto:** o que a engenharia planejou nas operações com data no período. **Lançado:** o consumo informado pelo engenheiro com data do serviço no período.
 - **Homem-dia:** pessoas × dias, informado no consumo da operação. No previsto, é pessoas × duração da operação.
 - **Moedas:** R$ e US$ são valores do contrato, sem conversão entre eles.
 
@@ -46,15 +56,19 @@ App de gestão que junta os arquivos dos engenheiros e mostra o consolidado de *
   ```
 
 - **Formato do arquivo** (gerado por `engPacoteGerencial`, em `engenharia/eng_contratos.js`):
-  - envelope `{tipo: 'EARL-Gerencial', formato: 1, app, geradoEm, por, contratos[], operacoes[]}`;
+  - envelope `{tipo: 'EARL-Gerencial', formato: 2, app, geradoEm, por, contratos[], operacoes[]}` (arquivos do formato 1 continuam sendo lidos, valorizados pelo valor vigente do contrato);
   - `contratos[]`: `{id, nome, numero, cliente, tipo, bases, regiao, inicio, atualizadoEm, itens[{ref, desc, unit, contratado, brl, usd, brlIni, usdIni}], reajustes[{desde, obs, itens}]}`;
-  - `operacoes[]`: `{id, contratoId, sonda, base, ambiente, regiao, poco, tipo, revestimento, data, duracao, status, so, wbs, vida, contingencia, risco, handover, previsto, realizado, receita}`;
-  - `previsto` e `realizado` trazem `ppu`, `quimicas`, `casing` e `pessoal`. O `previsto` traz também `equipamentos`; o `realizado` traz `data` e o PPU com os valores.
+  - `operacoes[]`: `{id, contratoId, sonda, base, ambiente, regiao, poco, tipo, revestimento, data, duracao, status, so, wbs, vida, contingencia, chanceConting, risco, handover, previsto, realizado, receita}`;
+  - `risco` é o risco da receita/COGS (0–100). `chanceConting` é o "Risco de acontecer" da contingência, que não entra no cálculo;
+  - `previsto` traz `ppu` (com valor e total), `receita`, `cogs`, `quimicas` e `casing` (com COGS unitário), `pessoal` e `equipamentos`;
+  - `realizado` traz `data`, `ppu` com os valores, `quimicas`, `casing`, `cogs` e `pessoal`; `receita` é a receita bruta do realizado.
 - Os dados ficam em `localStorage` com o prefixo `earlger:`.
-- **Teste de ponta a ponta:** dois engenheiros geram arquivos no app de Engenharia, e o Gerencial carrega por arquivos, `.zip` e pasta (30 verificações):
+- **Testes de ponta a ponta:**
+  - dois engenheiros geram arquivos no app de Engenharia, e o Gerencial carrega por arquivos, `.zip` e pasta (30 verificações);
+  - o teste BP (`../engenharia/teste_bp/e2e_bp.js`) confere o Gerencial contra os totais da planilha do BP: receita, COGS, margem, operações fora, aba Operações e Excel.
 
   ```bash
   node tests/e2e_gerencial.js ../engenharia/EARL_Engenharia.html EARL_Gerencial.html [pasta-das-telas]
   ```
 
-- Versão: `EARL Gerencial g1`.
+- Versão: `EARL Gerencial g2`.

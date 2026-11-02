@@ -81,7 +81,7 @@ assert i > 0
 s = s[:i] + css + s[i:]
 
 # ---------------------------------------------------------------- app (código compilado)
-rep("var EARL_VERSION = 'EARL v115';", "var EARL_VERSION = 'EARL Engenharia e4 (base v115)';")
+rep("var EARL_VERSION = 'EARL v115';", "var EARL_VERSION = 'EARL Engenharia e5 (base v115)';")
 rep("var HO_ST = {\n  pendente: {", "var HO_ST = {\n  email: {\n    label: 'Enviado por e-mail',\n    c: '#304220',\n    bg: '#F1F5EC',\n    brd: '#D9E4CC'\n  },\n  pendente: {")
 # quem gera o e-mail assina os registros (sem login)
 rep("  var currentUser = () => authUser && authUser.email || sbUser || '';",
@@ -239,7 +239,7 @@ rep(r'placeholder: "Informa\xE7\xF5es para a coordena\xE7\xE3o, a log\xEDstica e
 rep("  var renderPlanHandovers = () => {", "  var renderPlanHandovers = () => renderHoEmails();\n  var renderPlanHandoversEARL = () => {")
 # Lista: selo do e-mail e botão
 rep('''pjBadge(j.status), j.contingencia && React.createElement("div", {
-        className: "eng-cont-pill"''', '''pjBadge(j.status), hoEmailTag(j), engConsTag(j), j.contingencia && React.createElement("div", {
+        className: "eng-cont-pill"''', '''pjBadge(j.status), hoEmailTag(j), engConsTag(j), engRiscoTag(j), j.contingencia && React.createElement("div", {
         className: "eng-cont-pill"''')
 rep('''        onClick: () => abrirHandover(j)
       }, "Handover \\u2192")));''', '''        onClick: () => abrirHandover(j)
@@ -269,6 +269,12 @@ rep('''        onClick: () => duplicatePlanned(j)
         },
         onClick: () => abrirEngCons(j)
       }, "\\u03A3 Consumo"),''')
+
+# e5: risco da receita/COGS na operação (seção 2 do formulário) e etiqueta na Lista
+rep("aparece em roxo no Gantt.')))), React.createElement(\"div\", {", "aparece em roxo no Gantt.')), engRiscoCampo(d, set))), React.createElement(\"div\", {")
+
+# e5: painel "Receita e COGS" na página inicial da Engenharia
+rep("engContratos.length + ' contrato(s) vigente(s)')), engAlerta(planJobs), React.createElement(\"div\", {", "engContratos.length + ' contrato(s) vigente(s)')), engAlerta(planJobs), renderEngPainel(), React.createElement(\"div\", {")
 
 # Código novo (antes de renderHandover) e janelas novas na árvore
 novo = open(os.path.join(AQUI, 'eng_app.js'), encoding='utf-8').read() + '\n' + open(os.path.join(AQUI, 'eng_contratos.js'), encoding='utf-8').read()

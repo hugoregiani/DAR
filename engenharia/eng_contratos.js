@@ -99,13 +99,86 @@
       semU
     };
   };
+  /* ---- e5: risco da receita/COGS (riscoRec, 0–100% na operação) e COGS unitário por SAP (db.cogsItens) ---- */
+  var engFator = j => {
+    var r = Number(j && j.riscoRec);
+    return isFinite(r) && r > 0 ? Math.max(0, 1 - Math.min(100, r) / 100) : 1;
+  };
+  var engCogsIdx = () => {
+    var o = {};
+    (db.cogsItens || []).forEach(c => {
+      if (c && String(c.sap || '').trim()) o['s:' + String(c.sap).trim()] = c;
+      if (c && c.nome) o['n:' + normNome(c.nome)] = c;
+    });
+    return o;
+  };
+  var engCogsDe = (idx, m) => m ? idx['s:' + String(m.sap || '').trim()] || idx['n:' + normNome(m.name || m.nome || '')] || null : null;
+  var engCogsSoma = (idx, lista) => {
+    var u = 0,
+      b = 0,
+      sem = 0;
+    (lista || []).forEach(m => {
+      var q = engNum(m.qty != null ? m.qty : m.qtd) || 0;
+      if (!q) return;
+      var c = engCogsDe(idx, m);
+      var cu = c ? engNum(c.usd) : null,
+        cb = c ? engNum(c.brl) : null;
+      if (cu == null && cb == null) {
+        sem++;
+        return;
+      }
+      if (cu != null) u += q * cu;
+      if (cb != null) b += q * cb;
+    });
+    return {
+      u,
+      b,
+      sem
+    };
+  };
+  var engRiscoTag = j => {
+    var rr = Number(j && j.riscoRec) || 0;
+    if (rr <= 0) return null;
+    return engH("span", {
+      className: "ec-tag ec-tag-risco",
+      title: rr >= 100 ? 'Operação mapeada, mas fora da receita e do COGS' : 'Receita e COGS contam ' + (100 - rr) + '%'
+    }, 'risco ' + fmtNum(rr) + '%');
+  };
+  var engRiscoCampo = (d, set) => {
+    if (!d || d.__tpl) return null;
+    var rr = Number(d.riscoRec) || 0;
+    return engH("div", {
+      className: "fld ec-risco-fld"
+    }, engH("label", {
+      className: "lbl"
+    }, "Risco da receita / COGS"), engH("div", {
+      className: "eng-risco"
+    }, engH("input", {
+      type: "range",
+      min: "0",
+      max: "100",
+      step: "5",
+      value: rr,
+      onChange: e => set('riscoRec', Number(e.target.value))
+    }), engH("input", {
+      className: "qty-input ec-risco-in",
+      type: "number",
+      min: "0",
+      max: "100",
+      value: d.riscoRec == null || d.riscoRec === '' ? '' : d.riscoRec,
+      placeholder: "0",
+      onChange: e => set('riscoRec', e.target.value === '' ? '' : Math.max(0, Math.min(100, Number(e.target.value) || 0)))
+    }), engH("b", null, "%")), engH("div", {
+      className: "eng-help"
+    }, rr >= 100 ? 'Risco 100%: a opera\xE7\xE3o fica mapeada, mas fora da receita e do COGS.' : rr > 0 ? 'Receita e COGS contam ' + (100 - rr) + '% (\xD7 ' + fmtNum((100 - rr) / 100) + ').' : '0% = receita e COGS contam inteiros. 100% = a opera\xE7\xE3o fica mapeada, mas fora da receita e do COGS.'));
+  };
   var engConsTag = j => {
     var v = engOpValor(j);
     if (!v) return null;
     return engH("span", {
       className: "ec-tag",
       title: 'Consumo de PPU lançado (serviço em ' + fmtD(v.data) + ')'
-    }, 'Σ ' + (v.n - v.semB > 0 ? fmtBRL(v.vB) : v.n - v.semU > 0 ? fmtUSD(v.vU) : v.n + ' item(ns)'));
+    }, 'Σ ' + (v.n - v.semB > 0 ? fmtBRL(v.vB) : v.n - v.semU > 0 ? fmtUSD(v.vU) : v.n + ' item(ns)') + (engFator(j) === 0 ? ' · fora da receita' : ''));
   };
   var engConsBanner = d => {
     if (!d || !d.id || d.__tpl) return null;
@@ -132,12 +205,13 @@
     var nh = v => asciiName(String(v == null ? '' : v)).toLowerCase().trim();
     var tipoCol = h => {
       if (!h) return '';
-      if (/descri/.test(h)) return 'desc';
+      if (/descri|produto|material|quimic|casing/.test(h)) return 'desc';
       if (/^(unid|un$|un |uom|unit)/.test(h)) return 'unit';
       if (/saldo|quant|qtd|qtde|volume/.test(h)) return 'saldo';
       if (/(^|[^a-z])us($|[^a-z])|usd|dolar|dollar/.test(h)) return 'usd';
       if (/(^|[^a-z])r($|[^a-z])|brl|reais|real|preco|valor|price/.test(h)) return 'brl';
-      if (/^(item|ref|referencia|cod|codigo|n|no|numero)($|[^a-z])/.test(h)) return 'ref';
+      if (/cogs|custo/.test(h)) return 'usd';
+      if (/^(item|ref|referencia|cod|codigo|sap|n|no|numero)($|[^a-z])/.test(h)) return 'ref';
       return '';
     };
     var hi = -1,
@@ -390,7 +464,7 @@
   var renderEngContratos = () => {
     if (!engCt) return null;
     var fechar = () => {
-      if (engCt.view === 'edit' && engCt.sujo) {
+      if ((engCt.view === 'edit' || engCt.view === 'cogs') && engCt.sujo) {
         askConfirm({
           title: 'Fechar sem salvar',
           okLabel: 'Fechar sem salvar',
@@ -413,7 +487,7 @@
     }, engH("div", {
       className: "modal ec-modal",
       onClick: e => e.stopPropagation()
-    }, engCt.view === 'edit' && engCt.draft ? renderEngCtEdit(fechar) : renderEngCtLista(fechar)), engCt.reaj && renderEngReaj(), engCt.imp && renderEngImp(), engH("input", {
+    }, engCt.view === 'edit' && engCt.draft ? renderEngCtEdit(fechar) : engCt.view === 'cogs' ? renderEngCogs(fechar) : renderEngCtLista(fechar)), engCt.reaj && renderEngReaj(), engCt.imp && renderEngImp(), engH("input", {
       ref: engImpRef,
       type: "file",
       accept: ".xlsx,.xls,.csv,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel,text/csv",
@@ -425,7 +499,7 @@
         e.target.value = '';
         if (!f) return;
         var destino = engCt.impDestino || 'itens';
-        engLerPlanilha(f).then(r => setEngCt(x => x && {
+        engLerPlanilha(f).then(r => destino === 'cogs' ? engCogsAplicar(r) : setEngCt(x => x && {
           ...x,
           imp: {
             nome: f.name,
@@ -492,6 +566,10 @@
         flex: 1
       }
     }), engH("button", {
+      className: "btn-o ec-cogs-btn",
+      onClick: engCogsAbrir,
+      title: "COGS unitário por material (SAP) — químicas e casing equipment"
+    }, "Custos (COGS)"), engH("button", {
       className: "btn-r ec-novo",
       onClick: () => engCtAbrir(null)
     }, "＋ Novo contrato")), engH("div", {
@@ -1354,6 +1432,7 @@
     });
     var dur = Number(pj.durationDays) || 1;
     var outros = ct ? engConsDoCt(ct, pj.id) : {};
+    var cIdx = engCogsIdx();
     var setQ = (ref, v) => setEngCons(x => ({
       ...x,
       linhas: x.linhas.map(l => l.ref === ref ? {
@@ -1540,7 +1619,7 @@
         className: "tbl-scroll ec-mat-wrap"
       }, engH("table", {
         className: 'db-table ec-itens ec-mat ec-mat-' + campo
-      }, engH("thead", null, engH("tr", null, ['SAP', 'Produto', 'Unid.', 'Previsto', 'Consumido', ''].map((h, k) => engH("th", {
+      }, engH("thead", null, engH("tr", null, ['SAP', 'Produto', 'Unid.', 'Previsto', 'Consumido', 'COGS unit.', 'COGS total', ''].map((h, k) => engH("th", {
         key: k
       }, h)))), engH("tbody", null, lista.map(m => {
         var k = engKeyMat(m);
@@ -1556,7 +1635,19 @@
           value: m.qty || '',
           placeholder: "0",
           onChange: e => setM(campo, k, e.target.value)
-        })), engH("td", null, engH("button", {
+        })), (() => {
+          var c = engCogsDe(cIdx, m);
+          var cu = c ? engNum(c.usd) : null,
+            cb = c ? engNum(c.brl) : null,
+            q = engNum(m.qty) || 0;
+          return [engH("td", {
+            key: 'cu',
+            className: "ec-num"
+          }, cu != null ? fmtPUSD(cu) : cb != null ? fmtPBRL(cb) : '—'), engH("td", {
+            key: 'ct',
+            className: "ec-num"
+          }, cu != null ? fmtUSD(q * cu) : cb != null ? fmtBRL(q * cb) : '—')];
+        })(), engH("td", null, engH("button", {
           className: "btn-o hm-x",
           title: "Tirar a linha",
           onClick: () => setEngCons(x => ({
@@ -1564,7 +1655,7 @@
             [campo]: x[campo].filter(y => engKeyMat(y) !== k)
           }))
         }, "\xD7")));
-      }), !lista.length && semLinhas(6, 'Nada previsto — acrescente abaixo o que foi usado.')))), engH("select", {
+      }), !lista.length && semLinhas(8, 'Nada previsto — acrescente abaixo o que foi usado.')))), engH("select", {
         className: 'sel ec-add ec-add-' + campo,
         value: "",
         onChange: e => addMat(campo, catalogo.find(i => engKeyMat(i) === e.target.value))
@@ -1737,7 +1828,21 @@
     }, "＋ Acrescentar fun\xE7\xE3o…"), funcoesLivres.map(f => engH("option", {
       key: f,
       value: f
-    }, f)))), engH("div", {
+    }, f))), (() => {
+      var cg = engCogsSoma(cIdx, engCons.quim.concat(engCons.cas));
+      var rr = Number(pj.riscoRec) || 0;
+      return engH("div", {
+        className: "ec-resumo"
+      }, engH("span", null, 'Receita ', engH("b", {
+        className: "ec-res-rec"
+      }, fmtUSD(tU) + (tB ? ' · ' + fmtBRL(tB) : ''))), engH("span", null, 'COGS ', engH("b", {
+        className: "ec-res-cogs"
+      }, fmtUSD(cg.u) + (cg.b ? ' · ' + fmtBRL(cg.b) : ''))), engH("span", null, 'Margem ', engH("b", {
+        className: "ec-res-margem"
+      }, fmtUSD(tU - cg.u) + (tB || cg.b ? ' · ' + fmtBRL(tB - cg.b) : ''))), rr > 0 && engH("em", {
+        className: "ec-res-risco"
+      }, rr >= 100 ? 'Risco 100%: a operação fica mapeada, mas fora da receita e do COGS nas análises.' : 'Risco ' + fmtNum(rr) + '%: entram ' + fmtNum(100 - rr) + '% da receita e do COGS nas análises.'), cg.sem > 0 && engH("em", null, cg.sem + ' material(is) sem COGS cadastrado (Contratos → Custos).'));
+    })()), engH("div", {
       className: "ec-foot"
     }, pj.ppuCons && engH("button", {
       className: "btn-o",
@@ -1768,17 +1873,33 @@
   var engCalcCt = (ct, ops) => {
     var itens = ctrItensNaData(ct, null);
     var consTot = engConsDoCt(ct);
-    var lanc = [];
+    var cIdx = engCogsIdx();
+    var lanc = [],
+      porOp = {};
     ops.forEach(j => {
       var c = j.ppuCons;
       if (!c) return;
       var data = c.data || j.date;
       if (!engPerOk(data)) return;
+      var f = engFator(j);
+      var cg = engCogsSoma(cIdx, (c.quim || []).concat(c.cas || []));
+      var o = porOp[j.id] = {
+        j,
+        ct,
+        data,
+        n: 0,
+        vB: 0,
+        vU: 0,
+        cU: cg.u * f,
+        cB: cg.b * f,
+        fator: f,
+        risco: Number(j.riscoRec) || 0
+      };
       (c.linhas || []).forEach(l => {
         var q = engNum(l.qty) || 0;
         if (!q) return;
         var p = ctPreco(ct, l.ref, data);
-        lanc.push({
+        var x = {
           j,
           ct,
           data,
@@ -1788,24 +1909,15 @@
           q,
           pB: p.brl,
           pU: p.usd,
-          vB: p.brl != null ? q * p.brl : null,
-          vU: p.usd != null ? q * p.usd : null
-        });
+          vB: p.brl != null ? q * p.brl * f : null,
+          vU: p.usd != null ? q * p.usd * f : null,
+          fator: f
+        };
+        lanc.push(x);
+        o.n++;
+        o.vB += x.vB || 0;
+        o.vU += x.vU || 0;
       });
-    });
-    var porOp = {};
-    lanc.forEach(x => {
-      var o = porOp[x.j.id] || (porOp[x.j.id] = {
-        j: x.j,
-        ct,
-        data: x.data,
-        n: 0,
-        vB: 0,
-        vU: 0
-      });
-      o.n++;
-      o.vB += x.vB || 0;
-      o.vU += x.vU || 0;
     });
     var hoje = todayStr();
     var porItem = itens.map(i => {
@@ -1826,26 +1938,31 @@
       };
     });
     var porMes = {};
-    lanc.forEach(x => {
-      var k = String(x.data).slice(0, 7);
-      var o = porMes[k] || (porMes[k] = {
+    Object.values(porOp).forEach(o => {
+      var k = String(o.data).slice(0, 7);
+      var m = porMes[k] || (porMes[k] = {
         k,
         ops: new Set(),
         vB: 0,
-        vU: 0
+        vU: 0,
+        cU: 0
       });
-      o.ops.add(x.j.id);
-      o.vB += x.vB || 0;
-      o.vU += x.vU || 0;
+      m.ops.add(o.j.id);
+      m.vB += o.vB;
+      m.vU += o.vU;
+      m.cU += o.cU;
     });
+    var po = Object.values(porOp);
     return {
       ct,
       lanc,
-      porOp: Object.values(porOp).sort((a, b) => String(b.data).localeCompare(String(a.data))),
+      porOp: po.sort((a, b) => String(b.data).localeCompare(String(a.data))),
       porItem,
       porMes: Object.values(porMes).sort((a, b) => a.k.localeCompare(b.k)),
       tB: lanc.reduce((a, x) => a + (x.vB || 0), 0),
       tU: lanc.reduce((a, x) => a + (x.vU || 0), 0),
+      cU: po.reduce((a, o) => a + o.cU, 0),
+      cB: po.reduce((a, o) => a + o.cB, 0),
       semPreco: lanc.filter(x => x.pB == null && x.pU == null).length
     };
   };
@@ -1857,7 +1974,7 @@
     var ops = calcs.flatMap(c => c.porOp);
     var lanc = calcs.flatMap(c => c.lanc);
     var rigNm = j => ((db.rigs || []).find(r => r.id === j.rigId) || {}).name || '';
-    var abas = [['Operações', [['Data do serviço', 'Contrato', 'Sonda', 'Poço', 'Operação', 'SO', 'Itens', 'Receita R$', 'Receita US$'], ...ops.map(o => [fmtD(o.data), o.ct.name, rigNm(o.j), o.j.well || '', tipoTxt(o.j) || o.j.tipoOp || '', o.j.salesOrder || '', o.n, engR4(o.vB), engR4(o.vU)])], [14, 28, 16, 16, 26, 12, 8, 16, 16]]];
+    var abas = [['Operações', [['Data do serviço', 'Contrato', 'Sonda', 'Poço', 'Operação', 'SO', 'Itens', 'Risco %', 'Receita R$', 'Receita US$', 'COGS R$', 'COGS US$', 'Margem US$'], ...ops.map(o => [fmtD(o.data), o.ct.name, rigNm(o.j), o.j.well || '', tipoTxt(o.j) || o.j.tipoOp || '', o.j.salesOrder || '', o.n, o.risco, engR4(o.vB), engR4(o.vU), engR4(o.cB), engR4(o.cU), engR4(o.vU - o.cU)])], [14, 28, 16, 16, 26, 12, 8, 8, 16, 16, 14, 14, 14]]];
     if (comItens) calcs.forEach(c => abas.push(['Itens' + (calcs.length > 1 ? ' ' + c.ct.name : ''), [['Item', 'Descrição', 'Unid.', 'Contratado', 'Consumido (total)', 'Saldo', '% usado', 'Valor vigente R$', 'Valor vigente US$', 'Consumido no período', 'Receita R$', 'Receita US$'], ...c.porItem.map(x => [x.i.ref, x.i.desc || '', x.i.unit || '', x.contr, x.c, x.saldo, x.pct != null ? engR4(x.pct) : null, x.p.brl, x.p.usd, x.qP, engR4(x.vB), engR4(x.vU)])], [10, 60, 8, 12, 14, 12, 9, 14, 14, 14, 14, 14]]));
     abas.push(['Lançamentos', [['Data do serviço', 'Contrato', 'Sonda', 'Poço', 'Operação', 'SO', 'Item', 'Descrição', 'Unid.', 'Quantidade', 'Valor R$', 'Valor US$', 'Total R$', 'Total US$'], ...lanc.map(x => [fmtD(x.data), x.ct.name, rigNm(x.j), x.j.well || '', tipoTxt(x.j) || x.j.tipoOp || '', x.j.salesOrder || '', x.ref, x.desc || '', x.unit || '', x.q, x.pB, x.pU, x.vB != null ? engR4(x.vB) : null, x.vU != null ? engR4(x.vU) : null])], [14, 28, 16, 16, 26, 12, 10, 50, 8, 12, 12, 12, 14, 14]]);
     engBaixarXlsx('Consumo e receita - ' + titulo + ' - ' + todayStr(), abas);
@@ -1888,6 +2005,8 @@
     var opsCons = calcs.flatMap(c => c.porOp).sort((a, b) => String(b.data).localeCompare(String(a.data)));
     var semCons = ops.filter(j => !j.ppuCons && String(j.date || '') <= hoje).sort((a, b) => String(b.date).localeCompare(String(a.date)));
     var semPreco = calcs.reduce((a, c) => a + c.semPreco, 0);
+    var cU = calcs.reduce((a, c) => a + c.cU, 0),
+      cB = calcs.reduce((a, c) => a + c.cB, 0);
     var periodo = engH("div", {
       className: "ec-bar ec-per"
     }, engH("b", null, "Per\xEDodo do servi\xE7o"), engH("input", {
@@ -1934,28 +2053,30 @@
     }, "⬇ Excel"));
     var kpis = engH("div", {
       className: "ec-kpis"
-    }, engKpi('Receita em R$', fmtBRL(tB), 'consumo lançado no período', 'ec-kpi-brl'), engKpi('Receita em US$', fmtUSD(tU), 'consumo lançado no período', 'ec-kpi-usd'), engKpi('Operações com consumo', String(opsCons.length), semCons.length ? semCons.length + ' realizada(s) sem consumo' : 'nenhuma pendente'), semPreco ? engKpi('Lançamentos sem valor', String(semPreco), 'item sem valor no contrato', 'ec-kpi-alerta') : null);
+    }, engKpi('Receita em R$', fmtBRL(tB), 'consumo lançado no período', 'ec-kpi-brl'), engKpi('Receita em US$', fmtUSD(tU), 'consumo lançado no período', 'ec-kpi-usd'), engKpi('COGS', fmtUSD(cU) + (cB ? ' · ' + fmtBRL(cB) : ''), 'químicas e casing lançados', 'ec-kpi-cogs'), engKpi('Margem em US$', fmtUSD(tU - cU), tU ? fmtNum((tU - cU) / tU * 100) + '% da receita' : 'receita − COGS', 'ec-kpi-margem'), engKpi('Operações com consumo', String(opsCons.length), semCons.length ? semCons.length + ' realizada(s) sem consumo' : 'nenhuma pendente'), semPreco ? engKpi('Lançamentos sem valor', String(semPreco), 'item sem valor no contrato', 'ec-kpi-alerta') : null);
     var tabOps = engH(React.Fragment, null, engH("div", {
       className: "hm-sec ec-sec"
     }, 'Receita por operação (' + opsCons.length + ')'), engH("div", {
       className: "tbl-scroll"
     }, engH("table", {
       className: "db-table ec-ops"
-    }, engH("thead", null, engH("tr", null, ['Serviço', !ctSel && 'Contrato', 'Sonda', 'Poço', 'Operação', 'SO', 'Itens', 'Receita R$', 'Receita US$', ''].filter(x => x !== false).map((h, k) => engH("th", {
+    }, engH("thead", null, engH("tr", null, ['Serviço', !ctSel && 'Contrato', 'Sonda', 'Poço', 'Operação', 'SO', 'Itens', 'Receita R$', 'Receita US$', 'COGS US$', ''].filter(x => x !== false).map((h, k) => engH("th", {
       key: k
     }, h)))), engH("tbody", null, opsCons.map(o => engH("tr", {
       key: o.j.id
-    }, engH("td", null, fmtD(o.data)), !ctSel && engH("td", null, o.ct.name), engH("td", null, rigNm(o.j)), engH("td", null, o.j.well || '—'), engH("td", null, tipoTxt(o.j) || o.j.tipoOp), engH("td", null, o.j.salesOrder || '—'), engH("td", {
+    }, engH("td", null, fmtD(o.data)), !ctSel && engH("td", null, o.ct.name), engH("td", null, rigNm(o.j)), engH("td", null, o.j.well || '—'), engH("td", null, tipoTxt(o.j) || o.j.tipoOp, engRiscoTag(o.j)), engH("td", null, o.j.salesOrder || '—'), engH("td", {
       className: "ec-num"
     }, o.n), engH("td", {
       className: "ec-num"
     }, engH("b", null, fmtBRL(o.vB))), engH("td", {
       className: "ec-num"
-    }, engH("b", null, fmtUSD(o.vU))), engH("td", null, engH("button", {
+    }, engH("b", null, fmtUSD(o.vU))), engH("td", {
+      className: "ec-num"
+    }, fmtUSD(o.cU)), engH("td", null, engH("button", {
       className: "btn-o",
       onClick: () => abrirEngCons(o.j)
     }, "Σ Consumo")))), !opsCons.length && engH("tr", null, engH("td", {
-      colSpan: 10,
+      colSpan: 11,
       style: {
         color: 'var(--ink-3)',
         fontStyle: 'italic'
@@ -2085,6 +2206,491 @@
       className: "ec-num"
     }, x.vB || x.vU ? engH(React.Fragment, null, fmtBRL(x.vB), engH("br", null), fmtUSD(x.vU)) : '—')))))), tabMes);
   };
+  /* ---------------- custos (COGS) por material ----------------
+     db.cogsItens = [{id, sap, nome, unid, usd, brl, atualizadoEm}]: custo unitário de químicas e casing
+     equipment. COGS da operação = quantidade lançada (ou prevista) × COGS unitário do SAP. */
+  var engCogsAbrir = () => setEngCt(x => ({
+    ...(x || {}),
+    view: 'cogs',
+    sujo: false,
+    cbusca: '',
+    cogs: (db.cogsItens || []).map(c => ({
+      ...c,
+      _k: uid()
+    }))
+  }));
+  var engCogsFalta = lista => {
+    var saps = (lista || []).map(c => String(c.sap || '').trim()).filter(Boolean);
+    var rep = saps.filter((s, i) => saps.indexOf(s) !== i);
+    var f = [];
+    if ((lista || []).some(c => !String(c.sap || '').trim() && !String(c.nome || '').trim())) f.push('SAP ou produto em todas as linhas');
+    if (rep.length) f.push('SAP repetido (' + [...new Set(rep)].join(', ') + ')');
+    return f;
+  };
+  var engCogsAplicar = r => {
+    var lin = r && r.linhas || [];
+    var novos = 0,
+      atual = 0;
+    setEngCt(x => {
+      if (!x) return x;
+      var l = [...(x.cogs || [])];
+      lin.forEach(m => {
+        var sap = String(m.ref || '').trim();
+        var i = l.findIndex(c => sap && String(c.sap || '').trim() === sap || !sap && normNome(c.nome) === normNome(m.desc));
+        var o = {
+          sap,
+          nome: m.desc || '',
+          unid: m.unit || '',
+          usd: m.usd,
+          brl: m.brl
+        };
+        if (i >= 0) {
+          atual++;
+          l[i] = {
+            ...l[i],
+            nome: o.nome || l[i].nome,
+            unid: o.unid || l[i].unid,
+            usd: o.usd != null ? o.usd : l[i].usd,
+            brl: o.brl != null ? o.brl : l[i].brl,
+            _mud: true
+          };
+        } else {
+          novos++;
+          l.push({
+            ...o,
+            _k: uid(),
+            _mud: true
+          });
+        }
+      });
+      return {
+        ...x,
+        sujo: true,
+        cogs: l
+      };
+    });
+    setTimeout(() => {
+      setOkMsg('Planilha de COGS carregada ✓ — ' + novos + ' novo(s), ' + atual + ' atualizado(s). Confira e clique em “Salvar COGS”');
+      setTimeout(() => setOkMsg(''), 6000);
+    }, 0);
+  };
+  var engCogsSalvar = () => {
+    var lista = engCt && engCt.cogs || [];
+    if (engCogsFalta(lista).length) return;
+    var agora = new Date().toISOString();
+    var l = lista.map(c => {
+      var sap = String(c.sap || '').trim();
+      var o = {
+        id: c.id || 'cg_' + (sap || uid()),
+        sap,
+        nome: String(c.nome || '').trim(),
+        unid: String(c.unid || '').trim(),
+        atualizadoEm: c._mud || !c.atualizadoEm ? agora : c.atualizadoEm
+      };
+      var u = engNum(c.usd),
+        b = engNum(c.brl);
+      if (u != null) o.usd = u;
+      if (b != null) o.brl = b;
+      return o;
+    });
+    updateDB(d => ({
+      ...d,
+      cogsItens: l
+    }), {
+      kind: 'COGS',
+      action: 'Alteração',
+      name: l.length + ' material(is)',
+      user: currentUser() || '—',
+      detail: 'COGS unitário por SAP'
+    });
+    setEngCt(x => ({
+      ...x,
+      sujo: false,
+      cogs: l.map(c => ({
+        ...c,
+        _k: uid()
+      }))
+    }));
+    setOkMsg('COGS salvo ✓');
+    setTimeout(() => setOkMsg(''), 3000);
+  };
+  var renderEngCogs = fechar => {
+    var lista = engCt.cogs || [];
+    var setC = (k, patch) => setEngCt(x => ({
+      ...x,
+      sujo: true,
+      cogs: x.cogs.map(c => c._k === k ? {
+        ...c,
+        ...patch,
+        _mud: true
+      } : c)
+    }));
+    var q = normNome(engCt.cbusca);
+    var vis = lista.filter(c => !q || (String(c.sap || '') + ' ' + String(c.nome || '')).toLowerCase().includes(q));
+    var falta = engCogsFalta(lista);
+    var voltar = () => {
+      if (engCt.sujo) {
+        askConfirm({
+          title: 'Sair sem salvar',
+          okLabel: 'Sair sem salvar',
+          danger: true,
+          msg: engH("span", null, "Os custos t\xEAm altera\xE7\xF5es que n\xE3o foram salvas."),
+          onOk: () => setEngCt(x => x && {
+            ...x,
+            view: 'lista',
+            sujo: false
+          })
+        });
+        return;
+      }
+      setEngCt(x => x && {
+        ...x,
+        view: 'lista'
+      });
+    };
+    var inp = (c, k, num) => engH("input", {
+      className: 'ipt ec-in ec-c-' + k,
+      value: num ? engNumTxt(c[k]) : c[k] || '',
+      inputMode: num ? 'decimal' : undefined,
+      onChange: e => setC(c._k, {
+        [k]: e.target.value
+      })
+    });
+    return engH(React.Fragment, null, engH("div", {
+      className: "modal-title"
+    }, engH("span", null, engH("button", {
+      className: "btn-o ec-volta",
+      onClick: voltar
+    }, "← Contratos"), ' Custos (COGS) por material'), engH("button", {
+      className: "modal-close",
+      onClick: fechar
+    }, "\xD7")), engH("div", {
+      className: "eng-help",
+      style: {
+        marginTop: 0
+      }
+    }, "Custo unit\xE1rio de cada qu\xEDmica e casing equipment, pelo SAP. O COGS da opera\xE7\xE3o \xE9 a quantidade lan\xE7ada (ou prevista) \xD7 este custo. Planilha: colunas SAP, Produto, Unidade, COGS US$ e/ou COGS R$ (uma coluna s\xF3 “COGS” vale como US$)."), engH("div", {
+      className: "ec-bar"
+    }, engH("input", {
+      className: "ipt",
+      style: {
+        maxWidth: 260
+      },
+      placeholder: "Buscar SAP ou produto…",
+      value: engCt.cbusca || '',
+      onChange: e => {
+        var v = e.target.value;
+        setEngCt(x => ({
+          ...x,
+          cbusca: v
+        }));
+      }
+    }), engH("b", null, lista.length + ' material(is)'), engH("span", {
+      style: {
+        flex: 1
+      }
+    }), engH("button", {
+      className: "btn-o",
+      onClick: () => setEngCt(x => ({
+        ...x,
+        sujo: true,
+        cbusca: '',
+        cogs: [...x.cogs, {
+          _k: uid(),
+          _mud: true,
+          sap: '',
+          nome: '',
+          unid: '',
+          usd: '',
+          brl: ''
+        }]
+      }))
+    }, "＋ Linha"), engH("button", {
+      className: "btn-o ec-cogs-carregar",
+      onClick: () => engCarregar('cogs')
+    }, "⬆ Carregar planilha"), engH("button", {
+      className: "btn-o",
+      onClick: () => engBaixarXlsx('COGS', [['COGS', [['SAP', 'Produto', 'Unidade', 'COGS US$', 'COGS R$'], ...(lista.length ? lista.map(c => [c.sap || '', c.nome || '', c.unid || '', engNum(c.usd), engNum(c.brl)]) : [['100003685', 'Exemplo: CIMENTO CLASS G (apague esta linha)', 'SK', 13.15, null]])], [12, 50, 10, 14, 14]]])
+    }, lista.length ? "⬇ Baixar planilha" : "⬇ Modelo da planilha")), engH("div", {
+      className: "tbl-scroll ec-itens-wrap"
+    }, engH("table", {
+      className: "db-table ec-itens ec-cogs-tab"
+    }, engH("thead", null, engH("tr", null, ['SAP', 'Produto', 'Unid.', 'COGS US$', 'COGS R$', ''].map((h, k) => engH("th", {
+      key: k
+    }, h)))), engH("tbody", null, vis.map(c => engH("tr", {
+      key: c._k
+    }, engH("td", null, inp(c, 'sap')), engH("td", null, inp(c, 'nome')), engH("td", null, inp(c, 'unid')), engH("td", null, inp(c, 'usd', 1)), engH("td", null, inp(c, 'brl', 1)), engH("td", null, engH("button", {
+      className: "btn-o hm-x",
+      title: "Tirar a linha",
+      onClick: () => setEngCt(x => ({
+        ...x,
+        sujo: true,
+        cogs: x.cogs.filter(y => y._k !== c._k)
+      }))
+    }, "\xD7")))), !vis.length && engH("tr", null, engH("td", {
+      colSpan: 6,
+      style: {
+        color: 'var(--ink-3)',
+        fontStyle: 'italic'
+      }
+    }, "Nenhum custo cadastrado — use “⬆ Carregar planilha” ou “＋ Linha”."))))), engH("div", {
+      className: "ec-foot"
+    }, falta.length > 0 && engH("span", {
+      className: "ho-pend"
+    }, 'Para salvar, falta: ' + falta.join(' · ')), engCt.sujo && !falta.length && engH("span", {
+      className: "ec-sujo"
+    }, "Altera\xE7\xF5es n\xE3o salvas"), engH("span", {
+      style: {
+        flex: 1
+      }
+    }), engH("button", {
+      className: "btn-r ec-cogs-salvar",
+      disabled: falta.length > 0,
+      onClick: engCogsSalvar
+    }, "Salvar COGS")));
+  };
+
+  /* ---------------- painel "Receita e COGS" (página inicial da Engenharia) ----------------
+     Mesma regra do Gerencial: operação realizada (consumo lançado, pela data do serviço) ou prevista
+     (itens PPU previstos × valor do contrato na data; químicas e casing previstos × COGS), × (1 − risco). */
+  var [engPn, setEngPn] = useState(() => ({
+    ano: String(new Date().getFullYear()),
+    mes: '',
+    ct: '',
+    cli: '',
+    sit: 'todos',
+    aberto: true
+  }));
+  var engValorOp = (j, cIdx) => {
+    if (!j || j.status === PJ_STATUS.CANC) return null;
+    var ct = ctDoJob(j);
+    if (!ct) return null;
+    var f = engFator(j);
+    var c = j.ppuCons;
+    if (c) {
+      var v = engOpValor(j) || {
+        vB: 0,
+        vU: 0
+      };
+      var cg = engCogsSoma(cIdx, (c.quim || []).concat(c.cas || []));
+      return {
+        j,
+        ct,
+        tipo: 'real',
+        data: c.data || j.date,
+        f,
+        rU: v.vU * f,
+        rB: v.vB * f,
+        cU: cg.u * f,
+        cB: cg.b * f
+      };
+    }
+    var u = 0,
+      b = 0;
+    (j.ppuNeeds || []).forEach(n => {
+      if (!n || !n.ref) return;
+      var q = engNum(n.qty) || 0;
+      var p = ctPreco(ct, n.ref, j.date);
+      if (p.usd != null) u += q * p.usd;
+      if (p.brl != null) b += q * p.brl;
+    });
+    var cg2 = engCogsSoma(cIdx, (j.chems || []).concat(j.casingNeeds || []));
+    return {
+      j,
+      ct,
+      tipo: 'prev',
+      data: j.date,
+      f,
+      rU: u * f,
+      rB: b * f,
+      cU: cg2.u * f,
+      cB: cg2.b * f
+    };
+  };
+  var engSomaV = arr => arr.reduce((t, x) => {
+    t.n++;
+    t.rU += x.rU;
+    t.rB += x.rB;
+    t.cU += x.cU;
+    t.cB += x.cB;
+    if (x.tipo === 'real') {
+      t.nR++;
+      t.rRU += x.rU;
+      t.rRB += x.rB;
+    } else {
+      t.nP++;
+      t.rPU += x.rU;
+      t.rPB += x.rB;
+    }
+    if (x.f === 0) t.nF++;
+    return t;
+  }, {
+    n: 0,
+    nR: 0,
+    nP: 0,
+    nF: 0,
+    rU: 0,
+    rB: 0,
+    cU: 0,
+    cB: 0,
+    rRU: 0,
+    rRB: 0,
+    rPU: 0,
+    rPB: 0
+  });
+  var renderEngPainel = () => {
+    var p = engPn;
+    var set = patch => setEngPn(x => ({
+      ...x,
+      ...patch
+    }));
+    var cIdx = engCogsIdx();
+    var ctIds = {};
+    engContratos.forEach(c => {
+      ctIds[c.id] = 1;
+    });
+    var todas = (db.plannedJobs || []).map(j => engValorOp(j, cIdx)).filter(x => x && ctIds[x.ct.id]);
+    var anos = [...new Set(todas.map(x => String(x.data || '').slice(0, 4)).filter(a => /^\d{4}$/.test(a)))].sort();
+    if (p.ano && !anos.includes(p.ano)) anos.push(p.ano);
+    anos.sort();
+    var cts = engContratos.filter(c => todas.some(x => x.ct.id === c.id));
+    var clis = [...new Set(cts.map(c => c.clientName).filter(Boolean))].sort((a, b) => a.localeCompare(b, 'pt'));
+    var ls = todas.filter(x => (!p.ano || String(x.data).slice(0, 4) === p.ano) && (!p.mes || String(x.data).slice(5, 7) === p.mes) && (!p.ct || x.ct.id === p.ct) && (!p.cli || x.ct.clientName === p.cli) && (p.sit === 'todos' || x.tipo === p.sit));
+    var T = engSomaV(ls);
+    var g = {};
+    ls.forEach(x => {
+      var k = String(x.data).slice(0, 7);
+      (g[k] = g[k] || []).push(x);
+    });
+    var meses = Object.keys(g).sort().map(k => ({
+      k,
+      t: engSomaV(g[k])
+    }));
+    var gc = {};
+    ls.forEach(x => {
+      (gc[x.ct.id] = gc[x.ct.id] || {
+        ct: x.ct,
+        l: []
+      }).l.push(x);
+    });
+    var porCt = Object.values(gc).map(o => ({
+      ct: o.ct,
+      t: engSomaV(o.l)
+    })).sort((a, b) => b.t.rU + b.t.rB - (a.t.rU + a.t.rB));
+    var emU = T.rU || !T.rB;
+    var vb = t => emU ? t.rU : t.rB;
+    var mx = Math.max(1, ...meses.map(m => vb(m.t)));
+    var margem = (r, c) => r ? fmtNum((r - c) / r * 100) + '%' : '—';
+    var sel = (cls, val, campo, ops, todos) => engH("select", {
+      className: 'sel ' + cls,
+      value: val,
+      onChange: e => set({
+        [campo]: e.target.value
+      })
+    }, engH("option", {
+      value: ""
+    }, todos), ops.map(o => engH("option", {
+      key: o[0],
+      value: o[0]
+    }, o[1])));
+    var MES = ['jan', 'fev', 'mar', 'abr', 'mai', 'jun', 'jul', 'ago', 'set', 'out', 'nov', 'dez'];
+    var filtrado = p.mes || p.ct || p.cli || p.sit !== 'todos' || p.ano !== String(new Date().getFullYear());
+    var linhaT = (k, rot, t, onClick) => engH("tr", {
+      key: k,
+      className: onClick ? 'ec-row' : undefined,
+      onClick
+    }, engH("td", null, rot), engH("td", {
+      className: "ec-num"
+    }, t.n, engH("span", {
+      className: "ec-pn-sub"
+    }, t.nR + ' real. · ' + t.nP + ' prev.' + (t.nF ? ' · ' + t.nF + ' fora' : ''))), engH("td", {
+      className: "ec-num"
+    }, engH("b", null, fmtUSD(t.rU))), engH("td", {
+      className: "ec-num"
+    }, fmtBRL(t.rB)), engH("td", {
+      className: "ec-num"
+    }, fmtUSD(t.cU), t.cB ? engH("span", {
+      className: "ec-pn-sub"
+    }, fmtBRL(t.cB)) : null), engH("td", {
+      className: "ec-num"
+    }, fmtUSD(t.rU - t.cU), engH("span", {
+      className: "ec-pn-sub"
+    }, margem(t.rU, t.cU))));
+    var cab = ['', 'Operações', 'Receita US$', 'Receita R$', 'COGS', 'Margem US$'];
+    return engH("div", {
+      className: "ec-painel"
+    }, engH("div", {
+      className: "ec-painel-h"
+    }, engH("div", null, engH("h2", null, "Receita e COGS"), engH("span", null, "Realizado (consumo lan\xE7ado) + previsto (opera\xE7\xF5es ainda sem consumo), com o risco de cada opera\xE7\xE3o aplicado.")), engH("button", {
+      className: "btn-o ec-painel-tg",
+      onClick: () => set({
+        aberto: !p.aberto
+      })
+    }, p.aberto ? 'Recolher' : 'Mostrar')), p.aberto && engH(React.Fragment, null, engH("div", {
+      className: "ec-bar ec-pn-filtros"
+    }, sel('ec-pn-ano', p.ano, 'ano', anos.map(a => [a, a]), 'Todos os anos'), sel('ec-pn-mes', p.mes, 'mes', MES.map((m, i) => [String(i + 1).padStart(2, '0'), m]), 'Todos os meses'), sel('ec-pn-ct', p.ct, 'ct', cts.map(c => [c.id, c.name]), 'Todos os contratos'), sel('ec-pn-cli', p.cli, 'cli', clis.map(c => [c, c]), 'Todos os clientes'), engH("select", {
+      className: "sel ec-pn-sit",
+      value: p.sit,
+      onChange: e => set({
+        sit: e.target.value
+      })
+    }, engH("option", {
+      value: "todos"
+    }, "Realizado + previsto"), engH("option", {
+      value: "real"
+    }, "S\xF3 realizado"), engH("option", {
+      value: "prev"
+    }, "S\xF3 previsto")), filtrado && engH("button", {
+      className: "btn-o",
+      onClick: () => set({
+        ano: String(new Date().getFullYear()),
+        mes: '',
+        ct: '',
+        cli: '',
+        sit: 'todos'
+      })
+    }, "Limpar")), engH("div", {
+      className: "ec-kpis"
+    }, engKpi('Receita em US$', fmtUSD(T.rU), 'realizado ' + fmtUSD(T.rRU) + ' · previsto ' + fmtUSD(T.rPU), 'ec-pn-rec-usd'), engKpi('Receita em R$', fmtBRL(T.rB), 'realizado ' + fmtBRL(T.rRB) + ' · previsto ' + fmtBRL(T.rPB), 'ec-pn-rec-brl'), engKpi('COGS', fmtUSD(T.cU) + (T.cB ? ' · ' + fmtBRL(T.cB) : ''), 'químicas e casing', 'ec-pn-cogs'), engKpi('Margem em US$', fmtUSD(T.rU - T.cU), margem(T.rU, T.cU) + ' da receita' + (T.rB || T.cB ? ' · ' + fmtBRL(T.rB - T.cB) : ''), 'ec-pn-margem'), engKpi('Operações', String(T.n), T.nR + ' realizada(s) · ' + T.nP + ' prevista(s)' + (T.nF ? ' · ' + T.nF + ' fora (risco 100%)' : ''), 'ec-pn-ops')), engH("div", {
+      className: "ec-pn-grid"
+    }, engH("div", null, engH("div", {
+      className: "hm-sec"
+    }, "Por m\xEAs"), engH("div", {
+      className: "tbl-scroll"
+    }, engH("table", {
+      className: "db-table ec-pn-mes-tab"
+    }, engH("thead", null, engH("tr", null, ['Mês', ...cab.slice(1), ''].map((h, k) => engH("th", {
+      key: k
+    }, h)))), engH("tbody", null, meses.map(m => {
+      var tr = linhaT(m.k, engMesTxt(m.k), m.t);
+      return engH("tr", {
+        key: m.k
+      }, ...tr.props.children, engH("td", {
+        style: {
+          minWidth: 90
+        }
+      }, engBarra(vb(m.t) / mx * 100)));
+    }), !meses.length && engH("tr", null, engH("td", {
+      colSpan: 7,
+      className: "ec-vazio"
+    }, "Nenhuma opera\xE7\xE3o no filtro.")))))), engH("div", null, engH("div", {
+      className: "hm-sec"
+    }, "Por contrato"), engH("div", {
+      className: "tbl-scroll"
+    }, engH("table", {
+      className: "db-table ec-pn-ct-tab"
+    }, engH("thead", null, engH("tr", null, ['Contrato', ...cab.slice(1)].map((h, k) => engH("th", {
+      key: k
+    }, h)))), engH("tbody", null, porCt.map(o => linhaT(o.ct.id, engH("b", null, o.ct.name), o.t, () => {
+      setPlanCt(o.ct.id);
+      setPlanView('rec');
+    })), !porCt.length && engH("tr", null, engH("td", {
+      colSpan: 6,
+      className: "ec-vazio"
+    }, "Nenhuma opera\xE7\xE3o no filtro."))), porCt.length > 1 && engH("tfoot", null, linhaT('tot', engH("b", null, "Total"), T)))))), engH("div", {
+      className: "ec-pn-nota"
+    }, "Clique no contrato para abrir “Consumo e receita”. Risco 100% = opera\xE7\xE3o mapeada, mas fora da receita e do COGS. O COGS vem de Contratos → Custos (COGS).")));
+  };
   /* ---------------- arquivo para o gerencial ----------------
      Pacote com os contratos escolhidos pelo engenheiro e as operações deles, já calculado (valores na data do
      serviço), para a pasta do SharePoint. O EARL Gerencial junta os arquivos de todos os engenheiros e, para
@@ -2098,12 +2704,23 @@
   var engPacoteGerencial = (ids, nome) => {
     var hoje = todayStr();
     var cts = (db.contratos || []).filter(c => ids.includes(c.id));
-    var mat = l => (l || []).map(m => ({
-      sap: m.sap || '',
-      nome: m.name || m.sap || '',
-      unid: m.unit || '',
-      qtd: engNum(m.qty) || 0
-    })).filter(m => m.qtd > 0);
+    var cIdx = engCogsIdx();
+    var mat = l => (l || []).map(m => {
+      var c = engCogsDe(cIdx, m);
+      return {
+        sap: m.sap || '',
+        nome: m.name || m.sap || '',
+        unid: m.unit || '',
+        qtd: engNum(m.qty) || 0,
+        cogsUsd: c ? engNum(c.usd) : null,
+        cogsBrl: c ? engNum(c.brl) : null
+      };
+    }).filter(m => m.qtd > 0);
+    var somaCogs = l => ({
+      usd: engR4(l.reduce((a, m) => a + (m.cogsUsd != null ? m.qtd * m.cogsUsd : 0), 0)),
+      brl: engR4(l.reduce((a, m) => a + (m.cogsBrl != null ? m.qtd * m.cogsBrl : 0), 0)),
+      semCogs: l.filter(m => m.cogsUsd == null && m.cogsBrl == null).length
+    });
     var contratos = cts.map(ct => ({
       id: ct.id,
       nome: ct.name || '',
@@ -2154,9 +2771,28 @@
           valorUsd: p.usd != null ? engR4(q * p.usd) : null
         };
       }) : [];
+      var pq = mat(j.chems),
+        pc = mat(j.casingNeeds),
+        rq = c ? mat(c.quim) : [],
+        rc = c ? mat(c.cas) : [];
+      var ppuP = (j.ppuNeeds || []).filter(n => n && n.ref).map(n => {
+        var q = engNum(n.qty) || 0;
+        var p = ctPreco(ct, n.ref, j.date);
+        return {
+          ref: n.ref,
+          desc: n.desc || '',
+          unit: n.unit || '',
+          qtd: q,
+          brl: p.brl,
+          usd: p.usd,
+          valorBrl: p.brl != null ? engR4(q * p.brl) : null,
+          valorUsd: p.usd != null ? engR4(q * p.usd) : null
+        };
+      });
       operacoes.push({
         id: j.id,
         contratoId: ct.id,
+        risco: Math.max(0, Math.min(100, Number(j.riscoRec) || 0)),
         sonda: rig.name || '',
         base: rig.base || '',
         ambiente: rig.id ? rigAmbiente(rig) : '',
@@ -2171,21 +2807,23 @@
         wbs: j.wbs || '',
         vida: j.vida || '',
         contingencia: !!j.contingencia,
-        risco: j.contingencia ? Number(j.risco) || 0 : null,
+        /* chance de a contingência acontecer (campo do EARL); "risco" acima é o risco da receita/COGS */
+        chanceConting: j.contingencia ? Number(j.risco) || 0 : null,
         handover: h ? {
           versao: h.versao || 1,
           em: h.email && h.email.em || h.atualizadoEm || '',
           para: h.email && h.email.para || []
         } : null,
         previsto: {
-          ppu: (j.ppuNeeds || []).filter(n => n && n.ref).map(n => ({
-            ref: n.ref,
-            desc: n.desc || '',
-            unit: n.unit || '',
-            qtd: engNum(n.qty) || 0
-          })),
-          quimicas: mat(j.chems),
-          casing: mat(j.casingNeeds),
+          ppu: ppuP,
+          receita: {
+            brl: engR4(ppuP.reduce((a, x) => a + (x.valorBrl || 0), 0)),
+            usd: engR4(ppuP.reduce((a, x) => a + (x.valorUsd || 0), 0)),
+            semValor: ppuP.filter(x => x.brl == null && x.usd == null && x.qtd).length
+          },
+          cogs: somaCogs(pq.concat(pc)),
+          quimicas: pq,
+          casing: pc,
           pessoal: (j.peopleNeeds || []).filter(n => n && n.funcao).map(n => ({
             funcao: n.funcao,
             pessoas: engNum(n.qty) || 0,
@@ -2202,8 +2840,9 @@
           em: c.em || '',
           por: c.por || '',
           ppu,
-          quimicas: mat(c.quim),
-          casing: mat(c.cas),
+          quimicas: rq,
+          casing: rc,
+          cogs: somaCogs(rq.concat(rc)),
           pessoal: (c.pes || []).map(p => ({
             funcao: p.funcao,
             pessoas: Number(p.pessoas) || 0,
@@ -2220,7 +2859,7 @@
     }));
     return {
       tipo: 'EARL-Gerencial',
-      formato: 1,
+      formato: 2,
       app: EARL_VERSION,
       geradoEm: new Date().toISOString(),
       por: nome || (db.hoMail || {}).nome || '',

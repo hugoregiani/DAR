@@ -22,7 +22,12 @@ A Engenharia do EARL separada do resto do sistema, para usar **sem servidor, sem
   4. **Pessoal:** pessoas e dias por função, que dão o homem-dia.
 
   Cada parte começa com o previsto da operação, e **⇩ Copiar previsto** preenche tudo de uma vez. O app avisa quando um item PPU passa do saldo ou não tem valor cadastrado.
-- **⬇ Arquivo do gerencial:** botão na barra (e na aba Consumo e receita). O engenheiro marca os contratos sob a responsabilidade dele e gera um `.json` com os contratos (itens, saldos, valores, reajustes) e as operações (previsto, consumo lançado e receita). Esse arquivo vai para a pasta do SharePoint do gerencial e é lido pelo **EARL Gerencial** (`../gerencial`).
+- **Página inicial: Receita e COGS.** Logo abaixo do título, um painel com a receita em US$ e em R$, o COGS, a margem e o número de operações, com filtros por **ano, mês, contrato, cliente e situação** (realizado + previsto, só realizado ou só previsto). Tem a tabela **por mês** e a **por contrato**; clicar no contrato abre a aba "Consumo e receita" dele. **Recolher** esconde o painel.
+  - **Realizado:** operação com consumo lançado, pelo valor do contrato na data do serviço.
+  - **Previsto:** operação ainda sem consumo, pelos itens PPU previstos × valor do contrato na data da operação. O COGS vem das químicas e do casing previstos.
+- **Risco da receita / COGS (%):** campo na janela da operação (seção 2). A receita e o COGS da operação contam × (1 − risco). Com **0%** contam inteiros; com **100%** a operação continua mapeada (Gantt, lista, handover), mas **fica fora da receita e do COGS**. A Lista mostra a etiqueta "risco N%". Esse campo é diferente do "Risco de acontecer" da contingência.
+- **Custos (COGS):** botão na tela de Contratos. Custo unitário de cada química e casing equipment, pelo SAP, em US$ e/ou R$. Pode ser digitado ou carregado de planilha (colunas `SAP`, `Produto`, `Unidade`, `COGS US$` e/ou `COGS R$`; uma coluna só "COGS" vale como US$). O consumo da operação e a aba "Consumo e receita" mostram COGS e margem.
+- **⬇ Arquivo do gerencial:** botão na barra (e na aba Consumo e receita). O engenheiro marca os contratos sob a responsabilidade dele e gera um `.json` com os contratos (itens, saldos, valores, reajustes) e as operações (previsto com valores, consumo lançado, receita, COGS e risco). Esse arquivo vai para a pasta do SharePoint do gerencial e é lido pelo **EARL Gerencial** (`../gerencial`).
 - **Consumo e receita:** aba nova na Engenharia.
   - **Num contrato:** receita em R$ e US$, receita por operação, saldo por item PPU (contratado, consumido, saldo e % usado), receita por mês e a lista das operações que já passaram e estão sem consumo lançado.
   - **Na Visão geral:** receita por contrato.
@@ -64,6 +69,34 @@ O app funciona offline e os dados ficam **só no navegador** do computador onde 
 
 Exporte também de vez em quando, como cópia de segurança. Limpar os dados de navegação do Chrome ou do Edge apaga as operações deste computador.
 
+## Teste BP (pasta `teste_bp/`)
+
+Gera um arquivo de teste com os dados da planilha `Contrato_BP_Teste_EARL.xlsx` (aba "Banco de dados Contratos" para o contrato e aba "Forecast" para as operações). A planilha e o arquivo gerado não ficam no repositório.
+
+```bash
+node teste_bp/gerar_seed_bp.js Contrato_BP_Teste_EARL.xlsx EARL_Engenharia.html seed_bp.json
+```
+
+```bash
+python3 teste_bp/montar_bp.py EARL_Engenharia.html seed_bp.json EARL_Engenharia_BP_teste.html
+```
+
+```bash
+node teste_bp/e2e_bp.js Contrato_BP_Teste_EARL.xlsx EARL_Engenharia_BP_teste.html ../gerencial/EARL_Gerencial.html saida
+```
+
+- **Contrato BP:** os 134 itens com o valor em US$ do Ano 1 (os itens 8-1 e 8-2 entram no cadastro) e início em 22/06/2026.
+- **Sonda NS-39:** cadastrada, com base em Macaé.
+- **COGS:** a tabela de químicos e casing da planilha (162 linhas).
+- **27 operações**, uma por coluna do Forecast:
+  - **Tipo:** revestimento → Cimentação primária com o tamanho; P&A → Abandono; LCP → Tampão de combate à perda; o resto → Outros, com a descrição da planilha.
+  - **Datas:** fixas, sem acompanhar a operação anterior da sonda.
+  - **Itens:** PPU, químicas e pessoal (time de embarque × duração).
+  - **Risco da planilha** vira o "Risco da receita / COGS".
+  - **Concluído** = consumo lançado igual ao previsto, com a data da operação; **Previsto** = só o planejado.
+- **Arquivo de teste:** o `EARL_Engenharia_BP_teste.html` guarda os dados com prefixo próprio (`earlengbp:`) e tem a etiqueta **TESTE BP** com **Reiniciar**, que volta aos dados da planilha.
+- **Verificação:** o `e2e_bp.js` (31 verificações) confere, operação por operação, a receita, a receita final, o COGS, o COGS final, o risco, a situação e o homem-dia contra os totais da própria planilha. Confere também o painel da página inicial, a aba do contrato, o arquivo do gerencial e o EARL Gerencial com esse arquivo, incluindo o Excel. Na pasta de saída fica o arquivo do gerencial do BP.
+
 ## Para quem mexe no código
 
 - `EARL_Engenharia.html` é gerado pelo `patch_engenharia.py` a partir do `EARL_HAL_CMT_115_SIMULACAO.html`, que já vem com o app compilado:
@@ -73,10 +106,10 @@ Exporte também de vez em quando, como cópia de segurança. Limpar os dados de 
   ```
 
   A pasta `node_modules` precisa de `react@18.2.0`, `react-dom@18.2.0`, `xlsx@0.18.5` e `jspdf@2.5.1`, as mesmas versões que o EARL carrega do cdnjs. Elas vão embutidas no HTML.
-- `eng_app.js` tem o código novo da e1 (e-mail do handover, aba Handovers, sondas e backup); `eng_contratos.js`, o da e2 (contratos, valores, reajustes, consumo e receita). `eng.css` tem o visual novo.
+- `eng_app.js` tem o código novo da e1 (e-mail do handover, aba Handovers, sondas e backup); `eng_contratos.js`, o da e2 em diante (contratos, valores, reajustes, consumo, receita, COGS, risco, arquivo do gerencial e o painel da página inicial). `eng.css` tem o visual novo.
 - Cada troca do patch confere que o trecho original existe. Com `CHECAR=1`, o script lista todas as falhas de uma vez.
 - Os dados ficam com o prefixo `earleng:` no armazenamento do navegador, para não misturar com outros arquivos do EARL abertos do disco.
 - Testes, com o arquivo aberto do disco, a internet bloqueada e o relógio do navegador fixo em 02/11/2026:
   - `node tests/e2e_engenharia.js EARL_Engenharia.html [pasta-das-telas]`: 62 verificações (abertura, handover e e-mail, sondas, exportar e importar substituindo);
-  - `node tests/e2e_contratos.js EARL_Engenharia.html [pasta-das-telas]`: 55 verificações (contratos, planilhas, reajustes, consumo, receita, juntar dados de outro computador e tela pequena 1366×768).
-- Versão: `EARL_VERSION = 'EARL Engenharia e4 (base v115)'`. O teste do fluxo completo com o Gerencial está em `../gerencial/tests/e2e_gerencial.js`.
+  - `node tests/e2e_contratos.js EARL_Engenharia.html [pasta-das-telas]`: 75 verificações (contratos, planilhas, reajustes, consumo, receita, juntar dados de outro computador, tela pequena 1366×768, COGS e risco, e o painel Receita e COGS com os filtros).
+- Versão: `EARL_VERSION = 'EARL Engenharia e5 (base v115)'`. O teste do fluxo completo com o Gerencial está em `../gerencial/tests/e2e_gerencial.js`.

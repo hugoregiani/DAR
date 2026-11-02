@@ -42,7 +42,8 @@ h1:before{content:"";position:absolute;left:-22px;top:-12px;width:18px;height:18
 .kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:10px;margin:10px 0}
 .kpi{background:#fff;border:1px solid var(--line);border-radius:16px;padding:12px 14px;display:flex;flex-direction:column;gap:2px}
 .kpi span{font-size:10.5px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--ink-3)}
-.kpi b{font-size:22px;font-weight:600}
+.kpi{container-type:inline-size}
+.kpi b{font-size:22px;font-size:min(22px,10.5cqi);font-weight:600;white-space:nowrap}
 .kpi em{font-style:normal;font-size:12px;color:var(--ink-2)}
 .kpi.dest{background:linear-gradient(150deg,#D71F34 0%,#CC0000 46%,#961B24 100%);border-color:transparent;color:#fff}
 .kpi.dest span,.kpi.dest em{color:rgba(255,255,255,.85)}
@@ -78,7 +79,12 @@ tr.clk:hover td{background:#FAFBFB}
 details.ajuda{margin-top:10px;font-size:13px;color:var(--ink-2)}
 details.ajuda summary{cursor:pointer;font-weight:700;color:var(--ink)}
 .t-ops td{white-space:nowrap}
-@media(max-width:760px){.hdr{gap:10px;padding:0 12px}.hdr img{height:24px}.hdr .ver{display:none}h1{font-size:30px;padding-left:22px}h1:before{left:0;top:-6px}.f select{max-width:100%}.f{flex:1 1 140px}.kpis{grid-template-columns:1fr 1fr}.kpi b{font-size:17px}.kpi em{font-size:11px}}
+.sub2{font-size:11px;color:var(--ink-3);font-weight:400}
+.nota{font-size:12px;color:var(--ink-3);margin:8px 0 0}
+tr.fora td{color:var(--ink-3)}
+tr.fora td b{color:var(--ink-3)}
+@media(max-width:1100px){.kpis{grid-template-columns:repeat(3,minmax(0,1fr))}}
+@media(max-width:760px){.hdr{gap:10px;padding:0 12px}.hdr img{height:24px}.hdr .ver{display:none}h1{font-size:30px;padding-left:22px}h1:before{left:0;top:-6px}.f select{max-width:100%}.f{flex:1 1 140px}.kpis{grid-template-columns:1fr 1fr}.kpi b{font-size:min(17px,10.5cqi)}.kpi em{font-size:11px}}
 @media print{.bar,.tabs,.filtros{display:none}}
 </style>
 </head>
@@ -91,11 +97,11 @@ details.ajuda summary{cursor:pointer;font-weight:700;color:var(--ink)}
 <script>/*__LIB_JSZIP__*/</script>
 <script>
 /* EARL Gerencial — junta os arquivos "Arquivo do gerencial" gerados pelos engenheiros no EARL Engenharia
-   (formato {tipo:'EARL-Gerencial', formato:1, geradoEm, por, contratos[], operacoes[]}) e mostra o consolidado.
+   (formato {tipo:'EARL-Gerencial', formato:2 (ou 1), geradoEm, por, contratos[], operacoes[]}) e mostra o consolidado.
    Para cada contrato vale o arquivo mais novo. Tudo fica neste navegador (localStorage, prefixo earlger:). */
 (function () {
   'use strict';
-  var VERSAO = 'EARL Gerencial g1';
+  var VERSAO = 'EARL Gerencial g2';
   var CHAVE = 'earlger:pacotes_v1';
   var $ = function (s) { return document.querySelector(s); };
   var esc = function (v) { return String(v == null ? '' : v).replace(/[&<>"']/g, function (c) { return {'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'}[c]; }); };
@@ -210,56 +216,113 @@ details.ajuda summary{cursor:pointer;font-weight:700;color:var(--ink)}
     var noPer = function (d) { return (!f.de || String(d) >= f.de) && (!f.ate || String(d) <= f.ate); };
     return {cts: cts, ops: ops, noPer: noPer};
   };
-  var agregar = function (F) {
-    var realiz = F.ops.filter(function (o) { return o.realizado && F.noPer(o.realizado.data); });
-    var previstas = F.ops.filter(function (o) { return F.noPer(o.data); });
-    var tB = 0, tU = 0, semValor = 0, hd = 0;
-    realiz.forEach(function (o) { tB += (o.receita && o.receita.brl) || 0; tU += (o.receita && o.receita.usd) || 0; semValor += (o.receita && o.receita.semValor) || 0; (o.realizado.pessoal || []).forEach(function (p) { hd += p.hd || 0; }); });
-    // por contrato
-    var porCt = F.cts.map(function (c) {
-      var os = F.ops.filter(function (o) { return o.contratoId === c.id; });
-      var rs = os.filter(function (o) { return o.realizado && F.noPer(o.realizado.data); });
-      var b = 0, u = 0; rs.forEach(function (o) { b += (o.receita && o.receita.brl) || 0; u += (o.receita && o.receita.usd) || 0; });
-      var cons = {}; os.forEach(function (o) { if (o.realizado) (o.realizado.ppu || []).forEach(function (l) { cons[l.ref] = (cons[l.ref] || 0) + (l.qtd || 0); }); });
-      var vC = 0, vU = 0; // uso do contrato em valor (R$): consumido × valor vigente / contratado × valor vigente
-      (c.itens || []).forEach(function (i) { if (i.contratado != null && i.brl != null) { vC += i.contratado * i.brl; vU += Math.min(cons[i.ref] || 0, i.contratado) * i.brl; } });
-      return {c: c, ops: os.length, prev: os.filter(function (o) { return F.noPer(o.data); }).length, cons: rs.length, b: b, u: u, pctValor: vC > 0 ? vU / vC * 100 : null};
+  /* Risco da operação (0–100%): receita e COGS contam × (1 − risco). Com 100% a operação aparece, mas fica fora. */
+  var fatorOp = function (o) { var r = Number(o.risco) || 0; return r > 0 ? Math.max(0, 1 - Math.min(100, r) / 100) : 1; };
+  var precoItem = function (o, ref) { return (o._ct.itens || []).find(function (x) { return x.ref === ref; }) || {}; };
+  var prevRec = function (o) {
+    var p = o.previsto || {};
+    if (p.receita) return {b: p.receita.brl || 0, u: p.receita.usd || 0};
+    var b = 0, u = 0; // arquivo do formato 1: valoriza pelo valor vigente do contrato
+    (p.ppu || []).forEach(function (l) { var i = precoItem(o, l.ref); if (i.brl != null) b += (l.qtd || 0) * i.brl; if (i.usd != null) u += (l.qtd || 0) * i.usd; });
+    return {b: b, u: u};
+  };
+  var cogsDe = function (c) { return {b: c ? c.brl || 0 : 0, u: c ? c.usd || 0 : 0}; };
+  var hdDe = function (l) { return (l || []).reduce(function (a, p) { return a + (p.hd || 0); }, 0); };
+  /* Valor de cada operação no período: realizada (consumo lançado, pela data do serviço) ou prevista
+     (ainda sem consumo, pela data planejada) — como o "Total receita" da planilha de forecast. */
+  var valorOp = function (o, F) {
+    var f = fatorOp(o);
+    if (o.realizado) {
+      if (!F.noPer(o.realizado.data)) return null;
+      var c = cogsDe(o.realizado.cogs), g = o.receita || {};
+      return {o: o, tipo: 'real', data: o.realizado.data, f: f, gB: g.brl || 0, gU: g.usd || 0, rB: (g.brl || 0) * f, rU: (g.usd || 0) * f, cB: c.b * f, cU: c.u * f, hd: hdDe(o.realizado.pessoal)};
+    }
+    if (!F.noPer(o.data)) return null;
+    var r = prevRec(o), c2 = cogsDe((o.previsto || {}).cogs);
+    return {o: o, tipo: 'prev', data: o.data, f: f, gB: r.b, gU: r.u, rB: r.b * f, rU: r.u * f, cB: c2.b * f, cU: c2.u * f, hd: hdDe((o.previsto || {}).pessoal)};
+  };
+  var soma = function (ls) {
+    var t = {n: ls.length, nR: 0, nP: 0, nF: 0, rB: 0, rU: 0, cB: 0, cU: 0, rRB: 0, rRU: 0, rPB: 0, rPU: 0, cRU: 0, cPU: 0, cRB: 0, cPB: 0, hdR: 0, hdP: 0};
+    ls.forEach(function (x) {
+      t.rB += x.rB; t.rU += x.rU; t.cB += x.cB; t.cU += x.cU;
+      if (x.tipo === 'real') { t.nR++; t.rRB += x.rB; t.rRU += x.rU; t.cRB += x.cB; t.cRU += x.cU; t.hdR += x.hd; }
+      else { t.nP++; t.rPB += x.rB; t.rPU += x.rU; t.cPB += x.cB; t.cPU += x.cU; t.hdP += x.hd; }
+      if (x.f === 0) t.nF++;
     });
-    // por mês, cliente e região
-    var grupo = function (chave) { var g = {}; realiz.forEach(function (o) { var k = chave(o); var x = g[k] || (g[k] = {k: k, n: 0, b: 0, u: 0}); x.n++; x.b += (o.receita && o.receita.brl) || 0; x.u += (o.receita && o.receita.usd) || 0; }); return Object.keys(g).map(function (k) { return g[k]; }); };
-    var porMes = grupo(function (o) { return String(o.realizado.data).slice(0, 7); }).sort(function (a, b) { return a.k.localeCompare(b.k); });
-    var porCli = grupo(function (o) { return o._ct.cliente || '—'; }).sort(function (a, b) { return b.b - a.b; });
-    var porReg = grupo(function (o) { return o.regiao || o._ct.regiao || '—'; }).sort(function (a, b) { return b.b - a.b; });
-    // itens PPU
+    return t;
+  };
+  var agregar = function (F) {
+    var linhas = F.ops.map(function (o) { return valorOp(o, F); }).filter(Boolean);
+    var T = soma(linhas);
+    var porCt = F.cts.map(function (c) {
+      var ls = linhas.filter(function (x) { return x.o.contratoId === c.id; });
+      var os = F.ops.filter(function (o) { return o.contratoId === c.id; });
+      var cons = {}; os.forEach(function (o) { if (o.realizado) (o.realizado.ppu || []).forEach(function (l) { cons[l.ref] = (cons[l.ref] || 0) + (l.qtd || 0); }); });
+      var vC = 0, vU = 0;
+      (c.itens || []).forEach(function (i) { var pr = i.usd != null ? i.usd : i.brl; if (i.contratado != null && pr != null) { vC += i.contratado * pr; vU += Math.min(cons[i.ref] || 0, i.contratado) * pr; } });
+      return {c: c, t: soma(ls), pctValor: vC > 0 ? vU / vC * 100 : null};
+    });
+    var grupo = function (chave) {
+      var g = {};
+      linhas.forEach(function (x) { var k = chave(x); (g[k] = g[k] || []).push(x); });
+      return Object.keys(g).map(function (k) { var t = soma(g[k]); t.k = k; return t; });
+    };
+    var porMes = grupo(function (x) { return String(x.data).slice(0, 7); }).sort(function (a, b) { return a.k.localeCompare(b.k); });
+    var porCli = grupo(function (x) { return x.o._ct.cliente || '—'; }).sort(function (a, b) { return (b.rU + b.rB) - (a.rU + a.rB); });
+    var porReg = grupo(function (x) { return x.o.regiao || x.o._ct.regiao || '—'; }).sort(function (a, b) { return (b.rU + b.rB) - (a.rU + a.rB); });
+    // itens PPU: saldo pelo consumo lançado (todo o período); no filtro, o lançado e o a realizar com a receita considerada
     var ppu = [];
     F.cts.forEach(function (c) {
-      var os = F.ops.filter(function (o) { return o.contratoId === c.id && o.realizado; });
-      var tot = {}, per = {}, recB = {}, recU = {}, desc = {};
-      os.forEach(function (o) { var noP = F.noPer(o.realizado.data); (o.realizado.ppu || []).forEach(function (l) { tot[l.ref] = (tot[l.ref] || 0) + (l.qtd || 0); desc[l.ref] = desc[l.ref] || l; if (noP) { per[l.ref] = (per[l.ref] || 0) + (l.qtd || 0); recB[l.ref] = (recB[l.ref] || 0) + (l.valorBrl || 0); recU[l.ref] = (recU[l.ref] || 0) + (l.valorUsd || 0); } }); });
+      var tot = {}, per = {}, aR = {}, rU = {}, rB = {}, desc = {};
+      F.ops.filter(function (o) { return o.contratoId === c.id && o.realizado; }).forEach(function (o) { (o.realizado.ppu || []).forEach(function (l) { tot[l.ref] = (tot[l.ref] || 0) + (l.qtd || 0); desc[l.ref] = desc[l.ref] || l; }); });
+      linhas.filter(function (x) { return x.o.contratoId === c.id; }).forEach(function (x) {
+        var lista = x.tipo === 'real' ? x.o.realizado.ppu : (x.o.previsto || {}).ppu;
+        (lista || []).forEach(function (l) {
+          var i = precoItem(x.o, l.ref);
+          var vU = l.valorUsd != null ? l.valorUsd : i.usd != null ? (l.qtd || 0) * i.usd : 0;
+          var vB = l.valorBrl != null ? l.valorBrl : i.brl != null ? (l.qtd || 0) * i.brl : 0;
+          desc[l.ref] = desc[l.ref] || l;
+          if (x.tipo === 'real') per[l.ref] = (per[l.ref] || 0) + (l.qtd || 0); else aR[l.ref] = (aR[l.ref] || 0) + (l.qtd || 0);
+          rU[l.ref] = (rU[l.ref] || 0) + vU * x.f; rB[l.ref] = (rB[l.ref] || 0) + vB * x.f;
+        });
+      });
       var refs = (c.itens || []).map(function (i) { return i.ref; });
-      Object.keys(tot).forEach(function (r) { if (refs.indexOf(r) < 0) refs.push(r); });
+      Object.keys(desc).forEach(function (r) { if (refs.indexOf(r) < 0) refs.push(r); });
       refs.forEach(function (r) {
         var i = (c.itens || []).find(function (x) { return x.ref === r; }) || {ref: r, desc: (desc[r] || {}).desc, unit: (desc[r] || {}).unit, contratado: null};
         var cons = tot[r] || 0;
-        ppu.push({c: c, i: i, cons: cons, saldo: i.contratado != null ? i.contratado - cons : null, pct: i.contratado ? cons / i.contratado * 100 : null, per: per[r] || 0, b: recB[r] || 0, u: recU[r] || 0});
+        ppu.push({c: c, i: i, cons: cons, saldo: i.contratado != null ? i.contratado - cons : null, pct: i.contratado ? cons / i.contratado * 100 : null, per: per[r] || 0, aR: aR[r] || 0, u: rU[r] || 0, b: rB[r] || 0});
       });
     });
-    // materiais e pessoal
+    // químicas e casing: planejado (todas as operações com data no período), lançado, a realizar e COGS considerado
     var mats = function (campo) {
       var g = {};
-      var add = function (m, o, lado) { var k = (m.sap || m.nome) + '|' + (m.unid || ''); var x = g[k] || (g[k] = {sap: m.sap, nome: m.nome, unid: m.unid, prev: 0, real: 0, opsP: {}, opsR: {}, cts: {}}); x[lado] += m.qtd || 0; x[lado === 'prev' ? 'opsP' : 'opsR'][o.id] = 1; x.cts[o._ct.nome] = 1; };
-      previstas.forEach(function (o) { ((o.previsto || {})[campo] || []).forEach(function (m) { add(m, o, 'prev'); }); });
-      realiz.forEach(function (o) { (o.realizado[campo] || []).forEach(function (m) { add(m, o, 'real'); }); });
-      return Object.keys(g).map(function (k) { var x = g[k]; x.nP = Object.keys(x.opsP).length; x.nR = Object.keys(x.opsR).length; x.ctsL = Object.keys(x.cts).sort(); return x; }).sort(function (a, b) { return b.real - a.real || b.prev - a.prev || String(a.nome).localeCompare(String(b.nome), 'pt'); });
+      var item = function (m, o) { var k = (m.sap || m.nome) + '|' + (m.unid || ''); return g[k] || (g[k] = {sap: m.sap, nome: m.nome, unid: m.unid, cu: m.cogsUsd, cb: m.cogsBrl, plan: 0, real: 0, aR: 0, cU: 0, cB: 0, cts: {}}); };
+      F.ops.filter(function (o) { return F.noPer(o.data); }).forEach(function (o) { ((o.previsto || {})[campo] || []).forEach(function (m) { var x = item(m, o); x.plan += m.qtd || 0; x.cts[o._ct.nome] = 1; }); });
+      linhas.forEach(function (l) {
+        var lista = l.tipo === 'real' ? l.o.realizado[campo] : (l.o.previsto || {})[campo];
+        (lista || []).forEach(function (m) {
+          var x = item(m, l.o);
+          if (l.tipo === 'real') x.real += m.qtd || 0; else x.aR += m.qtd || 0;
+          if (m.cogsUsd != null) { x.cU += (m.qtd || 0) * m.cogsUsd * l.f; x.cu = m.cogsUsd; }
+          if (m.cogsBrl != null) { x.cB += (m.qtd || 0) * m.cogsBrl * l.f; x.cb = m.cogsBrl; }
+          x.cts[l.o._ct.nome] = 1;
+        });
+      });
+      return Object.keys(g).map(function (k) { var x = g[k]; x.ctsL = Object.keys(x.cts).sort(); return x; })
+        .sort(function (a, b) { return b.cU - a.cU || b.real - a.real || b.plan - a.plan || String(a.nome).localeCompare(String(b.nome), 'pt'); });
     };
     var pes = (function () {
       var g = {};
-      var add = function (p, lado) { var x = g[p.funcao] || (g[p.funcao] = {funcao: p.funcao, pP: 0, hP: 0, pR: 0, hR: 0, n: 0}); if (lado === 'prev') { x.pP += p.pessoas || 0; x.hP += p.hd || 0; } else { x.pR += p.pessoas || 0; x.hR += p.hd || 0; x.n++; } };
-      previstas.forEach(function (o) { ((o.previsto || {}).pessoal || []).forEach(function (p) { add(p, 'prev'); }); });
-      realiz.forEach(function (o) { (o.realizado.pessoal || []).forEach(function (p) { add(p, 'real'); }); });
+      var it = function (f) { return g[f] || (g[f] = {funcao: f, pP: 0, hP: 0, pR: 0, hR: 0, hA: 0, n: 0}); };
+      F.ops.filter(function (o) { return F.noPer(o.data); }).forEach(function (o) { ((o.previsto || {}).pessoal || []).forEach(function (p) { var x = it(p.funcao); x.pP += p.pessoas || 0; x.hP += p.hd || 0; }); });
+      linhas.forEach(function (l) {
+        if (l.tipo === 'real') (l.o.realizado.pessoal || []).forEach(function (p) { var x = it(p.funcao); x.pR += p.pessoas || 0; x.hR += p.hd || 0; x.n++; });
+        else ((l.o.previsto || {}).pessoal || []).forEach(function (p) { it(p.funcao).hA += p.hd || 0; });
+      });
       return Object.keys(g).map(function (k) { return g[k]; }).sort(function (a, b) { return b.hR - a.hR || b.hP - a.hP; });
     })();
-    return {realiz: realiz, previstas: previstas, tB: tB, tU: tU, semValor: semValor, hd: hd, porCt: porCt, porMes: porMes, porCli: porCli, porReg: porReg, ppu: ppu, quim: mats('quimicas'), cas: mats('casing'), pes: pes};
+    return {linhas: linhas, T: T, porCt: porCt, porMes: porMes, porCli: porCli, porReg: porReg, ppu: ppu, quim: mats('quimicas'), cas: mats('casing'), pes: pes};
   };
 
   /* ---------- telas ---------- */
@@ -270,10 +333,17 @@ details.ajuda summary{cursor:pointer;font-weight:700;color:var(--ink)}
       (linhas.length ? linhas.join('') : '<tr><td colspan="' + cab.length + '" class="vazio">Nada no filtro.</td></tr>') + '</tbody>' + (rodape ? '<tfoot>' + rodape + '</tfoot>' : '') + '</table></div>';
   };
   var N = function (t) { return {t: t, n: 1}; };
-  var stTag = function (o) { return o.status === 'consumo' ? '<span class="tag t-ok">consumo lançado</span>' : o.status === 'handover' ? '<span class="tag t-ho">handover enviado</span>' : '<span class="tag t-pl">planejada</span>'; };
+  var sub = function (t) { return '<br><span class="sub2">' + t + '</span>'; };
+  var fM = function (u, b) { return u || !b ? fUSD(u) : fBRL(b); }; // valor principal: US$, ou R$ quando só há R$
+  var stTag = function (o) {
+    var r = Number(o.risco) || 0;
+    var s = o.realizado ? '<span class="tag t-ok">realizada</span>' : o.status === 'handover' ? '<span class="tag t-ho">prevista · handover enviado</span>' : '<span class="tag t-pl">prevista</span>';
+    return s + (r >= 100 ? ' <span class="tag t-old">fora (risco 100%)</span>' : r > 0 ? ' <span class="tag t-ho">risco ' + fN(r) + '%</span>' : '');
+  };
+  var margemTxt = function (r, c) { return r ? fN((r - c) / r * 100) + '%' : '—'; };
 
   var telaVazia = function () {
-    return '<h1>Gerencial</h1><p class="sub">Receita, consumo de itens PPU, químicas, casing equipment e pessoal de todos os contratos.</p>' + barraTopo() +
+    return '<h1>Gerencial</h1><p class="sub">Receita, COGS e margem, consumo de itens PPU, químicas, casing equipment e pessoal de todos os contratos — realizado e previsto.</p>' + barraTopo() +
       '<div class="drop" id="drop"><b>Carregue os arquivos dos engenheiros</b>Arraste aqui os arquivos .json (ou a pasta, ou o .zip baixado do SharePoint), ou use os botões acima.' +
       '<ol><li>No <b>EARL Engenharia</b>, cada engenheiro clica em <b>“⬇ Arquivo do gerencial”</b>, marca os contratos dele e salva o arquivo na pasta do SharePoint do gerencial.</li>' +
       '<li>Aqui, carregue a pasta sincronizada do SharePoint (<b>📁 Carregar pasta</b>) ou os arquivos baixados (<b>⬆ Carregar arquivos</b>, aceita .zip).</li>' +
@@ -292,11 +362,11 @@ details.ajuda summary{cursor:pointer;font-weight:700;color:var(--ink)}
   var render = function () {
     $('#ver').textContent = VERSAO;
     var app = $('#app');
-    if (!S.pacotes.length) { app.innerHTML = telaVazia(); ligarDrop(); return; }
-    var C = consolidar(), F = filtrar(C), A = agregar(F), f = S.f;
-    var h = '<h1>Gerencial</h1><p class="sub">' + C.contratos.length + ' contrato(s) de ' + uniq(S.pacotes.map(function (p) { return p.pac.por || '—'; })).length + ' engenheiro(s) · ' + C.ops.length + ' operação(ões)</p>' + barraTopo();
+    if (!S.pacotes.length) { app.innerHTML = telaVazia(); return; }
+    var C = consolidar(), F = filtrar(C), A = agregar(F), f = S.f, T = A.T;
+    var h = '<h1>Gerencial</h1><p class="sub">' + C.contratos.length + ' contrato(s) de ' + uniq(S.pacotes.map(function (p) { return p.pac.por || '—'; })).length + ' engenheiro(s) · ' + C.ops.length + ' operação(ões) · realizado + previsto, com o risco aplicado</p>' + barraTopo();
     h += '<div class="filtros">' +
-      '<div class="f"><label>Serviço de</label><input type="date" data-f="de" value="' + esc(f.de) + '"></div>' +
+      '<div class="f"><label>Data de</label><input type="date" data-f="de" value="' + esc(f.de) + '"></div>' +
       '<div class="f"><label>até</label><input type="date" data-f="ate" value="' + esc(f.ate) + '"></div>' +
       '<div class="f"><label>Cliente</label><select data-f="cliente">' + opcoes(uniq(C.contratos.map(function (c) { return c.cliente; })), f.cliente, 'Todos') + '</select></div>' +
       '<div class="f"><label>Contrato</label><select data-f="contrato">' + opcoes(C.contratos.map(function (c) { return {v: c.id, t: c.nome}; }), f.contrato, 'Todos') + '</select></div>' +
@@ -304,61 +374,67 @@ details.ajuda summary{cursor:pointer;font-weight:700;color:var(--ink)}
       '<div class="f"><label>Tipo de contrato</label><select data-f="tipo">' + opcoes(uniq(C.contratos.map(function (c) { return c.tipo; })), f.tipo, 'Todos') + '</select></div>' +
       ((f.de || f.ate || f.cliente || f.contrato || f.regiao || f.tipo) ? '<button class="btn-o" data-a="limparf">Limpar filtros</button>' : '') + '</div>';
     h += '<div class="kpis">' +
-      '<div class="kpi dest k-brl"><span>Receita em R$</span><b>' + fBRL(A.tB) + '</b><em>consumo lançado no período</em></div>' +
-      '<div class="kpi dest k-usd"><span>Receita em US$</span><b>' + fUSD(A.tU) + '</b><em>consumo lançado no período</em></div>' +
-      '<div class="kpi k-ops"><span>Operações com consumo</span><b>' + A.realiz.length + '</b><em>' + A.previstas.length + ' operação(ões) com data no período</em></div>' +
-      '<div class="kpi k-hd"><span>Pessoal (homem-dia)</span><b>' + fN(A.hd) + '</b><em>lançado nas operações</em></div>' +
-      (A.semValor ? '<div class="kpi k-sem"><span>Lançamentos sem valor</span><b>' + A.semValor + '</b><em>item sem valor no contrato</em></div>' : '') + '</div>';
-    var tabs = [['contratos', 'Contratos'], ['receita', 'Receita'], ['ppu', 'Itens PPU'], ['quim', 'Químicas'], ['cas', 'Casing equipment'], ['pes', 'Pessoal'], ['ops', 'Operações'], ['fontes', 'Arquivos (' + S.pacotes.length + ')']];
+      '<div class="kpi dest k-rec-usd"><span>Receita em US$</span><b>' + fUSD(T.rU) + '</b><em>realizado ' + fUSD(T.rRU) + ' · previsto ' + fUSD(T.rPU) + '</em></div>' +
+      '<div class="kpi dest k-rec-brl"><span>Receita em R$</span><b>' + fBRL(T.rB) + '</b><em>realizado ' + fBRL(T.rRB) + ' · previsto ' + fBRL(T.rPB) + '</em></div>' +
+      '<div class="kpi k-cogs"><span>COGS em US$</span><b>' + fUSD(T.cU) + '</b><em>realizado ' + fUSD(T.cRU) + ' · previsto ' + fUSD(T.cPU) + (T.cB ? ' · R$ ' + nf(2, 2)(T.cB) : '') + '</em></div>' +
+      '<div class="kpi k-margem"><span>Margem em US$</span><b>' + fUSD(T.rU - T.cU) + '</b><em>' + margemTxt(T.rU, T.cU) + ' da receita' + (T.rB || T.cB ? ' · R$ ' + nf(2, 2)(T.rB - T.cB) : '') + '</em></div>' +
+      '<div class="kpi k-ops"><span>Operações</span><b>' + T.n + '</b><em>' + T.nR + ' realizada(s) · ' + T.nP + ' prevista(s)' + (T.nF ? ' · ' + T.nF + ' fora (risco 100%)' : '') + '</em></div>' +
+      '<div class="kpi k-hd"><span>Pessoal (homem-dia)</span><b>' + fN(T.hdR) + '</b><em>lançado · ' + fN(T.hdP) + ' previsto a realizar</em></div></div>';
+    var tabs = [['contratos', 'Contratos'], ['receita', 'Receita e margem'], ['ppu', 'Itens PPU'], ['quim', 'Químicas'], ['cas', 'Casing equipment'], ['pes', 'Pessoal'], ['ops', 'Operações'], ['fontes', 'Arquivos (' + S.pacotes.length + ')']];
     h += '<div class="tabs">' + tabs.map(function (t) { return '<button class="tab' + (S.tab === t[0] ? ' on' : '') + '" data-tab="' + t[0] + '">' + esc(t[1]) + '</button>'; }).join('') + '</div>';
     h += telas[S.tab] ? telas[S.tab](C, F, A) : '';
     app.innerHTML = h;
-    var on = app.querySelector('.tab.on'); if (on && on.scrollIntoView) { var tb = on.parentNode; tb.scrollLeft = on.offsetLeft - 20; }
+    var on = app.querySelector('.tab.on'); if (on) { var tb = on.parentNode; tb.scrollLeft = on.offsetLeft - 20; }
+  };
+  var linhaValores = function (t) {
+    return '<td class="n"><b>' + fUSD(t.rU) + '</b>' + sub('real. ' + fUSD(t.rRU) + ' · prev. ' + fUSD(t.rPU)) + '</td><td class="n">' + fBRL(t.rB) + '</td><td class="n">' + fUSD(t.cU) + '</td><td class="n">' + fUSD(t.rU - t.cU) + sub(margemTxt(t.rU, t.cU)) + '</td>';
   };
   var telas = {
     contratos: function (C, F, A) {
-      var mx = Math.max.apply(null, [1].concat(A.porCt.map(function (x) { return x.b; })));
+      var mx = Math.max.apply(null, [1].concat(A.porCt.map(function (x) { return x.t.rU + x.t.rB; })));
       var l = A.porCt.map(function (x) {
-        return '<tr class="clk" data-ct="' + esc(x.c.id) + '"><td><b>' + esc(x.c.nome) + '</b>' + (x.c.numero ? '<br><span style="font-size:11.5px;color:var(--ink-3)">' + esc(x.c.numero) + '</span>' : '') + '</td><td>' + esc(x.c.cliente) + '</td><td>' + esc(x.c.regiao) + '</td><td>' + esc(x.c._por || '—') + '<br><span style="font-size:11.5px;color:var(--ink-3)">' + fDH(x.c._gerado) + '</span></td><td class="n">' + x.ops + '</td><td class="n">' + x.cons + '</td><td class="n"><b>' + fBRL(x.b) + '</b></td><td class="n">' + fUSD(x.u) + '</td><td style="min-width:120px">' + barra(x.b / mx * 100) + '</td><td>' + pctCel(x.pctValor) + '</td></tr>';
+        return '<tr class="clk" data-ct="' + esc(x.c.id) + '"><td><b>' + esc(x.c.nome) + '</b>' + (x.c.numero ? sub(esc(x.c.numero)) : '') + '</td><td>' + esc(x.c.cliente) + '</td><td>' + esc(x.c.regiao) + '</td><td>' + esc(x.c._por || '—') + sub(fDH(x.c._gerado)) + '</td><td class="n">' + x.t.n + sub(x.t.nR + ' real. · ' + x.t.nP + ' prev.' + (x.t.nF ? ' · ' + x.t.nF + ' fora' : '')) + '</td>' + linhaValores(x.t) + '<td style="min-width:110px">' + barra((x.t.rU + x.t.rB) / mx * 100) + '</td><td>' + pctCel(x.pctValor) + '</td></tr>';
       });
-      var rod = '<tr><td colspan="5">Total</td><td class="n">' + A.realiz.length + '</td><td class="n">' + fBRL(A.tB) + '</td><td class="n">' + fUSD(A.tU) + '</td><td></td><td></td></tr>';
-      return '<div class="card"><h2>Receita por contrato</h2>' + tabela(['Contrato', 'Cliente', 'Região', 'Arquivo de', N('Operações'), N('Com consumo'), N('Receita R$'), N('Receita US$'), '', 'Uso do contrato (valor)'], l, rod, 't-cts') +
-        '<p style="font-size:12px;color:var(--ink-3);margin:8px 0 0">“Uso do contrato” = valor consumido ÷ valor contratado (saldos × valores vigentes). Clique no contrato para filtrar.</p></div>';
+      var T = A.T;
+      var rod = '<tr><td colspan="4">Total</td><td class="n">' + T.n + '</td>' + linhaValores(T) + '<td></td><td></td></tr>';
+      return '<div class="card"><h2>Por contrato</h2>' + tabela(['Contrato', 'Cliente', 'Região', 'Arquivo de', N('Operações'), N('Receita US$'), N('Receita R$'), N('COGS US$'), N('Margem US$'), '', 'Uso do contrato (valor)'], l, rod, 't-cts') +
+        '<p class="nota">Receita e COGS = realizado (consumo lançado) + previsto (operações ainda sem consumo), × (1 − risco da operação). Operações com risco 100% ficam fora. “Uso do contrato” = valor consumido ÷ valor contratado. Clique no contrato para filtrar.</p></div>';
     },
     receita: function (C, F, A) {
       var bloco = function (tit, lista, rot, cls) {
-        var mx = Math.max.apply(null, [1].concat(lista.map(function (x) { return x.b; })));
-        return '<div class="card"><h2>' + esc(tit) + '</h2>' + tabela([rot, N('Operações'), N('Receita R$'), N('Receita US$'), ''], lista.map(function (x) { return '<tr><td>' + esc(rot === 'Mês' ? fMes(x.k) : x.k) + '</td><td class="n">' + x.n + '</td><td class="n"><b>' + fBRL(x.b) + '</b></td><td class="n">' + fUSD(x.u) + '</td><td style="width:34%">' + barra(x.b / mx * 100, true) + '</td></tr>'; }), '<tr><td>Total</td><td class="n">' + A.realiz.length + '</td><td class="n">' + fBRL(A.tB) + '</td><td class="n">' + fUSD(A.tU) + '</td><td></td></tr>', cls) + '</div>';
+        var mx = Math.max.apply(null, [1].concat(lista.map(function (x) { return x.rU + x.rB; })));
+        return '<div class="card"><h2>' + esc(tit) + '</h2>' + tabela([rot, N('Operações'), N('Realizado US$'), N('Previsto US$'), N('Receita US$'), N('COGS US$'), N('Margem US$'), N('Receita R$'), ''], lista.map(function (x) {
+          return '<tr><td>' + esc(rot === 'Mês' ? fMes(x.k) : x.k) + '</td><td class="n">' + x.n + '</td><td class="n">' + fUSD(x.rRU) + '</td><td class="n">' + fUSD(x.rPU) + '</td><td class="n"><b>' + fUSD(x.rU) + '</b></td><td class="n">' + fUSD(x.cU) + '</td><td class="n">' + fUSD(x.rU - x.cU) + '</td><td class="n">' + fBRL(x.rB) + '</td><td style="width:22%">' + barra((x.rU + x.rB) / mx * 100, true) + '</td></tr>';
+        }), '<tr><td>Total</td><td class="n">' + A.T.n + '</td><td class="n">' + fUSD(A.T.rRU) + '</td><td class="n">' + fUSD(A.T.rPU) + '</td><td class="n">' + fUSD(A.T.rU) + '</td><td class="n">' + fUSD(A.T.cU) + '</td><td class="n">' + fUSD(A.T.rU - A.T.cU) + '</td><td class="n">' + fBRL(A.T.rB) + '</td><td></td></tr>', cls) + '</div>';
       };
-      return bloco('Receita por mês (data do serviço)', A.porMes, 'Mês', 't-mes') + bloco('Receita por cliente', A.porCli, 'Cliente', 't-cli') + bloco('Receita por região', A.porReg, 'Região', 't-reg');
+      return bloco('Por mês (data do serviço ou data planejada)', A.porMes, 'Mês', 't-mes') + bloco('Por cliente', A.porCli, 'Cliente', 't-cli') + bloco('Por região', A.porReg, 'Região', 't-reg');
     },
     ppu: function (C, F, A) {
-      var l = A.ppu.filter(function (x) { return !S.soComConsumo || x.cons > 0; });
-      var linhas = l.map(function (x) { return '<tr><td>' + esc(x.c.nome) + '</td><td>' + esc(x.i.ref) + '</td><td>' + esc(x.i.desc || '—') + '</td><td>' + esc(x.i.unit || '') + '</td><td class="n">' + (x.i.contratado == null ? '—' : fN(x.i.contratado)) + '</td><td class="n">' + fN(x.cons) + '</td><td class="n' + (x.saldo != null && x.saldo < 0 ? ' neg' : '') + '">' + (x.saldo == null ? '—' : fN(x.saldo)) + '</td><td style="min-width:120px">' + pctCel(x.pct) + '</td><td class="n">' + fN(x.per) + '</td><td class="n">' + fBRL(x.b) + '</td><td class="n">' + fUSD(x.u) + '</td><td class="n">' + (x.i.brl == null ? '—' : 'R$ ' + nf(2, 4)(x.i.brl)) + '<br>' + (x.i.usd == null ? '—' : 'US$ ' + nf(2, 4)(x.i.usd)) + '</td></tr>'; });
-      return '<div class="card"><h2>Itens PPU — contratado, consumido e saldo</h2><label class="chk"><input type="checkbox" data-a="soCons"' + (S.soComConsumo ? ' checked' : '') + '> só itens com consumo</label>' +
-        tabela(['Contrato', 'Item', 'Descrição', 'Unid.', N('Contratado'), N('Consumido'), N('Saldo'), '% usado', N('No período'), N('Receita R$'), N('Receita US$'), N('Valor vigente')], linhas, null, 't-ppu') +
-        '<p style="font-size:12px;color:var(--ink-3);margin:8px 0 0">Consumido e saldo consideram todo o consumo lançado no contrato; “no período” e a receita seguem o filtro de datas.</p></div>';
+      var l = A.ppu.filter(function (x) { return !S.soComConsumo || x.cons > 0 || x.aR > 0; });
+      var linhas = l.map(function (x) { return '<tr><td>' + esc(x.c.nome) + '</td><td>' + esc(x.i.ref) + '</td><td>' + esc(x.i.desc || '—') + '</td><td>' + esc(x.i.unit || '') + '</td><td class="n">' + (x.i.contratado == null ? '—' : fN(x.i.contratado)) + '</td><td class="n">' + fN(x.cons) + '</td><td class="n' + (x.saldo != null && x.saldo < 0 ? ' neg' : '') + '">' + (x.saldo == null ? '—' : fN(x.saldo)) + '</td><td style="min-width:110px">' + pctCel(x.pct) + '</td><td class="n">' + fN(x.per) + '</td><td class="n">' + fN(x.aR) + '</td><td class="n">' + fUSD(x.u) + '</td><td class="n">' + fBRL(x.b) + '</td><td class="n">' + (x.i.usd == null ? '—' : 'US$ ' + nf(2, 4)(x.i.usd)) + '<br>' + (x.i.brl == null ? '—' : 'R$ ' + nf(2, 4)(x.i.brl)) + '</td></tr>'; });
+      return '<div class="card"><h2>Itens PPU — contratado, consumido, saldo e receita</h2><label class="chk"><input type="checkbox" data-a="soCons"' + (S.soComConsumo ? ' checked' : '') + '> só itens com consumo ou previsão</label>' +
+        tabela(['Contrato', 'Item', 'Descrição', 'Unid.', N('Contratado'), N('Consumido'), N('Saldo'), '% usado', N('Lançado no período'), N('A realizar'), N('Receita US$'), N('Receita R$'), N('Valor vigente')], linhas, null, 't-ppu') +
+        '<p class="nota">Consumido e saldo consideram todo o consumo lançado no contrato. “A realizar” = previsto nas operações ainda sem consumo. A receita (lançado + a realizar) segue o filtro e o risco das operações.</p></div>';
     },
     quim: function (C, F, A) { return telaMat('Químicas', A.quim, 't-quim'); },
     cas: function (C, F, A) { return telaMat('Casing equipment', A.cas, 't-cas'); },
     pes: function (C, F, A) {
-      var tot = A.pes.reduce(function (a, x) { return [a[0] + x.pP, a[1] + x.hP, a[2] + x.pR, a[3] + x.hR]; }, [0, 0, 0, 0]);
-      return '<div class="card"><h2>Pessoal por função</h2>' + tabela(['Função', N('Previsto (pessoas)'), N('Previsto (homem-dia)'), N('Lançado (pessoas)'), N('Lançado (homem-dia)'), N('Operações')], A.pes.map(function (x) { return '<tr><td>' + esc(x.funcao) + '</td><td class="n">' + fN(x.pP) + '</td><td class="n">' + fN(x.hP) + '</td><td class="n"><b>' + fN(x.pR) + '</b></td><td class="n"><b>' + fN(x.hR) + '</b></td><td class="n">' + x.n + '</td></tr>'; }),
-        '<tr><td>Total</td><td class="n">' + fN(tot[0]) + '</td><td class="n">' + fN(tot[1]) + '</td><td class="n">' + fN(tot[2]) + '</td><td class="n">' + fN(tot[3]) + '</td><td></td></tr>', 't-pes') +
-        '<p style="font-size:12px;color:var(--ink-3);margin:8px 0 0">Previsto = pessoal planejado nas operações com data no período (pessoas × duração). Lançado = o que o engenheiro informou no consumo da operação.</p></div>';
+      var tot = A.pes.reduce(function (a, x) { return [a[0] + x.pP, a[1] + x.hP, a[2] + x.pR, a[3] + x.hR, a[4] + x.hA]; }, [0, 0, 0, 0, 0]);
+      return '<div class="card"><h2>Pessoal por função</h2>' + tabela(['Função', N('Planejado (pessoas)'), N('Planejado (homem-dia)'), N('Lançado (pessoas)'), N('Lançado (homem-dia)'), N('A realizar (homem-dia)'), N('Operações lançadas')], A.pes.map(function (x) { return '<tr><td>' + esc(x.funcao) + '</td><td class="n">' + fN(x.pP) + '</td><td class="n">' + fN(x.hP) + '</td><td class="n"><b>' + fN(x.pR) + '</b></td><td class="n"><b>' + fN(x.hR) + '</b></td><td class="n">' + fN(x.hA) + '</td><td class="n">' + x.n + '</td></tr>'; }),
+        '<tr><td>Total</td><td class="n">' + fN(tot[0]) + '</td><td class="n">' + fN(tot[1]) + '</td><td class="n">' + fN(tot[2]) + '</td><td class="n">' + fN(tot[3]) + '</td><td class="n">' + fN(tot[4]) + '</td><td></td></tr>', 't-pes') +
+        '<p class="nota">Planejado = pessoal previsto nas operações com data no período (pessoas × duração). Lançado = o que o engenheiro informou no consumo da operação. A realizar = previsto nas operações ainda sem consumo.</p></div>';
     },
     ops: function (C, F, A) {
       var q = String(S.f.busca || '').toLowerCase();
-      var l = F.ops.filter(function (o) { var d = o.realizado ? o.realizado.data : o.data; return F.noPer(d); }).filter(function (o) { return !q || [o.sonda, o.poco, o.tipo, o.so, o._ct.nome, o._ct.cliente].join(' ').toLowerCase().indexOf(q) >= 0; })
-        .sort(function (a, b) { return String((b.realizado || {}).data || b.data).localeCompare(String((a.realizado || {}).data || a.data)); });
-      var linhas = l.map(function (o) {
-        var r = o.realizado || {};
-        var hd = (r.pessoal || []).reduce(function (a, p) { return a + (p.hd || 0); }, 0);
-        return '<tr><td>' + fD(r.data || o.data) + '</td><td>' + esc(o._ct.nome) + '</td><td>' + esc(o.sonda || '—') + '</td><td>' + esc(o.poco || '—') + '</td><td>' + esc(o.tipo) + (o.revestimento ? ' ' + esc(o.revestimento) : '') + '</td><td>' + esc(o.so || '—') + '</td><td>' + stTag(o) + '</td><td class="n">' + (o.receita ? fBRL(o.receita.brl) : '—') + '</td><td class="n">' + (o.receita ? fUSD(o.receita.usd) : '—') + '</td><td class="n">' + (r.ppu ? r.ppu.length : '—') + '</td><td class="n">' + (r.quimicas ? r.quimicas.length : '—') + '</td><td class="n">' + (r.casing ? r.casing.length : '—') + '</td><td class="n">' + (hd ? fN(hd) : '—') + '</td></tr>';
+      var l = A.linhas.filter(function (x) { var o = x.o; return !q || [o.sonda, o.poco, o.tipo, o.so, o._ct.nome, o._ct.cliente].join(' ').toLowerCase().indexOf(q) >= 0; })
+        .sort(function (a, b) { return String(b.data).localeCompare(String(a.data)); });
+      var linhas = l.map(function (x) {
+        var o = x.o;
+        return '<tr' + (x.f === 0 ? ' class="fora"' : '') + '><td>' + fD(x.data) + '</td><td>' + esc(o._ct.nome) + '</td><td>' + esc(o.sonda || '—') + '</td><td>' + esc(o.poco || '—') + '</td><td>' + esc(o.tipo) + (o.revestimento ? ' ' + esc(o.revestimento) : '') + '</td><td>' + esc(o.so || '—') + '</td><td>' + stTag(o) + '</td><td class="n"><b>' + fUSD(x.rU) + '</b>' + (x.f !== 1 ? sub('bruto ' + fUSD(x.gU)) : '') + '</td><td class="n">' + fBRL(x.rB) + '</td><td class="n">' + fUSD(x.cU) + '</td><td class="n">' + fUSD(x.rU - x.cU) + '</td><td class="n">' + (x.hd ? fN(x.hd) : '—') + '</td></tr>';
       });
       return '<div class="card"><h2>Operações (' + l.length + ')</h2><div class="filtros" style="margin-top:0"><div class="f" style="flex:1 1 260px"><label>Buscar</label><input data-f="busca" placeholder="sonda, poço, operação, SO, contrato…" value="' + esc(S.f.busca) + '"></div></div>' +
-        tabela(['Data', 'Contrato', 'Sonda', 'Poço', 'Operação', 'SO', 'Situação', N('Receita R$'), N('Receita US$'), N('Itens PPU'), N('Químicas'), N('Casing'), N('Homem-dia')], linhas, null, 't-ops') +
-        '<p style="font-size:12px;color:var(--ink-3);margin:8px 0 0">Data = data do serviço (consumo lançado) ou data planejada.</p></div>';
+        tabela(['Data', 'Contrato', 'Sonda', 'Poço', 'Operação', 'SO', 'Situação', N('Receita US$'), N('Receita R$'), N('COGS US$'), N('Margem US$'), N('Homem-dia')], linhas, null, 't-ops') +
+        '<p class="nota">Data = data do serviço (realizada) ou data planejada (prevista). Valores já com o risco aplicado; “bruto” = antes do risco.</p></div>';
     },
     fontes: function (C, F, A) {
       var linhas = S.pacotes.map(function (p, i) {
@@ -367,37 +443,41 @@ details.ajuda summary{cursor:pointer;font-weight:700;color:var(--ink)}
         return '<tr><td>' + esc(p.arquivo) + '</td><td>' + esc(p.pac.por || '—') + '</td><td>' + fDH(p.pac.geradoEm) + '</td><td>' + esc((p.pac.contratos || []).map(function (c) { return c.nome; }).join(', ')) + '</td><td class="n">' + (p.pac.operacoes || []).length + '</td><td>' + st + '</td><td><button class="btn-x" title="Tirar este arquivo" data-rm="' + i + '">×</button></td></tr>';
       });
       return '<div class="card"><h2>Arquivos carregados</h2>' + tabela(['Arquivo', 'Engenheiro', 'Gerado em', 'Contratos', N('Operações'), 'Situação', ''], linhas, null, 't-fontes') +
-        '<p style="font-size:12px;color:var(--ink-3);margin:8px 0 0">Quando o mesmo contrato está em mais de um arquivo, vale o gerado por último.</p></div>';
+        '<p class="nota">Quando o mesmo contrato está em mais de um arquivo, vale o gerado por último.</p></div>';
     }
   };
   var telaMat = function (tit, lista, cls) {
-    var linhas = lista.map(function (x) { return '<tr><td>' + esc(x.sap || '—') + '</td><td>' + esc(x.nome || '—') + '</td><td>' + esc(x.unid || '') + '</td><td class="n">' + fN(x.prev) + '</td><td class="n"><b>' + fN(x.real) + '</b></td><td class="n">' + x.nP + '</td><td class="n">' + x.nR + '</td><td>' + esc(x.ctsL.join(', ')) + '</td></tr>'; });
-    return '<div class="card"><h2>' + esc(tit) + ' — previsto × lançado</h2>' + tabela(['SAP', 'Produto', 'Unid.', N('Previsto'), N('Lançado'), N('Op. previstas'), N('Op. lançadas'), 'Contratos'], linhas, null, cls) +
-      '<p style="font-size:12px;color:var(--ink-3);margin:8px 0 0">Previsto = planejado nas operações com data no período. Lançado = consumo informado pelo engenheiro (data do serviço no período).</p></div>';
+    var tU = lista.reduce(function (a, x) { return a + x.cU; }, 0), tB = lista.reduce(function (a, x) { return a + x.cB; }, 0);
+    var linhas = lista.map(function (x) { return '<tr><td>' + esc(x.sap || '—') + '</td><td>' + esc(x.nome || '—') + '</td><td>' + esc(x.unid || '') + '</td><td class="n">' + (x.cu != null ? 'US$ ' + nf(2, 4)(x.cu) : x.cb != null ? 'R$ ' + nf(2, 4)(x.cb) : '—') + '</td><td class="n">' + fN(x.plan) + '</td><td class="n"><b>' + fN(x.real) + '</b></td><td class="n">' + fN(x.aR) + '</td><td class="n"><b>' + fUSD(x.cU) + '</b>' + (x.cB ? sub(fBRL(x.cB)) : '') + '</td><td>' + esc(x.ctsL.join(', ')) + '</td></tr>'; });
+    return '<div class="card"><h2>' + esc(tit) + ' — planejado, lançado, a realizar e COGS</h2>' + tabela(['SAP', 'Produto', 'Unid.', N('COGS unit.'), N('Planejado'), N('Lançado'), N('A realizar'), N('COGS'), 'Contratos'], linhas, '<tr><td colspan="7">Total</td><td class="n">' + fUSD(tU) + (tB ? sub(fBRL(tB)) : '') + '</td><td></td></tr>', cls) +
+      '<p class="nota">Planejado = previsto nas operações com data no período. Lançado = consumo informado pelo engenheiro. A realizar = previsto nas operações ainda sem consumo. COGS = (lançado + a realizar) × COGS unitário, × (1 − risco).</p></div>';
   };
 
   /* ---------- Excel ---------- */
   var excel = function () {
-    var C = consolidar(), F = filtrar(C), A = agregar(F);
+    var C = consolidar(), F = filtrar(C), A = agregar(F), T = A.T;
     var wb = XLSX.utils.book_new();
     var aba = function (nome, aoa, larg) { var ws = XLSX.utils.aoa_to_sheet(aoa); if (larg) ws['!cols'] = larg.map(function (w) { return {wch: w}; }); XLSX.utils.book_append_sheet(wb, ws, nome); };
-    aba('Contratos', [['Contrato', 'Número', 'Cliente', 'Região', 'Tipo', 'Engenheiro', 'Arquivo gerado em', 'Operações', 'Com consumo', 'Receita R$', 'Receita US$', 'Uso do contrato (valor) %']].concat(A.porCt.map(function (x) { return [x.c.nome, x.c.numero || '', x.c.cliente, x.c.regiao, x.c.tipo, x.c._por, fDH(x.c._gerado), x.ops, x.cons, r4(x.b), r4(x.u), x.pctValor == null ? null : r4(x.pctValor)]; })), [30, 18, 20, 12, 18, 20, 16, 10, 12, 16, 16, 12]);
-    aba('Receita por mês', [['Mês', 'Operações', 'Receita R$', 'Receita US$']].concat(A.porMes.map(function (x) { return [fMes(x.k), x.n, r4(x.b), r4(x.u)]; })), [12, 10, 16, 16]);
-    aba('Itens PPU', [['Contrato', 'Item', 'Descrição', 'Unid.', 'Contratado', 'Consumido', 'Saldo', '% usado', 'Consumido no período', 'Receita R$', 'Receita US$', 'Valor vigente R$', 'Valor vigente US$']].concat(A.ppu.map(function (x) { return [x.c.nome, x.i.ref, x.i.desc || '', x.i.unit || '', x.i.contratado, x.cons, x.saldo, x.pct == null ? null : r4(x.pct), x.per, r4(x.b), r4(x.u), x.i.brl, x.i.usd]; })), [26, 10, 50, 8, 12, 12, 12, 9, 14, 14, 14, 14, 14]);
-    var matA = function (lista) { return [['SAP', 'Produto', 'Unid.', 'Previsto', 'Lançado', 'Op. previstas', 'Op. lançadas', 'Contratos']].concat(lista.map(function (x) { return [x.sap, x.nome, x.unid, x.prev, x.real, x.nP, x.nR, x.ctsL.join(', ')]; })); };
-    aba('Químicas', matA(A.quim), [12, 40, 8, 12, 12, 12, 12, 40]);
-    aba('Casing', matA(A.cas), [12, 40, 8, 12, 12, 12, 12, 40]);
-    aba('Pessoal', [['Função', 'Previsto (pessoas)', 'Previsto (homem-dia)', 'Lançado (pessoas)', 'Lançado (homem-dia)', 'Operações']].concat(A.pes.map(function (x) { return [x.funcao, x.pP, x.hP, x.pR, x.hR, x.n]; })), [28, 16, 18, 16, 18, 12]);
-    var ops = F.ops.filter(function (o) { return F.noPer(o.realizado ? o.realizado.data : o.data); });
-    aba('Operações', [['Data', 'Contrato', 'Cliente', 'Região', 'Sonda', 'Poço', 'Operação', 'Revestimento', 'SO', 'Nº VIDA', 'Situação', 'Receita R$', 'Receita US$', 'Homem-dia']].concat(ops.map(function (o) { var r = o.realizado || {}; return [fD(r.data || o.data), o._ct.nome, o._ct.cliente, o.regiao, o.sonda, o.poco, o.tipo, o.revestimento, o.so, o.vida, o.status === 'consumo' ? 'consumo lançado' : o.status === 'handover' ? 'handover enviado' : 'planejada', o.receita ? o.receita.brl : null, o.receita ? o.receita.usd : null, (r.pessoal || []).reduce(function (a, p) { return a + (p.hd || 0); }, 0) || null]; })), [11, 26, 18, 10, 16, 16, 24, 12, 12, 10, 16, 14, 14, 10]);
-    var lanc = [['Data do serviço', 'Contrato', 'Sonda', 'Poço', 'Operação', 'SO', 'Tipo', 'Código', 'Descrição', 'Unid.', 'Quantidade', 'Valor R$', 'Valor US$', 'Total R$', 'Total US$']];
-    A.realiz.forEach(function (o) { var r = o.realizado;
-      (r.ppu || []).forEach(function (l) { lanc.push([fD(r.data), o._ct.nome, o.sonda, o.poco, o.tipo, o.so, 'PPU', l.ref, l.desc, l.unit, l.qtd, l.brl, l.usd, l.valorBrl, l.valorUsd]); });
-      (r.quimicas || []).forEach(function (m) { lanc.push([fD(r.data), o._ct.nome, o.sonda, o.poco, o.tipo, o.so, 'Química', m.sap, m.nome, m.unid, m.qtd, null, null, null, null]); });
-      (r.casing || []).forEach(function (m) { lanc.push([fD(r.data), o._ct.nome, o.sonda, o.poco, o.tipo, o.so, 'Casing', m.sap, m.nome, m.unid, m.qtd, null, null, null, null]); });
-      (r.pessoal || []).forEach(function (p) { lanc.push([fD(r.data), o._ct.nome, o.sonda, o.poco, o.tipo, o.so, 'Pessoal', '', p.funcao, 'homem-dia', p.hd, null, null, null, null]); });
+    var cols = function (t) { return [t.n, t.nR, t.nP, t.nF, r4(t.rRU), r4(t.rPU), r4(t.rU), r4(t.rRB), r4(t.rPB), r4(t.rB), r4(t.cU), r4(t.cB), r4(t.rU - t.cU), r4(t.rB - t.cB)]; };
+    var cab = ['Operações', 'Realizadas', 'Previstas', 'Fora (risco 100%)', 'Receita realizada US$', 'Receita prevista US$', 'Receita US$', 'Receita realizada R$', 'Receita prevista R$', 'Receita R$', 'COGS US$', 'COGS R$', 'Margem US$', 'Margem R$'];
+    aba('Contratos', [['Contrato', 'Número', 'Cliente', 'Região', 'Tipo', 'Engenheiro', 'Arquivo gerado em'].concat(cab).concat(['Uso do contrato (valor) %'])].concat(A.porCt.map(function (x) { return [x.c.nome, x.c.numero || '', x.c.cliente, x.c.regiao, x.c.tipo, x.c._por, fDH(x.c._gerado)].concat(cols(x.t)).concat([x.pctValor == null ? null : r4(x.pctValor)]); })).concat([['Total', '', '', '', '', '', ''].concat(cols(T))]), [30, 16, 18, 12, 18, 20, 16].concat(cab.map(function () { return 14; })));
+    aba('Por mês', [['Mês'].concat(cab)].concat(A.porMes.map(function (x) { return [fMes(x.k)].concat(cols(x)); })), [12].concat(cab.map(function () { return 14; })));
+    aba('Itens PPU', [['Contrato', 'Item', 'Descrição', 'Unid.', 'Contratado', 'Consumido', 'Saldo', '% usado', 'Lançado no período', 'A realizar', 'Receita US$', 'Receita R$', 'Valor vigente US$', 'Valor vigente R$']].concat(A.ppu.map(function (x) { return [x.c.nome, x.i.ref, x.i.desc || '', x.i.unit || '', x.i.contratado, x.cons, x.saldo, x.pct == null ? null : r4(x.pct), x.per, x.aR, r4(x.u), r4(x.b), x.i.usd, x.i.brl]; })), [26, 10, 50, 8, 12, 12, 12, 9, 14, 12, 14, 14, 14, 14]);
+    var matA = function (lista) { return [['SAP', 'Produto', 'Unid.', 'COGS unit. US$', 'COGS unit. R$', 'Planejado', 'Lançado', 'A realizar', 'COGS US$', 'COGS R$', 'Contratos']].concat(lista.map(function (x) { return [x.sap, x.nome, x.unid, x.cu, x.cb, r4(x.plan), r4(x.real), r4(x.aR), r4(x.cU), r4(x.cB), x.ctsL.join(', ')]; })); };
+    aba('Químicas', matA(A.quim), [12, 40, 8, 12, 12, 12, 12, 12, 14, 14, 40]);
+    aba('Casing', matA(A.cas), [12, 40, 8, 12, 12, 12, 12, 12, 14, 14, 40]);
+    aba('Pessoal', [['Função', 'Planejado (pessoas)', 'Planejado (homem-dia)', 'Lançado (pessoas)', 'Lançado (homem-dia)', 'A realizar (homem-dia)', 'Operações lançadas']].concat(A.pes.map(function (x) { return [x.funcao, x.pP, x.hP, x.pR, x.hR, x.hA, x.n]; })), [28, 16, 18, 16, 18, 18, 14]);
+    aba('Operações', [['Data', 'Situação', 'Contrato', 'Cliente', 'Região', 'Sonda', 'Poço', 'Operação', 'Revestimento', 'SO', 'Risco %', 'Receita bruta US$', 'Receita bruta R$', 'Receita US$', 'Receita R$', 'COGS US$', 'COGS R$', 'Margem US$', 'Homem-dia']].concat(A.linhas.map(function (x) { var o = x.o; return [fD(x.data), x.tipo === 'real' ? 'realizada' : 'prevista', o._ct.nome, o._ct.cliente, o.regiao, o.sonda, o.poco, o.tipo, o.revestimento, o.so, Number(o.risco) || 0, r4(x.gU), r4(x.gB), r4(x.rU), r4(x.rB), r4(x.cU), r4(x.cB), r4(x.rU - x.cU), x.hd || null]; })), [11, 10, 26, 18, 10, 16, 16, 24, 12, 12, 8, 14, 14, 14, 14, 14, 14, 14, 10]);
+    var lanc = [['Data', 'Situação', 'Contrato', 'Sonda', 'Poço', 'Operação', 'SO', 'Risco %', 'Tipo', 'Código', 'Descrição', 'Unid.', 'Quantidade', 'Valor/COGS unit. US$', 'Valor/COGS unit. R$', 'Total US$', 'Total R$']];
+    A.linhas.forEach(function (x) {
+      var o = x.o, base = x.tipo === 'real' ? o.realizado : (o.previsto || {});
+      var cab0 = [fD(x.data), x.tipo === 'real' ? 'realizada' : 'prevista', o._ct.nome, o.sonda, o.poco, o.tipo, o.so, Number(o.risco) || 0];
+      (base.ppu || []).forEach(function (l) { var i = precoItem(o, l.ref); var u = l.usd != null ? l.usd : i.usd, b = l.brl != null ? l.brl : i.brl; lanc.push(cab0.concat(['PPU (receita)', l.ref, l.desc, l.unit, l.qtd, u, b, u != null ? r4(l.qtd * u) : null, b != null ? r4(l.qtd * b) : null])); });
+      (base.quimicas || []).forEach(function (m) { lanc.push(cab0.concat(['Química (COGS)', m.sap, m.nome, m.unid, m.qtd, m.cogsUsd, m.cogsBrl, m.cogsUsd != null ? r4(m.qtd * m.cogsUsd) : null, m.cogsBrl != null ? r4(m.qtd * m.cogsBrl) : null])); });
+      (base.casing || []).forEach(function (m) { lanc.push(cab0.concat(['Casing (COGS)', m.sap, m.nome, m.unid, m.qtd, m.cogsUsd, m.cogsBrl, m.cogsUsd != null ? r4(m.qtd * m.cogsUsd) : null, m.cogsBrl != null ? r4(m.qtd * m.cogsBrl) : null])); });
+      (base.pessoal || []).forEach(function (p) { lanc.push(cab0.concat(['Pessoal', '', p.funcao, 'homem-dia', p.hd, null, null, null, null])); });
     });
-    aba('Lançamentos', lanc, [12, 26, 16, 16, 22, 12, 9, 12, 40, 10, 12, 12, 12, 14, 14]);
+    aba('Lançamentos', lanc, [11, 10, 26, 14, 14, 22, 12, 8, 14, 12, 40, 10, 12, 14, 14, 14, 14]);
     var buf = XLSX.write(wb, {bookType: 'xlsx', type: 'array'});
     var a = document.createElement('a');
     a.href = URL.createObjectURL(new Blob([buf], {type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'}));
@@ -407,7 +487,6 @@ details.ajuda summary{cursor:pointer;font-weight:700;color:var(--ink)}
   };
 
   /* ---------- eventos ---------- */
-  var ligarDrop = function () {};
   document.addEventListener('click', function (e) {
     var t = e.target.closest('[data-a],[data-tab],[data-ct],[data-rm]');
     if (!t) return;

@@ -74,7 +74,7 @@ O CSP está em `globalHeaders`. Ele precisa de `'unsafe-inline'` e `'unsafe-eval
 
 ---
 
-## 4-E. Desmembramento: EARL Engenharia (avulso) e1 a e4, e EARL Gerencial — pasta `engenharia/` do repositório `hugoregiani/DAR`
+## 4-E. Desmembramento: EARL Engenharia (avulso) e1 a e5, EARL Gerencial g2 e teste BP — pasta `engenharia/` do repositório `hugoregiani/DAR`
 
 Pedido do Hugo (01/11/2026): como o EARL ainda não pode ser usado online, separar a **Engenharia** num HTML próprio, **sem login**, e trocar o envio do handover (que ia para a Coordenação/Logística) por um **e-mail .eml** gerado no app. Parte do `EARL_HAL_CMT_115_SIMULACAO.html` (compilado) pelo `engenharia/patch_engenharia.py`, que insere `engenharia/eng_app.js` (código novo, dentro do `App`, antes de `renderHandover`) e `engenharia/eng.css`. Saída: `engenharia/EARL_Engenharia.html` (~8,4 MB). Versão: `EARL_VERSION = 'EARL Engenharia e1 (base v115)'`.
 
@@ -182,6 +182,58 @@ Pedido do Hugo: cada engenheiro cuida de um tipo de contrato, extrai as informa�
   - **Saída e dados:** Excel com 8 abas; os dados ficam em `localStorage` com prefixo `earlger:`.
 - **Testes:** `gerencial/tests/e2e_gerencial.js` (30): engenheiro A (contrato por planilha, operação com PPU, química, casing e pessoal, 2 arquivos), engenheiro B (PBR Land com valor), Gerencial com 3 arquivos (receita R$ 8.200,00 / US$ 1.540,00, o arquivo mais novo vale), PPU, químicas, casing, pessoal, mês e cliente, operações e busca, filtros, Excel, persistência, zip, pasta e celular. A regressão `e2e_engenharia` (62) e `e2e_contratos` (55) passa.
 - **Pendências:** não há gravação direta no SharePoint (o app é offline, sem login; o engenheiro salva o arquivo na pasta sincronizada ou faz o upload). Os valores são calculados no momento em que o arquivo é gerado, então reajustes posteriores pedem um arquivo novo. Não há conversão R$↔US$.
+
+### e5 + EARL Gerencial g2 + teste BP (02/11/2026): risco, COGS e margem, previsto no gerencial, painel na página inicial
+
+Pedidos do Hugo:
+- popular a Engenharia com a planilha `Contrato_BP_Teste_EARL.xlsx` (abas "Banco de dados Contratos" e "Forecast") para testar no Gerencial;
+- operações com risco 100% ficam mapeadas, mas fora da receita e do COGS; com risco 0% contam inteiras;
+- COGS e margem; o Gerencial mostra realizado + previsto;
+- receita e COGS na página inicial da Engenharia, com filtros por ano, mês, contrato etc.
+
+Decisões confirmadas com o Hugo:
+- risco igual à "RECEITA FINAL" da planilha, num campo "Risco (%)" por operação, valor × (1 − risco);
+- pessoal = time de embarque × duração;
+- arquivo de teste separado.
+
+- **Risco da receita / COGS** (`riscoRec`, 0–100, na operação):
+  - **Na tela:** `engRiscoCampo(d, set)` na seção 2 do formulário (depois da contingência) e `engRiscoTag(j)` na Lista.
+  - **No cálculo:** `engFator(j)` = 1 − riscoRec/100. Não confundir com `risco`, o "Risco de acontecer" da contingência do EARL.
+- **COGS:**
+  - **Cadastro:** `db.cogsItens[{id, sap, nome, unid, usd, brl, atualizadoEm}]`, editado em Contratos → "Custos (COGS)" (`engCogsAbrir`, `renderEngCogs`, planilha `SAP/Produto/Unidade/COGS US$/COGS R$`).
+  - **Cálculo:** `engCogsIdx`/`engCogsDe`/`engCogsSoma` (pelo SAP, ou pelo nome); COGS = quantidade × custo unitário.
+  - **Onde aparece:** o consumo da operação mostra a coluna de COGS e o resumo `.ec-resumo` (receita, COGS, margem, risco); a aba "Consumo e receita" mostra os KPIs de COGS e margem.
+- **Painel "Receita e COGS"** na página inicial (`renderEngPainel`, `engValorOp`, `engSomaV`; inserido depois de `engAlerta(planJobs)` no `renderEngHub`):
+  - **Regra:** a mesma do Gerencial. Operação com `ppuCons` = realizada (valor na data do serviço); sem consumo = prevista (`ppuNeeds` × `ctPreco` na data; COGS de `chems` + `casingNeeds`); tudo × `engFator`. Canceladas ficam fora.
+  - **Filtros** (`engPn`): ano (padrão: o ano atual), mês, contrato, cliente e situação. O botão "Limpar" volta ao padrão.
+  - **Conteúdo:** KPIs, tabela por mês com barra e tabela por contrato com total; clicar no contrato faz `setPlanCt` + aba `rec`.
+- **Arquivo do gerencial formato 2** (`engPacoteGerencial`):
+  - **Previsto:** `previsto` ganha `ppu` com valor, `receita`, `cogs`, e `quimicas`/`casing` com `cogsUsd`/`cogsBrl`; vai em toda operação.
+  - **Realizado:** `realizado.cogs`.
+  - **Risco:** `risco` = riscoRec. **Bug corrigido:** o objeto da operação tinha a chave `risco` duas vezes, e a segunda (a chance da contingência) apagava o risco da receita. Agora a contingência vai em `chanceConting`. Há teste de regressão em `e2e_contratos`.
+- **EARL Gerencial g2** (`gerencial/gerencial.html`, núcleo reescrito):
+  - **Regra:** realizado + previsto × (1 − risco), com COGS e margem; lê também o formato 1.
+  - **Indicadores:** receita US$/R$ (realizado · previsto), COGS, margem, operações (realizadas, previstas, fora) e homem-dia.
+  - **Abas:** "Receita e margem"; Operações com risco e receita bruta/com risco; Excel com as colunas novas. Os valores dos KPIs não quebram linha (`container-type` + `min(22px,10.5cqi)`).
+- **Teste BP** (`engenharia/teste_bp/`; a planilha, o HTML gerado e o .json do gerencial não vão para o repositório):
+  - **`gerar_seed_bp.js`** lê a planilha com o XLSX do próprio app e grava o banco com `loadDB`/`saveDB`:
+    - **Contrato:** ct_bp com o US$ do Ano 1, os itens 8-1 e 8-2 e `inicio` 2026-06-22.
+    - **Cadastros:** sonda `rig_bp_ns39` (NS-39, Macaé, offshore) e `cogsItens` (60 químicos + 102 casing).
+    - **27 operações** `bp_op_01..27`, uma por coluna do Forecast, com `anchor:'fixed'`:
+      - tipo: revestimento → Cimentação primária + tamanho; P&A → Abandono; LCP → Tampão; o resto → Outros + `tipoOutro`;
+      - PPU, químicas (unidade da planilha) e pessoal (Tamponeiro e "Op. Cabeça" → Operador de Cabeça de Cimentação; `pePessoas`);
+      - `riscoRec` = risco × 100; "Sim" na contingência vira `contingencia`;
+      - "Concluído" vira `ppuCons` igual ao previsto, com a data da operação, `dias` = duração e `por` = Renata Alberton.
+    - **Também:** `hoMail.nome` = Renata Alberton e `gerCfg` = [ct_bp].
+  - **`montar_bp.py`:** prefixo `earlengbp:`, banco embutido gravado na primeira abertura, etiqueta "TESTE BP" com "Reiniciar" e `EARL_VERSION` "… · teste BP".
+  - **`e2e_bp.js`** (31 verificações): por operação, receita, receita final, COGS, COGS final, risco, situação e homem-dia contra as linhas de total da própria planilha. Também o painel (anos, realizado/previsto), a aba do contrato, o consumo, "Reiniciar", o arquivo do gerencial e o Gerencial, incluindo o Excel.
+  - **Resultado:** RECEITA FINAL US$ 4.436.331,22 e COGS FINAL US$ 983.836,59 (margem US$ 3.452.494,63); realizado US$ 1.795.916,91 e previsto US$ 2.640.414,31; 2026 US$ 3.114.498,59 e 2027 US$ 1.321.832,63. Batem na planilha, no painel, no arquivo e no Gerencial.
+  - **Observações:**
+    - 6 itens têm preço diferente entre as duas abas (1-42, 1-43, 6-28, 6-29, 6-35, 6-36), mas nenhum tem quantidade;
+    - o SAP 1128066 (microesferas) está em kg na planilha e em lb no catálogo do EARL, e ficou em kg;
+    - a LCP (contingência, risco 100%, sem consumo) aparece em "até hoje sem consumo lançado";
+    - a Lista do EARL só mostra as operações futuras (horizonte de 15 a 180 dias), então as realizadas ficam no Gantt e na aba "Consumo e receita".
+- **Testes:** `e2e_engenharia` 62, `e2e_contratos` 75 (COGS, risco, contingência no arquivo e painel com filtros), `e2e_gerencial` 30 e `e2e_bp` 31.
 
 ---
 
