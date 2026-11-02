@@ -1,0 +1,449 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>EARL — Gerencial</title>
+<style>
+:root{--red:#CC0000;--red-dk:#961B24;--ink:#2A2F30;--ink-2:#4D545A;--ink-3:#6B7378;--line:#E2E5E7;--line-2:#D4DADD;--bg:#ECEFF0;--card:#fff;--soft:#F4F5F6;--ok:#304220;--ok-bg:#F1F5EC;--warn:#6B4E0E;--warn-bg:#FBF4E4}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{background:var(--bg);color:var(--ink);font:14px/1.45 "Univers","Helvetica Neue",Arial,Helvetica,sans-serif;font-variant-numeric:tabular-nums;min-height:100vh}
+button,input,select{font:inherit;color:inherit}
+.hdr{background:var(--red);color:#fff;height:60px;display:flex;align-items:center;gap:16px;padding:0 20px}
+.hdr img{height:30px;display:block}
+.hdr .rule{width:1px;height:34px;background:rgba(255,255,255,.55)}
+.hdr .tit{font-size:16px;font-weight:300;letter-spacing:.04em;white-space:nowrap}
+.hdr .sp{flex:1}
+.hdr .ver{font-size:11px;opacity:.85;white-space:nowrap}
+.wrap{max-width:1360px;margin:0 auto;padding:18px 16px 40px}
+.bar{background:var(--card);border-radius:20px;padding:12px 14px;display:flex;flex-wrap:wrap;gap:8px;align-items:center;box-shadow:0 1px 3px rgba(0,0,0,.06)}
+.bar .info{font-size:12.5px;color:var(--ink-2)}
+.sp{flex:1}
+.btn-r,.btn-o{border-radius:999px;padding:8px 16px;font-weight:700;font-size:13px;cursor:pointer;white-space:nowrap;border:1px solid transparent}
+.btn-r{background:var(--red);color:#fff}
+.btn-r:hover{background:#B92031}
+.btn-o{background:#fff;border-color:var(--line-2);color:var(--ink)}
+.btn-o:hover{border-color:var(--ink-3)}
+.btn-r:disabled,.btn-o:disabled{opacity:.5;cursor:default}
+.btn-x{border:1px solid var(--line-2);background:#fff;border-radius:999px;width:26px;height:26px;cursor:pointer;font-weight:700;line-height:1}
+h1{font-size:40px;font-weight:300;margin:26px 0 2px;position:relative;padding-left:4px}
+h1:before{content:"";position:absolute;left:-22px;top:-12px;width:18px;height:18px;border-left:3px solid var(--red);border-top:3px solid var(--red)}
+.sub{color:var(--ink-2);margin:0 0 16px}
+.drop{border:2px dashed var(--line-2);border-radius:20px;background:#fff;padding:34px 20px;text-align:center;color:var(--ink-2);margin-top:14px}
+.drop.on{border-color:var(--red);background:#FFF7F7}
+.drop b{display:block;font-size:17px;color:var(--ink);margin-bottom:6px}
+.drop ol{text-align:left;display:inline-block;margin:12px auto 0;font-size:13px;line-height:1.7}
+.filtros{display:flex;flex-wrap:wrap;gap:8px;align-items:flex-end;margin:14px 0 6px}
+.f{display:flex;flex-direction:column;gap:3px}
+.f label{font-size:10.5px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--ink-3)}
+.f input,.f select{border:1px solid var(--line-2);border-radius:10px;padding:7px 10px;background:#fff;min-width:0}
+.f select{max-width:240px}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:10px;margin:10px 0}
+.kpi{background:#fff;border:1px solid var(--line);border-radius:16px;padding:12px 14px;display:flex;flex-direction:column;gap:2px}
+.kpi span{font-size:10.5px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--ink-3)}
+.kpi b{font-size:22px;font-weight:600}
+.kpi em{font-style:normal;font-size:12px;color:var(--ink-2)}
+.kpi.dest{background:linear-gradient(150deg,#D71F34 0%,#CC0000 46%,#961B24 100%);border-color:transparent;color:#fff}
+.kpi.dest span,.kpi.dest em{color:rgba(255,255,255,.85)}
+.tabs{display:flex;gap:2px;background:rgba(42,47,48,.06);border-radius:999px;padding:5px;overflow-x:auto;scrollbar-width:none;margin:12px 0}
+.tab{border:0;background:transparent;border-radius:999px;padding:7px 14px;font-weight:700;font-size:13px;color:var(--ink-2);cursor:pointer;white-space:nowrap}
+.tab.on{background:var(--ink);color:#fff}
+.card{background:#fff;border-radius:18px;padding:14px 16px;margin:10px 0;box-shadow:0 1px 3px rgba(0,0,0,.05)}
+.card h2{font-size:12px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--ink-2);margin:0 0 8px}
+.tw{overflow-x:auto;-webkit-overflow-scrolling:touch}
+table{border-collapse:collapse;width:100%;font-size:13px}
+th{font-size:10.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-3);text-align:left;padding:7px 8px;border-bottom:1px solid var(--line-2);background:var(--soft);white-space:nowrap}
+td{padding:6px 8px;border-bottom:1px solid var(--line);vertical-align:middle}
+td.n,th.n{text-align:right;white-space:nowrap}
+tfoot td{font-weight:700;border-top:2px solid var(--line-2)}
+tr.clk{cursor:pointer}
+tr.clk:hover td{background:#FAFBFB}
+.barra{height:8px;border-radius:999px;background:#E8EAEC;overflow:hidden;min-width:70px}
+.barra i{display:block;height:100%;border-radius:999px;background:#43494E}
+.barra i.r{background:var(--red)}
+.pct{display:flex;align-items:center;gap:8px}
+.pct span{font-size:11.5px;white-space:nowrap}
+.neg{color:var(--red);font-weight:700}
+.tag{display:inline-block;font-size:11px;font-weight:700;border-radius:999px;padding:2px 8px;white-space:nowrap}
+.t-ok{background:var(--ok-bg);color:var(--ok)}
+.t-ho{background:var(--warn-bg);color:var(--warn)}
+.t-pl{background:var(--soft);color:var(--ink-2)}
+.t-old{background:#FBEFEF;color:var(--red-dk)}
+.vazio{color:var(--ink-3);font-style:italic;padding:8px 0}
+.aviso{background:var(--warn-bg);border:1px solid #EEDDB4;color:var(--warn);border-radius:12px;padding:8px 12px;font-size:12.5px;margin:8px 0}
+.msg{position:fixed;left:50%;bottom:18px;transform:translateX(-50%);background:var(--ink);color:#fff;border-radius:999px;padding:9px 18px;font-size:13px;font-weight:700;z-index:50;max-width:92vw}
+.msg.err{background:var(--red)}
+.chk{display:inline-flex;gap:6px;align-items:center;font-size:12.5px;color:var(--ink-2);cursor:pointer}
+details.ajuda{margin-top:10px;font-size:13px;color:var(--ink-2)}
+details.ajuda summary{cursor:pointer;font-weight:700;color:var(--ink)}
+.t-ops td{white-space:nowrap}
+@media(max-width:760px){.hdr{gap:10px;padding:0 12px}.hdr img{height:24px}.hdr .ver{display:none}h1{font-size:30px;padding-left:22px}h1:before{left:0;top:-6px}.f select{max-width:100%}.f{flex:1 1 140px}.kpis{grid-template-columns:1fr 1fr}.kpi b{font-size:17px}.kpi em{font-size:11px}}
+@media print{.bar,.tabs,.filtros{display:none}}
+</style>
+</head>
+<body>
+<div class="hdr"><img src="__LOGO_HAL__" alt="Halliburton"><div class="rule"></div><img src="__LOGO_EARL__" alt="EARL"><div class="tit">Gerencial</div><div class="sp"></div><div class="ver" id="ver"></div></div>
+<div class="wrap" id="app"></div>
+<input type="file" id="inArq" accept=".json,.zip,application/json,application/zip" multiple hidden>
+<input type="file" id="inPasta" webkitdirectory multiple hidden>
+<script>/*__LIB_XLSX__*/</script>
+<script>/*__LIB_JSZIP__*/</script>
+<script>
+/* EARL Gerencial — junta os arquivos "Arquivo do gerencial" gerados pelos engenheiros no EARL Engenharia
+   (formato {tipo:'EARL-Gerencial', formato:1, geradoEm, por, contratos[], operacoes[]}) e mostra o consolidado.
+   Para cada contrato vale o arquivo mais novo. Tudo fica neste navegador (localStorage, prefixo earlger:). */
+(function () {
+  'use strict';
+  var VERSAO = 'EARL Gerencial g1';
+  var CHAVE = 'earlger:pacotes_v1';
+  var $ = function (s) { return document.querySelector(s); };
+  var esc = function (v) { return String(v == null ? '' : v).replace(/[&<>"']/g, function (c) { return {'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'}[c]; }); };
+  var nf = function (min, max) { return function (v) { return v == null || !isFinite(v) ? '—' : Number(v).toLocaleString('pt-BR', {minimumFractionDigits: min, maximumFractionDigits: max}); }; };
+  var fN = nf(0, 2);
+  var fBRL = function (v) { return v == null || !isFinite(v) ? '—' : 'R$ ' + nf(2, 2)(v); };
+  var fUSD = function (v) { return v == null || !isFinite(v) ? '—' : 'US$ ' + nf(2, 2)(v); };
+  var fD = function (s) { if (!s) return '—'; var m = /^(\d{4})-(\d{2})-(\d{2})/.exec(s); return m ? m[3] + '/' + m[2] + '/' + m[1] : s; };
+  var fDH = function (iso) { if (!iso) return '—'; var d = new Date(iso); if (isNaN(d)) return iso; var p = function (n) { return String(n).padStart(2, '0'); }; return p(d.getDate()) + '/' + p(d.getMonth() + 1) + '/' + d.getFullYear() + ' ' + p(d.getHours()) + ':' + p(d.getMinutes()); };
+  var MESES = ['jan', 'fev', 'mar', 'abr', 'mai', 'jun', 'jul', 'ago', 'set', 'out', 'nov', 'dez'];
+  var fMes = function (k) { var a = String(k).split('-'); return MESES[Number(a[1]) - 1] + '/' + a[0]; };
+  var hojeTxt = function () { var d = new Date(), p = function (n) { return String(n).padStart(2, '0'); }; return d.getFullYear() + '-' + p(d.getMonth() + 1) + '-' + p(d.getDate()); };
+  var r4 = function (v) { return Math.round(v * 10000) / 10000; };
+
+  var S = {pacotes: [], tab: 'contratos', f: {de: '', ate: '', cliente: '', contrato: '', regiao: '', tipo: '', busca: ''}, soComConsumo: true, msg: null};
+  try { S.pacotes = JSON.parse(localStorage.getItem(CHAVE) || '[]') || []; } catch (e) { S.pacotes = []; }
+  try { var t0 = localStorage.getItem('earlger:tab'); if (t0) S.tab = t0; } catch (e) {}
+  var gravar = function () {
+    try { localStorage.setItem(CHAVE, JSON.stringify(S.pacotes)); return true; }
+    catch (e) { aviso('O navegador não deixou guardar os arquivos (armazenamento cheio). Eles valem até fechar a página.', true); return false; }
+  };
+  var tmsg = null;
+  var aviso = function (txt, erro) {
+    S.msg = {txt: txt, erro: !!erro};
+    var el = $('#msg'); if (!el) { el = document.createElement('div'); el.id = 'msg'; document.body.appendChild(el); }
+    el.className = 'msg' + (erro ? ' err' : ''); el.textContent = txt; el.style.display = '';
+    clearTimeout(tmsg); tmsg = setTimeout(function () { el.style.display = 'none'; }, erro ? 9000 : 5000);
+  };
+
+  /* ---------- leitura dos arquivos ---------- */
+  var lerTexto = function (f) { return new Promise(function (res, rej) { var r = new FileReader(); r.onload = function () { res(String(r.result || '')); }; r.onerror = function () { rej(r.error); }; r.readAsText(f); }); };
+  var lerBuf = function (f) { return new Promise(function (res, rej) { var r = new FileReader(); r.onload = function () { res(r.result); }; r.onerror = function () { rej(r.error); }; r.readAsArrayBuffer(f); }); };
+  var ehPacote = function (j) { return j && j.tipo === 'EARL-Gerencial' && Array.isArray(j.contratos) && Array.isArray(j.operacoes); };
+  var assinatura = function (p) { return [p.geradoEm, p.por, (p.contratos || []).map(function (c) { return c.id; }).sort().join(',')].join('|'); };
+  var acrescentar = function (lista) {
+    var novos = 0, repetidos = 0;
+    lista.forEach(function (x) {
+      var sig = assinatura(x.pac);
+      if (S.pacotes.some(function (p) { return assinatura(p.pac) === sig; })) { repetidos++; return; }
+      S.pacotes.push({arquivo: x.arquivo, carregadoEm: new Date().toISOString(), pac: x.pac}); novos++;
+    });
+    return {novos: novos, repetidos: repetidos};
+  };
+  var processar = async function (files) {
+    var achados = [], ignorados = [];
+    for (var i = 0; i < files.length; i++) {
+      var f = files[i], nome = f.webkitRelativePath || f.name || '';
+      try {
+        if (/\.zip$/i.test(nome)) {
+          var zip = await JSZip.loadAsync(await lerBuf(f));
+          var nomes = Object.keys(zip.files).filter(function (n) { return /\.json$/i.test(n) && !zip.files[n].dir; });
+          for (var k = 0; k < nomes.length; k++) {
+            try { var j = JSON.parse(await zip.files[nomes[k]].async('string')); if (ehPacote(j)) achados.push({arquivo: nome + ' › ' + nomes[k], pac: j}); else ignorados.push(nomes[k]); }
+            catch (e) { ignorados.push(nomes[k]); }
+          }
+        } else if (/\.json$/i.test(nome)) {
+          var j2 = JSON.parse(await lerTexto(f));
+          if (ehPacote(j2)) achados.push({arquivo: nome, pac: j2}); else ignorados.push(nome);
+        }
+      } catch (e) { ignorados.push(nome); }
+    }
+    var r = acrescentar(achados);
+    gravar();
+    render();
+    var partes = [r.novos + ' arquivo(s) carregado(s)'];
+    if (r.repetidos) partes.push(r.repetidos + ' já estavam carregados');
+    if (ignorados.length) partes.push(ignorados.length + ' ignorado(s) — não são “Arquivo do gerencial”: ' + ignorados.slice(0, 3).join(', ') + (ignorados.length > 3 ? '…' : ''));
+    aviso(partes.join(' · '), !achados.length);
+  };
+  var lerEntrada = function (entry, acc) {
+    return new Promise(function (res) {
+      if (entry.isFile) entry.file(function (f) { acc.push(f); res(); }, function () { res(); });
+      else if (entry.isDirectory) {
+        var rd = entry.createReader(), todas = [];
+        var ler = function () { rd.readEntries(function (es) { if (!es.length) { Promise.all(todas.map(function (e) { return lerEntrada(e, acc); })).then(res); } else { todas = todas.concat(Array.from(es)); ler(); } }, function () { res(); }); };
+        ler();
+      } else res();
+    });
+  };
+
+  /* ---------- consolidação ---------- */
+  var consolidar = function () {
+    var porCt = {};
+    S.pacotes.forEach(function (p, ip) {
+      (p.pac.contratos || []).forEach(function (c) {
+        var a = porCt[c.id];
+        if (!a || String(p.pac.geradoEm || '') > String(S.pacotes[a.ip].pac.geradoEm || '')) porCt[c.id] = {ip: ip, ct: c};
+      });
+    });
+    var contratos = [], ops = [];
+    Object.keys(porCt).forEach(function (id) {
+      var x = porCt[id], p = S.pacotes[x.ip];
+      contratos.push(Object.assign({}, x.ct, {_fonte: p.arquivo, _gerado: p.pac.geradoEm, _por: p.pac.por || ''}));
+      (p.pac.operacoes || []).filter(function (o) { return o.contratoId === id; }).forEach(function (o) { ops.push(Object.assign({}, o, {_ct: x.ct})); });
+    });
+    contratos.sort(function (a, b) { return String(a.cliente).localeCompare(String(b.cliente), 'pt') || String(a.nome).localeCompare(String(b.nome), 'pt'); });
+    var uso = S.pacotes.map(function (p, ip) {
+      var ids = (p.pac.contratos || []).map(function (c) { return c.id; });
+      var usados = ids.filter(function (id) { return porCt[id] && porCt[id].ip === ip; });
+      return {usados: usados.length, total: ids.length};
+    });
+    return {contratos: contratos, ops: ops, uso: uso};
+  };
+  var filtrar = function (C) {
+    var f = S.f;
+    var ctOk = function (c) {
+      return (!f.cliente || c.cliente === f.cliente) && (!f.contrato || c.id === f.contrato) && (!f.regiao || c.regiao === f.regiao) && (!f.tipo || c.tipo === f.tipo);
+    };
+    var cts = C.contratos.filter(ctOk);
+    var ids = {}; cts.forEach(function (c) { ids[c.id] = 1; });
+    var ops = C.ops.filter(function (o) { return ids[o.contratoId]; });
+    var noPer = function (d) { return (!f.de || String(d) >= f.de) && (!f.ate || String(d) <= f.ate); };
+    return {cts: cts, ops: ops, noPer: noPer};
+  };
+  var agregar = function (F) {
+    var realiz = F.ops.filter(function (o) { return o.realizado && F.noPer(o.realizado.data); });
+    var previstas = F.ops.filter(function (o) { return F.noPer(o.data); });
+    var tB = 0, tU = 0, semValor = 0, hd = 0;
+    realiz.forEach(function (o) { tB += (o.receita && o.receita.brl) || 0; tU += (o.receita && o.receita.usd) || 0; semValor += (o.receita && o.receita.semValor) || 0; (o.realizado.pessoal || []).forEach(function (p) { hd += p.hd || 0; }); });
+    // por contrato
+    var porCt = F.cts.map(function (c) {
+      var os = F.ops.filter(function (o) { return o.contratoId === c.id; });
+      var rs = os.filter(function (o) { return o.realizado && F.noPer(o.realizado.data); });
+      var b = 0, u = 0; rs.forEach(function (o) { b += (o.receita && o.receita.brl) || 0; u += (o.receita && o.receita.usd) || 0; });
+      var cons = {}; os.forEach(function (o) { if (o.realizado) (o.realizado.ppu || []).forEach(function (l) { cons[l.ref] = (cons[l.ref] || 0) + (l.qtd || 0); }); });
+      var vC = 0, vU = 0; // uso do contrato em valor (R$): consumido × valor vigente / contratado × valor vigente
+      (c.itens || []).forEach(function (i) { if (i.contratado != null && i.brl != null) { vC += i.contratado * i.brl; vU += Math.min(cons[i.ref] || 0, i.contratado) * i.brl; } });
+      return {c: c, ops: os.length, prev: os.filter(function (o) { return F.noPer(o.data); }).length, cons: rs.length, b: b, u: u, pctValor: vC > 0 ? vU / vC * 100 : null};
+    });
+    // por mês, cliente e região
+    var grupo = function (chave) { var g = {}; realiz.forEach(function (o) { var k = chave(o); var x = g[k] || (g[k] = {k: k, n: 0, b: 0, u: 0}); x.n++; x.b += (o.receita && o.receita.brl) || 0; x.u += (o.receita && o.receita.usd) || 0; }); return Object.keys(g).map(function (k) { return g[k]; }); };
+    var porMes = grupo(function (o) { return String(o.realizado.data).slice(0, 7); }).sort(function (a, b) { return a.k.localeCompare(b.k); });
+    var porCli = grupo(function (o) { return o._ct.cliente || '—'; }).sort(function (a, b) { return b.b - a.b; });
+    var porReg = grupo(function (o) { return o.regiao || o._ct.regiao || '—'; }).sort(function (a, b) { return b.b - a.b; });
+    // itens PPU
+    var ppu = [];
+    F.cts.forEach(function (c) {
+      var os = F.ops.filter(function (o) { return o.contratoId === c.id && o.realizado; });
+      var tot = {}, per = {}, recB = {}, recU = {}, desc = {};
+      os.forEach(function (o) { var noP = F.noPer(o.realizado.data); (o.realizado.ppu || []).forEach(function (l) { tot[l.ref] = (tot[l.ref] || 0) + (l.qtd || 0); desc[l.ref] = desc[l.ref] || l; if (noP) { per[l.ref] = (per[l.ref] || 0) + (l.qtd || 0); recB[l.ref] = (recB[l.ref] || 0) + (l.valorBrl || 0); recU[l.ref] = (recU[l.ref] || 0) + (l.valorUsd || 0); } }); });
+      var refs = (c.itens || []).map(function (i) { return i.ref; });
+      Object.keys(tot).forEach(function (r) { if (refs.indexOf(r) < 0) refs.push(r); });
+      refs.forEach(function (r) {
+        var i = (c.itens || []).find(function (x) { return x.ref === r; }) || {ref: r, desc: (desc[r] || {}).desc, unit: (desc[r] || {}).unit, contratado: null};
+        var cons = tot[r] || 0;
+        ppu.push({c: c, i: i, cons: cons, saldo: i.contratado != null ? i.contratado - cons : null, pct: i.contratado ? cons / i.contratado * 100 : null, per: per[r] || 0, b: recB[r] || 0, u: recU[r] || 0});
+      });
+    });
+    // materiais e pessoal
+    var mats = function (campo) {
+      var g = {};
+      var add = function (m, o, lado) { var k = (m.sap || m.nome) + '|' + (m.unid || ''); var x = g[k] || (g[k] = {sap: m.sap, nome: m.nome, unid: m.unid, prev: 0, real: 0, opsP: {}, opsR: {}, cts: {}}); x[lado] += m.qtd || 0; x[lado === 'prev' ? 'opsP' : 'opsR'][o.id] = 1; x.cts[o._ct.nome] = 1; };
+      previstas.forEach(function (o) { ((o.previsto || {})[campo] || []).forEach(function (m) { add(m, o, 'prev'); }); });
+      realiz.forEach(function (o) { (o.realizado[campo] || []).forEach(function (m) { add(m, o, 'real'); }); });
+      return Object.keys(g).map(function (k) { var x = g[k]; x.nP = Object.keys(x.opsP).length; x.nR = Object.keys(x.opsR).length; x.ctsL = Object.keys(x.cts).sort(); return x; }).sort(function (a, b) { return b.real - a.real || b.prev - a.prev || String(a.nome).localeCompare(String(b.nome), 'pt'); });
+    };
+    var pes = (function () {
+      var g = {};
+      var add = function (p, lado) { var x = g[p.funcao] || (g[p.funcao] = {funcao: p.funcao, pP: 0, hP: 0, pR: 0, hR: 0, n: 0}); if (lado === 'prev') { x.pP += p.pessoas || 0; x.hP += p.hd || 0; } else { x.pR += p.pessoas || 0; x.hR += p.hd || 0; x.n++; } };
+      previstas.forEach(function (o) { ((o.previsto || {}).pessoal || []).forEach(function (p) { add(p, 'prev'); }); });
+      realiz.forEach(function (o) { (o.realizado.pessoal || []).forEach(function (p) { add(p, 'real'); }); });
+      return Object.keys(g).map(function (k) { return g[k]; }).sort(function (a, b) { return b.hR - a.hR || b.hP - a.hP; });
+    })();
+    return {realiz: realiz, previstas: previstas, tB: tB, tU: tU, semValor: semValor, hd: hd, porCt: porCt, porMes: porMes, porCli: porCli, porReg: porReg, ppu: ppu, quim: mats('quimicas'), cas: mats('casing'), pes: pes};
+  };
+
+  /* ---------- telas ---------- */
+  var barra = function (pct, verm) { var w = Math.max(0, Math.min(100, pct || 0)); return '<div class="barra"><i class="' + (verm ? 'r' : '') + '" style="width:' + w.toFixed(1) + '%"></i></div>'; };
+  var pctCel = function (pct) { return pct == null ? '—' : '<div class="pct">' + barra(pct, pct > 100) + '<span' + (pct > 100 ? ' class="neg"' : '') + '>' + fN(pct) + '%</span></div>'; };
+  var tabela = function (cab, linhas, rodape, cls) {
+    return '<div class="tw"><table class="' + (cls || '') + '"><thead><tr>' + cab.map(function (h) { return '<th' + (h.n ? ' class="n"' : '') + '>' + esc(h.t || h) + '</th>'; }).join('') + '</tr></thead><tbody>' +
+      (linhas.length ? linhas.join('') : '<tr><td colspan="' + cab.length + '" class="vazio">Nada no filtro.</td></tr>') + '</tbody>' + (rodape ? '<tfoot>' + rodape + '</tfoot>' : '') + '</table></div>';
+  };
+  var N = function (t) { return {t: t, n: 1}; };
+  var stTag = function (o) { return o.status === 'consumo' ? '<span class="tag t-ok">consumo lançado</span>' : o.status === 'handover' ? '<span class="tag t-ho">handover enviado</span>' : '<span class="tag t-pl">planejada</span>'; };
+
+  var telaVazia = function () {
+    return '<h1>Gerencial</h1><p class="sub">Receita, consumo de itens PPU, químicas, casing equipment e pessoal de todos os contratos.</p>' + barraTopo() +
+      '<div class="drop" id="drop"><b>Carregue os arquivos dos engenheiros</b>Arraste aqui os arquivos .json (ou a pasta, ou o .zip baixado do SharePoint), ou use os botões acima.' +
+      '<ol><li>No <b>EARL Engenharia</b>, cada engenheiro clica em <b>“⬇ Arquivo do gerencial”</b>, marca os contratos dele e salva o arquivo na pasta do SharePoint do gerencial.</li>' +
+      '<li>Aqui, carregue a pasta sincronizada do SharePoint (<b>📁 Carregar pasta</b>) ou os arquivos baixados (<b>⬆ Carregar arquivos</b>, aceita .zip).</li>' +
+      '<li>Para cada contrato vale o arquivo mais novo. Os arquivos ficam guardados neste navegador; carregue de novo quando houver arquivos novos.</li></ol></div>';
+  };
+  var barraTopo = function () {
+    var n = S.pacotes.length;
+    var ult = S.pacotes.reduce(function (a, p) { return String(p.pac.geradoEm || '') > a ? String(p.pac.geradoEm) : a; }, '');
+    return '<div class="bar"><button class="btn-r" data-a="arq">⬆ Carregar arquivos</button><button class="btn-o" data-a="pasta">📁 Carregar pasta</button>' +
+      (n ? '<button class="btn-o" data-a="excel">⬇ Excel consolidado</button>' : '') + '<span class="sp"></span>' +
+      (n ? '<span class="info">' + n + ' arquivo(s) · mais novo de ' + fDH(ult) + '</span><button class="btn-o" data-a="limpar">Limpar</button>' : '') + '</div>';
+  };
+  var opcoes = function (lista, val, todos) { return '<option value="">' + esc(todos) + '</option>' + lista.map(function (x) { var v = typeof x === 'string' ? x : x.v, t = typeof x === 'string' ? x : x.t; return '<option value="' + esc(v) + '"' + (v === val ? ' selected' : '') + '>' + esc(t) + '</option>'; }).join(''); };
+  var uniq = function (l) { return l.filter(function (x, i) { return x && l.indexOf(x) === i; }).sort(function (a, b) { return a.localeCompare(b, 'pt'); }); };
+
+  var render = function () {
+    $('#ver').textContent = VERSAO;
+    var app = $('#app');
+    if (!S.pacotes.length) { app.innerHTML = telaVazia(); ligarDrop(); return; }
+    var C = consolidar(), F = filtrar(C), A = agregar(F), f = S.f;
+    var h = '<h1>Gerencial</h1><p class="sub">' + C.contratos.length + ' contrato(s) de ' + uniq(S.pacotes.map(function (p) { return p.pac.por || '—'; })).length + ' engenheiro(s) · ' + C.ops.length + ' operação(ões)</p>' + barraTopo();
+    h += '<div class="filtros">' +
+      '<div class="f"><label>Serviço de</label><input type="date" data-f="de" value="' + esc(f.de) + '"></div>' +
+      '<div class="f"><label>até</label><input type="date" data-f="ate" value="' + esc(f.ate) + '"></div>' +
+      '<div class="f"><label>Cliente</label><select data-f="cliente">' + opcoes(uniq(C.contratos.map(function (c) { return c.cliente; })), f.cliente, 'Todos') + '</select></div>' +
+      '<div class="f"><label>Contrato</label><select data-f="contrato">' + opcoes(C.contratos.map(function (c) { return {v: c.id, t: c.nome}; }), f.contrato, 'Todos') + '</select></div>' +
+      '<div class="f"><label>Região</label><select data-f="regiao">' + opcoes(uniq(C.contratos.map(function (c) { return c.regiao; })), f.regiao, 'Todas') + '</select></div>' +
+      '<div class="f"><label>Tipo de contrato</label><select data-f="tipo">' + opcoes(uniq(C.contratos.map(function (c) { return c.tipo; })), f.tipo, 'Todos') + '</select></div>' +
+      ((f.de || f.ate || f.cliente || f.contrato || f.regiao || f.tipo) ? '<button class="btn-o" data-a="limparf">Limpar filtros</button>' : '') + '</div>';
+    h += '<div class="kpis">' +
+      '<div class="kpi dest k-brl"><span>Receita em R$</span><b>' + fBRL(A.tB) + '</b><em>consumo lançado no período</em></div>' +
+      '<div class="kpi dest k-usd"><span>Receita em US$</span><b>' + fUSD(A.tU) + '</b><em>consumo lançado no período</em></div>' +
+      '<div class="kpi k-ops"><span>Operações com consumo</span><b>' + A.realiz.length + '</b><em>' + A.previstas.length + ' operação(ões) com data no período</em></div>' +
+      '<div class="kpi k-hd"><span>Pessoal (homem-dia)</span><b>' + fN(A.hd) + '</b><em>lançado nas operações</em></div>' +
+      (A.semValor ? '<div class="kpi k-sem"><span>Lançamentos sem valor</span><b>' + A.semValor + '</b><em>item sem valor no contrato</em></div>' : '') + '</div>';
+    var tabs = [['contratos', 'Contratos'], ['receita', 'Receita'], ['ppu', 'Itens PPU'], ['quim', 'Químicas'], ['cas', 'Casing equipment'], ['pes', 'Pessoal'], ['ops', 'Operações'], ['fontes', 'Arquivos (' + S.pacotes.length + ')']];
+    h += '<div class="tabs">' + tabs.map(function (t) { return '<button class="tab' + (S.tab === t[0] ? ' on' : '') + '" data-tab="' + t[0] + '">' + esc(t[1]) + '</button>'; }).join('') + '</div>';
+    h += telas[S.tab] ? telas[S.tab](C, F, A) : '';
+    app.innerHTML = h;
+    var on = app.querySelector('.tab.on'); if (on && on.scrollIntoView) { var tb = on.parentNode; tb.scrollLeft = on.offsetLeft - 20; }
+  };
+  var telas = {
+    contratos: function (C, F, A) {
+      var mx = Math.max.apply(null, [1].concat(A.porCt.map(function (x) { return x.b; })));
+      var l = A.porCt.map(function (x) {
+        return '<tr class="clk" data-ct="' + esc(x.c.id) + '"><td><b>' + esc(x.c.nome) + '</b>' + (x.c.numero ? '<br><span style="font-size:11.5px;color:var(--ink-3)">' + esc(x.c.numero) + '</span>' : '') + '</td><td>' + esc(x.c.cliente) + '</td><td>' + esc(x.c.regiao) + '</td><td>' + esc(x.c._por || '—') + '<br><span style="font-size:11.5px;color:var(--ink-3)">' + fDH(x.c._gerado) + '</span></td><td class="n">' + x.ops + '</td><td class="n">' + x.cons + '</td><td class="n"><b>' + fBRL(x.b) + '</b></td><td class="n">' + fUSD(x.u) + '</td><td style="min-width:120px">' + barra(x.b / mx * 100) + '</td><td>' + pctCel(x.pctValor) + '</td></tr>';
+      });
+      var rod = '<tr><td colspan="5">Total</td><td class="n">' + A.realiz.length + '</td><td class="n">' + fBRL(A.tB) + '</td><td class="n">' + fUSD(A.tU) + '</td><td></td><td></td></tr>';
+      return '<div class="card"><h2>Receita por contrato</h2>' + tabela(['Contrato', 'Cliente', 'Região', 'Arquivo de', N('Operações'), N('Com consumo'), N('Receita R$'), N('Receita US$'), '', 'Uso do contrato (valor)'], l, rod, 't-cts') +
+        '<p style="font-size:12px;color:var(--ink-3);margin:8px 0 0">“Uso do contrato” = valor consumido ÷ valor contratado (saldos × valores vigentes). Clique no contrato para filtrar.</p></div>';
+    },
+    receita: function (C, F, A) {
+      var bloco = function (tit, lista, rot, cls) {
+        var mx = Math.max.apply(null, [1].concat(lista.map(function (x) { return x.b; })));
+        return '<div class="card"><h2>' + esc(tit) + '</h2>' + tabela([rot, N('Operações'), N('Receita R$'), N('Receita US$'), ''], lista.map(function (x) { return '<tr><td>' + esc(rot === 'Mês' ? fMes(x.k) : x.k) + '</td><td class="n">' + x.n + '</td><td class="n"><b>' + fBRL(x.b) + '</b></td><td class="n">' + fUSD(x.u) + '</td><td style="width:34%">' + barra(x.b / mx * 100, true) + '</td></tr>'; }), '<tr><td>Total</td><td class="n">' + A.realiz.length + '</td><td class="n">' + fBRL(A.tB) + '</td><td class="n">' + fUSD(A.tU) + '</td><td></td></tr>', cls) + '</div>';
+      };
+      return bloco('Receita por mês (data do serviço)', A.porMes, 'Mês', 't-mes') + bloco('Receita por cliente', A.porCli, 'Cliente', 't-cli') + bloco('Receita por região', A.porReg, 'Região', 't-reg');
+    },
+    ppu: function (C, F, A) {
+      var l = A.ppu.filter(function (x) { return !S.soComConsumo || x.cons > 0; });
+      var linhas = l.map(function (x) { return '<tr><td>' + esc(x.c.nome) + '</td><td>' + esc(x.i.ref) + '</td><td>' + esc(x.i.desc || '—') + '</td><td>' + esc(x.i.unit || '') + '</td><td class="n">' + (x.i.contratado == null ? '—' : fN(x.i.contratado)) + '</td><td class="n">' + fN(x.cons) + '</td><td class="n' + (x.saldo != null && x.saldo < 0 ? ' neg' : '') + '">' + (x.saldo == null ? '—' : fN(x.saldo)) + '</td><td style="min-width:120px">' + pctCel(x.pct) + '</td><td class="n">' + fN(x.per) + '</td><td class="n">' + fBRL(x.b) + '</td><td class="n">' + fUSD(x.u) + '</td><td class="n">' + (x.i.brl == null ? '—' : 'R$ ' + nf(2, 4)(x.i.brl)) + '<br>' + (x.i.usd == null ? '—' : 'US$ ' + nf(2, 4)(x.i.usd)) + '</td></tr>'; });
+      return '<div class="card"><h2>Itens PPU — contratado, consumido e saldo</h2><label class="chk"><input type="checkbox" data-a="soCons"' + (S.soComConsumo ? ' checked' : '') + '> só itens com consumo</label>' +
+        tabela(['Contrato', 'Item', 'Descrição', 'Unid.', N('Contratado'), N('Consumido'), N('Saldo'), '% usado', N('No período'), N('Receita R$'), N('Receita US$'), N('Valor vigente')], linhas, null, 't-ppu') +
+        '<p style="font-size:12px;color:var(--ink-3);margin:8px 0 0">Consumido e saldo consideram todo o consumo lançado no contrato; “no período” e a receita seguem o filtro de datas.</p></div>';
+    },
+    quim: function (C, F, A) { return telaMat('Químicas', A.quim, 't-quim'); },
+    cas: function (C, F, A) { return telaMat('Casing equipment', A.cas, 't-cas'); },
+    pes: function (C, F, A) {
+      var tot = A.pes.reduce(function (a, x) { return [a[0] + x.pP, a[1] + x.hP, a[2] + x.pR, a[3] + x.hR]; }, [0, 0, 0, 0]);
+      return '<div class="card"><h2>Pessoal por função</h2>' + tabela(['Função', N('Previsto (pessoas)'), N('Previsto (homem-dia)'), N('Lançado (pessoas)'), N('Lançado (homem-dia)'), N('Operações')], A.pes.map(function (x) { return '<tr><td>' + esc(x.funcao) + '</td><td class="n">' + fN(x.pP) + '</td><td class="n">' + fN(x.hP) + '</td><td class="n"><b>' + fN(x.pR) + '</b></td><td class="n"><b>' + fN(x.hR) + '</b></td><td class="n">' + x.n + '</td></tr>'; }),
+        '<tr><td>Total</td><td class="n">' + fN(tot[0]) + '</td><td class="n">' + fN(tot[1]) + '</td><td class="n">' + fN(tot[2]) + '</td><td class="n">' + fN(tot[3]) + '</td><td></td></tr>', 't-pes') +
+        '<p style="font-size:12px;color:var(--ink-3);margin:8px 0 0">Previsto = pessoal planejado nas operações com data no período (pessoas × duração). Lançado = o que o engenheiro informou no consumo da operação.</p></div>';
+    },
+    ops: function (C, F, A) {
+      var q = String(S.f.busca || '').toLowerCase();
+      var l = F.ops.filter(function (o) { var d = o.realizado ? o.realizado.data : o.data; return F.noPer(d); }).filter(function (o) { return !q || [o.sonda, o.poco, o.tipo, o.so, o._ct.nome, o._ct.cliente].join(' ').toLowerCase().indexOf(q) >= 0; })
+        .sort(function (a, b) { return String((b.realizado || {}).data || b.data).localeCompare(String((a.realizado || {}).data || a.data)); });
+      var linhas = l.map(function (o) {
+        var r = o.realizado || {};
+        var hd = (r.pessoal || []).reduce(function (a, p) { return a + (p.hd || 0); }, 0);
+        return '<tr><td>' + fD(r.data || o.data) + '</td><td>' + esc(o._ct.nome) + '</td><td>' + esc(o.sonda || '—') + '</td><td>' + esc(o.poco || '—') + '</td><td>' + esc(o.tipo) + (o.revestimento ? ' ' + esc(o.revestimento) : '') + '</td><td>' + esc(o.so || '—') + '</td><td>' + stTag(o) + '</td><td class="n">' + (o.receita ? fBRL(o.receita.brl) : '—') + '</td><td class="n">' + (o.receita ? fUSD(o.receita.usd) : '—') + '</td><td class="n">' + (r.ppu ? r.ppu.length : '—') + '</td><td class="n">' + (r.quimicas ? r.quimicas.length : '—') + '</td><td class="n">' + (r.casing ? r.casing.length : '—') + '</td><td class="n">' + (hd ? fN(hd) : '—') + '</td></tr>';
+      });
+      return '<div class="card"><h2>Operações (' + l.length + ')</h2><div class="filtros" style="margin-top:0"><div class="f" style="flex:1 1 260px"><label>Buscar</label><input data-f="busca" placeholder="sonda, poço, operação, SO, contrato…" value="' + esc(S.f.busca) + '"></div></div>' +
+        tabela(['Data', 'Contrato', 'Sonda', 'Poço', 'Operação', 'SO', 'Situação', N('Receita R$'), N('Receita US$'), N('Itens PPU'), N('Químicas'), N('Casing'), N('Homem-dia')], linhas, null, 't-ops') +
+        '<p style="font-size:12px;color:var(--ink-3);margin:8px 0 0">Data = data do serviço (consumo lançado) ou data planejada.</p></div>';
+    },
+    fontes: function (C, F, A) {
+      var linhas = S.pacotes.map(function (p, i) {
+        var u = C.uso[i];
+        var st = u.usados === u.total ? '<span class="tag t-ok">em uso</span>' : u.usados ? '<span class="tag t-ho">' + u.usados + ' de ' + u.total + ' contrato(s) em uso</span>' : '<span class="tag t-old">substituído por arquivo mais novo</span>';
+        return '<tr><td>' + esc(p.arquivo) + '</td><td>' + esc(p.pac.por || '—') + '</td><td>' + fDH(p.pac.geradoEm) + '</td><td>' + esc((p.pac.contratos || []).map(function (c) { return c.nome; }).join(', ')) + '</td><td class="n">' + (p.pac.operacoes || []).length + '</td><td>' + st + '</td><td><button class="btn-x" title="Tirar este arquivo" data-rm="' + i + '">×</button></td></tr>';
+      });
+      return '<div class="card"><h2>Arquivos carregados</h2>' + tabela(['Arquivo', 'Engenheiro', 'Gerado em', 'Contratos', N('Operações'), 'Situação', ''], linhas, null, 't-fontes') +
+        '<p style="font-size:12px;color:var(--ink-3);margin:8px 0 0">Quando o mesmo contrato está em mais de um arquivo, vale o gerado por último.</p></div>';
+    }
+  };
+  var telaMat = function (tit, lista, cls) {
+    var linhas = lista.map(function (x) { return '<tr><td>' + esc(x.sap || '—') + '</td><td>' + esc(x.nome || '—') + '</td><td>' + esc(x.unid || '') + '</td><td class="n">' + fN(x.prev) + '</td><td class="n"><b>' + fN(x.real) + '</b></td><td class="n">' + x.nP + '</td><td class="n">' + x.nR + '</td><td>' + esc(x.ctsL.join(', ')) + '</td></tr>'; });
+    return '<div class="card"><h2>' + esc(tit) + ' — previsto × lançado</h2>' + tabela(['SAP', 'Produto', 'Unid.', N('Previsto'), N('Lançado'), N('Op. previstas'), N('Op. lançadas'), 'Contratos'], linhas, null, cls) +
+      '<p style="font-size:12px;color:var(--ink-3);margin:8px 0 0">Previsto = planejado nas operações com data no período. Lançado = consumo informado pelo engenheiro (data do serviço no período).</p></div>';
+  };
+
+  /* ---------- Excel ---------- */
+  var excel = function () {
+    var C = consolidar(), F = filtrar(C), A = agregar(F);
+    var wb = XLSX.utils.book_new();
+    var aba = function (nome, aoa, larg) { var ws = XLSX.utils.aoa_to_sheet(aoa); if (larg) ws['!cols'] = larg.map(function (w) { return {wch: w}; }); XLSX.utils.book_append_sheet(wb, ws, nome); };
+    aba('Contratos', [['Contrato', 'Número', 'Cliente', 'Região', 'Tipo', 'Engenheiro', 'Arquivo gerado em', 'Operações', 'Com consumo', 'Receita R$', 'Receita US$', 'Uso do contrato (valor) %']].concat(A.porCt.map(function (x) { return [x.c.nome, x.c.numero || '', x.c.cliente, x.c.regiao, x.c.tipo, x.c._por, fDH(x.c._gerado), x.ops, x.cons, r4(x.b), r4(x.u), x.pctValor == null ? null : r4(x.pctValor)]; })), [30, 18, 20, 12, 18, 20, 16, 10, 12, 16, 16, 12]);
+    aba('Receita por mês', [['Mês', 'Operações', 'Receita R$', 'Receita US$']].concat(A.porMes.map(function (x) { return [fMes(x.k), x.n, r4(x.b), r4(x.u)]; })), [12, 10, 16, 16]);
+    aba('Itens PPU', [['Contrato', 'Item', 'Descrição', 'Unid.', 'Contratado', 'Consumido', 'Saldo', '% usado', 'Consumido no período', 'Receita R$', 'Receita US$', 'Valor vigente R$', 'Valor vigente US$']].concat(A.ppu.map(function (x) { return [x.c.nome, x.i.ref, x.i.desc || '', x.i.unit || '', x.i.contratado, x.cons, x.saldo, x.pct == null ? null : r4(x.pct), x.per, r4(x.b), r4(x.u), x.i.brl, x.i.usd]; })), [26, 10, 50, 8, 12, 12, 12, 9, 14, 14, 14, 14, 14]);
+    var matA = function (lista) { return [['SAP', 'Produto', 'Unid.', 'Previsto', 'Lançado', 'Op. previstas', 'Op. lançadas', 'Contratos']].concat(lista.map(function (x) { return [x.sap, x.nome, x.unid, x.prev, x.real, x.nP, x.nR, x.ctsL.join(', ')]; })); };
+    aba('Químicas', matA(A.quim), [12, 40, 8, 12, 12, 12, 12, 40]);
+    aba('Casing', matA(A.cas), [12, 40, 8, 12, 12, 12, 12, 40]);
+    aba('Pessoal', [['Função', 'Previsto (pessoas)', 'Previsto (homem-dia)', 'Lançado (pessoas)', 'Lançado (homem-dia)', 'Operações']].concat(A.pes.map(function (x) { return [x.funcao, x.pP, x.hP, x.pR, x.hR, x.n]; })), [28, 16, 18, 16, 18, 12]);
+    var ops = F.ops.filter(function (o) { return F.noPer(o.realizado ? o.realizado.data : o.data); });
+    aba('Operações', [['Data', 'Contrato', 'Cliente', 'Região', 'Sonda', 'Poço', 'Operação', 'Revestimento', 'SO', 'Nº VIDA', 'Situação', 'Receita R$', 'Receita US$', 'Homem-dia']].concat(ops.map(function (o) { var r = o.realizado || {}; return [fD(r.data || o.data), o._ct.nome, o._ct.cliente, o.regiao, o.sonda, o.poco, o.tipo, o.revestimento, o.so, o.vida, o.status === 'consumo' ? 'consumo lançado' : o.status === 'handover' ? 'handover enviado' : 'planejada', o.receita ? o.receita.brl : null, o.receita ? o.receita.usd : null, (r.pessoal || []).reduce(function (a, p) { return a + (p.hd || 0); }, 0) || null]; })), [11, 26, 18, 10, 16, 16, 24, 12, 12, 10, 16, 14, 14, 10]);
+    var lanc = [['Data do serviço', 'Contrato', 'Sonda', 'Poço', 'Operação', 'SO', 'Tipo', 'Código', 'Descrição', 'Unid.', 'Quantidade', 'Valor R$', 'Valor US$', 'Total R$', 'Total US$']];
+    A.realiz.forEach(function (o) { var r = o.realizado;
+      (r.ppu || []).forEach(function (l) { lanc.push([fD(r.data), o._ct.nome, o.sonda, o.poco, o.tipo, o.so, 'PPU', l.ref, l.desc, l.unit, l.qtd, l.brl, l.usd, l.valorBrl, l.valorUsd]); });
+      (r.quimicas || []).forEach(function (m) { lanc.push([fD(r.data), o._ct.nome, o.sonda, o.poco, o.tipo, o.so, 'Química', m.sap, m.nome, m.unid, m.qtd, null, null, null, null]); });
+      (r.casing || []).forEach(function (m) { lanc.push([fD(r.data), o._ct.nome, o.sonda, o.poco, o.tipo, o.so, 'Casing', m.sap, m.nome, m.unid, m.qtd, null, null, null, null]); });
+      (r.pessoal || []).forEach(function (p) { lanc.push([fD(r.data), o._ct.nome, o.sonda, o.poco, o.tipo, o.so, 'Pessoal', '', p.funcao, 'homem-dia', p.hd, null, null, null, null]); });
+    });
+    aba('Lançamentos', lanc, [12, 26, 16, 16, 22, 12, 9, 12, 40, 10, 12, 12, 12, 14, 14]);
+    var buf = XLSX.write(wb, {bookType: 'xlsx', type: 'array'});
+    var a = document.createElement('a');
+    a.href = URL.createObjectURL(new Blob([buf], {type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'}));
+    a.download = 'EARL_Gerencial_consolidado_' + hojeTxt() + '.xlsx';
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(function () { URL.revokeObjectURL(a.href); }, 8000);
+  };
+
+  /* ---------- eventos ---------- */
+  var ligarDrop = function () {};
+  document.addEventListener('click', function (e) {
+    var t = e.target.closest('[data-a],[data-tab],[data-ct],[data-rm]');
+    if (!t) return;
+    if (t.dataset.tab) { S.tab = t.dataset.tab; try { localStorage.setItem('earlger:tab', S.tab); } catch (x) {} render(); return; }
+    if (t.dataset.ct) { S.f.contrato = S.f.contrato === t.dataset.ct ? '' : t.dataset.ct; render(); return; }
+    if (t.dataset.rm != null) { S.pacotes.splice(Number(t.dataset.rm), 1); gravar(); render(); aviso('Arquivo tirado'); return; }
+    var a = t.dataset.a;
+    if (a === 'arq') $('#inArq').click();
+    else if (a === 'pasta') $('#inPasta').click();
+    else if (a === 'excel') excel();
+    else if (a === 'limparf') { S.f = {de: '', ate: '', cliente: '', contrato: '', regiao: '', tipo: '', busca: ''}; render(); }
+    else if (a === 'limpar') { if (confirm('Tirar todos os arquivos carregados deste navegador?')) { S.pacotes = []; gravar(); render(); } }
+  });
+  document.addEventListener('change', function (e) {
+    var t = e.target;
+    if (t.dataset && t.dataset.f) { S.f[t.dataset.f] = t.value; render(); return; }
+    if (t.dataset && t.dataset.a === 'soCons') { S.soComConsumo = t.checked; render(); return; }
+    if (t.id === 'inArq' || t.id === 'inPasta') { var fs = Array.from(t.files || []); t.value = ''; if (fs.length) processar(fs); }
+  });
+  document.addEventListener('input', function (e) {
+    var t = e.target;
+    if (t.dataset && t.dataset.f === 'busca') { S.f.busca = t.value; var pos = t.selectionStart; render(); var n = document.querySelector('[data-f="busca"]'); if (n) { n.focus(); try { n.setSelectionRange(pos, pos); } catch (x) {} } }
+  });
+  document.addEventListener('dragover', function (e) { e.preventDefault(); var d = $('#drop'); if (d) d.classList.add('on'); });
+  document.addEventListener('dragleave', function () { var d = $('#drop'); if (d) d.classList.remove('on'); });
+  document.addEventListener('drop', async function (e) {
+    e.preventDefault(); var d = $('#drop'); if (d) d.classList.remove('on');
+    var itens = Array.from((e.dataTransfer && e.dataTransfer.items) || []);
+    var acc = [];
+    if (itens.length && itens[0].webkitGetAsEntry) { await Promise.all(itens.map(function (it) { var en = it.webkitGetAsEntry(); return en ? lerEntrada(en, acc) : null; })); }
+    else acc = Array.from((e.dataTransfer && e.dataTransfer.files) || []);
+    if (acc.length) processar(acc);
+  });
+  window.earlGerencial = {consolidar: consolidar, estado: S, processar: processar};
+  render();
+})();
+</script>
+</body>
+</html>

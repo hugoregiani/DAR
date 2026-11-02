@@ -74,7 +74,7 @@ O CSP está em `globalHeaders`. Ele precisa de `'unsafe-inline'` e `'unsafe-eval
 
 ---
 
-## 4-E. Desmembramento: EARL Engenharia (avulso), e1, e2 e e3 — pasta `engenharia/` do repositório `hugoregiani/DAR`
+## 4-E. Desmembramento: EARL Engenharia (avulso) e1 a e4, e EARL Gerencial — pasta `engenharia/` do repositório `hugoregiani/DAR`
 
 Pedido do Hugo (01/11/2026): como o EARL ainda não pode ser usado online, separar a **Engenharia** num HTML próprio, **sem login**, e trocar o envio do handover (que ia para a Coordenação/Logística) por um **e-mail .eml** gerado no app. Parte do `EARL_HAL_CMT_115_SIMULACAO.html` (compilado) pelo `engenharia/patch_engenharia.py`, que insere `engenharia/eng_app.js` (código novo, dentro do `App`, antes de `renderHandover`) e `engenharia/eng.css`. Saída: `engenharia/EARL_Engenharia.html` (~8,4 MB). Versão: `EARL_VERSION = 'EARL Engenharia e1 (base v115)'`.
 
@@ -156,6 +156,32 @@ Retorno do Hugo sobre a e2, com 3 fotos:
     - outro computador: exporta, cria uma operação noutro navegador e junta (3 operações, consumo, contrato com valores e reajustes, mesma receita);
     - tela 1366×768: tabela de 132 itens visível, rodapé visível, "＋ Linha" com foco e campos visíveis, contrato novo com 3 linhas.
 - Versão: `EARL Engenharia e3 (base v115)`.
+
+### e4 + EARL Gerencial g1 (02/11/2026): consumo completo da operação, arquivo do gerencial e app gerencial
+
+Pedido do Hugo: cada engenheiro cuida de um tipo de contrato, extrai as informações para uma pasta no SharePoint, e um app gerencial carrega os arquivos de todos e mostra o consolidado (receita, consumo de PPU, químicas, casing equipment e pessoal).
+
+- **Consumo completo** (`abrirEngCons` / `renderEngCons` reescritos; `ppuCons` mantém o nome e ganha `quim[{sap,name,unit,qty}]`, `cas[...]` e `pes[{funcao,pessoas,dias,hd}]`):
+  - **Janela:** 4 seções. Itens PPU (receita, como antes), Químicas (catálogo `matCatalogo('quimico')`), Casing equipment (`matCatalogo('casing')`) e Pessoal (funções de `FUNCOES_EQUIPE` + as previstas; homem-dia = pessoas × dias).
+  - **Previsto:** cada seção começa com o previsto da operação (`chems`, `casingNeeds`, `peopleNeeds`). "⇩ Copiar previsto" preenche as 4 seções, e os dias do pessoal vêm da duração da operação.
+  - **Gravação:** salva se qualquer seção tiver quantidade.
+  - **Onde aparece:** a faixa da operação resume as 4 partes; o log diz "Consumo da operação lançado/alterado/apagado". Uma operação com consumo só de materiais não conta como "sem consumo".
+- **Arquivo do gerencial** (`engPacoteGerencial`, `abrirEngGer`, `renderEngGer`, `engGerar`; botão "⬇ Arquivo do gerencial" na barra e na aba de receita):
+  - **Janela:** marca os contratos (o padrão é a última escolha, guardada em `db.gerCfg`, ou os contratos que têm operações) e o nome do engenheiro (`hoMail.nome`).
+  - **Arquivo:** `EARL_Gerencial_<contrato ou engenheiro>_AAAA-MM-DD_HHhMM.json` = `{tipo:'EARL-Gerencial', formato:1, app, geradoEm, por, contratos[], operacoes[]}`.
+  - **Conteúdo:** itens com o valor vigente hoje e o inicial; operações (as do contrato pelo `ctDoJob`, sem as canceladas) com previsto, realizado (PPU com valor na data do serviço) e receita.
+- **EARL Gerencial g1** (pasta `gerencial/`):
+  - **Arquivos:** `gerencial.html` (JavaScript puro) + `build_gerencial.py`, que gera o `EARL_Gerencial.html` (~1 MB) com xlsx, jszip e os logos do EARL embutidos.
+  - **Carga:**
+    - várias `.json`, `.zip` do SharePoint, pasta (`webkitdirectory`) ou arrastar;
+    - ignora o que não é `EARL-Gerencial`, e não duplica (assinatura `geradoEm|por|contratos`);
+    - para cada contrato vale o arquivo mais novo (`consolidar`).
+  - **Filtros:** período do serviço, cliente, contrato, região e tipo.
+  - **Indicadores:** receita R$/US$, operações com consumo, homem-dia e lançamentos sem valor.
+  - **Abas:** Contratos (receita e uso do contrato em valor), Receita (mês, cliente, região), Itens PPU (saldo e % usado), Químicas, Casing, Pessoal (previsto × lançado), Operações (busca) e Arquivos (em uso / substituído, ×).
+  - **Saída e dados:** Excel com 8 abas; os dados ficam em `localStorage` com prefixo `earlger:`.
+- **Testes:** `gerencial/tests/e2e_gerencial.js` (30): engenheiro A (contrato por planilha, operação com PPU, química, casing e pessoal, 2 arquivos), engenheiro B (PBR Land com valor), Gerencial com 3 arquivos (receita R$ 8.200,00 / US$ 1.540,00, o arquivo mais novo vale), PPU, químicas, casing, pessoal, mês e cliente, operações e busca, filtros, Excel, persistência, zip, pasta e celular. A regressão `e2e_engenharia` (62) e `e2e_contratos` (55) passa.
+- **Pendências:** não há gravação direta no SharePoint (o app é offline, sem login; o engenheiro salva o arquivo na pasta sincronizada ou faz o upload). Os valores são calculados no momento em que o arquivo é gerado, então reajustes posteriores pedem um arquivo novo. Não há conversão R$↔US$.
 
 ---
 

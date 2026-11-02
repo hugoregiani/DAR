@@ -15,7 +15,14 @@ A Engenharia do EARL separada do resto do sistema, para usar **sem servidor, sem
   - Os itens podem ser digitados ou **carregados de uma planilha** (Excel ou CSV) com as colunas `Item`, `Descrição`, `Unidade`, `Saldo`, `Valor R$` e `Valor US$`. O botão **⬇ Baixar planilha / Modelo da planilha** gera o modelo. Na hora de carregar, dá para **atualizar e acrescentar** ou **substituir a lista**.
   - **Reajustes:** cada reajuste vale **a partir de uma data**. Os valores novos podem ser digitados linha a linha, sair de um **% aplicado a todas as linhas** (separado para R$ e US$) ou vir de uma planilha. Operações com serviço antes dessa data continuam com o valor anterior.
   - Item já usado em operação não pode ser apagado nem ter o código trocado.
-- **Consumo de PPU:** em cada operação (botão **Σ Consumo PPU** na janela da operação, ou **Σ Consumo** na Lista), o engenheiro lança a data do serviço e a quantidade consumida de cada item. O app mostra o previsto (com **⇩ Copiar previsto**), o saldo disponível, o valor vigente na data e o total em R$ e US$. Ele avisa quando o consumo passa do saldo e quando o item não tem valor cadastrado.
+- **Consumo da operação:** em cada operação (botão **Σ Consumo PPU** na janela da operação, ou **Σ Consumo** na Lista), o engenheiro lança a data do serviço e o que foi usado, em quatro partes:
+  1. **Itens PPU**, que geram a receita: saldo disponível, valor vigente na data e total em R$ e US$.
+  2. **Químicas.**
+  3. **Casing equipment.**
+  4. **Pessoal:** pessoas e dias por função, que dão o homem-dia.
+
+  Cada parte começa com o previsto da operação, e **⇩ Copiar previsto** preenche tudo de uma vez. O app avisa quando um item PPU passa do saldo ou não tem valor cadastrado.
+- **⬇ Arquivo do gerencial:** botão na barra (e na aba Consumo e receita). O engenheiro marca os contratos sob a responsabilidade dele e gera um `.json` com os contratos (itens, saldos, valores, reajustes) e as operações (previsto, consumo lançado e receita). Esse arquivo vai para a pasta do SharePoint do gerencial e é lido pelo **EARL Gerencial** (`../gerencial`).
 - **Consumo e receita:** aba nova na Engenharia.
   - **Num contrato:** receita em R$ e US$, receita por operação, saldo por item PPU (contratado, consumido, saldo e % usado), receita por mês e a lista das operações que já passaram e estão sem consumo lançado.
   - **Na Visão geral:** receita por contrato.
@@ -72,4 +79,4 @@ Exporte também de vez em quando, como cópia de segurança. Limpar os dados de 
 - Testes, com o arquivo aberto do disco, a internet bloqueada e o relógio do navegador fixo em 02/11/2026:
   - `node tests/e2e_engenharia.js EARL_Engenharia.html [pasta-das-telas]`: 62 verificações (abertura, handover e e-mail, sondas, exportar e importar substituindo);
   - `node tests/e2e_contratos.js EARL_Engenharia.html [pasta-das-telas]`: 55 verificações (contratos, planilhas, reajustes, consumo, receita, juntar dados de outro computador e tela pequena 1366×768).
-- Versão: `EARL_VERSION = 'EARL Engenharia e3 (base v115)'`.
+- Versão: `EARL_VERSION = 'EARL Engenharia e4 (base v115)'`. O teste do fluxo completo com o Gerencial está em `../gerencial/tests/e2e_gerencial.js`.

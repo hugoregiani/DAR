@@ -122,3 +122,9 @@ td.ec-desc{font-size:12.5px;line-height:1.35}
 .ec-imp-op span{font-size:12.5px;color:var(--ink-2);line-height:1.5;flex:1}
 .ec-imp-op button{align-self:flex-start}
 .ec-modal>.ec-foot{position:sticky;bottom:-20px;margin-bottom:-20px;padding-bottom:20px;background:var(--surface,#fff);z-index:3}
+/* e4: consumo completo e arquivo do gerencial */
+.ec-mat-wrap{border:1px solid var(--line,#E2E5E7);border-radius:12px}
+.ec-mat td,.ec-pes td{padding:4px 6px;vertical-align:middle}
+.ec-ger-modal{width:min(1060px,96vw)}
+.ec-ger-tab tr.ec-sel td{background:#F6F8F3}
+.ec-ger-tab input{width:16px;height:16px}

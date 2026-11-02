@@ -110,11 +110,17 @@
   var engConsBanner = d => {
     if (!d || !d.id || d.__tpl) return null;
     var pj = (db.plannedJobs || []).find(j => j.id === d.id);
-    var v = engOpValor(pj);
-    if (!v) return null;
+    var c = pj && pj.ppuCons;
+    if (!c) return null;
+    var v = engOpValor(pj) || {
+      n: 0,
+      vB: 0,
+      vU: 0
+    };
+    var hd = (c.pes || []).reduce((a, p) => a + (Number(p.hd) || 0), 0);
     return engH("div", {
       className: "hm-banner ec-banner"
-    }, engH("div", null, engH("b", null, 'Σ Consumo de PPU lançado'), engH("span", null, 'serviço em ' + fmtD(v.data) + ' · ' + v.n + ' item(ns) · ' + fmtBRL(v.vB) + ' · ' + fmtUSD(v.vU))), engH("button", {
+    }, engH("div", null, engH("b", null, 'Σ Consumo da operação lançado'), engH("span", null, ['serviço em ' + fmtD(c.data || pj.date), v.n + ' item(ns) PPU · ' + fmtBRL(v.vB) + ' · ' + fmtUSD(v.vU), (c.quim || []).length ? c.quim.length + ' química(s)' : '', (c.cas || []).length ? c.cas.length + ' casing' : '', hd ? fmtNum(hd) + ' homem-dia' : ''].filter(Boolean).join(' · '))), engH("button", {
       className: "btn-o",
       onClick: () => abrirEngCons(pj)
     }, "Editar consumo"));
@@ -1263,27 +1269,65 @@
     }, im.destino === 'reaj' ? 'Usar os valores' : 'Carregar'))));
   };
 
-  /* ---------------- consumo de PPU da operação ---------------- */
+  /* ---------------- consumo da operação: PPU (receita), químicas, casing equipment e pessoal ----------------
+     ppuCons = {data, linhas[{ref, desc, unit, qty}] (PPU), quim[{sap, name, unit, qty}], cas[{sap, name, unit, qty}],
+     pes[{funcao, pessoas, dias, hd}], em, por}. O nome ppuCons ficou da e2 (só PPU) para não mudar o formato. */
+  var engKeyMat = n => String(n && (n.sap || n.name) || '').trim();
+  var engPrevMat = lista => {
+    var o = {};
+    (lista || []).forEach(n => {
+      var k = engKeyMat(n);
+      if (k) o[k] = (o[k] || 0) + (engNum(n.qty) || 0);
+    });
+    return o;
+  };
+  var engUniq = (l, k) => {
+    var s = new Set();
+    return (l || []).filter(x => {
+      var v = k(x);
+      if (!v || s.has(v)) return false;
+      s.add(v);
+      return true;
+    });
+  };
   var abrirEngCons = pj0 => {
     if (!pj0) return;
     var pj = (db.plannedJobs || []).find(j => j.id === pj0.id) || pj0;
-    var c = pj.ppuCons;
-    var refs = [];
-    if (c && (c.linhas || []).length) c.linhas.forEach(l => {
-      if (!refs.some(x => x.ref === l.ref)) refs.push({
-        ref: l.ref,
-        qty: engNumTxt(l.qty)
-      });
-    });else (pj.ppuNeeds || []).forEach(n => {
-      if (n.ref && !refs.some(x => x.ref === n.ref)) refs.push({
-        ref: n.ref,
-        qty: ''
-      });
-    });
+    var c = pj.ppuCons || {};
+    var linhas = (c.linhas || []).length ? engUniq(c.linhas, l => l.ref).map(l => ({
+      ref: l.ref,
+      qty: engNumTxt(l.qty)
+    })) : engUniq(pj.ppuNeeds, n => n.ref).map(n => ({
+      ref: n.ref,
+      qty: ''
+    }));
+    var mat = (salvo, prev) => (salvo || []).length ? engUniq(salvo, engKeyMat).map(x => ({
+      sap: x.sap || '',
+      name: x.name || '',
+      unit: x.unit || '',
+      qty: engNumTxt(x.qty)
+    })) : engUniq(prev, engKeyMat).map(x => ({
+      sap: x.sap || '',
+      name: x.name || x.sap || '',
+      unit: x.unit || '',
+      qty: ''
+    }));
+    var pes = (c.pes || []).length ? c.pes.map(p => ({
+      funcao: p.funcao,
+      pessoas: engNumTxt(p.pessoas),
+      dias: engNumTxt(p.dias)
+    })) : engUniq(pj.peopleNeeds, n => n.funcao).map(n => ({
+      funcao: n.funcao,
+      pessoas: '',
+      dias: ''
+    }));
     setEngCons({
       pjId: pj.id,
-      data: c && c.data || pj.date || todayStr(),
-      linhas: refs
+      data: c.data || pj.date || todayStr(),
+      linhas,
+      quim: mat(c.quim, pj.chems),
+      cas: mat(c.cas, pj.casingNeeds),
+      pes
     });
   };
   var renderEngCons = () => {
@@ -1302,6 +1346,13 @@
     (pj.ppuNeeds || []).forEach(n => {
       if (n.ref) prev[n.ref] = (prev[n.ref] || 0) + (engNum(n.qty) || 0);
     });
+    var prevQ = engPrevMat(pj.chems),
+      prevC = engPrevMat(pj.casingNeeds);
+    var prevP = {};
+    (pj.peopleNeeds || []).forEach(n => {
+      if (n.funcao) prevP[n.funcao] = (prevP[n.funcao] || 0) + (engNum(n.qty) || 0);
+    });
+    var dur = Number(pj.durationDays) || 1;
     var outros = ct ? engConsDoCt(ct, pj.id) : {};
     var setQ = (ref, v) => setEngCons(x => ({
       ...x,
@@ -1309,6 +1360,20 @@
         ...l,
         qty: v
       } : l)
+    }));
+    var setM = (campo, k, v) => setEngCons(x => ({
+      ...x,
+      [campo]: x[campo].map(m => engKeyMat(m) === k ? {
+        ...m,
+        qty: v
+      } : m)
+    }));
+    var setPe = (f, patch) => setEngCons(x => ({
+      ...x,
+      pes: x.pes.map(p => p.funcao === f ? {
+        ...p,
+        ...patch
+      } : p)
     }));
     var rows = engCons.linhas.map(l => {
       var it = byRef[l.ref] || (ct && (ct.items || []).find(i => i.ref === l.ref)) || {
@@ -1333,6 +1398,22 @@
     var acima = rows.filter(r => r.q > 0 && r.disp != null && r.q > r.disp + 1e-9);
     var semPreco = rows.filter(r => r.q > 0 && r.p.brl == null && r.p.usd == null);
     var nQ = rows.filter(r => r.q > 0).length;
+    var nMq = engCons.quim.filter(m => engNum(m.qty) > 0).length,
+      nMc = engCons.cas.filter(m => engNum(m.qty) > 0).length;
+    var pesRows = engCons.pes.map(p => {
+      var n = engNum(p.pessoas),
+        d = engNum(p.dias);
+      return {
+        p,
+        n,
+        d,
+        hd: n > 0 && d > 0 ? n * d : null
+      };
+    });
+    var tHD = pesRows.reduce((a, r) => a + (r.hd || 0), 0);
+    var nPe = pesRows.filter(r => r.n > 0).length;
+    var nTot = nQ + nMq + nMc + nPe;
+    var temPrev = Object.keys(prev).length || Object.keys(prevQ).length || Object.keys(prevC).length || Object.keys(prevP).length;
     var add = ref => {
       if (!ref) return;
       setEngCons(x => ({
@@ -1343,29 +1424,66 @@
         }]
       }));
     };
+    var addMat = (campo, it) => {
+      if (!it) return;
+      setEngCons(x => x[campo].some(m => engKeyMat(m) === engKeyMat(it)) ? x : {
+        ...x,
+        [campo]: [...x[campo], {
+          sap: it.sap || '',
+          name: it.name || it.sap || '',
+          unit: it.unit || '',
+          qty: ''
+        }]
+      });
+    };
+    var addPe = f => {
+      if (!f) return;
+      setEngCons(x => x.pes.some(p => p.funcao === f) ? x : {
+        ...x,
+        pes: [...x.pes, {
+          funcao: f,
+          pessoas: '',
+          dias: ''
+        }]
+      });
+    };
     var copiar = () => setEngCons(x => ({
       ...x,
       linhas: x.linhas.map(l => engNum(l.qty) == null && prev[l.ref] ? {
         ...l,
         qty: engNumTxt(prev[l.ref])
-      } : l)
+      } : l),
+      quim: x.quim.map(m => engNum(m.qty) == null && prevQ[engKeyMat(m)] ? {
+        ...m,
+        qty: engNumTxt(prevQ[engKeyMat(m)])
+      } : m),
+      cas: x.cas.map(m => engNum(m.qty) == null && prevC[engKeyMat(m)] ? {
+        ...m,
+        qty: engNumTxt(prevC[engKeyMat(m)])
+      } : m),
+      pes: x.pes.map(p => ({
+        ...p,
+        pessoas: engNum(p.pessoas) == null && prevP[p.funcao] ? engNumTxt(prevP[p.funcao]) : p.pessoas,
+        dias: engNum(p.dias) == null ? engNumTxt(dur) : p.dias
+      }))
     }));
     var fechar = () => setEngCons(null);
+    var resumo = reg => [reg.linhas.length + ' item(ns) PPU', fmtBRL(tB), fmtUSD(tU), reg.quim.length ? reg.quim.length + ' química(s)' : '', reg.cas.length ? reg.cas.length + ' casing' : '', reg.pes.length ? fmtNum(tHD) + ' homem-dia' : '', 'serviço em ' + fmtD(reg.data)].filter(Boolean).join(' · ');
     var gravar = reg => {
       updateDB(d => ({
         ...d,
         plannedJobs: comLog((d.plannedJobs || []).map(j => j.id === pj.id ? {
           ...j,
           ppuCons: reg
-        } : j), [pj.id], logE(reg ? pj.ppuCons ? 'Consumo de PPU alterado' : 'Consumo de PPU lançado' : 'Consumo de PPU apagado', {
-          detalhe: reg ? reg.linhas.length + ' item(ns) · ' + fmtBRL(tB) + ' · ' + fmtUSD(tU) + ' · serviço em ' + fmtD(reg.data) : ''
+        } : j), [pj.id], logE(reg ? pj.ppuCons ? 'Consumo da operação alterado' : 'Consumo da operação lançado' : 'Consumo da operação apagado', {
+          detalhe: reg ? resumo(reg) : ''
         }))
       }), {
-        kind: 'Consumo PPU',
+        kind: 'Consumo',
         action: reg ? pj.ppuCons ? 'Alteração' : 'Inclusão' : 'Exclusão',
         name: (rig.name || '—') + ' — ' + (pj.well || tipoTxt(pj) || ''),
         user: currentUser() || '—',
-        detail: reg ? reg.linhas.map(l => l.ref + ' ' + fmtNum(l.qty)).join(', ') : ''
+        detail: reg ? resumo(reg) : ''
       });
       setPlanDraft(x => x && x.id === pj.id ? {
         ...x,
@@ -1382,14 +1500,82 @@
         unit: r.it.unit || '',
         qty: r.q
       }));
-      gravar(linhas.length ? {
+      var mats = campo => engCons[campo].filter(m => engNum(m.qty) > 0).map(m => ({
+        sap: m.sap || '',
+        name: m.name || '',
+        unit: m.unit || '',
+        qty: engNum(m.qty)
+      }));
+      var pes = pesRows.filter(r => r.n > 0).map(r => ({
+        funcao: r.p.funcao,
+        pessoas: r.n,
+        dias: r.d || 0,
+        hd: r.hd || 0
+      }));
+      var reg = {
         data,
         linhas,
+        quim: mats('quim'),
+        cas: mats('cas'),
+        pes,
         em: new Date().toISOString(),
         por: currentUser() || ''
-      } : null);
+      };
+      gravar(linhas.length || reg.quim.length || reg.cas.length || pes.length ? reg : null);
     };
     var disponiveis = itens.filter(i => !engCons.linhas.some(l => l.ref === i.ref));
+    var semLinhas = (n, txt) => engH("tr", null, engH("td", {
+      colSpan: n,
+      style: {
+        color: 'var(--ink-3)',
+        fontStyle: 'italic'
+      }
+    }, txt));
+    var secMat = (num, titulo, campo, prevM, catalogo) => {
+      var lista = engCons[campo];
+      var livres = catalogo.filter(i => !lista.some(m => engKeyMat(m) === engKeyMat(i)));
+      return engH(React.Fragment, null, engH("div", {
+        className: "hm-sec ec-sec"
+      }, num + ' · ' + titulo + ' (' + lista.length + ')'), engH("div", {
+        className: "tbl-scroll ec-mat-wrap"
+      }, engH("table", {
+        className: 'db-table ec-itens ec-mat ec-mat-' + campo
+      }, engH("thead", null, engH("tr", null, ['SAP', 'Produto', 'Unid.', 'Previsto', 'Consumido', ''].map((h, k) => engH("th", {
+        key: k
+      }, h)))), engH("tbody", null, lista.map(m => {
+        var k = engKeyMat(m);
+        return engH("tr", {
+          key: k
+        }, engH("td", null, m.sap || '—'), engH("td", {
+          className: "ec-desc"
+        }, m.name || '—'), engH("td", null, m.unit || ''), engH("td", {
+          className: "ec-num"
+        }, prevM[k] != null ? fmtNum(prevM[k]) : '—'), engH("td", null, engH("input", {
+          className: 'ipt ec-in ec-qtd ec-q-' + campo,
+          inputMode: "decimal",
+          value: m.qty || '',
+          placeholder: "0",
+          onChange: e => setM(campo, k, e.target.value)
+        })), engH("td", null, engH("button", {
+          className: "btn-o hm-x",
+          title: "Tirar a linha",
+          onClick: () => setEngCons(x => ({
+            ...x,
+            [campo]: x[campo].filter(y => engKeyMat(y) !== k)
+          }))
+        }, "\xD7")));
+      }), !lista.length && semLinhas(6, 'Nada previsto — acrescente abaixo o que foi usado.')))), engH("select", {
+        className: 'sel ec-add ec-add-' + campo,
+        value: "",
+        onChange: e => addMat(campo, catalogo.find(i => engKeyMat(i) === e.target.value))
+      }, engH("option", {
+        value: ""
+      }, '＋ Acrescentar ' + (campo === 'quim' ? 'química' : 'item de casing') + ' do cadastro…'), livres.map(i => engH("option", {
+        key: engKeyMat(i),
+        value: engKeyMat(i)
+      }, (i.sap ? i.sap + ' — ' : '') + String(i.name || '').slice(0, 80) + (i.unit ? ' (' + i.unit + ')' : '')))));
+    };
+    var funcoesLivres = [...FUNCOES_EQUIPE, ...Object.keys(prevP)].filter((f, i, a) => a.indexOf(f) === i && !engCons.pes.some(p => p.funcao === f));
     return engH("div", {
       className: "overlay",
       style: {
@@ -1403,7 +1589,7 @@
       onClick: e => e.stopPropagation()
     }, engH("div", {
       className: "modal-title"
-    }, engH("span", null, 'Σ Consumo de PPU — ' + (pj.well || 'poço a definir') + ' · ' + (tipoTxt(pj) || pj.tipoOp || '')), engH("button", {
+    }, engH("span", null, 'Σ Consumo da operação — ' + (pj.well || 'poço a definir') + ' · ' + (tipoTxt(pj) || pj.tipoOp || '')), engH("button", {
       className: "modal-close",
       onClick: fechar
     }, "\xD7")), engH("div", {
@@ -1437,14 +1623,16 @@
         flex: 1,
         minWidth: 220
       }
-    }, "Os valores usados s\xE3o os vigentes nesta data (com os reajustes)."), engH("button", {
-      className: "btn-o",
+    }, "Os valores dos itens PPU s\xE3o os vigentes nesta data (com os reajustes). Lance tamb\xE9m as qu\xEDmicas, o casing equipment e o pessoal usados."), engH("button", {
+      className: "btn-o ec-copiar",
       style: {
         alignSelf: 'flex-end'
       },
-      disabled: !Object.keys(prev).length,
+      disabled: !temPrev,
       onClick: copiar
     }, "⇩ Copiar previsto")), engH("div", {
+      className: "hm-sec ec-sec"
+    }, '1 · Itens PPU — receita (' + rows.length + ')'), engH("div", {
       className: "tbl-scroll ec-itens-wrap"
     }, engH("table", {
       className: "db-table ec-itens ec-cons"
@@ -1480,13 +1668,7 @@
         ...x,
         linhas: x.linhas.filter(y => y.ref !== r.l.ref)
       }))
-    }, "\xD7")))), !rows.length && engH("tr", null, engH("td", {
-      colSpan: 11,
-      style: {
-        color: 'var(--ink-3)',
-        fontStyle: 'italic'
-      }
-    }, "Nenhum item — acrescente abaixo os itens do contrato usados na opera\xE7\xE3o."))), rows.length > 0 && engH("tfoot", null, engH("tr", null, engH("td", {
+    }, "\xD7")))), !rows.length && semLinhas(11, 'Nenhum item — acrescente abaixo os itens do contrato usados na operação.')), rows.length > 0 && engH("tfoot", null, engH("tr", null, engH("td", {
       colSpan: 8
     }, engH("b", null, 'Total da operação')), engH("td", {
       className: "ec-num ec-tot-brl"
@@ -1505,7 +1687,57 @@
       className: "ec-aviso"
     }, 'Acima do saldo disponível: ' + acima.map(r => r.l.ref).join(', ') + '. Dá para salvar, mas o saldo do contrato fica negativo.'), semPreco.length > 0 && engH("div", {
       className: "ec-aviso"
-    }, 'Sem valor cadastrado no contrato: ' + semPreco.map(r => r.l.ref).join(', ') + ' — não entram na receita até o contrato ter o valor.')), engH("div", {
+    }, 'Sem valor cadastrado no contrato: ' + semPreco.map(r => r.l.ref).join(', ') + ' — não entram na receita até o contrato ter o valor.'), secMat(2, 'Químicas', 'quim', prevQ, matCatalogo('quimico')), secMat(3, 'Casing equipment', 'cas', prevC, matCatalogo('casing')), engH("div", {
+      className: "hm-sec ec-sec"
+    }, '4 · Pessoal (' + engCons.pes.length + ')'), engH("div", {
+      className: "tbl-scroll ec-mat-wrap"
+    }, engH("table", {
+      className: "db-table ec-itens ec-pes"
+    }, engH("thead", null, engH("tr", null, ['Função', 'Previsto', 'Pessoas', 'Dias', 'Homem-dia', ''].map((h, k) => engH("th", {
+      key: k
+    }, h)))), engH("tbody", null, pesRows.map(r => engH("tr", {
+      key: r.p.funcao
+    }, engH("td", null, r.p.funcao), engH("td", {
+      className: "ec-num"
+    }, prevP[r.p.funcao] != null ? fmtNum(prevP[r.p.funcao]) : '—'), engH("td", null, engH("input", {
+      className: "ipt ec-in ec-qtd ec-p-pes",
+      inputMode: "decimal",
+      value: r.p.pessoas || '',
+      placeholder: "0",
+      onChange: e => setPe(r.p.funcao, {
+        pessoas: e.target.value
+      })
+    })), engH("td", null, engH("input", {
+      className: "ipt ec-in ec-qtd ec-p-dias",
+      inputMode: "decimal",
+      value: r.p.dias || '',
+      placeholder: String(dur),
+      onChange: e => setPe(r.p.funcao, {
+        dias: e.target.value
+      })
+    })), engH("td", {
+      className: "ec-num"
+    }, r.hd == null ? '—' : fmtNum(r.hd)), engH("td", null, engH("button", {
+      className: "btn-o hm-x",
+      title: "Tirar a linha",
+      onClick: () => setEngCons(x => ({
+        ...x,
+        pes: x.pes.filter(y => y.funcao !== r.p.funcao)
+      }))
+    }, "\xD7")))), !pesRows.length && semLinhas(6, 'Nenhuma função — acrescente abaixo.')), pesRows.length > 0 && engH("tfoot", null, engH("tr", null, engH("td", {
+      colSpan: 4
+    }, engH("b", null, 'Total')), engH("td", {
+      className: "ec-num ec-tot-hd"
+    }, engH("b", null, fmtNum(tHD))), engH("td", null))))), engH("select", {
+      className: "sel ec-add ec-add-pes",
+      value: "",
+      onChange: e => addPe(e.target.value)
+    }, engH("option", {
+      value: ""
+    }, "＋ Acrescentar fun\xE7\xE3o…"), funcoesLivres.map(f => engH("option", {
+      key: f,
+      value: f
+    }, f)))), engH("div", {
       className: "ec-foot"
     }, pj.ppuCons && engH("button", {
       className: "btn-o",
@@ -1513,7 +1745,7 @@
         title: 'Apagar consumo',
         okLabel: 'Apagar',
         danger: true,
-        msg: engH("span", null, "Apagar o consumo de PPU desta opera\xE7\xE3o?"),
+        msg: engH("span", null, "Apagar o consumo desta opera\xE7\xE3o (PPU, qu\xEDmicas, casing e pessoal)?"),
         hint: 'O saldo volta ao contrato e a receita sai das análises.',
         onOk: () => gravar(null)
       })
@@ -1528,7 +1760,7 @@
       className: "btn-r ec-cons-ok",
       disabled: !ct || !engCons.data,
       onClick: salvar
-    }, nQ ? 'Salvar consumo (' + nQ + ' item(ns))' : 'Salvar consumo'))));
+    }, nTot ? 'Salvar consumo (' + nTot + ' linha(s))' : 'Salvar consumo'))));
   };
 
   /* ---------------- aba "Consumo e receita" ---------------- */
@@ -1654,7 +1886,7 @@
     var tB = calcs.reduce((a, c) => a + c.tB, 0),
       tU = calcs.reduce((a, c) => a + c.tU, 0);
     var opsCons = calcs.flatMap(c => c.porOp).sort((a, b) => String(b.data).localeCompare(String(a.data)));
-    var semCons = ops.filter(j => !(j.ppuCons && (j.ppuCons.linhas || []).length) && String(j.date || '') <= hoje).sort((a, b) => String(b.date).localeCompare(String(a.date)));
+    var semCons = ops.filter(j => !j.ppuCons && String(j.date || '') <= hoje).sort((a, b) => String(b.date).localeCompare(String(a.date)));
     var semPreco = calcs.reduce((a, c) => a + c.semPreco, 0);
     var periodo = engH("div", {
       className: "ec-bar ec-per"
@@ -1694,6 +1926,9 @@
       className: "btn-o",
       onClick: abrirEngContratos
     }, "Contratos"), engH("button", {
+      className: "btn-o",
+      onClick: abrirEngGer
+    }, "\u2B07 Arquivo do gerencial"), engH("button", {
       className: "btn-o ec-excel",
       onClick: () => engRecExcel(ctSel ? ctSel.name : 'todos os contratos', calcs, !!ctSel)
     }, "⬇ Excel"));
@@ -1849,5 +2084,303 @@
     }, fmtPBRL(x.p.brl), engH("br", null), fmtPUSD(x.p.usd)), engH("td", {
       className: "ec-num"
     }, x.vB || x.vU ? engH(React.Fragment, null, fmtBRL(x.vB), engH("br", null), fmtUSD(x.vU)) : '—')))))), tabMes);
+  };
+  /* ---------------- arquivo para o gerencial ----------------
+     Pacote com os contratos escolhidos pelo engenheiro e as operações deles, já calculado (valores na data do
+     serviço), para a pasta do SharePoint. O EARL Gerencial junta os arquivos de todos os engenheiros e, para
+     cada contrato, usa o arquivo mais novo. Formato: {tipo:'EARL-Gerencial', formato:1, app, geradoEm, por,
+     contratos[], operacoes[]}. */
+  var [engGer, setEngGer] = useState(null);
+  var engGerOps = ct => engOpsDoCt(ct).filter(j => {
+    var c = ctDoJob(j);
+    return c && c.id === ct.id;
+  });
+  var engPacoteGerencial = (ids, nome) => {
+    var hoje = todayStr();
+    var cts = (db.contratos || []).filter(c => ids.includes(c.id));
+    var mat = l => (l || []).map(m => ({
+      sap: m.sap || '',
+      nome: m.name || m.sap || '',
+      unid: m.unit || '',
+      qtd: engNum(m.qty) || 0
+    })).filter(m => m.qtd > 0);
+    var contratos = cts.map(ct => ({
+      id: ct.id,
+      nome: ct.name || '',
+      numero: ct.numero && ct.numero !== ct.name ? ct.numero : '',
+      cliente: ct.clientName || '',
+      tipo: ctKindLabel(ct.kind),
+      bases: ct.bases || [],
+      regiao: REGIAO_LABEL[ctrRegioes(ct)[0]] || '',
+      inicio: ct.inicio || '',
+      atualizadoEm: ct.atualizadoEm || '',
+      itens: ctrItensNaData(ct, null).map(i => {
+        var p = ctPreco(ct, i.ref, hoje);
+        return {
+          ref: i.ref,
+          desc: i.desc || '',
+          unit: i.unit || '',
+          contratado: i.saldoIni != null && i.saldoIni !== '' ? Number(i.saldoIni) : null,
+          brl: p.brl,
+          usd: p.usd,
+          brlIni: engNum(i.brl),
+          usdIni: engNum(i.usd)
+        };
+      }),
+      reajustes: (ct.reajustes || []).map(r => ({
+        desde: r.desde,
+        obs: r.obs || '',
+        itens: Object.keys(r.precos || {}).length
+      }))
+    }));
+    var operacoes = [];
+    cts.forEach(ct => engGerOps(ct).forEach(j => {
+      var rig = (db.rigs || []).find(r => r.id === j.rigId) || {};
+      var h = handoverDoJob(j);
+      var c = j.ppuCons;
+      var data = c ? c.data || j.date : '';
+      var dur = Number(j.durationDays) || 1;
+      var ppu = c ? (c.linhas || []).map(l => {
+        var q = engNum(l.qty) || 0;
+        var p = ctPreco(ct, l.ref, data);
+        return {
+          ref: l.ref,
+          desc: l.desc || '',
+          unit: l.unit || '',
+          qtd: q,
+          brl: p.brl,
+          usd: p.usd,
+          valorBrl: p.brl != null ? engR4(q * p.brl) : null,
+          valorUsd: p.usd != null ? engR4(q * p.usd) : null
+        };
+      }) : [];
+      operacoes.push({
+        id: j.id,
+        contratoId: ct.id,
+        sonda: rig.name || '',
+        base: rig.base || '',
+        ambiente: rig.id ? rigAmbiente(rig) : '',
+        regiao: REGIAO_LABEL[j.loc] || REGIAO_LABEL[ctrRegioes(ct)[0]] || '',
+        poco: j.well || '',
+        tipo: tipoTxt(j) || j.tipoOp || '',
+        revestimento: j.casing || '',
+        data: j.date || '',
+        duracao: dur,
+        status: c ? 'consumo' : h ? 'handover' : 'planejada',
+        so: j.salesOrder || '',
+        wbs: j.wbs || '',
+        vida: j.vida || '',
+        contingencia: !!j.contingencia,
+        risco: j.contingencia ? Number(j.risco) || 0 : null,
+        handover: h ? {
+          versao: h.versao || 1,
+          em: h.email && h.email.em || h.atualizadoEm || '',
+          para: h.email && h.email.para || []
+        } : null,
+        previsto: {
+          ppu: (j.ppuNeeds || []).filter(n => n && n.ref).map(n => ({
+            ref: n.ref,
+            desc: n.desc || '',
+            unit: n.unit || '',
+            qtd: engNum(n.qty) || 0
+          })),
+          quimicas: mat(j.chems),
+          casing: mat(j.casingNeeds),
+          pessoal: (j.peopleNeeds || []).filter(n => n && n.funcao).map(n => ({
+            funcao: n.funcao,
+            pessoas: engNum(n.qty) || 0,
+            dias: dur,
+            hd: (engNum(n.qty) || 0) * dur
+          })),
+          equipamentos: (j.equipNeeds || []).filter(n => Number(n.qty) > 0).map(n => ({
+            tipo: subtypeLabel(n.subtypeId),
+            qtd: Number(n.qty) || 0
+          }))
+        },
+        realizado: c ? {
+          data,
+          em: c.em || '',
+          por: c.por || '',
+          ppu,
+          quimicas: mat(c.quim),
+          casing: mat(c.cas),
+          pessoal: (c.pes || []).map(p => ({
+            funcao: p.funcao,
+            pessoas: Number(p.pessoas) || 0,
+            dias: Number(p.dias) || 0,
+            hd: Number(p.hd) || 0
+          }))
+        } : null,
+        receita: c ? {
+          brl: engR4(ppu.reduce((a, x) => a + (x.valorBrl || 0), 0)),
+          usd: engR4(ppu.reduce((a, x) => a + (x.valorUsd || 0), 0)),
+          semValor: ppu.filter(x => x.brl == null && x.usd == null).length
+        } : null
+      });
+    }));
+    return {
+      tipo: 'EARL-Gerencial',
+      formato: 1,
+      app: EARL_VERSION,
+      geradoEm: new Date().toISOString(),
+      por: nome || (db.hoMail || {}).nome || '',
+      contratos,
+      operacoes
+    };
+  };
+  var abrirEngGer = () => {
+    var salvos = (db.gerCfg && db.gerCfg.contratos || []).filter(id => engContratos.some(c => c.id === id));
+    setEngGer({
+      sel: salvos.length ? salvos : engContratos.filter(c => engGerOps(c).length).map(c => c.id),
+      nome: (db.hoMail || {}).nome || ''
+    });
+  };
+  var engGerar = () => {
+    var g = engGer;
+    if (!g || !g.sel.length) return;
+    var pac = engPacoteGerencial(g.sel, String(g.nome || '').trim());
+    var c1 = pac.contratos.length === 1 ? pac.contratos[0].nome : '';
+    var nomeArq = 'EARL_Gerencial_' + (c1 || String(g.nome || '').trim() || pac.contratos.length + ' contratos') + '_' + engAgoraTxt();
+    forceDownload([new File([JSON.stringify(pac)], asciiName(fnSafe(nomeArq)).replace(/ /g, '_') + '.json', {
+      type: 'application/json'
+    })]);
+    updateDB(d => ({
+      ...d,
+      gerCfg: {
+        ...(d.gerCfg || {}),
+        contratos: g.sel,
+        ultimo: pac.geradoEm
+      },
+      hoMail: String(g.nome || '').trim() ? {
+        ...(d.hoMail || {}),
+        nome: String(g.nome).trim()
+      } : d.hoMail
+    }));
+    setEngGer(null);
+    setOkMsg('Arquivo do gerencial gerado ✓ — salve na pasta do SharePoint do gerencial');
+    setTimeout(() => setOkMsg(''), 7000);
+  };
+  var renderEngGer = () => {
+    var g = engGer;
+    if (!g) return null;
+    var fechar = () => setEngGer(null);
+    var set = patch => setEngGer(x => ({
+      ...x,
+      ...patch
+    }));
+    var linhas = engContratos.map(ct => {
+      var ops = engGerOps(ct);
+      var cons = ops.filter(j => j.ppuCons);
+      var rec = cons.reduce((a, j) => {
+        var v = engOpValor(j);
+        return v ? [a[0] + v.vB, a[1] + v.vU] : a;
+      }, [0, 0]);
+      return {
+        ct,
+        ops: ops.length,
+        cons: cons.length,
+        rec,
+        nP: (ct.items || []).filter(i => engNum(i.brl) != null || engNum(i.usd) != null).length
+      };
+    });
+    var marcar = id => set({
+      sel: g.sel.includes(id) ? g.sel.filter(x => x !== id) : [...g.sel, id]
+    });
+    var ult = db.gerCfg && db.gerCfg.ultimo;
+    return engH("div", {
+      className: "overlay",
+      style: {
+        zIndex: 300
+      },
+      onClick: e => {
+        if (e.target === e.currentTarget) fechar();
+      }
+    }, engH("div", {
+      className: "modal ec-modal ec-ger-modal",
+      onClick: e => e.stopPropagation()
+    }, engH("div", {
+      className: "modal-title"
+    }, engH("span", null, "⬇ Arquivo para o gerencial"), engH("button", {
+      className: "modal-close",
+      onClick: fechar
+    }, "\xD7")), engH("div", {
+      className: "eng-help",
+      style: {
+        marginTop: 0
+      }
+    }, "Marque os contratos sob a sua responsabilidade. O arquivo leva os contratos (itens, saldos, valores e reajustes) e as opera\xE7\xF5es deles, com o previsto e o consumo lan\xE7ado (PPU, qu\xEDmicas, casing equipment e pessoal) e a receita calculada. Salve o arquivo na pasta do SharePoint do gerencial: o EARL Gerencial junta os arquivos de todos os engenheiros e, para cada contrato, usa o arquivo mais novo."), ult && engH("div", {
+      className: "ec-cons-id"
+    }, '\xDAltimo arquivo gerado neste computador: ' + fmtDH(ult)), engH("div", {
+      className: "fld",
+      style: {
+        maxWidth: 360
+      }
+    }, engH("label", {
+      className: "lbl"
+    }, "Engenheiro respons\xE1vel"), engH("input", {
+      className: "ipt ec-ger-nome",
+      value: g.nome || '',
+      placeholder: "seu nome",
+      onChange: e => set({
+        nome: e.target.value
+      })
+    })), engH("div", {
+      className: "ec-bar"
+    }, engH("b", null, g.sel.length + ' de ' + linhas.length + ' contrato(s) marcado(s)'), engH("span", {
+      style: {
+        flex: 1
+      }
+    }), engH("button", {
+      className: "btn-o",
+      onClick: () => set({
+        sel: linhas.filter(l => l.ops).map(l => l.ct.id)
+      })
+    }, "Os que t\xEAm opera\xE7\xF5es"), engH("button", {
+      className: "btn-o",
+      onClick: () => set({
+        sel: []
+      })
+    }, "Nenhum")), engH("div", {
+      className: "tbl-scroll ec-mat-wrap"
+    }, engH("table", {
+      className: "db-table ec-ger-tab"
+    }, engH("thead", null, engH("tr", null, ['', 'Contrato', 'Cliente', 'Operações', 'Com consumo', 'Receita R$', 'Receita US$', 'Itens com valor'].map((h, k) => engH("th", {
+      key: k
+    }, h)))), engH("tbody", null, linhas.map(l => engH("tr", {
+      key: l.ct.id,
+      className: 'ec-row' + (g.sel.includes(l.ct.id) ? ' ec-sel' : ''),
+      onClick: () => marcar(l.ct.id)
+    }, engH("td", null, engH("input", {
+      type: "checkbox",
+      className: "ec-ger-ck",
+      checked: g.sel.includes(l.ct.id),
+      onChange: () => marcar(l.ct.id),
+      onClick: e => e.stopPropagation()
+    })), engH("td", null, engH("b", null, l.ct.name)), engH("td", null, l.ct.clientName || '—'), engH("td", {
+      className: "ec-num"
+    }, l.ops), engH("td", {
+      className: "ec-num"
+    }, l.cons), engH("td", {
+      className: "ec-num"
+    }, l.cons ? fmtBRL(l.rec[0]) : '—'), engH("td", {
+      className: "ec-num"
+    }, l.cons ? fmtUSD(l.rec[1]) : '—'), engH("td", {
+      className: "ec-num"
+    }, l.nP + ' de ' + (l.ct.items || []).length)))))), engH("div", {
+      className: "ec-foot"
+    }, !g.sel.length && engH("span", {
+      className: "ho-pend"
+    }, "Marque ao menos um contrato."), engH("span", {
+      style: {
+        flex: 1
+      }
+    }), engH("button", {
+      className: "btn-o",
+      onClick: fechar
+    }, "Cancelar"), engH("button", {
+      className: "btn-r ec-ger-ok",
+      disabled: !g.sel.length,
+      onClick: engGerar
+    }, '⬇ Gerar arquivo (' + g.sel.length + ' contrato(s))'))));
   };
   /* ============ fim CONTRATOS (avulso) ============ */

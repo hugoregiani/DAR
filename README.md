@@ -26,3 +26,7 @@ Todos os dados são armazenados no `localStorage` do navegador sob a chave `DAR_
 ## EARL — Engenharia (avulso)
 
 A pasta [`engenharia/`](engenharia/) traz a Engenharia do EARL num HTML próprio (`EARL_Engenharia.html`): sem login, funciona sem internet, abre direto na Engenharia, e o handover sai como e-mail (.eml) para o Outlook. Tem também o cadastro de contratos (itens PPU com saldo e valores em R$ e US$, reajustes por data), o consumo de PPU por operação e a receita. Veja o [README da pasta](engenharia/README.md).
+
+## EARL — Gerencial
+
+A pasta [`gerencial/`](gerencial/) traz o app gerencial (`EARL_Gerencial.html`). Ele carrega os arquivos "Arquivo do gerencial" que os engenheiros salvam no SharePoint (arquivos, pasta ou .zip) e mostra o consolidado de todos os contratos: receita em R$ e US$, itens PPU e saldo, químicas, casing equipment e pessoal. Veja o [README da pasta](gerencial/README.md).

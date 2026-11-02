@@ -910,7 +910,11 @@
     className: "btn-o eng-importar",
     onClick: () => engRestRef.current && engRestRef.current.click(),
     title: "Carrega um arquivo exportado de outro computador (juntar ou substituir)"
-  }, "⬆ Importar dados"), engH("input", {
+  }, "⬆ Importar dados"), engH("button", {
+    className: "btn-o eng-gerencial",
+    onClick: abrirEngGer,
+    title: "Gera o arquivo dos seus contratos para a pasta do SharePoint do gerencial"
+  }, "\u2B07 Arquivo do gerencial"), engH("input", {
     ref: engRestRef,
     type: "file",
     accept: "application/json,.json",
