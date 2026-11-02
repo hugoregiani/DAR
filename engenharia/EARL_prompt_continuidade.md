@@ -74,7 +74,7 @@ O CSP está em `globalHeaders`. Ele precisa de `'unsafe-inline'` e `'unsafe-eval
 
 ---
 
-## 4-E. Desmembramento: EARL Engenharia (avulso) e1 a e5, EARL Gerencial g2 e teste BP — pasta `engenharia/` do repositório `hugoregiani/DAR`
+## 4-E. Desmembramento: EARL Engenharia (avulso) e1 a e6, EARL Gerencial g2 e teste BP — pasta `engenharia/` do repositório `hugoregiani/DAR`
 
 Pedido do Hugo (01/11/2026): como o EARL ainda não pode ser usado online, separar a **Engenharia** num HTML próprio, **sem login**, e trocar o envio do handover (que ia para a Coordenação/Logística) por um **e-mail .eml** gerado no app. Parte do `EARL_HAL_CMT_115_SIMULACAO.html` (compilado) pelo `engenharia/patch_engenharia.py`, que insere `engenharia/eng_app.js` (código novo, dentro do `App`, antes de `renderHandover`) e `engenharia/eng.css`. Saída: `engenharia/EARL_Engenharia.html` (~8,4 MB). Versão: `EARL_VERSION = 'EARL Engenharia e1 (base v115)'`.
 
@@ -234,6 +234,36 @@ Decisões confirmadas com o Hugo:
     - a LCP (contingência, risco 100%, sem consumo) aparece em "até hoje sem consumo lançado";
     - a Lista do EARL só mostra as operações futuras (horizonte de 15 a 180 dias), então as realizadas ficam no Gantt e na aba "Consumo e receita".
 - **Testes:** `e2e_engenharia` 62, `e2e_contratos` 75 (COGS, risco, contingência no arquivo e painel com filtros), `e2e_gerencial` 30 e `e2e_bp` 31.
+
+### e6 (02/11/2026): banco de produtos químicos
+
+Pedido do Hugo: montar um banco de dados de produtos químicos com SAP, descrição, unidade e valor em US$, a partir da aba Forecast. Quando precisar atualizar, ele manda uma planilha para a engenharia e eles atualizam o banco.
+
+- **Dados:**
+  - `db.quimicos[{id:'q_<SAP>', sap, nome, unid, usd, atualizadoEm}]`;
+  - `db.quimHist[{id, em, por, origem:'base'|'planilha'|'manual', arquivo, novos, alterados, removidos, total}]`, com as 60 últimas.
+- **Base:**
+  - `engenharia/quimicos_base.json` traz os 60 produtos da tabela "Químicos" (SAP, Químicos, UOM, COGS) da aba Forecast de `Contrato_BP_Teste_EARL.xlsx`; é gerado pelo `gerar_quimicos_base.py`;
+  - o patch embute a base como `ENG_QUIM_BASE`, no nível do script, e cria `engQuimMig(d)`, chamada no `loadDB` em volta do `migrateDB`;
+  - a base só entra se `!d.quimBaseV1` e o banco estiver vazio. Depois a flag fica gravada e a base não volta, nem se o usuário esvaziar o banco.
+- **Tela** (`eng_quimicos.js`; botão "Químicos" na barra, `.eng-quimicos` → `abrirEngQuim` / `renderEngQuim`):
+  - **Tabela:** SAP (só leitura depois de salvo), descrição, unidade, valor US$ (mostra até 4 casas, grava com a precisão toda), data e avisos (`engQuimAvisos`).
+  - **Avisos:** fora do catálogo (`chemCatalog`, por `sapN`), unidade diferente da do EARL (`engUnNorm`: gl/gll→gal, lbr→lb, sack→sk, bg→bag…), SAP não numérico, sem valor, valor zero.
+  - **Ferramentas:** busca, "só com aviso", "＋ Produto", "⬆ Atualizar pela planilha", "⬇ Baixar planilha" (`Banco_Quimicos_EARL_AAAA-MM-DD.xlsx`, aba Químicos, SAP numérico como número) e histórico (`details`).
+  - **Gravação:** "Salvar" grava pelo `engQuimGravar`, que compara com o banco e registra novos, alterados e removidos.
+- **Planilha:**
+  - **Leitura:** `engLerWb` (extraído do `engLerPlanilha`; xlsx, ou CSV em UTF-8/1252). `engQuimLerWb` procura em todas as abas a linha de cabeçalho com SAP + valor (`cogs|valor|custo|us|usd|preço`) e prefere a que tem "Químicos" ou a aba de químicos. Lê até o próximo cabeçalho "SAP" (a tabela de Casing no Forecast) ou 3 linhas vazias. No SAP repetido vale a última linha; linha sem SAP é ignorada e listada.
+  - **Prévia:** `renderEngQuimPlan` / `engQuimPlanCalc` mostra:
+    - contagens: novos, valor alterado (antes, depois, %), descrição/unidade, sem mudança, só no banco;
+    - a escolha "Atualizar e acrescentar" / "Substituir o banco pela planilha" e "Seu nome" (vai para `hoMail.nome`);
+    - "Aplicar e salvar" (`engQuimAplicar`), desligado quando nada muda.
+- **COGS:** `engCogsIdx` junta `cogsItens` e `quimicos`; no mesmo SAP vale o de `quimicos`. "Custos (COGS)" passou a ser para casing e outros materiais. O BP: 60 químicos em `quimicos` (iguais à base) e 102 casing em `cogsItens`.
+- **Exportar e importar:** `quimicos` e `quimHist` vão no export e se juntam por id (no mesmo SAP, fica o alterado por último). A janela de importação mostra "Produtos químicos".
+- **Avisos da base atual (8):**
+  - unidade diferente do catálogo do EARL: BARITA (TON × bag), CLORETO DE SÓDIO (KG × bag), GOMA XANTANA (LB × bag), MICROESFERAS (KG × lb);
+  - valor zero: CFR-6, CFR-6L, LIQUILITE 8000 e FLUORESCEINA (que também tem o SAP provisório "XXX").
+- **Limite:** o valor não tem vigência por data. Ao mudar o valor, muda o COGS de todas as operações, inclusive das já lançadas.
+- **Testes:** `engenharia/tests/e2e_quimicos.js` (36; 37 com a planilha do BP). A regressão `e2e_engenharia` 62, `e2e_contratos` 75, `e2e_gerencial` 30 e `e2e_bp` 31 passa.
 
 ---
 

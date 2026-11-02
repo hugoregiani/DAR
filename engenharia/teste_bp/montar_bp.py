@@ -59,7 +59,10 @@ rep("  window.EARL_ENG_AVULSO=true;\n})();\n</script>", r"""  window.EARL_ENG_AV
 @media(max-width:700px){.earl-bp-tag span{display:none}}
 </style>""".replace('__SEED__', lit))
 rep('<title>EARL — Engenharia</title>', '<title>EARL — Engenharia (TESTE BP)</title>')
-rep("var EARL_VERSION = 'EARL Engenharia e5 (base v115)';", "var EARL_VERSION = 'EARL Engenharia e5 (base v115) · teste BP';")
+import re
+m = re.findall(r"var EARL_VERSION = '([^']*)';", s)
+assert len(m) == 1, 'EARL_VERSION'
+rep("var EARL_VERSION = '%s';" % m[0], "var EARL_VERSION = '%s · teste BP';" % m[0])
 
 open(OUT, 'w', encoding='utf-8').write(s)
 print('ok →', OUT, '(%.1f MB)' % (len(s.encode('utf-8')) / 1e6))

@@ -12,7 +12,8 @@
 //   - Risco (%) da planilha vai para o campo "Risco da receita / COGS" da operação (0% conta tudo; 100% fica
 //     mapeada, fora da receita e do COGS);
 //   - pessoal = time de embarque × duração da operação;
-//   - "Concluído" = consumo lançado igual ao previsto, com a data da operação; "Previsto" = só o planejado.
+//   - "Concluído" = consumo lançado igual ao previsto, com a data da operação; "Previsto" = só o planejado;
+//   - COGS: químicos no banco de produtos químicos (conferido com a base embutida no app) e casing em Custos (COGS).
 const {abrir} = require('../tests/harness');
 const fs = require('fs');
 const path = require('path');
@@ -96,12 +97,19 @@ if (!XLSX_ARQ || !HTML || !SAIDA) {
       d.rigs.push(rig);
     }
 
-    // COGS unitário (US$) de químicos e casing
-    const cogsItens = [];
-    [[quimRows, 'quim'], [casRows, 'cas']].forEach(([rows, k]) => rows.forEach((r, i) => {
-      cogsItens.push({id: 'cg_bp_' + k + '_' + (i + 1), sap: txt(r[0]), nome: txt(r[1]), unid: txt(r[4]), usd: num(r[5]), brl: null, atualizadoEm: agora});
-    }));
-    d.cogsItens = cogsItens;
+    // químicos: banco de produtos químicos (e6), que já vem com a base desta mesma tabela; confere e, se diferir, usa a planilha
+    const sapTxt = v => typeof v === 'number' && Number.isInteger(v) ? String(v) : txt(v);
+    const quimPl = quimRows.map(r => ({sap: sapTxt(r[0]), nome: txt(r[1]), unid: txt(r[4]), usd: r[5] == null || r[5] === '' ? null : num(r[5])}));
+    const quimAtual = (d.quimicos || []).map(q => [q.sap, q.nome, q.unid, q.usd].join('|')).sort().join('\n');
+    const quimIguais = quimAtual === quimPl.map(q => [q.sap, q.nome, q.unid, q.usd].join('|')).sort().join('\n');
+    if (!quimIguais) {
+      d.quimicos = quimPl.map(q => ({id: 'q_' + q.sap, ...q, atualizadoEm: agora}));
+      d.quimHist = [...(d.quimHist || []), {id: 'qh_bp', em: agora, por: '', origem: 'planilha', arquivo: 'Contrato_BP_Teste_EARL.xlsx (aba Forecast)', novos: 0, alterados: quimPl.length, removidos: 0, total: quimPl.length}];
+      avisos.push('banco de químicos diferente da base: substituído pela tabela da planilha');
+    }
+    d.quimBaseV1 = d.quimBaseV1 || agora;
+    // casing: COGS unitário em Contratos → Custos (COGS)
+    d.cogsItens = casRows.map((r, i) => ({id: 'cg_bp_cas_' + (i + 1), sap: txt(r[0]), nome: txt(r[1]), unid: txt(r[4]), usd: num(r[5]), brl: null, atualizadoEm: agora}));
 
     // catálogo de químicas do EARL (nome e unidade pelo SAP)
     const cat = {};
@@ -210,7 +218,7 @@ if (!XLSX_ARQ || !HTML || !SAIDA) {
     d.gerCfg = {...(d.gerCfg || {}), contratos: [ct.id]};
     saveDB(d);
     return {
-      inicio, itensBanco: itensBanco.length, itensContrato: ct.items.length, novos, rig: rig.id, cogs: cogsItens.length,
+      inicio, itensBanco: itensBanco.length, itensContrato: ct.items.length, novos, rig: rig.id, quimicos: d.quimicos.length, quimIguais, cogsCasing: d.cogsItens.length,
       ops: ops.length, concluidas: ops.filter(j => j.ppuCons).length, risco100: ops.filter(j => j.riscoRec >= 100).map(j => j.id),
       tipos: ops.map(j => j.id + ' ' + j.date + ' ' + (j.tipoOp === TIPO_OUTROS ? j.tipoOutro : j.tipoOp + (j.casing ? ' ' + j.casing : '')) + ' · ' + j.ppuNeeds.length + ' PPU · ' + j.chems.length + ' quím · ' + j.peopleNeeds.map(n => n.qty + ' ' + n.funcao).join(' + ') + (j.ppuCons ? ' · CONSUMO' : '') + (j.riscoRec ? ' · risco ' + j.riscoRec + '%' : '')),
       difPreco, difUnid: [...new Map(difUnid.map(x => [x.sap, x])).values()], avisos

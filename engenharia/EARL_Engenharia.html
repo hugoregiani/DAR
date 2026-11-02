@@ -3554,6 +3554,40 @@ td.ec-desc{font-size:12.5px;line-height:1.35}
 .ec-pn-sub{display:block;font-size:11px;color:var(--ink-3);font-weight:400}
 .ec-pn-nota{font-size:12px;color:var(--ink-3);margin-top:8px}
 .ec-pn-ct-tab tfoot td{border-top:2px solid var(--line-2,#D4DADD)}
+/* e6: banco de produtos químicos */
+.ec-quim-info{display:flex;flex-wrap:wrap;gap:6px;align-items:baseline;font-size:12.5px;color:var(--ink-2);margin:2px 0 4px}
+.ec-quim-info b{color:var(--ink)}
+.ec-quim-nav{color:#8A4B00;font-weight:600}
+.ec-quim-tab td:nth-child(1),.ec-quim-tab th:nth-child(1){width:120px}
+.ec-quim-tab td:nth-child(3),.ec-quim-tab th:nth-child(3){width:80px}
+.ec-quim-tab td:nth-child(4),.ec-quim-tab th:nth-child(4){width:120px}
+.ec-quim-tab td:nth-child(5){width:92px;font-size:12px;color:var(--ink-3);white-space:nowrap}
+.ec-quim-tab .ec-q-sap[readonly]{background:transparent;border-color:transparent;font-weight:600}
+.ec-quim-tab .ec-q-usd{text-align:right}
+.ec-quim-aviso{margin:1px 4px 1px 0;background:#FFF4E5;border-color:#F5C98B;color:#8A4B00;cursor:help}
+.ec-quim-hist,.ec-qp-sec{margin-top:10px;border:1px solid var(--line,#E2E5E7);border-radius:12px;padding:8px 12px}
+.ec-quim-hist summary,.ec-qp-sec summary{cursor:pointer;font-size:13px;font-weight:600;color:var(--ink)}
+.ec-quim-hist .tbl-scroll,.ec-qp-wrap{max-height:30vh;overflow:auto;margin-top:8px}
+.ec-quim-plan{width:min(980px,96vw)}
+.ec-qp-chips{display:flex;flex-wrap:wrap;gap:6px;margin:10px 0 4px}
+.ec-qp-chip{font-size:12.5px;border:1px solid var(--line,#E2E5E7);border-radius:999px;padding:4px 10px;background:#fff;color:var(--ink-2)}
+.ec-qp-chip b{color:var(--ink)}
+.ec-qp-chip.zero{opacity:.55}
+.ec-qp-novos:not(.zero){background:#EEF6EA;border-color:#CFE3C5}
+.ec-qp-valor:not(.zero),.ec-qp-texto:not(.zero){background:#FFF4E5;border-color:#F5C98B}
+.ec-qp-aviso{background:#FFF8EC;border-color:#F5DDB3;font-size:12.5px}
+.ec-qp-sobe{color:#961B24;font-weight:600}
+.ec-qp-desce{color:#2E6B2E;font-weight:600}
+.ec-qp-modo{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:12px 0 4px}
+@media(max-width:700px){.ec-qp-modo{grid-template-columns:1fr}}
+.ec-qp-op{display:grid;grid-template-columns:auto 1fr;gap:2px 8px;align-items:start;border:1px solid var(--line,#E2E5E7);border-radius:12px;padding:10px 12px;cursor:pointer}
+.ec-qp-op input{grid-row:span 2;margin-top:3px}
+.ec-qp-op span{font-size:12px;color:var(--ink-2)}
+.ec-qp-op.on{border-color:#CC0000;box-shadow:0 0 0 1px #CC0000 inset}
+.ec-qp-res{font-size:12.5px;color:var(--ink-2)}
+.ec-quim-modal>*,.ec-quim-plan>*{flex-shrink:0}
+.ec-quim-tab{min-width:760px}
+.ec-quim-plan .ec-qp-modo{margin-top:12px}
 </style>
 </head>
 <body>
@@ -28097,17 +28131,48 @@ var appendAudit = (mob, type, user, details) => {
     auditLog: [...(Array.isArray(mob.auditLog) ? mob.auditLog : []), entry]
   };
 };
+/* EARL Engenharia (avulso) e6: banco inicial de produtos químicos */
+var ENG_QUIM_BASE = {"origem": "Contrato_BP_Teste_EARL.xlsx — aba Forecast, tabela Químicos (SAP, Químicos, UOM, COGS)", "geradoEm": "2026-11-02T12:00:00.000Z", "itens": [{"sap": "212324", "nome": "BARAZAN D", "unid": "BAG", "usd": 85.93}, {"sap": "213257", "nome": "BARITA", "unid": "TON", "usd": 267.3333333333333}, {"sap": "211444", "nome": "BENTONITA", "unid": "BAG", "usd": 230.38}, {"sap": "1248178", "nome": "BOOST BC (CAULIM)", "unid": "TON", "usd": 168.61}, {"sap": "1277323", "nome": "BOOST IG (PERLITA - LOCAL SPACER)", "unid": "KG", "usd": 0.22}, {"sap": "1062609", "nome": "BRIDGEMAKER II LCM", "unid": "LB", "usd": 1.31}, {"sap": "212659", "nome": "CADIT", "unid": "M3", "usd": 34.35}, {"sap": "102009107", "nome": "CARBONATO DE CÁLCIO", "unid": "TON", "usd": 83.22}, {"sap": "100003653", "nome": "CFR-3", "unid": "LB", "usd": 1.41}, {"sap": "100003657", "nome": "CFR-3L", "unid": "GAL", "usd": 9.85}, {"sap": "101208606", "nome": "CFR-6", "unid": "LB", "usd": 0}, {"sap": "101208599", "nome": "CFR-6L", "unid": "GAL", "usd": 0}, {"sap": "100003685", "nome": "CIMENTO CLASS G", "unid": "SK", "usd": 13.15}, {"sap": "100003683", "nome": "CIMENTO CPV ARI", "unid": "SK", "usd": 6.39}, {"sap": "370758", "nome": "CIMENTO G+35% SSA-1", "unid": "TON", "usd": 281.2}, {"sap": "212675", "nome": "CLORETO DE CÁLCIO", "unid": "KG", "usd": 5.44}, {"sap": "100064159", "nome": "CLORETO DE CÁLCIO LIQ", "unid": "GAL", "usd": 1.69}, {"sap": "212395", "nome": "CLORETO DE POTÁSSIO", "unid": "BAG", "usd": 23.56}, {"sap": "214065", "nome": "CLORETO DE SÓDIO", "unid": "KG", "usd": 0.06}, {"sap": "101007444", "nome": "D-AIR 3000L LIQ", "unid": "GAL", "usd": 20.52}, {"sap": "1157591", "nome": "DUAL SPACER B LIQ (FDP-C1410-20)", "unid": "GAL", "usd": 13.5}, {"sap": "101530807", "nome": "ECONOLITE LIQ", "unid": "GAL", "usd": 2.77}, {"sap": "XXX", "nome": "FLUORESCEINA", "unid": "GAL", "usd": 0}, {"sap": "100064127", "nome": "GASCON 469 LIQ", "unid": "GAL", "usd": 6.4}, {"sap": "100003701", "nome": "GASSTOP", "unid": "LB", "usd": 3.88}, {"sap": "101280580", "nome": "GASSTOP EXP", "unid": "GAL", "usd": 30.47}, {"sap": "101242935", "nome": "GASSTOP LIQ", "unid": "GAL", "usd": 1.81}, {"sap": "213087", "nome": "GOMA XANTANA", "unid": "LB", "usd": 1.9945578231292516}, {"sap": "100003646", "nome": "HALAD-322", "unid": "LB", "usd": 3.6}, {"sap": "100003670", "nome": "HALAD-344", "unid": "LB", "usd": 5.24}, {"sap": "100003738", "nome": "HALAD-413", "unid": "LB", "usd": 7.17}, {"sap": "100003760", "nome": "HALAD-413 LIQ", "unid": "GAL", "usd": 18.74}, {"sap": "100003756", "nome": "HR-25", "unid": "LB", "usd": 2.95}, {"sap": "101630169", "nome": "HR-25 LIQ", "unid": "GAL", "usd": 13.33}, {"sap": "101791552", "nome": "LATEX 3000 (AGENA)", "unid": "GAL", "usd": 27.77}, {"sap": "1018486", "nome": "LIQUILITE 8000", "unid": "GAL", "usd": 0}, {"sap": "1190997", "nome": "MICROBOND (FDP-C1430-2)", "unid": "LB", "usd": 0.32653061224489793}, {"sap": "100003723", "nome": "MICROBOND HT", "unid": "LB", "usd": 1.27}, {"sap": "100012233", "nome": "MICROBOND M", "unid": "LB", "usd": 0.36}, {"sap": "101910298", "nome": "MICROCIMENTO", "unid": "LB", "usd": 0.45}, {"sap": "1128066", "nome": "MICROESFERAS", "unid": "KG", "usd": 3.76}, {"sap": "100003837", "nome": "MUSOL E", "unid": "GAL", "usd": 11.57}, {"sap": "212577", "nome": "ÓXIDO DE MAGNÉSIO", "unid": "BAG", "usd": 18.56}, {"sap": "102077046", "nome": "SA-1015", "unid": "LB", "usd": 9.18}, {"sap": "100003749", "nome": "SCR-100", "unid": "LB", "usd": 4.83}, {"sap": "100012238", "nome": "SCR-100 LIQ", "unid": "GAL", "usd": 16.71}, {"sap": "1076796", "nome": "SENTINELCEM (ADDITIVE 984)", "unid": "KG", "usd": 24.12}, {"sap": "2000008", "nome": "SENTINELCEM PRO", "unid": "LB", "usd": 0.72}, {"sap": "100003691", "nome": "SÍLICA SSA-1", "unid": "LB", "usd": 0.12}, {"sap": "100003722", "nome": "SILICALITE", "unid": "LB", "usd": 0.24}, {"sap": "101311191", "nome": "SUPER CBL EXP", "unid": "GAL", "usd": 44.64}, {"sap": "1159516", "nome": "TUNED DEFENSE E", "unid": "LB", "usd": 1.59}, {"sap": "1106418", "nome": "TUNED PRIME SPACER", "unid": "LB", "usd": 0.39}, {"sap": "102161744", "nome": "WELLLOCK A2", "unid": "GAL", "usd": 25.8}, {"sap": "1053839", "nome": "WELLLOCK H1", "unid": "GAL", "usd": 53.52230769230769}, {"sap": "1025200", "nome": "WELLLOCK H3", "unid": "GAL", "usd": 75.85}, {"sap": "102161679", "nome": "WELLLOCK R1", "unid": "GAL", "usd": 40.41}, {"sap": "1053838", "nome": "WELLLOCK R2", "unid": "GAL", "usd": 65.28980769230769}, {"sap": "100003623", "nome": "WG-17", "unid": "LB", "usd": 5.76}, {"sap": "101204007", "nome": "ZONESEALANT 2000 LIQ", "unid": "GAL", "usd": 16.7}]};
+var engQuimMig = d => {
+  try {
+    if (d && !d.quimBaseV1) {
+      if (!Array.isArray(d.quimicos) || !d.quimicos.length) {
+        d.quimicos = ENG_QUIM_BASE.itens.map(q => ({
+          id: 'q_' + q.sap,
+          sap: q.sap,
+          nome: q.nome,
+          unid: q.unid,
+          usd: q.usd,
+          atualizadoEm: ENG_QUIM_BASE.geradoEm
+        }));
+        d.quimHist = [...(Array.isArray(d.quimHist) ? d.quimHist : []), {
+          id: 'qh_base',
+          em: ENG_QUIM_BASE.geradoEm,
+          por: '',
+          origem: 'base',
+          arquivo: ENG_QUIM_BASE.origem,
+          novos: d.quimicos.length,
+          alterados: 0,
+          removidos: 0,
+          total: d.quimicos.length
+        }];
+      }
+      d.quimBaseV1 = new Date().toISOString();
+    }
+  } catch (e) {}
+  return d;
+};
 var loadDB = () => {
   try {
     var r = localStorage.getItem(DB_KEY);
     if (r) {
       var d = JSON.parse(r);
-      if (d.people && d.people.length > 0) return migrateDB(d);
+      if (d.people && d.people.length > 0) return engQuimMig(migrateDB(d));
     }
   } catch (_) {}
-  return migrateDB(JSON.parse(JSON.stringify(SEED_DB)));
+  return engQuimMig(migrateDB(JSON.parse(JSON.stringify(SEED_DB))));
 };
-var EARL_VERSION = 'EARL Engenharia e5 (base v115)';
+var EARL_VERSION = 'EARL Engenharia e6 (base v115)';
 var fnSafe = v => String(v == null ? '' : v).replace(/[\\/]/g, '-').replace(/["*?<>|:]/g, '').replace(/\s+/g, ' ').trim();
 var sanitizeFileName = fnSafe;
 var finalizeDateStr = m => {
@@ -62345,7 +62410,8 @@ _Gerado por: ${user}_`;
     consumos: (d.plannedJobs || []).filter(j => j.ppuCons).length,
     handovers: (d.handovers || []).length,
     sondas: (d.rigs || []).length,
-    templates: (d.opTemplates || []).length
+    templates: (d.opTemplates || []).length,
+    quimicos: (d.quimicos || []).length
   });
   var engExportar = () => {
     try {
@@ -62431,7 +62497,7 @@ _Gerado por: ${user}_`;
     var ra = engResumoDb(db),
       rb = engResumoDb(im.dados),
       rj = engResumoDb(engMesclarDb(db, im.dados));
-    var linhas = [['Contratos', 'contratos'], ['Itens com valor', 'precos'], ['Reajustes', 'reajustes'], ['Operações', 'operacoes'], ['Consumos lançados', 'consumos'], ['Handovers', 'handovers'], ['Sondas', 'sondas'], ['Templates', 'templates']];
+    var linhas = [['Contratos', 'contratos'], ['Itens com valor', 'precos'], ['Reajustes', 'reajustes'], ['Operações', 'operacoes'], ['Consumos lançados', 'consumos'], ['Handovers', 'handovers'], ['Sondas', 'sondas'], ['Templates', 'templates'], ['Produtos químicos', 'quimicos']];
     var aplicar = modo => {
       var final = modo === 'juntar' ? engMesclarDb(db, im.dados) : im.dados;
       if (!saveDB(final)) {
@@ -62520,9 +62586,13 @@ _Gerado por: ${user}_`;
     onClick: abrirEngSondas,
     title: "Cadastro de sondas"
   }, "Sondas"), engH("button", {
+    className: "btn-o eng-quimicos",
+    onClick: abrirEngQuim,
+    title: "Banco de produtos qu\xEDmicos: SAP, descri\xE7\xE3o, unidade e valor em US$ (COGS), atualizado por planilha"
+  }, "Qu\xEDmicos"), engH("button", {
     className: "btn-o eng-exportar",
     onClick: engExportar,
-    title: "Baixa um arquivo .json com todos os dados (contratos, valores, reajustes, opera\xE7\xF5es, consumos, handovers, sondas e templates) para guardar ou levar para outro computador"
+    title: "Baixa um arquivo .json com todos os dados (contratos, valores, reajustes, opera\xE7\xF5es, consumos, handovers, sondas, templates e o banco de qu\xEDmicos) para guardar ou levar para outro computador"
   }, "⬇ Exportar dados"), engH("button", {
     className: "btn-o eng-importar",
     onClick: () => engRestRef.current && engRestRef.current.click(),
@@ -62652,12 +62722,15 @@ _Gerado por: ${user}_`;
     var r = Number(j && j.riscoRec);
     return isFinite(r) && r > 0 ? Math.max(0, 1 - Math.min(100, r) / 100) : 1;
   };
+  // custo unitário pelo SAP (ou pelo nome): banco de produtos químicos (db.quimicos) vale sobre os Custos (db.cogsItens)
   var engCogsIdx = () => {
     var o = {};
-    (db.cogsItens || []).forEach(c => {
+    var add = c => {
       if (c && String(c.sap || '').trim()) o['s:' + String(c.sap).trim()] = c;
       if (c && c.nome) o['n:' + normNome(c.nome)] = c;
-    });
+    };
+    (db.cogsItens || []).forEach(add);
+    (db.quimicos || []).forEach(add);
     return o;
   };
   var engCogsDe = (idx, m) => m ? idx['s:' + String(m.sap || '').trim()] || idx['n:' + normNome(m.name || m.nome || '')] || null : null;
@@ -62811,7 +62884,8 @@ _Gerado por: ${user}_`;
       cols
     };
   };
-  var engLerPlanilha = file => new Promise((res, rej) => {
+  // lê .xlsx/.xls/.csv e devolve o workbook do XLSX
+  var engLerWb = file => new Promise((res, rej) => {
     var r = new FileReader();
     r.onload = () => {
       try {
@@ -62836,19 +62910,22 @@ _Gerado por: ${user}_`;
         } else wb = XLSX.read(buf, {
           type: 'array'
         });
-        var ws = wb.Sheets[wb.SheetNames[0]];
-        var op = raw => ({
-          header: 1,
-          defval: '',
-          raw
-        });
-        res(engPlanLinhas(XLSX.utils.sheet_to_json(ws, op(true)), XLSX.utils.sheet_to_json(ws, op(false))));
+        res(wb);
       } catch (e) {
         rej(e);
       }
     };
     r.onerror = () => rej(r.error);
     r.readAsArrayBuffer(file);
+  });
+  var engLerPlanilha = file => engLerWb(file).then(wb => {
+    var ws = wb.Sheets[wb.SheetNames[0]];
+    var op = raw => ({
+      header: 1,
+      defval: '',
+      raw
+    });
+    return engPlanLinhas(XLSX.utils.sheet_to_json(ws, op(true)), XLSX.utils.sheet_to_json(ws, op(false)));
   });
   var engBaixarXlsx = (nome, abas) => {
     var wb = XLSX.utils.book_new();
@@ -64917,7 +64994,7 @@ _Gerado por: ${user}_`;
       style: {
         marginTop: 0
       }
-    }, "Custo unit\xE1rio de cada qu\xEDmica e casing equipment, pelo SAP. O COGS da opera\xE7\xE3o \xE9 a quantidade lan\xE7ada (ou prevista) \xD7 este custo. Planilha: colunas SAP, Produto, Unidade, COGS US$ e/ou COGS R$ (uma coluna s\xF3 “COGS” vale como US$)."), engH("div", {
+    }, "Custo unit\xE1rio de casing equipment e de outros materiais, pelo SAP. As qu\xEDmicas ficam no banco de produtos qu\xEDmicos (bot\xE3o “Qu\xEDmicos” na barra); se o mesmo SAP estiver nos dois, vale o do banco de qu\xEDmicos. O COGS da opera\xE7\xE3o \xE9 a quantidade lan\xE7ada (ou prevista) \xD7 este custo. Planilha: colunas SAP, Produto, Unidade, COGS US$ e/ou COGS R$ (uma coluna s\xF3 “COGS” vale como US$)."), engH("div", {
       className: "ec-bar"
     }, engH("input", {
       className: "ipt",
@@ -65237,7 +65314,7 @@ _Gerado por: ${user}_`;
       className: "ec-vazio"
     }, "Nenhuma opera\xE7\xE3o no filtro."))), porCt.length > 1 && engH("tfoot", null, linhaT('tot', engH("b", null, "Total"), T)))))), engH("div", {
       className: "ec-pn-nota"
-    }, "Clique no contrato para abrir “Consumo e receita”. Risco 100% = opera\xE7\xE3o mapeada, mas fora da receita e do COGS. O COGS vem de Contratos → Custos (COGS).")));
+    }, "Clique no contrato para abrir “Consumo e receita”. Risco 100% = opera\xE7\xE3o mapeada, mas fora da receita e do COGS. O COGS vem do banco de Qu\xEDmicos e de Contratos \u2192 Custos (COGS).")));
   };
   /* ---------------- arquivo para o gerencial ----------------
      Pacote com os contratos escolhidos pelo engenheiro e as operações deles, já calculado (valores na data do
@@ -65571,6 +65648,738 @@ _Gerado por: ${user}_`;
     }, '⬇ Gerar arquivo (' + g.sel.length + ' contrato(s))'))));
   };
   /* ============ fim CONTRATOS (avulso) ============ */
+
+  /* =================== e6: banco de produtos químicos ===================
+     db.quimicos = [{id: 'q_<SAP>', sap, nome, unid, usd, atualizadoEm}]: valor unitário em US$ (o COGS) de cada
+     produto químico, pelo SAP. É o valor usado no COGS das químicas das operações (vale sobre db.cogsItens).
+     db.quimHist = [{id, em, por, origem: 'base'|'planilha'|'manual', arquivo, novos, alterados, removidos, total}].
+     A base (ENG_QUIM_BASE, tabela Químicos da aba Forecast) entra uma vez por computador, no loadDB (engQuimMig).
+     Atualização: o responsável manda a planilha; o engenheiro usa "⬆ Atualizar pela planilha", confere e aplica. */
+  var [engQ, setEngQ] = useState(null);
+  var engQRef = useRef(null);
+  var engUnNorm = u => {
+    var s = asciiName(String(u || '')).toLowerCase().replace(/[^a-z0-9]/g, '');
+    return {
+      gl: 'gal',
+      gll: 'gal',
+      gals: 'gal',
+      galao: 'gal',
+      galoes: 'gal',
+      lbr: 'lb',
+      lbs: 'lb',
+      libra: 'lb',
+      libras: 'lb',
+      sack: 'sk',
+      sacks: 'sk',
+      bg: 'bag',
+      bags: 'bag',
+      t: 'ton',
+      tons: 'ton',
+      tonelada: 'ton',
+      kgs: 'kg'
+    }[s] || s;
+  };
+  var engQuimCat = () => {
+    var o = {};
+    (chemCatalog || []).forEach(c => {
+      if (c && String(c.sap || '').trim()) o[sapN(c.sap)] = c;
+    });
+    return o;
+  };
+  var engQuimAvisos = (q, cat) => {
+    var a = [];
+    var sap = String(q.sap || '').trim();
+    if (!sap) return a;
+    if (!/^\d+$/.test(sap)) a.push(['SAP provisório', 'O SAP não é um número. Confira o código.']);
+    var c = cat[sapN(sap)];
+    if (!c) a.push(['fora do catálogo', 'Este SAP não está no catálogo de químicas do EARL, então não aparece para escolher nas operações.']);else if (c.unit && q.unid && engUnNorm(c.unit) !== engUnNorm(q.unid)) a.push(['unidade no EARL: ' + c.unit, 'As operações usam este produto em ' + c.unit + ' e o valor aqui é por ' + q.unid + '. O COGS da operação é quantidade × valor: confira se o valor está na mesma unidade.']);
+    var u = engNum(q.usd);
+    if (u == null) a.push(['sem valor', 'Sem valor em US$: o COGS deste produto fica de fora.']);else if (u === 0) a.push(['valor zero', 'Valor US$ 0: o COGS deste produto fica zerado.']);
+    return a;
+  };
+  var engQuimFalta = lista => {
+    var f = [];
+    var saps = lista.map(q => String(q.sap || '').trim());
+    if (saps.some(s => !s)) f.push('SAP em todas as linhas');
+    var rep = saps.filter((s, i) => s && saps.indexOf(s) !== i);
+    if (rep.length) f.push('SAP repetido (' + [...new Set(rep)].join(', ') + ')');
+    if (lista.some(q => !String(q.nome || '').trim())) f.push('descrição em todas as linhas');
+    if (lista.some(q => String(q.usd == null ? '' : q.usd).trim() !== '' && engNum(q.usd) == null)) f.push('valor US$ válido');
+    if (lista.some(q => engNum(q.usd) < 0)) f.push('valor US$ sem sinal negativo');
+    return f;
+  };
+  var engQuimMudou = (a, b) => {
+    var ua = engNum(a.usd),
+      ub = engNum(b.usd);
+    return {
+      valor: ua == null !== (ub == null) || ua != null && Math.abs(ua - ub) > 1e-9,
+      texto: String(a.nome || '').trim() !== String(b.nome || '').trim() || String(a.unid || '').trim() !== String(b.unid || '').trim()
+    };
+  };
+  // compara o banco (ou o rascunho) com outra lista: novos, alterados e removidos, pelo SAP
+  var engQuimComparar = (antes, depois) => {
+    var idx = {};
+    antes.forEach(q => {
+      idx[String(q.sap || '').trim()] = q;
+    });
+    var vistos = {},
+      novos = [],
+      alterados = [];
+    depois.forEach(q => {
+      var s = String(q.sap || '').trim();
+      vistos[s] = 1;
+      var a = idx[s];
+      if (!a) novos.push(q);else {
+        var m = engQuimMudou(a, q);
+        if (m.valor || m.texto) alterados.push(q);
+      }
+    });
+    return {
+      novos,
+      alterados,
+      removidos: antes.filter(q => !vistos[String(q.sap || '').trim()])
+    };
+  };
+  var engQuimGravar = (lista, h) => {
+    var agora = new Date().toISOString();
+    var l = lista.map(q => {
+      var sap = String(q.sap || '').trim();
+      var u = engNum(q.usd);
+      return {
+        id: q.id || 'q_' + sap,
+        sap,
+        nome: String(q.nome || '').trim(),
+        unid: String(q.unid || '').trim(),
+        usd: u == null ? null : u,
+        atualizadoEm: q._mud || !q.atualizadoEm ? agora : q.atualizadoEm
+      };
+    });
+    var cmp = engQuimComparar(db.quimicos || [], l);
+    var reg = {
+      id: 'qh_' + uid(),
+      em: agora,
+      por: String(h.por != null ? h.por : (db.hoMail || {}).nome || '').trim(),
+      origem: h.origem,
+      arquivo: h.arquivo || '',
+      novos: cmp.novos.length,
+      alterados: cmp.alterados.length,
+      removidos: cmp.removidos.length,
+      total: l.length
+    };
+    updateDB(d => ({
+      ...d,
+      quimicos: l,
+      quimHist: [...(d.quimHist || []), reg].slice(-60),
+      quimBaseV1: d.quimBaseV1 || agora,
+      hoMail: h.por && String(h.por).trim() ? {
+        ...(d.hoMail || {}),
+        nome: String(h.por).trim()
+      } : d.hoMail
+    }), {
+      kind: 'Químicos',
+      action: 'Alteração',
+      name: l.length + ' produto(s) químico(s)',
+      user: currentUser() || '—',
+      detail: (h.origem === 'planilha' ? 'Planilha ' + (h.arquivo || '') + ': ' : '') + reg.novos + ' novo(s), ' + reg.alterados + ' alterado(s), ' + reg.removidos + ' removido(s)'
+    });
+    return {
+      l,
+      reg
+    };
+  };
+  var abrirEngQuim = () => setEngQ({
+    busca: '',
+    soAviso: false,
+    sujo: false,
+    lista: (db.quimicos || []).map(q => ({
+      ...q,
+      _k: uid()
+    }))
+  });
+  var engQuimSalvar = () => {
+    var lista = engQ && engQ.lista || [];
+    if (engQuimFalta(lista).length) return;
+    var {
+      l,
+      reg
+    } = engQuimGravar(lista, {
+      origem: 'manual'
+    });
+    setEngQ(x => ({
+      ...x,
+      sujo: false,
+      lista: l.map(q => ({
+        ...q,
+        _k: uid()
+      }))
+    }));
+    setOkMsg('Banco de químicos salvo ✓ — ' + reg.novos + ' novo(s), ' + reg.alterados + ' alterado(s), ' + reg.removidos + ' removido(s)');
+    setTimeout(() => setOkMsg(''), 5000);
+  };
+  var engQuimBaixar = lista => {
+    var l = [...lista].sort((a, b) => String(a.nome || '').localeCompare(String(b.nome || ''), 'pt'));
+    var sapCel = s => /^\d{1,15}$/.test(String(s || '').trim()) ? Number(s) : String(s || '');
+    engBaixarXlsx('Banco_Quimicos_EARL_' + dToday(), [['Químicos', [['SAP', 'Descrição', 'Unidade', 'Valor US$', 'Atualizado em'], ...(l.length ? l.map(q => [sapCel(q.sap), q.nome || '', q.unid || '', engNum(q.usd), q.atualizadoEm ? fmtD(String(q.atualizadoEm).slice(0, 10)) : '']) : [[100003685, 'Exemplo: CIMENTO CLASS G (apague esta linha)', 'SK', 13.15, '']])], [14, 46, 10, 14, 14]]]);
+  };
+
+  /* ---- leitura da planilha de químicos: acha a tabela com SAP + valor (em qualquer aba; prefere "Químicos") ---- */
+  var engQuimLerWb = wb => {
+    var nh = v => asciiName(String(v == null ? '' : v)).toLowerCase().trim();
+    var melhor = null;
+    wb.SheetNames.forEach(aba => {
+      var ws = wb.Sheets[aba];
+      var raw = XLSX.utils.sheet_to_json(ws, {
+        header: 1,
+        defval: '',
+        raw: true
+      });
+      var txt = XLSX.utils.sheet_to_json(ws, {
+        header: 1,
+        defval: '',
+        raw: false
+      });
+      txt.forEach((r, i) => {
+        var m = {};
+        (r || []).forEach((v, k) => {
+          var h = nh(v);
+          if (!h) return;
+          if (m.sap == null && /^(sap|cod(igo)? ?sap|material sap|n(o)? ?sap)$/.test(h)) m.sap = k;else if (m.nome == null && /descri|produto|quimic|nome/.test(h)) m.nome = k;else if (m.unid == null && /^(unid|un$|un |uom|unit)/.test(h)) m.unid = k;else if (m.usd == null && /(^| )us( |$)|usd|dolar|dollar|cogs|custo|valor|preco|price/.test(h)) m.usd = k;
+        });
+        if (m.sap == null || m.usd == null) return;
+        var pts = (m.nome != null && /quimic/.test(nh(r[m.nome])) || /quimic/.test(nh(aba)) ? 2 : 0) + (m.nome != null ? 1 : 0) + (m.unid != null ? 1 : 0);
+        if (!melhor || pts > melhor.pts) melhor = {
+          pts,
+          aba,
+          i,
+          m,
+          raw,
+          txt
+        };
+      });
+    });
+    if (!melhor) return null;
+    var {
+      m,
+      raw,
+      txt
+    } = melhor;
+    var linhas = [],
+      ignoradas = [],
+      porSap = {},
+      repetidos = [];
+    var vazias = 0;
+    for (var i = melhor.i + 1; i < txt.length; i++) {
+      var t = k => k == null ? '' : String((txt[i] || [])[k] == null ? '' : txt[i][k]).trim();
+      var sap = t(m.sap),
+        nome = t(m.nome);
+      if (nh(sap) === 'sap') break; // começou outra tabela (ex.: Casing no Forecast)
+      if (!sap && !nome) {
+        if (++vazias >= 3) break;
+        continue;
+      }
+      vazias = 0;
+      if (!sap) {
+        ignoradas.push({
+          linha: i + 1,
+          txt: nome,
+          motivo: 'sem SAP'
+        });
+        continue;
+      }
+      if (/^\d+\.0+$/.test(sap)) sap = sap.replace(/\.0+$/, '');
+      var rv = (raw[i] || [])[m.usd];
+      var usd = typeof rv === 'number' ? rv : engNum(t(m.usd));
+      var o = {
+        sap,
+        nome,
+        unid: t(m.unid),
+        usd,
+        linha: i + 1
+      };
+      if (porSap[sap]) {
+        repetidos.push(sap);
+        linhas[linhas.indexOf(porSap[sap])] = o;
+      } else linhas.push(o);
+      porSap[sap] = o;
+    }
+    return {
+      aba: melhor.aba,
+      cabecalho: melhor.i + 1,
+      linhas,
+      porSap,
+      ignoradas,
+      repetidos: [...new Set(repetidos)]
+    };
+  };
+  var engQuimArquivo = f => {
+    if (!f) return;
+    engLerWb(f).then(wb => {
+      var r = engQuimLerWb(wb);
+      if (!r || !r.linhas.length) {
+        setSyncErr('Não achei a tabela de químicos na planilha. Ela precisa de uma linha de cabeçalho com SAP, Descrição, Unidade e Valor US$ (ou SAP, Químicos, UOM e COGS, como na aba Forecast).');
+        return;
+      }
+      setEngQ(x => x && {
+        ...x,
+        plan: {
+          ...r,
+          nome: f.name,
+          modo: 'mesclar',
+          por: (db.hoMail || {}).nome || ''
+        }
+      });
+    }).catch(err => setSyncErr('Não foi possível ler a planilha: ' + (err && err.message || err)));
+  };
+  var engQuimPlanCalc = (lista, p) => {
+    var idx = {};
+    lista.forEach(q => {
+      idx[String(q.sap || '').trim()] = q;
+    });
+    var novos = [],
+      valor = [],
+      texto = [],
+      iguais = [];
+    p.linhas.forEach(r => {
+      var a = idx[r.sap];
+      if (!a) {
+        novos.push(r);
+        return;
+      }
+      var alvo = {
+        nome: r.nome || a.nome,
+        unid: r.unid || a.unid,
+        usd: r.usd != null ? r.usd : a.usd
+      };
+      var mu = engQuimMudou(a, alvo);
+      if (mu.valor) valor.push({
+        a,
+        r
+      });else if (mu.texto) texto.push({
+        a,
+        r
+      });else iguais.push(r);
+    });
+    return {
+      novos,
+      valor,
+      texto,
+      iguais,
+      soBanco: lista.filter(q => !p.porSap[String(q.sap || '').trim()])
+    };
+  };
+  var engQuimAplicar = () => {
+    var p = engQ.plan;
+    var c = engQuimPlanCalc(engQ.lista, p);
+    var subst = p.modo === 'substituir';
+    var fora = new Set(subst ? c.soBanco.map(q => q._k) : []);
+    var l = engQ.lista.filter(q => !fora.has(q._k)).map(q => {
+      var r = p.porSap[String(q.sap || '').trim()];
+      if (!r) return q;
+      var alvo = {
+        ...q,
+        nome: r.nome || q.nome,
+        unid: r.unid || q.unid,
+        usd: r.usd != null ? r.usd : q.usd
+      };
+      var mu = engQuimMudou(q, alvo);
+      return mu.valor || mu.texto ? {
+        ...alvo,
+        _mud: true
+      } : q;
+    });
+    c.novos.forEach(r => l.push({
+      sap: r.sap,
+      nome: r.nome,
+      unid: r.unid,
+      usd: r.usd,
+      _mud: true
+    }));
+    var falta = engQuimFalta(l);
+    if (falta.length) {
+      setSyncErr('A planilha não pode ser aplicada: falta ' + falta.join(' · ') + '.');
+      return;
+    }
+    var {
+      l: final,
+      reg
+    } = engQuimGravar(l, {
+      origem: 'planilha',
+      arquivo: p.nome,
+      por: p.por
+    });
+    setEngQ(x => ({
+      ...x,
+      plan: null,
+      sujo: false,
+      lista: final.map(q => ({
+        ...q,
+        _k: uid()
+      }))
+    }));
+    setOkMsg('Banco de químicos atualizado ✓ — ' + reg.novos + ' novo(s), ' + reg.alterados + ' alterado(s), ' + reg.removidos + ' removido(s)');
+    setTimeout(() => setOkMsg(''), 6000);
+  };
+
+  /* ---- telas ---- */
+  var renderEngQuimPlan = () => {
+    var p = engQ.plan;
+    var c = engQuimPlanCalc(engQ.lista, p);
+    var subst = p.modo === 'substituir';
+    var setP = patch => setEngQ(x => ({
+      ...x,
+      plan: {
+        ...x.plan,
+        ...patch
+      }
+    }));
+    var fechar = () => setEngQ(x => ({
+      ...x,
+      plan: null
+    }));
+    var nMuda = c.novos.length + c.valor.length + c.texto.length + (subst ? c.soBanco.length : 0);
+    var u4 = v => v == null ? '—' : 'US$ ' + Number(v).toLocaleString('pt-BR', {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 4
+    });
+    var tab = (cls, cab, linhas) => engH("div", {
+      className: "tbl-scroll ec-qp-wrap"
+    }, engH("table", {
+      className: 'db-table ' + cls
+    }, engH("thead", null, engH("tr", null, cab.map((h, k) => engH("th", {
+      key: k
+    }, h)))), engH("tbody", null, linhas)));
+    var sec = (titulo, n, corpo, aberto) => n > 0 && engH("details", {
+      className: "ec-qp-sec",
+      open: aberto
+    }, engH("summary", null, titulo + ' (' + n + ')'), corpo);
+    return engH("div", {
+      className: "overlay",
+      style: {
+        zIndex: 320
+      },
+      onClick: e => {
+        if (e.target === e.currentTarget) fechar();
+      }
+    }, engH("div", {
+      className: "modal ec-modal ec-quim-plan",
+      onClick: e => e.stopPropagation()
+    }, engH("div", {
+      className: "modal-title"
+    }, engH("span", null, "Atualizar pela planilha"), engH("button", {
+      className: "modal-close",
+      onClick: fechar
+    }, "\xD7")), engH("div", {
+      className: "hm-sum"
+    }, engH("div", {
+      className: "hm-k"
+    }, "Arquivo"), engH("div", {
+      className: "hm-arq"
+    }, p.nome), engH("div", {
+      className: "hm-k"
+    }, "Tabela"), engH("div", {
+      className: "hm-arq"
+    }, 'aba “' + p.aba + '”, cabeçalho na linha ' + p.cabecalho + ' · ' + p.linhas.length + ' produto(s) lido(s)')), engH("div", {
+      className: "ec-qp-chips"
+    }, [['ec-qp-novos', c.novos.length, 'novo(s)'], ['ec-qp-valor', c.valor.length, 'com valor alterado'], ['ec-qp-texto', c.texto.length, 'com descrição ou unidade alterada'], ['ec-qp-iguais', c.iguais.length, 'sem mudança'], ['ec-qp-so', c.soBanco.length, 'só no banco (não estão na planilha)']].map(([cls, n, rot]) => engH("span", {
+      key: cls,
+      className: 'ec-qp-chip ' + cls + (n ? '' : ' zero')
+    }, engH("b", null, n), ' ' + rot))), (p.ignoradas.length > 0 || p.repetidos.length > 0) && engH("div", {
+      className: "hm-banner ec-qp-aviso"
+    }, engH("div", null, p.ignoradas.length > 0 && engH("span", null, p.ignoradas.length + ' linha(s) sem SAP ignorada(s): ' + p.ignoradas.slice(0, 6).map(x => 'linha ' + x.linha + (x.txt ? ' (' + x.txt + ')' : '')).join(', ') + (p.ignoradas.length > 6 ? '…' : '') + '. '), p.repetidos.length > 0 && engH("span", null, 'SAP repetido na planilha (vale a última linha): ' + p.repetidos.join(', ') + '.'))), engH("div", {
+      className: "ec-qp-modo"
+    }, engH("label", {
+      className: 'ec-qp-op' + (!subst ? ' on' : '')
+    }, engH("input", {
+      type: "radio",
+      name: "ec-qp-modo",
+      className: "ec-qp-mesclar",
+      checked: !subst,
+      onChange: () => setP({
+        modo: 'mesclar'
+      })
+    }), engH("b", null, "Atualizar e acrescentar"), engH("span", null, "Atualiza os produtos que est\xE3o na planilha e acrescenta os novos. Os que n\xE3o est\xE3o na planilha continuam no banco.")), engH("label", {
+      className: 'ec-qp-op' + (subst ? ' on' : '')
+    }, engH("input", {
+      type: "radio",
+      name: "ec-qp-modo",
+      className: "ec-qp-substituir",
+      checked: subst,
+      onChange: () => setP({
+        modo: 'substituir'
+      })
+    }), engH("b", null, "Substituir o banco pela planilha"), engH("span", null, 'O banco fica igual à planilha' + (c.soBanco.length ? ': ' + c.soBanco.length + ' produto(s) que não estão nela saem do banco.' : '.')))), engH("div", {
+      className: "ec-bar"
+    }, engH("label", {
+      className: "lbl",
+      style: {
+        margin: 0
+      }
+    }, "Seu nome"), engH("input", {
+      className: "ipt ec-qp-por",
+      style: {
+        maxWidth: 260
+      },
+      value: p.por || '',
+      onChange: e => setP({
+        por: e.target.value
+      })
+    }), engQ.sujo && engH("span", {
+      className: "ec-sujo"
+    }, "As altera\xE7\xF5es feitas \xE0 m\xE3o na tela do banco tamb\xE9m ser\xE3o salvas.")), sec('Valor alterado', c.valor.length, tab('ec-qp-tab-valor', ['SAP', 'Descrição', 'Unid.', 'Antes', 'Depois', 'Variação'], c.valor.map(({
+      a,
+      r
+    }) => {
+      var va = engNum(a.usd);
+      var d = va && r.usd != null ? (r.usd - va) / va * 100 : null;
+      return engH("tr", {
+        key: r.sap
+      }, engH("td", null, r.sap), engH("td", null, r.nome || a.nome), engH("td", null, r.unid || a.unid), engH("td", {
+        className: "ec-num"
+      }, u4(va)), engH("td", {
+        className: "ec-num"
+      }, engH("b", null, u4(r.usd))), engH("td", {
+        className: 'ec-num' + (d > 0 ? ' ec-qp-sobe' : d < 0 ? ' ec-qp-desce' : '')
+      }, d == null ? '—' : (d > 0 ? '+' : '') + fmtNum(d) + '%'));
+    })), true), sec('Produtos novos', c.novos.length, tab('ec-qp-tab-novos', ['SAP', 'Descrição', 'Unid.', 'Valor US$'], c.novos.map(r => engH("tr", {
+      key: r.sap
+    }, engH("td", null, r.sap), engH("td", null, r.nome), engH("td", null, r.unid), engH("td", {
+      className: "ec-num"
+    }, u4(r.usd))))), true), sec('Descrição ou unidade alterada', c.texto.length, tab('ec-qp-tab-texto', ['SAP', 'Antes', 'Depois'], c.texto.map(({
+      a,
+      r
+    }) => engH("tr", {
+      key: r.sap
+    }, engH("td", null, r.sap), engH("td", null, a.nome + ' · ' + (a.unid || '—')), engH("td", null, engH("b", null, (r.nome || a.nome) + ' · ' + (r.unid || a.unid || '—')))))), true), sec('Só no banco', c.soBanco.length, tab('ec-qp-tab-so', ['SAP', 'Descrição', 'Unid.', 'Valor US$', ''], c.soBanco.map(q => engH("tr", {
+      key: q._k
+    }, engH("td", null, q.sap), engH("td", null, q.nome), engH("td", null, q.unid), engH("td", {
+      className: "ec-num"
+    }, u4(engNum(q.usd))), engH("td", null, subst ? engH("span", {
+      className: "ec-tag ec-tag-risco"
+    }, "sai do banco") : engH("span", {
+      className: "ec-tag"
+    }, "continua"))))), subst), engH("div", {
+      className: "ec-foot"
+    }, engH("span", {
+      className: "ec-qp-res"
+    }, nMuda ? nMuda + ' mudança(s) no banco' : 'A planilha não muda nada no banco.'), engH("span", {
+      style: {
+        flex: 1
+      }
+    }), engH("button", {
+      className: "btn-o",
+      onClick: fechar
+    }, "Cancelar"), engH("button", {
+      className: "btn-r ec-qp-aplicar",
+      disabled: !nMuda,
+      onClick: engQuimAplicar
+    }, "Aplicar e salvar"))));
+  };
+  var renderEngQuim = () => {
+    if (!engQ) return null;
+    var lista = engQ.lista || [];
+    var cat = engQuimCat();
+    var setQ = (k, patch) => setEngQ(x => ({
+      ...x,
+      sujo: true,
+      lista: x.lista.map(q => q._k === k ? {
+        ...q,
+        ...patch,
+        _mud: true
+      } : q)
+    }));
+    var fechar = () => {
+      if (engQ.sujo) {
+        askConfirm({
+          title: 'Fechar sem salvar',
+          okLabel: 'Fechar sem salvar',
+          danger: true,
+          msg: engH("span", null, "O banco de qu\xEDmicos tem altera\xE7\xF5es que n\xE3o foram salvas."),
+          onOk: () => setEngQ(null)
+        });
+        return;
+      }
+      setEngQ(null);
+    };
+    var comAviso = lista.map(q => ({
+      q,
+      av: engQuimAvisos(q, cat)
+    }));
+    var nAviso = comAviso.filter(x => x.av.length).length;
+    var qb = normNome(engQ.busca);
+    var vis = comAviso.filter(x => (!qb || normNome(String(x.q.sap || '') + ' ' + String(x.q.nome || '')).includes(qb)) && (!engQ.soAviso || x.av.length)).sort((a, b) => !a.q.id !== !b.q.id ? a.q.id ? 1 : -1 : String(a.q.nome || '').localeCompare(String(b.q.nome || ''), 'pt'));
+    var falta = engQuimFalta(lista);
+    var hist = (db.quimHist || []).slice().reverse();
+    var ult = hist[0];
+    var origemTxt = h => h.origem === 'base' ? 'Base inicial — ' + (h.arquivo || 'aba Forecast') : h.origem === 'planilha' ? 'Planilha ' + (h.arquivo || '') : 'Alteração na tela';
+    var inp = (q, k, num) => engH("input", {
+      className: 'ipt ec-in ec-q-' + k,
+      value: num ? typeof q[k] === 'number' ? engNumTxt(Math.round(q[k] * 10000) / 10000) : q[k] == null ? '' : q[k] : q[k] || '',
+      inputMode: num ? 'decimal' : undefined,
+      readOnly: k === 'sap' && !!q.id,
+      title: k === 'sap' && q.id ? 'O SAP de um produto salvo não muda. Para trocar, tire a linha e inclua o produto de novo.' : undefined,
+      onChange: e => setQ(q._k, {
+        [k]: e.target.value
+      })
+    });
+    return engH("div", {
+      className: "overlay",
+      style: {
+        zIndex: 245
+      },
+      onClick: e => {
+        if (e.target === e.currentTarget) fechar();
+      }
+    }, engH("div", {
+      className: "modal ec-modal ec-quim-modal",
+      onClick: e => e.stopPropagation()
+    }, engH("div", {
+      className: "modal-title"
+    }, engH("span", null, "Banco de produtos qu\xEDmicos"), engH("button", {
+      className: "modal-close",
+      onClick: fechar
+    }, "\xD7")), engH("div", {
+      className: "eng-help",
+      style: {
+        marginTop: 0
+      }
+    }, "SAP, descri\xE7\xE3o, unidade e valor unit\xE1rio em US$ (COGS) de cada produto qu\xEDmico. \xC9 o valor usado no COGS das qu\xEDmicas das opera\xE7\xF5es (previstas e lan\xE7adas). Para atualizar, receba a planilha do respons\xE1vel, clique em “⬆ Atualizar pela planilha”, confira as mudan\xE7as e aplique."), engH("div", {
+      className: "ec-quim-info"
+    }, engH("b", {
+      className: "ec-quim-n"
+    }, lista.length + ' produto(s)'), ult && engH("span", {
+      className: "ec-quim-ult"
+    }, '· última atualização ' + fmtDH(ult.em) + ' — ' + origemTxt(ult) + (ult.por ? ' · ' + ult.por : '')), nAviso > 0 && engH("span", {
+      className: "ec-quim-nav"
+    }, '· ⚠ ' + nAviso + ' com aviso')), engH("div", {
+      className: "ec-bar"
+    }, engH("input", {
+      className: "ipt ec-quim-busca",
+      style: {
+        maxWidth: 260
+      },
+      placeholder: "Buscar SAP ou produto…",
+      value: engQ.busca || '',
+      onChange: e => {
+        var v = e.target.value;
+        setEngQ(x => ({
+          ...x,
+          busca: v
+        }));
+      }
+    }), engH("label", {
+      className: "ec-ck"
+    }, engH("input", {
+      type: "checkbox",
+      className: "ec-quim-soaviso",
+      checked: !!engQ.soAviso,
+      onChange: e => {
+        var v = e.target.checked;
+        setEngQ(x => ({
+          ...x,
+          soAviso: v
+        }));
+      }
+    }), " s\xF3 com aviso"), engH("span", {
+      style: {
+        flex: 1
+      }
+    }), engH("button", {
+      className: "btn-o ec-quim-novo",
+      onClick: () => setEngQ(x => ({
+        ...x,
+        sujo: true,
+        busca: '',
+        soAviso: false,
+        lista: [...x.lista, {
+          _k: uid(),
+          _mud: true,
+          sap: '',
+          nome: '',
+          unid: '',
+          usd: ''
+        }]
+      }))
+    }, "＋ Produto"), engH("button", {
+      className: "btn-r ec-quim-carregar",
+      onClick: () => engQRef.current && engQRef.current.click()
+    }, "⬆ Atualizar pela planilha"), engH("button", {
+      className: "btn-o ec-quim-baixar",
+      onClick: () => engQuimBaixar(lista)
+    }, lista.length ? '⬇ Baixar planilha' : '⬇ Modelo da planilha')), engH("div", {
+      className: "tbl-scroll ec-itens-wrap"
+    }, engH("table", {
+      className: "db-table ec-itens ec-quim-tab"
+    }, engH("thead", null, engH("tr", null, ['SAP', 'Descrição', 'Unid.', 'Valor US$', 'Atualizado', 'Aviso', ''].map((h, k) => engH("th", {
+      key: k
+    }, h)))), engH("tbody", null, vis.map(({
+      q,
+      av
+    }) => engH("tr", {
+      key: q._k,
+      'data-sap': String(q.sap || '')
+    }, engH("td", null, inp(q, 'sap')), engH("td", null, inp(q, 'nome')), engH("td", null, inp(q, 'unid')), engH("td", null, inp(q, 'usd', 1)), engH("td", {
+      className: "ec-quim-em"
+    }, q.atualizadoEm ? fmtD(String(q.atualizadoEm).slice(0, 10)) : '—'), engH("td", null, av.map(a => engH("span", {
+      key: a[0],
+      className: "ec-tag ec-quim-aviso",
+      title: a[1]
+    }, '⚠ ' + a[0]))), engH("td", null, engH("button", {
+      className: "btn-o hm-x",
+      title: "Tirar o produto do banco",
+      onClick: () => setEngQ(x => ({
+        ...x,
+        sujo: true,
+        lista: x.lista.filter(y => y._k !== q._k)
+      }))
+    }, "\xD7")))), !vis.length && engH("tr", null, engH("td", {
+      colSpan: 7,
+      className: "ec-vazio"
+    }, lista.length ? 'Nenhum produto no filtro.' : 'Nenhum produto — use “⬆ Atualizar pela planilha” ou “＋ Produto”.'))))), hist.length > 0 && engH("details", {
+      className: "ec-quim-hist"
+    }, engH("summary", null, 'Histórico de atualizações (' + hist.length + ')'), engH("div", {
+      className: "tbl-scroll"
+    }, engH("table", {
+      className: "db-table"
+    }, engH("thead", null, engH("tr", null, ['Quando', 'Origem', 'Por', 'Novos', 'Alterados', 'Removidos', 'Total'].map((h, k) => engH("th", {
+      key: k
+    }, h)))), engH("tbody", null, hist.slice(0, 30).map(h => engH("tr", {
+      key: h.id
+    }, engH("td", null, fmtDH(h.em)), engH("td", null, origemTxt(h)), engH("td", null, h.por || '—'), engH("td", {
+      className: "ec-num"
+    }, h.novos), engH("td", {
+      className: "ec-num"
+    }, h.alterados), engH("td", {
+      className: "ec-num"
+    }, h.removidos), engH("td", {
+      className: "ec-num"
+    }, h.total))))))), engH("div", {
+      className: "ec-foot"
+    }, falta.length > 0 && engH("span", {
+      className: "ho-pend"
+    }, 'Para salvar, falta: ' + falta.join(' · ')), engQ.sujo && !falta.length && engH("span", {
+      className: "ec-sujo"
+    }, "Altera\xE7\xF5es n\xE3o salvas"), engH("span", {
+      style: {
+        flex: 1
+      }
+    }), engH("button", {
+      className: "btn-r ec-quim-salvar",
+      disabled: falta.length > 0 || !engQ.sujo,
+      onClick: engQuimSalvar
+    }, "Salvar"))), engQ.plan && renderEngQuimPlan(), engH("input", {
+      ref: engQRef,
+      type: "file",
+      accept: ".xlsx,.xls,.csv,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel,text/csv",
+      style: {
+        display: 'none'
+      },
+      onChange: e => {
+        var f = e.target.files && e.target.files[0];
+        e.target.value = '';
+        engQuimArquivo(f);
+      }
+    }));
+  };
   var renderHandover = () => {
     var hd = hoDraft;
     if (!hd) return null;
@@ -108999,7 +109808,7 @@ ${transferDraft.notes ? '<p><b>Observações:</b> ' + esc(transferDraft.notes) +
     style: {
       flex: 1
     }
-  }, okMsg)), renderMainTabs(), safeTab === 'home' && renderHome(), safeTab === 'mob' && !planAssumed && renderSupQueue(), safeTab === 'mob' && planAssumed && React.createElement(React.Fragment, null, renderPlanRef(), renderStepper(), step === 1 && renderStep1(), step === 2 && renderStep2(), step === 3 && renderStep3(), step === 4 && renderStepChem(), step === 5 && renderStep4(), step === 6 && renderStep5(), renderMobFooter()), safeTab === 'ops' && renderOps(), safeTab === 'plan' && renderPlanejamento(), safeTab === 'coord' && renderCoord(), safeTab === 'logi' && renderLogi(), safeTab === 'lab' && renderLab(), safeTab === 'pes' && React.createElement(React.Fragment, null, secBar('pes'), renderParteApp('pessoal')), safeTab === 'eqp' && React.createElement(React.Fragment, null, secBar('eqp'), renderParteApp('equipamentos')), safeTab === 'dar' && renderDarFor(null), safeTab === 'rig' && renderRigXray(), safeTab === 'sl' && React.createElement(React.Fragment, null, hubLocation !== 'brasil' && secBar('pes'), renderEscalas()), safeTab === 'pab' && React.createElement(React.Fragment, null, secBar('pes'), renderPesBordo(), renderPesDesForm(), renderEmbForm()), safeTab === 'bulk' && renderBulk(), safeTab === 'chem' && renderChem(), safeTab === 'fc' && renderForecast(), safeTab === 'ind' && renderIndicadores(), safeTab === 'pfl' && React.createElement(React.Fragment, null, hubLocation !== 'brasil' && secBar('pes'), renderPerfis()), safeTab === 'equip' && React.createElement(React.Fragment, null, secBar(hubLocation === 'brasil' ? 'eqpBr' : 'eqp'), renderEquipmentWithScroll()), safeTab === 'eqs' && React.createElement(React.Fragment, null, secBar(hubLocation === 'brasil' ? 'eqpBr' : 'eqp'), renderEqSondas()), safeTab === 'hi' && hiMob && React.createElement(React.Fragment, null, renderHIStepper(), hiStep === 6 && renderHIEquipe(), hiStep === 7 && renderHIEquip(), hiStep === 8 && renderHI6(), hiStep === 9 && renderHI7(), hiStep === 10 && renderHI8(), hiStep === 11 && renderHI9(), hiStep === 12 && renderHI10(), renderHIFooter()), safeTab === 'jl' && jlMob && renderJL(), safeTab === 'db' && adminUnlocked && renderDB(), safeTab === 'ana' && adminUnlocked && renderAnalytics(mobs.filter(mobNoRecorte)), safeTab === 'br' && adminUnlocked && renderBrasil(), renderAvisos(), renderPlanForm(), renderHandover(), renderHoReview(), renderCoordRev(), renderParteRev(), renderLogView(), renderEnvView(), renderEmbModal(), renderCiencia(), renderAmoView(), renderAmoSup(), renderAmoLog(), renderAmoLab(), renderAmoFoto(), renderAdicForm(), renderProcView(), safeTab !== 'rig' && renderExpForm(), safeTab !== 'rig' && renderAmoForm(), renderReleaseGate(), renderPlanCascade(), renderEngSondas(), renderEngContratos(), renderEngCons(), renderEngImpDados(), renderEngGer(), renderRigForm(), renderConfirmBox(), renderDiaPanel(), escalaPrompt && (() => {
+  }, okMsg)), renderMainTabs(), safeTab === 'home' && renderHome(), safeTab === 'mob' && !planAssumed && renderSupQueue(), safeTab === 'mob' && planAssumed && React.createElement(React.Fragment, null, renderPlanRef(), renderStepper(), step === 1 && renderStep1(), step === 2 && renderStep2(), step === 3 && renderStep3(), step === 4 && renderStepChem(), step === 5 && renderStep4(), step === 6 && renderStep5(), renderMobFooter()), safeTab === 'ops' && renderOps(), safeTab === 'plan' && renderPlanejamento(), safeTab === 'coord' && renderCoord(), safeTab === 'logi' && renderLogi(), safeTab === 'lab' && renderLab(), safeTab === 'pes' && React.createElement(React.Fragment, null, secBar('pes'), renderParteApp('pessoal')), safeTab === 'eqp' && React.createElement(React.Fragment, null, secBar('eqp'), renderParteApp('equipamentos')), safeTab === 'dar' && renderDarFor(null), safeTab === 'rig' && renderRigXray(), safeTab === 'sl' && React.createElement(React.Fragment, null, hubLocation !== 'brasil' && secBar('pes'), renderEscalas()), safeTab === 'pab' && React.createElement(React.Fragment, null, secBar('pes'), renderPesBordo(), renderPesDesForm(), renderEmbForm()), safeTab === 'bulk' && renderBulk(), safeTab === 'chem' && renderChem(), safeTab === 'fc' && renderForecast(), safeTab === 'ind' && renderIndicadores(), safeTab === 'pfl' && React.createElement(React.Fragment, null, hubLocation !== 'brasil' && secBar('pes'), renderPerfis()), safeTab === 'equip' && React.createElement(React.Fragment, null, secBar(hubLocation === 'brasil' ? 'eqpBr' : 'eqp'), renderEquipmentWithScroll()), safeTab === 'eqs' && React.createElement(React.Fragment, null, secBar(hubLocation === 'brasil' ? 'eqpBr' : 'eqp'), renderEqSondas()), safeTab === 'hi' && hiMob && React.createElement(React.Fragment, null, renderHIStepper(), hiStep === 6 && renderHIEquipe(), hiStep === 7 && renderHIEquip(), hiStep === 8 && renderHI6(), hiStep === 9 && renderHI7(), hiStep === 10 && renderHI8(), hiStep === 11 && renderHI9(), hiStep === 12 && renderHI10(), renderHIFooter()), safeTab === 'jl' && jlMob && renderJL(), safeTab === 'db' && adminUnlocked && renderDB(), safeTab === 'ana' && adminUnlocked && renderAnalytics(mobs.filter(mobNoRecorte)), safeTab === 'br' && adminUnlocked && renderBrasil(), renderAvisos(), renderPlanForm(), renderHandover(), renderHoReview(), renderCoordRev(), renderParteRev(), renderLogView(), renderEnvView(), renderEmbModal(), renderCiencia(), renderAmoView(), renderAmoSup(), renderAmoLog(), renderAmoLab(), renderAmoFoto(), renderAdicForm(), renderProcView(), safeTab !== 'rig' && renderExpForm(), safeTab !== 'rig' && renderAmoForm(), renderReleaseGate(), renderPlanCascade(), renderEngSondas(), renderEngContratos(), renderEngQuim(), renderEngCons(), renderEngImpDados(), renderEngGer(), renderRigForm(), renderConfirmBox(), renderDiaPanel(), escalaPrompt && (() => {
     var e = escalaPrompt;
     var membros = (e.team.members || []).map(id => (db.people || []).find(p => p.id === id)).filter(Boolean);
     var aceitar = () => {

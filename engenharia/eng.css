@@ -150,3 +150,37 @@ td.ec-desc{font-size:12.5px;line-height:1.35}
 .ec-pn-sub{display:block;font-size:11px;color:var(--ink-3);font-weight:400}
 .ec-pn-nota{font-size:12px;color:var(--ink-3);margin-top:8px}
 .ec-pn-ct-tab tfoot td{border-top:2px solid var(--line-2,#D4DADD)}
+/* e6: banco de produtos químicos */
+.ec-quim-info{display:flex;flex-wrap:wrap;gap:6px;align-items:baseline;font-size:12.5px;color:var(--ink-2);margin:2px 0 4px}
+.ec-quim-info b{color:var(--ink)}
+.ec-quim-nav{color:#8A4B00;font-weight:600}
+.ec-quim-tab td:nth-child(1),.ec-quim-tab th:nth-child(1){width:120px}
+.ec-quim-tab td:nth-child(3),.ec-quim-tab th:nth-child(3){width:80px}
+.ec-quim-tab td:nth-child(4),.ec-quim-tab th:nth-child(4){width:120px}
+.ec-quim-tab td:nth-child(5){width:92px;font-size:12px;color:var(--ink-3);white-space:nowrap}
+.ec-quim-tab .ec-q-sap[readonly]{background:transparent;border-color:transparent;font-weight:600}
+.ec-quim-tab .ec-q-usd{text-align:right}
+.ec-quim-aviso{margin:1px 4px 1px 0;background:#FFF4E5;border-color:#F5C98B;color:#8A4B00;cursor:help}
+.ec-quim-hist,.ec-qp-sec{margin-top:10px;border:1px solid var(--line,#E2E5E7);border-radius:12px;padding:8px 12px}
+.ec-quim-hist summary,.ec-qp-sec summary{cursor:pointer;font-size:13px;font-weight:600;color:var(--ink)}
+.ec-quim-hist .tbl-scroll,.ec-qp-wrap{max-height:30vh;overflow:auto;margin-top:8px}
+.ec-quim-plan{width:min(980px,96vw)}
+.ec-qp-chips{display:flex;flex-wrap:wrap;gap:6px;margin:10px 0 4px}
+.ec-qp-chip{font-size:12.5px;border:1px solid var(--line,#E2E5E7);border-radius:999px;padding:4px 10px;background:#fff;color:var(--ink-2)}
+.ec-qp-chip b{color:var(--ink)}
+.ec-qp-chip.zero{opacity:.55}
+.ec-qp-novos:not(.zero){background:#EEF6EA;border-color:#CFE3C5}
+.ec-qp-valor:not(.zero),.ec-qp-texto:not(.zero){background:#FFF4E5;border-color:#F5C98B}
+.ec-qp-aviso{background:#FFF8EC;border-color:#F5DDB3;font-size:12.5px}
+.ec-qp-sobe{color:#961B24;font-weight:600}
+.ec-qp-desce{color:#2E6B2E;font-weight:600}
+.ec-qp-modo{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:12px 0 4px}
+@media(max-width:700px){.ec-qp-modo{grid-template-columns:1fr}}
+.ec-qp-op{display:grid;grid-template-columns:auto 1fr;gap:2px 8px;align-items:start;border:1px solid var(--line,#E2E5E7);border-radius:12px;padding:10px 12px;cursor:pointer}
+.ec-qp-op input{grid-row:span 2;margin-top:3px}
+.ec-qp-op span{font-size:12px;color:var(--ink-2)}
+.ec-qp-op.on{border-color:#CC0000;box-shadow:0 0 0 1px #CC0000 inset}
+.ec-qp-res{font-size:12.5px;color:var(--ink-2)}
+.ec-quim-modal>*,.ec-quim-plan>*{flex-shrink:0}
+.ec-quim-tab{min-width:760px}
+.ec-quim-plan .ec-qp-modo{margin-top:12px}

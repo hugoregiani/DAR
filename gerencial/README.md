@@ -41,7 +41,7 @@ Tudo é **realizado + previsto**, com o risco de cada operação aplicado:
 
 - **Receita realizada:** a quantidade lançada × o valor do item vigente na **data do serviço**, com os reajustes. O app de Engenharia calcula e grava no arquivo; o Gerencial soma. Se um reajuste mudar valores já lançados, o engenheiro gera um arquivo novo.
 - **Receita prevista:** os itens PPU previstos × o valor do contrato na data da operação, só para as operações ainda sem consumo.
-- **COGS:** quantidade (lançada, ou prevista se ainda não houver consumo) × COGS unitário do SAP, cadastrado na Engenharia em Contratos → Custos (COGS).
+- **COGS:** quantidade (lançada, ou prevista se ainda não houver consumo) × COGS unitário do SAP. Na Engenharia, as químicas vêm do banco de **Químicos** e o casing de Contratos → Custos (COGS).
 - **Risco da operação (0–100%):** receita e COGS contam × (1 − risco). Com 100%, a operação aparece, mas fica fora da receita e do COGS.
 - **Saldo do item:** contratado (com aditivos) − tudo o que foi lançado no contrato (sem filtro de data).
 - **Homem-dia:** pessoas × dias, informado no consumo da operação. No previsto, é pessoas × duração da operação.

@@ -728,7 +728,8 @@
     consumos: (d.plannedJobs || []).filter(j => j.ppuCons).length,
     handovers: (d.handovers || []).length,
     sondas: (d.rigs || []).length,
-    templates: (d.opTemplates || []).length
+    templates: (d.opTemplates || []).length,
+    quimicos: (d.quimicos || []).length
   });
   var engExportar = () => {
     try {
@@ -814,7 +815,7 @@
     var ra = engResumoDb(db),
       rb = engResumoDb(im.dados),
       rj = engResumoDb(engMesclarDb(db, im.dados));
-    var linhas = [['Contratos', 'contratos'], ['Itens com valor', 'precos'], ['Reajustes', 'reajustes'], ['Operações', 'operacoes'], ['Consumos lançados', 'consumos'], ['Handovers', 'handovers'], ['Sondas', 'sondas'], ['Templates', 'templates']];
+    var linhas = [['Contratos', 'contratos'], ['Itens com valor', 'precos'], ['Reajustes', 'reajustes'], ['Operações', 'operacoes'], ['Consumos lançados', 'consumos'], ['Handovers', 'handovers'], ['Sondas', 'sondas'], ['Templates', 'templates'], ['Produtos químicos', 'quimicos']];
     var aplicar = modo => {
       var final = modo === 'juntar' ? engMesclarDb(db, im.dados) : im.dados;
       if (!saveDB(final)) {
@@ -903,9 +904,13 @@
     onClick: abrirEngSondas,
     title: "Cadastro de sondas"
   }, "Sondas"), engH("button", {
+    className: "btn-o eng-quimicos",
+    onClick: abrirEngQuim,
+    title: "Banco de produtos qu\xEDmicos: SAP, descri\xE7\xE3o, unidade e valor em US$ (COGS), atualizado por planilha"
+  }, "Qu\xEDmicos"), engH("button", {
     className: "btn-o eng-exportar",
     onClick: engExportar,
-    title: "Baixa um arquivo .json com todos os dados (contratos, valores, reajustes, opera\xE7\xF5es, consumos, handovers, sondas e templates) para guardar ou levar para outro computador"
+    title: "Baixa um arquivo .json com todos os dados (contratos, valores, reajustes, opera\xE7\xF5es, consumos, handovers, sondas, templates e o banco de qu\xEDmicos) para guardar ou levar para outro computador"
   }, "⬇ Exportar dados"), engH("button", {
     className: "btn-o eng-importar",
     onClick: () => engRestRef.current && engRestRef.current.click(),

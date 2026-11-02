@@ -1,0 +1,366 @@
+{
+ "origem": "Contrato_BP_Teste_EARL.xlsx — aba Forecast, tabela Químicos (SAP, Químicos, UOM, COGS)",
+ "geradoEm": "2026-11-02T12:00:00.000Z",
+ "itens": [
+  {
+   "sap": "212324",
+   "nome": "BARAZAN D",
+   "unid": "BAG",
+   "usd": 85.93
+  },
+  {
+   "sap": "213257",
+   "nome": "BARITA",
+   "unid": "TON",
+   "usd": 267.3333333333333
+  },
+  {
+   "sap": "211444",
+   "nome": "BENTONITA",
+   "unid": "BAG",
+   "usd": 230.38
+  },
+  {
+   "sap": "1248178",
+   "nome": "BOOST BC (CAULIM)",
+   "unid": "TON",
+   "usd": 168.61
+  },
+  {
+   "sap": "1277323",
+   "nome": "BOOST IG (PERLITA - LOCAL SPACER)",
+   "unid": "KG",
+   "usd": 0.22
+  },
+  {
+   "sap": "1062609",
+   "nome": "BRIDGEMAKER II LCM",
+   "unid": "LB",
+   "usd": 1.31
+  },
+  {
+   "sap": "212659",
+   "nome": "CADIT",
+   "unid": "M3",
+   "usd": 34.35
+  },
+  {
+   "sap": "102009107",
+   "nome": "CARBONATO DE CÁLCIO",
+   "unid": "TON",
+   "usd": 83.22
+  },
+  {
+   "sap": "100003653",
+   "nome": "CFR-3",
+   "unid": "LB",
+   "usd": 1.41
+  },
+  {
+   "sap": "100003657",
+   "nome": "CFR-3L",
+   "unid": "GAL",
+   "usd": 9.85
+  },
+  {
+   "sap": "101208606",
+   "nome": "CFR-6",
+   "unid": "LB",
+   "usd": 0
+  },
+  {
+   "sap": "101208599",
+   "nome": "CFR-6L",
+   "unid": "GAL",
+   "usd": 0
+  },
+  {
+   "sap": "100003685",
+   "nome": "CIMENTO CLASS G",
+   "unid": "SK",
+   "usd": 13.15
+  },
+  {
+   "sap": "100003683",
+   "nome": "CIMENTO CPV ARI",
+   "unid": "SK",
+   "usd": 6.39
+  },
+  {
+   "sap": "370758",
+   "nome": "CIMENTO G+35% SSA-1",
+   "unid": "TON",
+   "usd": 281.2
+  },
+  {
+   "sap": "212675",
+   "nome": "CLORETO DE CÁLCIO",
+   "unid": "KG",
+   "usd": 5.44
+  },
+  {
+   "sap": "100064159",
+   "nome": "CLORETO DE CÁLCIO LIQ",
+   "unid": "GAL",
+   "usd": 1.69
+  },
+  {
+   "sap": "212395",
+   "nome": "CLORETO DE POTÁSSIO",
+   "unid": "BAG",
+   "usd": 23.56
+  },
+  {
+   "sap": "214065",
+   "nome": "CLORETO DE SÓDIO",
+   "unid": "KG",
+   "usd": 0.06
+  },
+  {
+   "sap": "101007444",
+   "nome": "D-AIR 3000L LIQ",
+   "unid": "GAL",
+   "usd": 20.52
+  },
+  {
+   "sap": "1157591",
+   "nome": "DUAL SPACER B LIQ (FDP-C1410-20)",
+   "unid": "GAL",
+   "usd": 13.5
+  },
+  {
+   "sap": "101530807",
+   "nome": "ECONOLITE LIQ",
+   "unid": "GAL",
+   "usd": 2.77
+  },
+  {
+   "sap": "XXX",
+   "nome": "FLUORESCEINA",
+   "unid": "GAL",
+   "usd": 0
+  },
+  {
+   "sap": "100064127",
+   "nome": "GASCON 469 LIQ",
+   "unid": "GAL",
+   "usd": 6.4
+  },
+  {
+   "sap": "100003701",
+   "nome": "GASSTOP",
+   "unid": "LB",
+   "usd": 3.88
+  },
+  {
+   "sap": "101280580",
+   "nome": "GASSTOP EXP",
+   "unid": "GAL",
+   "usd": 30.47
+  },
+  {
+   "sap": "101242935",
+   "nome": "GASSTOP LIQ",
+   "unid": "GAL",
+   "usd": 1.81
+  },
+  {
+   "sap": "213087",
+   "nome": "GOMA XANTANA",
+   "unid": "LB",
+   "usd": 1.9945578231292516
+  },
+  {
+   "sap": "100003646",
+   "nome": "HALAD-322",
+   "unid": "LB",
+   "usd": 3.6
+  },
+  {
+   "sap": "100003670",
+   "nome": "HALAD-344",
+   "unid": "LB",
+   "usd": 5.24
+  },
+  {
+   "sap": "100003738",
+   "nome": "HALAD-413",
+   "unid": "LB",
+   "usd": 7.17
+  },
+  {
+   "sap": "100003760",
+   "nome": "HALAD-413 LIQ",
+   "unid": "GAL",
+   "usd": 18.74
+  },
+  {
+   "sap": "100003756",
+   "nome": "HR-25",
+   "unid": "LB",
+   "usd": 2.95
+  },
+  {
+   "sap": "101630169",
+   "nome": "HR-25 LIQ",
+   "unid": "GAL",
+   "usd": 13.33
+  },
+  {
+   "sap": "101791552",
+   "nome": "LATEX 3000 (AGENA)",
+   "unid": "GAL",
+   "usd": 27.77
+  },
+  {
+   "sap": "1018486",
+   "nome": "LIQUILITE 8000",
+   "unid": "GAL",
+   "usd": 0
+  },
+  {
+   "sap": "1190997",
+   "nome": "MICROBOND (FDP-C1430-2)",
+   "unid": "LB",
+   "usd": 0.32653061224489793
+  },
+  {
+   "sap": "100003723",
+   "nome": "MICROBOND HT",
+   "unid": "LB",
+   "usd": 1.27
+  },
+  {
+   "sap": "100012233",
+   "nome": "MICROBOND M",
+   "unid": "LB",
+   "usd": 0.36
+  },
+  {
+   "sap": "101910298",
+   "nome": "MICROCIMENTO",
+   "unid": "LB",
+   "usd": 0.45
+  },
+  {
+   "sap": "1128066",
+   "nome": "MICROESFERAS",
+   "unid": "KG",
+   "usd": 3.76
+  },
+  {
+   "sap": "100003837",
+   "nome": "MUSOL E",
+   "unid": "GAL",
+   "usd": 11.57
+  },
+  {
+   "sap": "212577",
+   "nome": "ÓXIDO DE MAGNÉSIO",
+   "unid": "BAG",
+   "usd": 18.56
+  },
+  {
+   "sap": "102077046",
+   "nome": "SA-1015",
+   "unid": "LB",
+   "usd": 9.18
+  },
+  {
+   "sap": "100003749",
+   "nome": "SCR-100",
+   "unid": "LB",
+   "usd": 4.83
+  },
+  {
+   "sap": "100012238",
+   "nome": "SCR-100 LIQ",
+   "unid": "GAL",
+   "usd": 16.71
+  },
+  {
+   "sap": "1076796",
+   "nome": "SENTINELCEM (ADDITIVE 984)",
+   "unid": "KG",
+   "usd": 24.12
+  },
+  {
+   "sap": "2000008",
+   "nome": "SENTINELCEM PRO",
+   "unid": "LB",
+   "usd": 0.72
+  },
+  {
+   "sap": "100003691",
+   "nome": "SÍLICA SSA-1",
+   "unid": "LB",
+   "usd": 0.12
+  },
+  {
+   "sap": "100003722",
+   "nome": "SILICALITE",
+   "unid": "LB",
+   "usd": 0.24
+  },
+  {
+   "sap": "101311191",
+   "nome": "SUPER CBL EXP",
+   "unid": "GAL",
+   "usd": 44.64
+  },
+  {
+   "sap": "1159516",
+   "nome": "TUNED DEFENSE E",
+   "unid": "LB",
+   "usd": 1.59
+  },
+  {
+   "sap": "1106418",
+   "nome": "TUNED PRIME SPACER",
+   "unid": "LB",
+   "usd": 0.39
+  },
+  {
+   "sap": "102161744",
+   "nome": "WELLLOCK A2",
+   "unid": "GAL",
+   "usd": 25.8
+  },
+  {
+   "sap": "1053839",
+   "nome": "WELLLOCK H1",
+   "unid": "GAL",
+   "usd": 53.52230769230769
+  },
+  {
+   "sap": "1025200",
+   "nome": "WELLLOCK H3",
+   "unid": "GAL",
+   "usd": 75.85
+  },
+  {
+   "sap": "102161679",
+   "nome": "WELLLOCK R1",
+   "unid": "GAL",
+   "usd": 40.41
+  },
+  {
+   "sap": "1053838",
+   "nome": "WELLLOCK R2",
+   "unid": "GAL",
+   "usd": 65.28980769230769
+  },
+  {
+   "sap": "100003623",
+   "nome": "WG-17",
+   "unid": "LB",
+   "usd": 5.76
+  },
+  {
+   "sap": "101204007",
+   "nome": "ZONESEALANT 2000 LIQ",
+   "unid": "GAL",
+   "usd": 16.7
+  }
+ ]
+}

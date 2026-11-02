@@ -81,7 +81,7 @@ assert i > 0
 s = s[:i] + css + s[i:]
 
 # ---------------------------------------------------------------- app (código compilado)
-rep("var EARL_VERSION = 'EARL v115';", "var EARL_VERSION = 'EARL Engenharia e5 (base v115)';")
+rep("var EARL_VERSION = 'EARL v115';", "var EARL_VERSION = 'EARL Engenharia e6 (base v115)';")
 rep("var HO_ST = {\n  pendente: {", "var HO_ST = {\n  email: {\n    label: 'Enviado por e-mail',\n    c: '#304220',\n    bg: '#F1F5EC',\n    brd: '#D9E4CC'\n  },\n  pendente: {")
 # quem gera o e-mail assina os registros (sem login)
 rep("  var currentUser = () => authUser && authUser.email || sbUser || '';",
@@ -276,10 +276,51 @@ rep("aparece em roxo no Gantt.')))), React.createElement(\"div\", {", "aparece e
 # e5: painel "Receita e COGS" na página inicial da Engenharia
 rep("engContratos.length + ' contrato(s) vigente(s)')), engAlerta(planJobs), React.createElement(\"div\", {", "engContratos.length + ' contrato(s) vigente(s)')), engAlerta(planJobs), renderEngPainel(), React.createElement(\"div\", {")
 
+# e6: banco de produtos químicos. A base (quimicos_base.json, tabela Químicos da aba Forecast) entra uma vez
+# em cada computador, no loadDB, quando o banco ainda não tem produtos químicos (flag quimBaseV1).
+import json as _json
+_base = _json.load(open(os.path.join(AQUI, 'quimicos_base.json'), encoding='utf-8'))
+_lit = _json.dumps(_base, ensure_ascii=False).replace('</', '<\\/')
+rep("var loadDB = () => {\n", """/* EARL Engenharia (avulso) e6: banco inicial de produtos químicos */
+var ENG_QUIM_BASE = %s;
+var engQuimMig = d => {
+  try {
+    if (d && !d.quimBaseV1) {
+      if (!Array.isArray(d.quimicos) || !d.quimicos.length) {
+        d.quimicos = ENG_QUIM_BASE.itens.map(q => ({
+          id: 'q_' + q.sap,
+          sap: q.sap,
+          nome: q.nome,
+          unid: q.unid,
+          usd: q.usd,
+          atualizadoEm: ENG_QUIM_BASE.geradoEm
+        }));
+        d.quimHist = [...(Array.isArray(d.quimHist) ? d.quimHist : []), {
+          id: 'qh_base',
+          em: ENG_QUIM_BASE.geradoEm,
+          por: '',
+          origem: 'base',
+          arquivo: ENG_QUIM_BASE.origem,
+          novos: d.quimicos.length,
+          alterados: 0,
+          removidos: 0,
+          total: d.quimicos.length
+        }];
+      }
+      d.quimBaseV1 = new Date().toISOString();
+    }
+  } catch (e) {}
+  return d;
+};
+var loadDB = () => {
+""" % _lit)
+rep("      if (d.people && d.people.length > 0) return migrateDB(d);", "      if (d.people && d.people.length > 0) return engQuimMig(migrateDB(d));")
+rep("  return migrateDB(JSON.parse(JSON.stringify(SEED_DB)));", "  return engQuimMig(migrateDB(JSON.parse(JSON.stringify(SEED_DB))));")
+
 # Código novo (antes de renderHandover) e janelas novas na árvore
-novo = open(os.path.join(AQUI, 'eng_app.js'), encoding='utf-8').read() + '\n' + open(os.path.join(AQUI, 'eng_contratos.js'), encoding='utf-8').read()
+novo = open(os.path.join(AQUI, 'eng_app.js'), encoding='utf-8').read() + '\n' + open(os.path.join(AQUI, 'eng_contratos.js'), encoding='utf-8').read() + '\n' + open(os.path.join(AQUI, 'eng_quimicos.js'), encoding='utf-8').read()
 rep("  var renderHandover = () => {\n", novo.rstrip('\n') + "\n  var renderHandover = () => {\n")
-rep("renderRigForm(), renderConfirmBox(),", "renderEngSondas(), renderEngContratos(), renderEngCons(), renderEngImpDados(), renderEngGer(), renderRigForm(), renderConfirmBox(),")
+rep("renderRigForm(), renderConfirmBox(),", "renderEngSondas(), renderEngContratos(), renderEngQuim(), renderEngCons(), renderEngImpDados(), renderEngGer(), renderRigForm(), renderConfirmBox(),")
 # sonda salva com data de alteração (para o "juntar" da importação ficar com a mais recente)
 rep("      regiao: regiaoDaBase(rigDraft.base) || rigDraft.regiao || 'nne',", "      regiao: regiaoDaBase(rigDraft.base) || rigDraft.regiao || 'nne',\n      updatedAt: new Date().toISOString(),")
 

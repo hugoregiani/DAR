@@ -66,7 +66,7 @@ const usd = v => 'US$ ' + v.toLocaleString('pt-BR', {minimumFractionDigits: 2, m
   const ops = db.plannedJobs.filter(j => j.contratoId === 'ct_bp').sort((a, b) => a.id.localeCompare(b.id));
   conf(ct && ct.items.length === 134 && ct.items.every(i => typeof i.usd === 'number') && ct.inicio === '2026-06-22', 'contrato BP: 134 itens PPU com US$, início 22/06/2026', ct && {n: ct.items.length, ini: ct.inicio});
   conf(db.rigs.some(r => r.nomePetrobras === 'NS-39' && r.base === 'Macaé') && ops.every(j => j.rigId === 'rig_bp_ns39'), 'sonda NS-39 cadastrada (base Macaé) e usada nas operações');
-  conf((db.cogsItens || []).length === 162, 'tabela de COGS: 60 químicos + 102 casing', (db.cogsItens || []).length);
+  conf((db.quimicos || []).length === 60 && (db.cogsItens || []).length === 102, 'COGS: 60 produtos no banco de químicos e 102 casing em Custos (COGS)', [(db.quimicos || []).length, (db.cogsItens || []).length]);
   conf(ops.length === 27 && ops.filter(j => j.ppuCons).length === 9, '27 operações do BP, 9 com consumo lançado', [ops.length, ops.filter(j => j.ppuCons).length]);
   const ordem = ops.map((j, i) => j.date === pl[i].data && (!!j.ppuCons) === /^conclu/i.test(pl[i].status) && j.riscoRec === Math.round(pl[i].risco * 100));
   conf(ordem.every(Boolean), 'cada operação com a data, a situação e o risco da planilha', ordem.map((x, i) => x ? null : ops[i].id).filter(Boolean));

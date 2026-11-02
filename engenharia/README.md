@@ -26,7 +26,27 @@ A Engenharia do EARL separada do resto do sistema, para usar **sem servidor, sem
   - **Realizado:** operação com consumo lançado, pelo valor do contrato na data do serviço.
   - **Previsto:** operação ainda sem consumo, pelos itens PPU previstos × valor do contrato na data da operação. O COGS vem das químicas e do casing previstos.
 - **Risco da receita / COGS (%):** campo na janela da operação (seção 2). A receita e o COGS da operação contam × (1 − risco). Com **0%** contam inteiros; com **100%** a operação continua mapeada (Gantt, lista, handover), mas **fica fora da receita e do COGS**. A Lista mostra a etiqueta "risco N%". Esse campo é diferente do "Risco de acontecer" da contingência.
-- **Custos (COGS):** botão na tela de Contratos. Custo unitário de cada química e casing equipment, pelo SAP, em US$ e/ou R$. Pode ser digitado ou carregado de planilha (colunas `SAP`, `Produto`, `Unidade`, `COGS US$` e/ou `COGS R$`; uma coluna só "COGS" vale como US$). O consumo da operação e a aba "Consumo e receita" mostram COGS e margem.
+- **Químicos (banco de produtos químicos):** botão na barra. Lista **SAP, descrição, unidade e valor unitário em US$** (o COGS) de cada produto químico.
+  - **Uso:** é o valor usado no COGS das químicas das operações, previstas e lançadas.
+  - **Base:** já vem com os 60 produtos da tabela "Químicos" da aba Forecast da planilha do BP. Ela entra uma vez em cada computador. Depois disso, só muda pelo que o engenheiro fizer.
+  - **Atualizar pela planilha:** o responsável manda a planilha e o engenheiro clica em **⬆ Atualizar pela planilha**. O app mostra antes de gravar:
+    - os produtos novos;
+    - os que mudaram de valor (antes, depois e variação %);
+    - os que mudaram de descrição ou unidade;
+    - os que não estão na planilha;
+    - as linhas ignoradas (sem SAP) e os SAP repetidos.
+
+    Aí ele escolhe **Atualizar e acrescentar** (os que não estão na planilha continuam) ou **Substituir o banco pela planilha**, e clica em **Aplicar e salvar**.
+  - **Formatos de planilha aceitos:**
+    - o modelo do app (`SAP`, `Descrição`, `Unidade`, `Valor US$`);
+    - a própria aba Forecast: o app acha a tabela `SAP / Químicos / UOM / COGS` e ignora as de PPU e Casing;
+    - Excel ou CSV.
+  - **⬇ Baixar planilha** gera a planilha com o banco atual: é a planilha-mestre para editar e mandar.
+  - **Edição na tela:** dá para mudar descrição, unidade e valor, incluir (**＋ Produto**) ou tirar produtos e clicar em **Salvar**. O SAP de um produto salvo não muda.
+  - **Avisos:** produto fora do catálogo de químicas do EARL, unidade diferente da usada nas operações (o COGS é quantidade × valor, então as duas precisam estar na mesma unidade), SAP provisório e valor zero ou em branco.
+  - **Histórico:** cada atualização fica registrada com data, origem (base, planilha ou tela), quem fez e quantos produtos ficaram novos, alterados e removidos.
+  - **Atenção:** o valor vale para todas as operações, inclusive as já lançadas; ao mudar um valor, o COGS delas muda junto.
+- **Custos (COGS):** botão na tela de Contratos, para casing equipment e outros materiais. As químicas ficam no banco de Químicos; se o mesmo SAP estiver nos dois, vale o do banco de Químicos. Custo unitário pelo SAP, em US$ e/ou R$. Pode ser digitado ou carregado de planilha (colunas `SAP`, `Produto`, `Unidade`, `COGS US$` e/ou `COGS R$`; uma coluna só "COGS" vale como US$). O consumo da operação e a aba "Consumo e receita" mostram COGS e margem.
 - **⬇ Arquivo do gerencial:** botão na barra (e na aba Consumo e receita). O engenheiro marca os contratos sob a responsabilidade dele e gera um `.json` com os contratos (itens, saldos, valores, reajustes) e as operações (previsto com valores, consumo lançado, receita, COGS e risco). Esse arquivo vai para a pasta do SharePoint do gerencial e é lido pelo **EARL Gerencial** (`../gerencial`).
 - **Consumo e receita:** aba nova na Engenharia.
   - **Num contrato:** receita em R$ e US$, receita por operação, saldo por item PPU (contratado, consumido, saldo e % usado), receita por mês e a lista das operações que já passaram e estão sem consumo lançado.
@@ -61,7 +81,7 @@ Não tem login, escolha de região, Coordenação, Logística, Pessoal, Equipame
 
 O app funciona offline e os dados ficam **só no navegador** do computador onde foram lançados. Para levar a outro computador:
 
-1. No computador de origem, clique em **⬇ Exportar dados**. Baixa um arquivo `EARL_Engenharia_dados_AAAA-MM-DD_HHhMM.json` com **tudo**: contratos, itens, valores, reajustes, operações, consumos, handovers, destinatários dos e-mails, sondas e templates.
+1. No computador de origem, clique em **⬇ Exportar dados**. Baixa um arquivo `EARL_Engenharia_dados_AAAA-MM-DD_HHhMM.json` com **tudo**: contratos, itens, valores, reajustes, operações, consumos, handovers, destinatários dos e-mails, sondas, templates e o banco de químicos.
 2. Leve o arquivo (OneDrive, rede, e-mail, pendrive) e abra o mesmo `EARL_Engenharia.html` no outro computador.
 3. Lá, clique em **⬆ Importar dados** e escolha o arquivo. A janela compara o que há neste computador, o que há no arquivo e como fica depois de juntar.
    - **Juntar com os dados deste computador:** soma os dois. Quando o mesmo registro existe nos dois, fica o alterado por último. Use quando os dois computadores lançaram coisas. Atenção: o que foi apagado num computador volta ao juntar.
@@ -87,7 +107,7 @@ node teste_bp/e2e_bp.js Contrato_BP_Teste_EARL.xlsx EARL_Engenharia_BP_teste.htm
 
 - **Contrato BP:** os 134 itens com o valor em US$ do Ano 1 (os itens 8-1 e 8-2 entram no cadastro) e início em 22/06/2026.
 - **Sonda NS-39:** cadastrada, com base em Macaé.
-- **COGS:** a tabela de químicos e casing da planilha (162 linhas).
+- **COGS:** os 60 químicos no banco de Químicos (iguais à base do app) e os 102 casing em Custos (COGS).
 - **27 operações**, uma por coluna do Forecast:
   - **Tipo:** revestimento → Cimentação primária com o tamanho; P&A → Abandono; LCP → Tampão de combate à perda; o resto → Outros, com a descrição da planilha.
   - **Datas:** fixas, sem acompanhar a operação anterior da sonda.
@@ -106,10 +126,12 @@ node teste_bp/e2e_bp.js Contrato_BP_Teste_EARL.xlsx EARL_Engenharia_BP_teste.htm
   ```
 
   A pasta `node_modules` precisa de `react@18.2.0`, `react-dom@18.2.0`, `xlsx@0.18.5` e `jspdf@2.5.1`, as mesmas versões que o EARL carrega do cdnjs. Elas vão embutidas no HTML.
+- `eng_quimicos.js` tem o banco de produtos químicos (e6). A base inicial fica no `quimicos_base.json`, gerado pelo `gerar_quimicos_base.py` a partir da aba Forecast; o patch embute a base e a aplica uma vez no `loadDB` (flag `quimBaseV1`).
 - `eng_app.js` tem o código novo da e1 (e-mail do handover, aba Handovers, sondas e backup); `eng_contratos.js`, o da e2 em diante (contratos, valores, reajustes, consumo, receita, COGS, risco, arquivo do gerencial e o painel da página inicial). `eng.css` tem o visual novo.
 - Cada troca do patch confere que o trecho original existe. Com `CHECAR=1`, o script lista todas as falhas de uma vez.
 - Os dados ficam com o prefixo `earleng:` no armazenamento do navegador, para não misturar com outros arquivos do EARL abertos do disco.
 - Testes, com o arquivo aberto do disco, a internet bloqueada e o relógio do navegador fixo em 02/11/2026:
   - `node tests/e2e_engenharia.js EARL_Engenharia.html [pasta-das-telas]`: 62 verificações (abertura, handover e e-mail, sondas, exportar e importar substituindo);
+  - `node tests/e2e_quimicos.js EARL_Engenharia.html [pasta-das-telas] [planilha do BP]`: 36 verificações (37 com a planilha). Cobre a base, os avisos, baixar a planilha, atualizar juntando e substituindo, a planilha no formato do Forecast, a edição na tela, o histórico, o COGS das operações, exportar e a base aplicada uma vez;
   - `node tests/e2e_contratos.js EARL_Engenharia.html [pasta-das-telas]`: 75 verificações (contratos, planilhas, reajustes, consumo, receita, juntar dados de outro computador, tela pequena 1366×768, COGS e risco, e o painel Receita e COGS com os filtros).
-- Versão: `EARL_VERSION = 'EARL Engenharia e5 (base v115)'`. O teste do fluxo completo com o Gerencial está em `../gerencial/tests/e2e_gerencial.js`.
+- Versão: `EARL_VERSION = 'EARL Engenharia e6 (base v115)'`. O teste do fluxo completo com o Gerencial está em `../gerencial/tests/e2e_gerencial.js`.

@@ -104,12 +104,15 @@
     var r = Number(j && j.riscoRec);
     return isFinite(r) && r > 0 ? Math.max(0, 1 - Math.min(100, r) / 100) : 1;
   };
+  // custo unitário pelo SAP (ou pelo nome): banco de produtos químicos (db.quimicos) vale sobre os Custos (db.cogsItens)
   var engCogsIdx = () => {
     var o = {};
-    (db.cogsItens || []).forEach(c => {
+    var add = c => {
       if (c && String(c.sap || '').trim()) o['s:' + String(c.sap).trim()] = c;
       if (c && c.nome) o['n:' + normNome(c.nome)] = c;
-    });
+    };
+    (db.cogsItens || []).forEach(add);
+    (db.quimicos || []).forEach(add);
     return o;
   };
   var engCogsDe = (idx, m) => m ? idx['s:' + String(m.sap || '').trim()] || idx['n:' + normNome(m.name || m.nome || '')] || null : null;
@@ -263,7 +266,8 @@
       cols
     };
   };
-  var engLerPlanilha = file => new Promise((res, rej) => {
+  // lê .xlsx/.xls/.csv e devolve o workbook do XLSX
+  var engLerWb = file => new Promise((res, rej) => {
     var r = new FileReader();
     r.onload = () => {
       try {
@@ -288,19 +292,22 @@
         } else wb = XLSX.read(buf, {
           type: 'array'
         });
-        var ws = wb.Sheets[wb.SheetNames[0]];
-        var op = raw => ({
-          header: 1,
-          defval: '',
-          raw
-        });
-        res(engPlanLinhas(XLSX.utils.sheet_to_json(ws, op(true)), XLSX.utils.sheet_to_json(ws, op(false))));
+        res(wb);
       } catch (e) {
         rej(e);
       }
     };
     r.onerror = () => rej(r.error);
     r.readAsArrayBuffer(file);
+  });
+  var engLerPlanilha = file => engLerWb(file).then(wb => {
+    var ws = wb.Sheets[wb.SheetNames[0]];
+    var op = raw => ({
+      header: 1,
+      defval: '',
+      raw
+    });
+    return engPlanLinhas(XLSX.utils.sheet_to_json(ws, op(true)), XLSX.utils.sheet_to_json(ws, op(false)));
   });
   var engBaixarXlsx = (nome, abas) => {
     var wb = XLSX.utils.book_new();
@@ -2369,7 +2376,7 @@
       style: {
         marginTop: 0
       }
-    }, "Custo unit\xE1rio de cada qu\xEDmica e casing equipment, pelo SAP. O COGS da opera\xE7\xE3o \xE9 a quantidade lan\xE7ada (ou prevista) \xD7 este custo. Planilha: colunas SAP, Produto, Unidade, COGS US$ e/ou COGS R$ (uma coluna s\xF3 “COGS” vale como US$)."), engH("div", {
+    }, "Custo unit\xE1rio de casing equipment e de outros materiais, pelo SAP. As qu\xEDmicas ficam no banco de produtos qu\xEDmicos (bot\xE3o “Qu\xEDmicos” na barra); se o mesmo SAP estiver nos dois, vale o do banco de qu\xEDmicos. O COGS da opera\xE7\xE3o \xE9 a quantidade lan\xE7ada (ou prevista) \xD7 este custo. Planilha: colunas SAP, Produto, Unidade, COGS US$ e/ou COGS R$ (uma coluna s\xF3 “COGS” vale como US$)."), engH("div", {
       className: "ec-bar"
     }, engH("input", {
       className: "ipt",
@@ -2689,7 +2696,7 @@
       className: "ec-vazio"
     }, "Nenhuma opera\xE7\xE3o no filtro."))), porCt.length > 1 && engH("tfoot", null, linhaT('tot', engH("b", null, "Total"), T)))))), engH("div", {
       className: "ec-pn-nota"
-    }, "Clique no contrato para abrir “Consumo e receita”. Risco 100% = opera\xE7\xE3o mapeada, mas fora da receita e do COGS. O COGS vem de Contratos → Custos (COGS).")));
+    }, "Clique no contrato para abrir “Consumo e receita”. Risco 100% = opera\xE7\xE3o mapeada, mas fora da receita e do COGS. O COGS vem do banco de Qu\xEDmicos e de Contratos \u2192 Custos (COGS).")));
   };
   /* ---------------- arquivo para o gerencial ----------------
      Pacote com os contratos escolhidos pelo engenheiro e as operações deles, já calculado (valores na data do
