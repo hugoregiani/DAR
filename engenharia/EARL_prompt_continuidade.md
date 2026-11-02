@@ -265,6 +265,23 @@ Pedido do Hugo: montar um banco de dados de produtos químicos com SAP, descriç
 - **Limite:** o valor não tem vigência por data. Ao mudar o valor, muda o COGS de todas as operações, inclusive das já lançadas.
 - **Testes:** `engenharia/tests/e2e_quimicos.js` (36; 37 com a planilha do BP). A regressão `e2e_engenharia` 62, `e2e_contratos` 75, `e2e_gerencial` 30 e `e2e_bp` 31 passa.
 
+### e6 (cont., 02/11/2026): teste BP vazio, espaço do navegador e cartões do painel
+
+- **Relato:** o `EARL_Engenharia_BP_teste.html` abriu vazio (0 operações) e com os 16 contratos do EARL.
+- **Causa** (reproduzida): no Chrome e no Edge, todos os HTML abertos do disco dividem o mesmo localStorage (~5.242.880 caracteres). A simulação v115 sozinha usa ~2,1 milhões ao abrir, e mais com o uso. Sem espaço, o `S.call(...SEED)` falhou calado e o `loadDB` caiu no `SEED_DB` vazio. Se o arquivo for aberto numa pré-visualização, o storage é bloqueado e o app nem abria: o EARL lê o localStorage fora de try em vários pontos.
+- **Teste BP** (`montar_bp.py`):
+  - **Marca da versão:** o seed ganha `testeBP` (hash do seed); `EARL_BP_SEED`/`EARL_BP_ID` ficam na página e `earlengbp:earl_bp_id` no navegador. Se o guardado não for desta versão, apaga as chaves `earlengbp:` e grava.
+  - **Sem espaço:** se não couber, `EARL_BP_SEM_ESPACO` e a etiqueta avisa "este navegador não está salvando".
+  - **loadDB:** usa o banco guardado só se `d.testeBP === EARL_BP_ID`; senão, `JSON.parse(EARL_BP_SEED)`, o que funciona sem storage.
+  - **Contratos:** `gerar_seed_bp.js` arquiva (`archived`) os outros contratos. Apagar não adianta: a migração recria 6 contratos da semente.
+- **Armazenamento bloqueado** (casca do `patch_engenharia.py`): se `localStorage` ou `sessionStorage` lançar erro, entra um storage em memória (`Object.defineProperty(window, …)`) e `EARL_ARMAZ_BLOQUEADO`. `window.EARL_ARMAZ = {P, G, S, R}` expõe as funções originais.
+- **Espaço do navegador** (`eng_app.js`):
+  - **Medição:** `engEspacoMedir` soma as chaves por prefixo, com cota de 5.242.880.
+  - **Aviso:** `renderEngEspacoAviso` aparece na página inicial (antes do painel) quando o uso passa de 85%, quando uma gravação é recusada (`engEspacoFalhou`, chamado no `updateDB`, cuja mensagem de "Granéis & HCl" foi trocada) ou quando o storage está bloqueado.
+  - **Tela:** `renderEngEspaco` traz uma tabela por arquivo. "Apagar" só aparece para `earlsimNNN:` e `earlengbp:` (quando não é o próprio arquivo); Engenharia, Gerencial e o EARL sem prefixo nunca.
+- **Painel da página inicial:** pedido do Hugo, os cartões ficam na ordem Receita (US$), COGS, Operações, **Receita / operação (US$)** (`ec-pn-rec-op`, receita ÷ operações que contam, sem as de risco 100%; realizado e previsto em separado; `engSomaV` ganhou `nFR`/`nFP`) e Margem. O cartão "Receita em R$" saiu; as tabelas continuam com R$. O Gerencial ainda tem o layout antigo dos cartões.
+- **Testes:** `e2e_espaco` 12 (novo), `e2e_bp` 38 (+ só BP ativo, receita/operação, alteração salva, sem espaço, versão anterior, bloqueado), `e2e_contratos` 76, `e2e_quimicos` 36, `e2e_engenharia` 62 e `e2e_gerencial` 30.
+
 ---
 
 ## 4. Última mudança: v115 (Inventário a bordo: "Movimentar material" em cada contentor e na sacaria, em todas as categorias; Logística: desfazer a divisão da tesoura)

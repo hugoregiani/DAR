@@ -6,11 +6,17 @@
    misturar com outros arquivos do EARL abertos do disco (file:// divide o mesmo armazenamento). */
 (function(){
   var P='earleng:';var SP=Storage.prototype,G=SP.getItem,S=SP.setItem,R=SP.removeItem;
+  /* armazenamento bloqueado (arquivo aberto dentro de uma pré-visualização): o app abre com um armazenamento
+     só na memória, mostra os dados e avisa que nada fica salvo */
+  function memoria(){var m={},o={getItem:function(k){return Object.prototype.hasOwnProperty.call(m,k)?m[k]:null;},setItem:function(k,v){m[k]=String(v);},removeItem:function(k){delete m[k];},clear:function(){m={};},key:function(i){return Object.keys(m)[i]||null;}};Object.defineProperty(o,'length',{get:function(){return Object.keys(m).length;}});return o;}
+  ['localStorage','sessionStorage'].forEach(function(n){var b=false;try{window[n].getItem('earl');}catch(e){b=true;}
+    if(b){try{Object.defineProperty(window,n,{configurable:true,value:memoria()});}catch(e){}if(n==='localStorage')window.EARL_ARMAZ_BLOQUEADO=true;}});
   SP.getItem=function(k){return G.call(this,P+k);};
   SP.setItem=function(k,v){return S.call(this,P+k,v);};
   SP.removeItem=function(k){return R.call(this,P+k);};
   try{var IO=IDBFactory.prototype.open;IDBFactory.prototype.open=function(n,v){return v===undefined?IO.call(this,P+n):IO.call(this,P+n,v);};}catch(e){}
   window.EARL_ENG_AVULSO=true;
+  window.EARL_ARMAZ={P:P,G:G,S:S,R:R}; /* funções originais, sem prefixo: tela "Espaço do navegador" */
 })();
 </script>
 
@@ -3588,6 +3594,16 @@ td.ec-desc{font-size:12.5px;line-height:1.35}
 .ec-quim-modal>*,.ec-quim-plan>*{flex-shrink:0}
 .ec-quim-tab{min-width:760px}
 .ec-quim-plan .ec-qp-modo{margin-top:12px}
+/* e6: espaço do navegador */
+.ec-esp-aviso{background:#FFF4E5;border-color:#F5C98B;margin:4px 0 14px}
+.ec-esp-aviso>div{flex:1;display:flex;flex-direction:column;gap:2px}
+.ec-esp-aviso b{color:#8A4B00}
+.ec-esp-aviso span{font-size:12.5px;color:var(--ink-2)}
+.ec-esp-modal{width:min(820px,96vw);max-height:92vh;overflow:auto;display:flex;flex-direction:column}
+.ec-esp-modal>*{flex-shrink:0}
+.ec-esp-total{display:flex;flex-direction:column;gap:6px;margin:6px 0 10px;font-size:13px}
+.ec-esp-total .ec-barra{height:10px}
+.ec-esp-tab td:first-child{min-width:240px}
 </style>
 </head>
 <body>
@@ -45257,7 +45273,10 @@ function App() {
           db: before
         });
       }
-      if (!saveDB(next)) setTimeout(() => setSyncErr('⚠ O navegador recusou a gravação — o armazenamento local está cheio ' + 'e esta alteração NÃO foi salva neste aparelho. Costuma ser anexo de nota fiscal grande demais: ' + 'apague anexos antigos em Granéis & HCl (ou exporte o banco) e repita a operação.'), 0);
+      if (!saveDB(next)) setTimeout(() => {
+        setSyncErr('⚠ O navegador recusou a gravação e esta alteração NÃO foi salva neste computador. O espaço do navegador para arquivos abertos do disco está cheio (ele é dividido com o EARL completo, as simulações, o Gerencial e os testes). Use “Ver e liberar espaço” na página inicial da Engenharia, ou “⬇ Exportar dados” para não perder o que foi feito.');
+        engEspacoFalhou();
+      }, 0);
       if (sbRef.current) {
         sbRef.current.from('operations').upsert({
           id: '__DB__',
@@ -60463,7 +60482,7 @@ _Gerado por: ${user}_`;
       className: "pg-chip-ic"
     }, brasilMapIcon(hubLocation === 'macae' ? 'macae' : hubLocation === 'brasil' ? 'brasil' : 'nne', 16)), regNome, React.createElement("i", {
       "aria-hidden": "true"
-    }, "\xB7"), engContratos.length + ' contrato(s) vigente(s)')), engAlerta(planJobs), renderEngPainel(), React.createElement("div", {
+    }, "\xB7"), engContratos.length + ' contrato(s) vigente(s)')), engAlerta(planJobs), renderEngEspacoAviso(), renderEngPainel(), React.createElement("div", {
       className: "eng2-grid"
     }, React.createElement("div", {
       role: "button",
@@ -62574,6 +62593,199 @@ _Gerado por: ${user}_`;
       className: "btn-o",
       onClick: fechar
     }, "Cancelar"))));
+  };
+  /* ---- e6: espaço do navegador ----
+     No Chrome e no Edge, todos os HTML abertos do disco (file://) dividem o mesmo localStorage, de cerca de
+     5 milhões de caracteres: EARL completo, simulações (earlsimNNN:), esta Engenharia (earleng:), o teste BP
+     (earlengbp:) e o Gerencial (earlger:). Quando enche, nenhum deles grava. Esta tela mostra quem ocupa o
+     espaço e deixa apagar só dados de simulação e de teste. */
+  var ENG_COTA = 5242880;
+  var [engEsp, setEngEsp] = useState(null);
+  var [engEspMed, setEngEspMed] = useState(null);
+  var [engEspFalhou, setEngEspFalhou] = useState(false);
+  var engEspacoMedir = () => {
+    var A = window.EARL_ARMAZ;
+    if (window.EARL_ARMAZ_BLOQUEADO) return {
+      ok: false,
+      erro: 'o navegador bloqueou o armazenamento deste arquivo'
+    };
+    try {
+      var por = {},
+        tot = 0;
+      for (var i = 0; i < localStorage.length; i++) {
+        var k = localStorage.key(i);
+        if (k == null) continue;
+        var v = A ? A.G.call(localStorage, k) : null;
+        var n = k.length + (v ? v.length : 0);
+        tot += n;
+        var m = /^([a-z][a-z0-9]*):/i.exec(k);
+        var g = m ? m[1] + ':' : '';
+        (por[g] = por[g] || {
+          g,
+          n: 0,
+          chaves: 0
+        }).n += n;
+        por[g].chaves++;
+      }
+      return {
+        ok: true,
+        tot,
+        pct: tot / ENG_COTA * 100,
+        por: Object.values(por).sort((a, b) => b.n - a.n)
+      };
+    } catch (e) {
+      return {
+        ok: false,
+        erro: String(e && e.message || e)
+      };
+    }
+  };
+  useEffect(() => {
+    setEngEspMed(engEspacoMedir());
+  }, []);
+  var engEspacoFalhou = () => {
+    setEngEspFalhou(true);
+    setEngEspMed(engEspacoMedir());
+  };
+  var engEspacoNome = g => {
+    var P = window.EARL_ARMAZ && window.EARL_ARMAZ.P;
+    var m = /^earlsim(\d+)/.exec(g);
+    var este = g === P ? ' — este arquivo' : '';
+    if (g === 'earleng:') return {
+      nome: 'EARL Engenharia' + este,
+      obs: 'dados da engenharia: não se apagam por aqui'
+    };
+    if (g === 'earlengbp:') return {
+      nome: 'EARL Engenharia — teste BP' + este,
+      apaga: !este,
+      obs: este ? 'para voltar aos dados da planilha, use “Reiniciar” na etiqueta TESTE BP' : 'dados de teste; ao abrir o teste de novo, ele volta aos dados da planilha'
+    };
+    if (g === 'earlger:') return {
+      nome: 'EARL Gerencial',
+      obs: 'arquivos carregados no Gerencial: use “Limpar” lá'
+    };
+    if (m) return {
+      nome: 'EARL — simulação v' + m[1],
+      apaga: true,
+      obs: 'dados fictícios; ao abrir a simulação de novo, ela recomeça do início'
+    };
+    if (!g) return {
+      nome: 'EARL completo e outros arquivos sem prefixo',
+      obs: 'não se apaga por aqui'
+    };
+    return {
+      nome: 'Outro arquivo (' + g.slice(0, -1) + ')' + este,
+      obs: 'não se apaga por aqui'
+    };
+  };
+  var engMilhoes = n => (n / 1e6).toLocaleString('pt-BR', {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2
+  }) + ' mi';
+  var engEspacoApagar = (g, nome) => askConfirm({
+    title: 'Apagar ' + nome,
+    okLabel: 'Apagar',
+    danger: true,
+    msg: engH("span", null, 'Apagar do navegador os dados de “' + nome + '”?'),
+    hint: 'Os dados da Engenharia, do Gerencial e do EARL completo não são tocados.',
+    onOk: () => {
+      var A = window.EARL_ARMAZ;
+      try {
+        var del = [];
+        for (var i = 0; i < localStorage.length; i++) {
+          var k = localStorage.key(i);
+          if (k && k.indexOf(g) === 0) del.push(k);
+        }
+        del.forEach(k => A.R.call(localStorage, k));
+      } catch (e) {}
+      var med = engEspacoMedir();
+      setEngEspMed(med);
+      if (med.ok && med.pct < 95) setEngEspFalhou(false);
+      setOkMsg('Espaço liberado ✓ — ' + nome);
+      setTimeout(() => setOkMsg(''), 4000);
+    }
+  });
+  var renderEngEspacoAviso = () => {
+    var med = engEspMed;
+    if (!med) return null;
+    var abrir = () => {
+      setEngEspMed(engEspacoMedir());
+      setEngEsp({});
+    };
+    if (!med.ok) return engH("div", {
+      className: "hm-banner ec-esp-aviso"
+    }, engH("div", null, engH("b", null, "⚠ Este arquivo não consegue guardar dados no navegador"), engH("span", null, "O que for lan\xE7ado aqui n\xE3o fica salvo. Isso acontece quando o arquivo \xE9 aberto dentro de uma pr\xE9-visualiza\xE7\xE3o (e-mail, Teams, visualizador de arquivos). Salve o arquivo no computador e abra direto no Chrome ou no Edge.")));
+    if (!engEspFalhou && med.pct < 85) return null;
+    return engH("div", {
+      className: "hm-banner ec-esp-aviso"
+    }, engH("div", null, engH("b", null, engEspFalhou ? '⚠ O espaço do navegador está cheio: o que foi lançado não está sendo salvo' : '⚠ O espaço do navegador está quase cheio (' + fmtNum(Math.round(med.pct)) + '%)'), engH("span", null, "Os arquivos do EARL abertos do disco dividem o mesmo espa\xE7o. Libere espa\xE7o apagando simula\xE7\xF5es e testes antigos.")), engH("button", {
+      className: "btn-r ec-esp-abrir",
+      onClick: abrir
+    }, "Ver e liberar espa\xE7o"));
+  };
+  var renderEngEspaco = () => {
+    if (!engEsp) return null;
+    var med = engEspMed || engEspacoMedir();
+    var fechar = () => setEngEsp(null);
+    var pct = med.ok ? Math.min(100, med.pct) : 0;
+    return engH("div", {
+      className: "overlay",
+      style: {
+        zIndex: 300
+      },
+      onClick: e => {
+        if (e.target === e.currentTarget) fechar();
+      }
+    }, engH("div", {
+      className: "modal ec-esp-modal",
+      onClick: e => e.stopPropagation()
+    }, engH("div", {
+      className: "modal-title"
+    }, engH("span", null, "Espa\xE7o do navegador"), engH("button", {
+      className: "modal-close",
+      onClick: fechar
+    }, "\xD7")), engH("div", {
+      className: "eng-help",
+      style: {
+        marginTop: 0
+      }
+    }, "No Chrome e no Edge, todos os arquivos HTML abertos do disco (EARL completo, simula\xE7\xF5es, Engenharia, Gerencial e testes) dividem o mesmo espa\xE7o, de cerca de 5 milh\xF5es de caracteres. Quando ele enche, nenhum desses arquivos consegue salvar."), !med.ok ? engH("div", {
+      className: "ho-pend"
+    }, 'O navegador não deixa este arquivo usar o armazenamento (' + med.erro + ').') : engH(React.Fragment, null, engH("div", {
+      className: "ec-esp-total"
+    }, engH("b", null, engMilhoes(med.tot) + ' de ~' + engMilhoes(ENG_COTA) + ' de caracteres (' + fmtNum(Math.round(med.pct)) + '%)'), engBarra(pct)), engH("div", {
+      className: "tbl-scroll"
+    }, engH("table", {
+      className: "db-table ec-esp-tab"
+    }, engH("thead", null, engH("tr", null, ['Arquivo', 'Espaço', '%', ''].map((h, k) => engH("th", {
+      key: k
+    }, h)))), engH("tbody", null, med.por.map(x => {
+      var nm = engEspacoNome(x.g);
+      return engH("tr", {
+        key: x.g || '-',
+        'data-g': x.g
+      }, engH("td", null, engH("b", null, nm.nome), engH("span", {
+        className: "ec-pn-sub"
+      }, nm.obs || '')), engH("td", {
+        className: "ec-num"
+      }, engMilhoes(x.n)), engH("td", {
+        className: "ec-num"
+      }, fmtNum(Math.round(x.n / ENG_COTA * 1000) / 10) + '%'), engH("td", null, nm.apaga && engH("button", {
+        className: "btn-o ec-esp-apagar",
+        onClick: () => engEspacoApagar(x.g, nm.nome)
+      }, "Apagar")));
+    }))))), engH("div", {
+      className: "ec-pn-nota"
+    }, "Antes de apagar, se tiver d\xFAvida, use “⬇ Exportar dados”. Os dados da Engenharia, do Gerencial e do EARL completo n\xE3o se apagam por aqui."), engH("div", {
+      className: "ec-foot"
+    }, engH("span", {
+      style: {
+        flex: 1
+      }
+    }), engH("button", {
+      className: "btn-o",
+      onClick: fechar
+    }, "Fechar"))));
   };
   var renderEngTools = () => hubLocation ? engH("div", {
     className: "eng-tools"
@@ -65147,13 +65359,18 @@ _Gerado por: ${user}_`;
       t.rPU += x.rU;
       t.rPB += x.rB;
     }
-    if (x.f === 0) t.nF++;
+    if (x.f === 0) {
+      t.nF++;
+      if (x.tipo === 'real') t.nFR++;else t.nFP++;
+    }
     return t;
   }, {
     n: 0,
     nR: 0,
     nP: 0,
     nF: 0,
+    nFR: 0,
+    nFP: 0,
     rU: 0,
     rB: 0,
     cU: 0,
@@ -65276,7 +65493,7 @@ _Gerado por: ${user}_`;
       })
     }, "Limpar")), engH("div", {
       className: "ec-kpis"
-    }, engKpi('Receita em US$', fmtUSD(T.rU), 'realizado ' + fmtUSD(T.rRU) + ' · previsto ' + fmtUSD(T.rPU), 'ec-pn-rec-usd'), engKpi('Receita em R$', fmtBRL(T.rB), 'realizado ' + fmtBRL(T.rRB) + ' · previsto ' + fmtBRL(T.rPB), 'ec-pn-rec-brl'), engKpi('COGS', fmtUSD(T.cU) + (T.cB ? ' · ' + fmtBRL(T.cB) : ''), 'químicas e casing', 'ec-pn-cogs'), engKpi('Margem em US$', fmtUSD(T.rU - T.cU), margem(T.rU, T.cU) + ' da receita' + (T.rB || T.cB ? ' · ' + fmtBRL(T.rB - T.cB) : ''), 'ec-pn-margem'), engKpi('Operações', String(T.n), T.nR + ' realizada(s) · ' + T.nP + ' prevista(s)' + (T.nF ? ' · ' + T.nF + ' fora (risco 100%)' : ''), 'ec-pn-ops')), engH("div", {
+    }, engKpi('Receita em US$', fmtUSD(T.rU), 'realizado ' + fmtUSD(T.rRU) + ' · previsto ' + fmtUSD(T.rPU), 'ec-pn-rec-usd'), engKpi('COGS', fmtUSD(T.cU) + (T.cB ? ' · ' + fmtBRL(T.cB) : ''), 'químicas e casing', 'ec-pn-cogs'), engKpi('Operações', String(T.n), T.nR + ' realizada(s) · ' + T.nP + ' prevista(s)' + (T.nF ? ' · ' + T.nF + ' fora (risco 100%)' : ''), 'ec-pn-ops'), engKpi('Receita / operação (US$)', T.n - T.nF ? fmtUSD(T.rU / (T.n - T.nF)) : '—', 'realizado ' + (T.nR - T.nFR ? fmtUSD(T.rRU / (T.nR - T.nFR)) : '—') + ' · previsto ' + (T.nP - T.nFP ? fmtUSD(T.rPU / (T.nP - T.nFP)) : '—') + (T.nF ? ' · sem as ' + T.nF + ' fora' : ''), 'ec-pn-rec-op'), engKpi('Margem em US$', fmtUSD(T.rU - T.cU), margem(T.rU, T.cU) + ' da receita' + (T.rB || T.cB ? ' · ' + fmtBRL(T.rB - T.cB) : ''), 'ec-pn-margem')), engH("div", {
       className: "ec-pn-grid"
     }, engH("div", null, engH("div", {
       className: "hm-sec"
@@ -109808,7 +110025,7 @@ ${transferDraft.notes ? '<p><b>Observações:</b> ' + esc(transferDraft.notes) +
     style: {
       flex: 1
     }
-  }, okMsg)), renderMainTabs(), safeTab === 'home' && renderHome(), safeTab === 'mob' && !planAssumed && renderSupQueue(), safeTab === 'mob' && planAssumed && React.createElement(React.Fragment, null, renderPlanRef(), renderStepper(), step === 1 && renderStep1(), step === 2 && renderStep2(), step === 3 && renderStep3(), step === 4 && renderStepChem(), step === 5 && renderStep4(), step === 6 && renderStep5(), renderMobFooter()), safeTab === 'ops' && renderOps(), safeTab === 'plan' && renderPlanejamento(), safeTab === 'coord' && renderCoord(), safeTab === 'logi' && renderLogi(), safeTab === 'lab' && renderLab(), safeTab === 'pes' && React.createElement(React.Fragment, null, secBar('pes'), renderParteApp('pessoal')), safeTab === 'eqp' && React.createElement(React.Fragment, null, secBar('eqp'), renderParteApp('equipamentos')), safeTab === 'dar' && renderDarFor(null), safeTab === 'rig' && renderRigXray(), safeTab === 'sl' && React.createElement(React.Fragment, null, hubLocation !== 'brasil' && secBar('pes'), renderEscalas()), safeTab === 'pab' && React.createElement(React.Fragment, null, secBar('pes'), renderPesBordo(), renderPesDesForm(), renderEmbForm()), safeTab === 'bulk' && renderBulk(), safeTab === 'chem' && renderChem(), safeTab === 'fc' && renderForecast(), safeTab === 'ind' && renderIndicadores(), safeTab === 'pfl' && React.createElement(React.Fragment, null, hubLocation !== 'brasil' && secBar('pes'), renderPerfis()), safeTab === 'equip' && React.createElement(React.Fragment, null, secBar(hubLocation === 'brasil' ? 'eqpBr' : 'eqp'), renderEquipmentWithScroll()), safeTab === 'eqs' && React.createElement(React.Fragment, null, secBar(hubLocation === 'brasil' ? 'eqpBr' : 'eqp'), renderEqSondas()), safeTab === 'hi' && hiMob && React.createElement(React.Fragment, null, renderHIStepper(), hiStep === 6 && renderHIEquipe(), hiStep === 7 && renderHIEquip(), hiStep === 8 && renderHI6(), hiStep === 9 && renderHI7(), hiStep === 10 && renderHI8(), hiStep === 11 && renderHI9(), hiStep === 12 && renderHI10(), renderHIFooter()), safeTab === 'jl' && jlMob && renderJL(), safeTab === 'db' && adminUnlocked && renderDB(), safeTab === 'ana' && adminUnlocked && renderAnalytics(mobs.filter(mobNoRecorte)), safeTab === 'br' && adminUnlocked && renderBrasil(), renderAvisos(), renderPlanForm(), renderHandover(), renderHoReview(), renderCoordRev(), renderParteRev(), renderLogView(), renderEnvView(), renderEmbModal(), renderCiencia(), renderAmoView(), renderAmoSup(), renderAmoLog(), renderAmoLab(), renderAmoFoto(), renderAdicForm(), renderProcView(), safeTab !== 'rig' && renderExpForm(), safeTab !== 'rig' && renderAmoForm(), renderReleaseGate(), renderPlanCascade(), renderEngSondas(), renderEngContratos(), renderEngQuim(), renderEngCons(), renderEngImpDados(), renderEngGer(), renderRigForm(), renderConfirmBox(), renderDiaPanel(), escalaPrompt && (() => {
+  }, okMsg)), renderMainTabs(), safeTab === 'home' && renderHome(), safeTab === 'mob' && !planAssumed && renderSupQueue(), safeTab === 'mob' && planAssumed && React.createElement(React.Fragment, null, renderPlanRef(), renderStepper(), step === 1 && renderStep1(), step === 2 && renderStep2(), step === 3 && renderStep3(), step === 4 && renderStepChem(), step === 5 && renderStep4(), step === 6 && renderStep5(), renderMobFooter()), safeTab === 'ops' && renderOps(), safeTab === 'plan' && renderPlanejamento(), safeTab === 'coord' && renderCoord(), safeTab === 'logi' && renderLogi(), safeTab === 'lab' && renderLab(), safeTab === 'pes' && React.createElement(React.Fragment, null, secBar('pes'), renderParteApp('pessoal')), safeTab === 'eqp' && React.createElement(React.Fragment, null, secBar('eqp'), renderParteApp('equipamentos')), safeTab === 'dar' && renderDarFor(null), safeTab === 'rig' && renderRigXray(), safeTab === 'sl' && React.createElement(React.Fragment, null, hubLocation !== 'brasil' && secBar('pes'), renderEscalas()), safeTab === 'pab' && React.createElement(React.Fragment, null, secBar('pes'), renderPesBordo(), renderPesDesForm(), renderEmbForm()), safeTab === 'bulk' && renderBulk(), safeTab === 'chem' && renderChem(), safeTab === 'fc' && renderForecast(), safeTab === 'ind' && renderIndicadores(), safeTab === 'pfl' && React.createElement(React.Fragment, null, hubLocation !== 'brasil' && secBar('pes'), renderPerfis()), safeTab === 'equip' && React.createElement(React.Fragment, null, secBar(hubLocation === 'brasil' ? 'eqpBr' : 'eqp'), renderEquipmentWithScroll()), safeTab === 'eqs' && React.createElement(React.Fragment, null, secBar(hubLocation === 'brasil' ? 'eqpBr' : 'eqp'), renderEqSondas()), safeTab === 'hi' && hiMob && React.createElement(React.Fragment, null, renderHIStepper(), hiStep === 6 && renderHIEquipe(), hiStep === 7 && renderHIEquip(), hiStep === 8 && renderHI6(), hiStep === 9 && renderHI7(), hiStep === 10 && renderHI8(), hiStep === 11 && renderHI9(), hiStep === 12 && renderHI10(), renderHIFooter()), safeTab === 'jl' && jlMob && renderJL(), safeTab === 'db' && adminUnlocked && renderDB(), safeTab === 'ana' && adminUnlocked && renderAnalytics(mobs.filter(mobNoRecorte)), safeTab === 'br' && adminUnlocked && renderBrasil(), renderAvisos(), renderPlanForm(), renderHandover(), renderHoReview(), renderCoordRev(), renderParteRev(), renderLogView(), renderEnvView(), renderEmbModal(), renderCiencia(), renderAmoView(), renderAmoSup(), renderAmoLog(), renderAmoLab(), renderAmoFoto(), renderAdicForm(), renderProcView(), safeTab !== 'rig' && renderExpForm(), safeTab !== 'rig' && renderAmoForm(), renderReleaseGate(), renderPlanCascade(), renderEngSondas(), renderEngContratos(), renderEngQuim(), renderEngEspaco(), renderEngCons(), renderEngImpDados(), renderEngGer(), renderRigForm(), renderConfirmBox(), renderDiaPanel(), escalaPrompt && (() => {
     var e = escalaPrompt;
     var membros = (e.team.members || []).map(id => (db.people || []).find(p => p.id === id)).filter(Boolean);
     var aceitar = () => {

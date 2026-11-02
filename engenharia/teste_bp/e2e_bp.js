@@ -65,6 +65,7 @@ const usd = v => 'US$ ' + v.toLocaleString('pt-BR', {minimumFractionDigits: 2, m
   const ct = db.contratos.find(c => c.id === 'ct_bp');
   const ops = db.plannedJobs.filter(j => j.contratoId === 'ct_bp').sort((a, b) => a.id.localeCompare(b.id));
   conf(ct && ct.items.length === 134 && ct.items.every(i => typeof i.usd === 'number') && ct.inicio === '2026-06-22', 'contrato BP: 134 itens PPU com US$, início 22/06/2026', ct && {n: ct.items.length, ini: ct.inicio});
+  conf(db.contratos.filter(c => !c.archived).map(c => c.id).join() === 'ct_bp' && /1 contrato\(s\) vigente/.test(await p.innerText('body')), 'só o contrato BP fica ativo (os outros do EARL vão para “arquivados”)', db.contratos.filter(c => !c.archived).map(c => c.name));
   conf(db.rigs.some(r => r.nomePetrobras === 'NS-39' && r.base === 'Macaé') && ops.every(j => j.rigId === 'rig_bp_ns39'), 'sonda NS-39 cadastrada (base Macaé) e usada nas operações');
   conf((db.quimicos || []).length === 60 && (db.cogsItens || []).length === 102, 'COGS: 60 produtos no banco de químicos e 102 casing em Custos (COGS)', [(db.quimicos || []).length, (db.cogsItens || []).length]);
   conf(ops.length === 27 && ops.filter(j => j.ppuCons).length === 9, '27 operações do BP, 9 com consumo lançado', [ops.length, ops.filter(j => j.ppuCons).length]);
@@ -118,6 +119,10 @@ const usd = v => 'US$ ' + v.toLocaleString('pt-BR', {minimumFractionDigits: 2, m
   let v = await pn();
   conf(perto(v.usd, T.rec) && perto(v.usd, PL.rec, 0.05) && perto(v.cogs, T.cogs) && v.ops === '27' && v.sub === '9 realizada(s) · 18 prevista(s) · 2 fora (risco 100%)', 'todos os anos: ' + usd(PL.rec) + ' de receita, COGS ' + usd(PL.cogs) + ', 27 operações (2 fora)', v);
   await foto(p, 'bp2_painel');
+  const nConta = pl.filter(o => o.risco < 1).length;
+  const cards = await p.$$eval('.ec-painel .ec-kpi span', l => l.map(s => s.textContent));
+  conf(cards.join('|') === 'Receita em US$|COGS|Operações|Receita / operação (US$)|Margem em US$', 'cartões: Receita, COGS, Operações, Receita/operação, Margem', cards);
+  conf(perto(valor(await txt(p, '.ec-pn-rec-op b')), PL.rec / nConta), 'receita por operação: ' + usd(PL.rec / nConta) + ' (Σ RECEITA FINAL ÷ ' + nConta + ' operações, sem as 2 com risco 100%)', await txt(p, '.ec-pn-rec-op b'));
   await p.selectOption('.ec-pn-ano', '2026');
   v = await pn();
   conf(perto(v.usd, T.ano['2026']), 'filtro 2026: ' + usd(T.ano['2026']), v.usd);
@@ -152,6 +157,17 @@ const usd = v => 'US$ ' + v.toLocaleString('pt-BR', {minimumFractionDigits: 2, m
   await p.click('.ec-cons-modal .modal-close');
   conf(E.errs.length === 0, 'engenharia: nenhum erro', E.errs.slice(0, 5));
 
+  console.log('Alteração salva');
+  await p.click('.eng-quimicos');
+  await p.waitForSelector('.ec-quim-tab');
+  await p.locator('.ec-quim-tab tbody tr[data-sap="100003837"] input.ec-q-usd').fill('12');
+  await p.click('.ec-quim-salvar');
+  await p.waitForTimeout(300);
+  await p.click('.ec-quim-modal .modal-close');
+  await p.reload();
+  await p.waitForSelector('.eng-tools');
+  const per = await p.evaluate(() => { const d = JSON.parse(localStorage.getItem('hal_cmt_db_v1')); return {q: d.quimicos.find(x => x.sap === '100003837').usd, ops: d.plannedJobs.filter(j => j.contratoId === 'ct_bp').length, marca: d.testeBP === window.EARL_BP_ID}; });
+  conf(per.q === 12 && per.ops === 27 && per.marca, 'alteração salva continua depois de reabrir', per);
   console.log('Reiniciar');
   await p.evaluate(() => { const d = JSON.parse(localStorage.getItem('hal_cmt_db_v1')); d.plannedJobs = d.plannedJobs.filter(j => j.id !== 'bp_op_01'); localStorage.setItem('hal_cmt_db_v1', JSON.stringify(d)); });
   p.once('dialog', d => d.accept());
@@ -162,6 +178,42 @@ const usd = v => 'US$ ' + v.toLocaleString('pt-BR', {minimumFractionDigits: 2, m
   const outro = await p.evaluate(() => Object.keys(Storage.prototype).length >= 0 && [...Array(localStorage.length).keys()].map(i => localStorage.key(i)).every(k => k.startsWith('earlengbp:')));
   conf(outro, 'armazenamento separado (prefixo earlengbp:), não mistura com o EARL_Engenharia.html normal');
   await E.browser.close();
+
+  console.log('Navegador sem espaço, dados antigos e armazenamento bloqueado');
+  const {chromium} = require('playwright');
+  const BRANCO = path.join(SAIDA, '_branco.html');
+  fs.writeFileSync(BRANCO, '<!doctype html><title>outro arquivo do disco</title>');
+  const cenario = async (preparar, init) => {
+    const b = await chromium.launch();
+    const ctx = await b.newContext({viewport: {width: 1440, height: 900}});
+    await ctx.route(/^https?:\/\//, r => r.abort());
+    if (init) await ctx.addInitScript(init);
+    const pg = await ctx.newPage();
+    await pg.clock.setFixedTime(new Date('2026-11-02T12:00:00'));
+    const er = [];
+    pg.on('pageerror', e => er.push(String(e)));
+    if (preparar) { await pg.goto('file://' + BRANCO); await pg.evaluate(preparar); }
+    await pg.goto('file://' + path.resolve(BP));
+    await pg.waitForSelector('.eng-tools', {timeout: 60000});
+    await pg.selectOption('.ec-pn-ano', '');
+    const r = {ops: await txt(pg, '.ec-pn-ops b'), usd: valor(await txt(pg, '.ec-pn-rec-usd b')), tag: await txt(pg, '.earl-bp-tag'), aviso: await pg.locator('.ec-esp-aviso').count() ? await txt(pg, '.ec-esp-aviso') : '', cts: await pg.locator('.eng2-card').count(), er};
+    return {b, pg, r};
+  };
+  // 1) espaço do file:// cheio (EARL completo e simulações abertos do disco): o caso relatado
+  let c1 = await cenario(() => { localStorage.setItem('earlsim113:hal_cmt_db_v1', 'x'.repeat(2600000)); localStorage.setItem('earlsim115:hal_cmt_db_v1', 'x'.repeat(2550000)); });
+  await foto(c1.pg, 'bp8_sem_espaco');
+  conf(c1.r.ops === '27' && perto(c1.r.usd, PL.rec, 0.05) && /não está salvando/.test(c1.r.tag) && /espaço do navegador/.test(c1.r.aviso) && !c1.r.er.length, 'sem espaço no navegador: abre com as 27 operações e a receita da planilha, e avisa que não salva', c1.r);
+  await c1.b.close();
+  // 2) dados guardados de uma versão anterior do teste (ou do EARL vazio): usa os da planilha
+  c1 = await cenario(() => { localStorage.setItem('earlengbp:hal_cmt_db_v1', JSON.stringify({people: [{id: 'p1', name: 'X'}], rigs: [], contratos: [], plannedJobs: []})); });
+  const marca = await c1.pg.evaluate(() => JSON.parse(localStorage.getItem('hal_cmt_db_v1')).testeBP === window.EARL_BP_ID);
+  conf(c1.r.ops === '27' && marca && /dados da planilha/.test(c1.r.tag) && !c1.r.aviso && !c1.r.er.length, 'dados de uma versão anterior no navegador: troca pelos da planilha', c1.r);
+  await c1.b.close();
+  // 3) armazenamento bloqueado (arquivo aberto numa pré-visualização)
+  c1 = await cenario(null, () => { Object.defineProperty(window, 'localStorage', {configurable: true, get() { throw new DOMException('The document is sandboxed and lacks the allow-same-origin flag.', 'SecurityError'); }}); });
+  conf(c1.r.ops === '27' && /não consegue guardar dados/.test(c1.r.aviso) && /não está salvando/.test(c1.r.tag) && !c1.r.er.length, 'armazenamento bloqueado: abre com os dados e avisa', c1.r);
+  await c1.b.close();
+  fs.unlinkSync(BRANCO);
 
   console.log('Gerencial (carregando o arquivo do BP)');
   const G = await abrir(GER, {h: 1000, hoje: '2026-11-02'});

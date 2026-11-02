@@ -22,7 +22,7 @@ A Engenharia do EARL separada do resto do sistema, para usar **sem servidor, sem
   4. **Pessoal:** pessoas e dias por função, que dão o homem-dia.
 
   Cada parte começa com o previsto da operação, e **⇩ Copiar previsto** preenche tudo de uma vez. O app avisa quando um item PPU passa do saldo ou não tem valor cadastrado.
-- **Página inicial: Receita e COGS.** Logo abaixo do título, um painel com a receita em US$ e em R$, o COGS, a margem e o número de operações, com filtros por **ano, mês, contrato, cliente e situação** (realizado + previsto, só realizado ou só previsto). Tem a tabela **por mês** e a **por contrato**; clicar no contrato abre a aba "Consumo e receita" dele. **Recolher** esconde o painel.
+- **Página inicial: Receita e COGS.** Logo abaixo do título, um painel com os cartões **Receita (US$), COGS, Operações, Receita / operação (US$) e Margem**. A receita por operação não conta as operações com risco 100%. O painel tem com filtros por **ano, mês, contrato, cliente e situação** (realizado + previsto, só realizado ou só previsto). Tem a tabela **por mês** e a **por contrato**; clicar no contrato abre a aba "Consumo e receita" dele. **Recolher** esconde o painel.
   - **Realizado:** operação com consumo lançado, pelo valor do contrato na data do serviço.
   - **Previsto:** operação ainda sem consumo, pelos itens PPU previstos × valor do contrato na data da operação. O COGS vem das químicas e do casing previstos.
 - **Risco da receita / COGS (%):** campo na janela da operação (seção 2). A receita e o COGS da operação contam × (1 − risco). Com **0%** contam inteiros; com **100%** a operação continua mapeada (Gantt, lista, handover), mas **fica fora da receita e do COGS**. A Lista mostra a etiqueta "risco N%". Esse campo é diferente do "Risco de acontecer" da contingência.
@@ -54,6 +54,11 @@ A Engenharia do EARL separada do resto do sistema, para usar **sem servidor, sem
   - Tem filtro por período do serviço e **⬇ Excel** com as abas Operações, Itens e Lançamentos.
 - **Sondas:** botão na barra, para cadastrar sondas. O cadastro já vem com as 41 sondas offshore; as do Nordeste precisam ser cadastradas.
 - **Exportar dados e Importar dados:** botões na barra, para levar tudo de um computador para outro (veja abaixo).
+
+- **Espaço do navegador:** no Chrome e no Edge, todos os HTML abertos do disco (EARL completo, simulações, Engenharia, Gerencial e testes) dividem o mesmo espaço, de cerca de 5 milhões de caracteres. Quando ele enche, nenhum desses arquivos consegue salvar.
+  - **Aviso:** a página inicial avisa quando o uso passa de 85% ou quando uma gravação é recusada.
+  - **Liberar espaço:** **Ver e liberar espaço** mostra quanto cada arquivo ocupa e deixa apagar só dados de simulação e de teste. Os dados da Engenharia, do Gerencial e do EARL completo não se apagam por ali.
+  - **Armazenamento bloqueado:** se o arquivo foi aberto dentro de uma pré-visualização (e-mail, Teams, visualizador), o navegador bloqueia o armazenamento. O app abre mesmo assim e avisa que nada fica salvo.
 
 ## O que não tem
 
@@ -114,8 +119,12 @@ node teste_bp/e2e_bp.js Contrato_BP_Teste_EARL.xlsx EARL_Engenharia_BP_teste.htm
   - **Itens:** PPU, químicas e pessoal (time de embarque × duração).
   - **Risco da planilha** vira o "Risco da receita / COGS".
   - **Concluído** = consumo lançado igual ao previsto, com a data da operação; **Previsto** = só o planejado.
-- **Arquivo de teste:** o `EARL_Engenharia_BP_teste.html` guarda os dados com prefixo próprio (`earlengbp:`) e tem a etiqueta **TESTE BP** com **Reiniciar**, que volta aos dados da planilha.
-- **Verificação:** o `e2e_bp.js` (31 verificações) confere, operação por operação, a receita, a receita final, o COGS, o COGS final, o risco, a situação e o homem-dia contra os totais da própria planilha. Confere também o painel da página inicial, a aba do contrato, o arquivo do gerencial e o EARL Gerencial com esse arquivo, incluindo o Excel. Na pasta de saída fica o arquivo do gerencial do BP.
+- **Arquivo de teste:**
+  - guarda os dados com prefixo próprio (`earlengbp:`) e tem a etiqueta **TESTE BP** com **Reiniciar**, que volta aos dados da planilha;
+  - só o contrato BP fica ativo; os outros contratos do EARL vão para "arquivados";
+  - os dados guardados no navegador só valem se forem desta mesma versão do teste (marca `testeBP`);
+  - sem espaço no navegador, ou com o armazenamento bloqueado, o teste abre com os dados da planilha mesmo assim, e a etiqueta avisa que as alterações não ficam salvas.
+- **Verificação:** o `e2e_bp.js` (38 verificações) confere, operação por operação, a receita, a receita final, o COGS, o COGS final, o risco, a situação e o homem-dia contra os totais da própria planilha. Confere também o painel da página inicial (com a receita por operação), a aba do contrato, uma alteração salva, o navegador sem espaço, dados de versão anterior, o armazenamento bloqueado, o arquivo do gerencial e o EARL Gerencial com esse arquivo, incluindo o Excel. Na pasta de saída fica o arquivo do gerencial do BP.
 
 ## Para quem mexe no código
 
@@ -133,5 +142,6 @@ node teste_bp/e2e_bp.js Contrato_BP_Teste_EARL.xlsx EARL_Engenharia_BP_teste.htm
 - Testes, com o arquivo aberto do disco, a internet bloqueada e o relógio do navegador fixo em 02/11/2026:
   - `node tests/e2e_engenharia.js EARL_Engenharia.html [pasta-das-telas]`: 62 verificações (abertura, handover e e-mail, sondas, exportar e importar substituindo);
   - `node tests/e2e_quimicos.js EARL_Engenharia.html [pasta-das-telas] [planilha do BP]`: 36 verificações (37 com a planilha). Cobre a base, os avisos, baixar a planilha, atualizar juntando e substituindo, a planilha no formato do Forecast, a edição na tela, o histórico, o COGS das operações, exportar e a base aplicada uma vez;
-  - `node tests/e2e_contratos.js EARL_Engenharia.html [pasta-das-telas]`: 75 verificações (contratos, planilhas, reajustes, consumo, receita, juntar dados de outro computador, tela pequena 1366×768, COGS e risco, e o painel Receita e COGS com os filtros).
+  - `node tests/e2e_espaco.js EARL_Engenharia.html [pasta-das-telas]`: 12 verificações (espaço quase cheio, gravação recusada, apagar simulação antiga, gravação de volta e armazenamento bloqueado);
+  - `node tests/e2e_contratos.js EARL_Engenharia.html [pasta-das-telas]`: 76 verificações (contratos, planilhas, reajustes, consumo, receita, juntar dados de outro computador, tela pequena 1366×768, COGS e risco, e o painel Receita e COGS com os filtros).
 - Versão: `EARL_VERSION = 'EARL Engenharia e6 (base v115)'`. O teste do fluxo completo com o Gerencial está em `../gerencial/tests/e2e_gerencial.js`.

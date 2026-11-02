@@ -2529,13 +2529,18 @@
       t.rPU += x.rU;
       t.rPB += x.rB;
     }
-    if (x.f === 0) t.nF++;
+    if (x.f === 0) {
+      t.nF++;
+      if (x.tipo === 'real') t.nFR++;else t.nFP++;
+    }
     return t;
   }, {
     n: 0,
     nR: 0,
     nP: 0,
     nF: 0,
+    nFR: 0,
+    nFP: 0,
     rU: 0,
     rB: 0,
     cU: 0,
@@ -2658,7 +2663,7 @@
       })
     }, "Limpar")), engH("div", {
       className: "ec-kpis"
-    }, engKpi('Receita em US$', fmtUSD(T.rU), 'realizado ' + fmtUSD(T.rRU) + ' · previsto ' + fmtUSD(T.rPU), 'ec-pn-rec-usd'), engKpi('Receita em R$', fmtBRL(T.rB), 'realizado ' + fmtBRL(T.rRB) + ' · previsto ' + fmtBRL(T.rPB), 'ec-pn-rec-brl'), engKpi('COGS', fmtUSD(T.cU) + (T.cB ? ' · ' + fmtBRL(T.cB) : ''), 'químicas e casing', 'ec-pn-cogs'), engKpi('Margem em US$', fmtUSD(T.rU - T.cU), margem(T.rU, T.cU) + ' da receita' + (T.rB || T.cB ? ' · ' + fmtBRL(T.rB - T.cB) : ''), 'ec-pn-margem'), engKpi('Operações', String(T.n), T.nR + ' realizada(s) · ' + T.nP + ' prevista(s)' + (T.nF ? ' · ' + T.nF + ' fora (risco 100%)' : ''), 'ec-pn-ops')), engH("div", {
+    }, engKpi('Receita em US$', fmtUSD(T.rU), 'realizado ' + fmtUSD(T.rRU) + ' · previsto ' + fmtUSD(T.rPU), 'ec-pn-rec-usd'), engKpi('COGS', fmtUSD(T.cU) + (T.cB ? ' · ' + fmtBRL(T.cB) : ''), 'químicas e casing', 'ec-pn-cogs'), engKpi('Operações', String(T.n), T.nR + ' realizada(s) · ' + T.nP + ' prevista(s)' + (T.nF ? ' · ' + T.nF + ' fora (risco 100%)' : ''), 'ec-pn-ops'), engKpi('Receita / operação (US$)', T.n - T.nF ? fmtUSD(T.rU / (T.n - T.nF)) : '—', 'realizado ' + (T.nR - T.nFR ? fmtUSD(T.rRU / (T.nR - T.nFR)) : '—') + ' · previsto ' + (T.nP - T.nFP ? fmtUSD(T.rPU / (T.nP - T.nFP)) : '—') + (T.nF ? ' · sem as ' + T.nF + ' fora' : ''), 'ec-pn-rec-op'), engKpi('Margem em US$', fmtUSD(T.rU - T.cU), margem(T.rU, T.cU) + ' da receita' + (T.rB || T.cB ? ' · ' + fmtBRL(T.rB - T.cB) : ''), 'ec-pn-margem')), engH("div", {
       className: "ec-pn-grid"
     }, engH("div", null, engH("div", {
       className: "hm-sec"

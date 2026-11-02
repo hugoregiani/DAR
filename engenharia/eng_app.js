@@ -893,6 +893,199 @@
       onClick: fechar
     }, "Cancelar"))));
   };
+  /* ---- e6: espaço do navegador ----
+     No Chrome e no Edge, todos os HTML abertos do disco (file://) dividem o mesmo localStorage, de cerca de
+     5 milhões de caracteres: EARL completo, simulações (earlsimNNN:), esta Engenharia (earleng:), o teste BP
+     (earlengbp:) e o Gerencial (earlger:). Quando enche, nenhum deles grava. Esta tela mostra quem ocupa o
+     espaço e deixa apagar só dados de simulação e de teste. */
+  var ENG_COTA = 5242880;
+  var [engEsp, setEngEsp] = useState(null);
+  var [engEspMed, setEngEspMed] = useState(null);
+  var [engEspFalhou, setEngEspFalhou] = useState(false);
+  var engEspacoMedir = () => {
+    var A = window.EARL_ARMAZ;
+    if (window.EARL_ARMAZ_BLOQUEADO) return {
+      ok: false,
+      erro: 'o navegador bloqueou o armazenamento deste arquivo'
+    };
+    try {
+      var por = {},
+        tot = 0;
+      for (var i = 0; i < localStorage.length; i++) {
+        var k = localStorage.key(i);
+        if (k == null) continue;
+        var v = A ? A.G.call(localStorage, k) : null;
+        var n = k.length + (v ? v.length : 0);
+        tot += n;
+        var m = /^([a-z][a-z0-9]*):/i.exec(k);
+        var g = m ? m[1] + ':' : '';
+        (por[g] = por[g] || {
+          g,
+          n: 0,
+          chaves: 0
+        }).n += n;
+        por[g].chaves++;
+      }
+      return {
+        ok: true,
+        tot,
+        pct: tot / ENG_COTA * 100,
+        por: Object.values(por).sort((a, b) => b.n - a.n)
+      };
+    } catch (e) {
+      return {
+        ok: false,
+        erro: String(e && e.message || e)
+      };
+    }
+  };
+  useEffect(() => {
+    setEngEspMed(engEspacoMedir());
+  }, []);
+  var engEspacoFalhou = () => {
+    setEngEspFalhou(true);
+    setEngEspMed(engEspacoMedir());
+  };
+  var engEspacoNome = g => {
+    var P = window.EARL_ARMAZ && window.EARL_ARMAZ.P;
+    var m = /^earlsim(\d+)/.exec(g);
+    var este = g === P ? ' — este arquivo' : '';
+    if (g === 'earleng:') return {
+      nome: 'EARL Engenharia' + este,
+      obs: 'dados da engenharia: não se apagam por aqui'
+    };
+    if (g === 'earlengbp:') return {
+      nome: 'EARL Engenharia — teste BP' + este,
+      apaga: !este,
+      obs: este ? 'para voltar aos dados da planilha, use “Reiniciar” na etiqueta TESTE BP' : 'dados de teste; ao abrir o teste de novo, ele volta aos dados da planilha'
+    };
+    if (g === 'earlger:') return {
+      nome: 'EARL Gerencial',
+      obs: 'arquivos carregados no Gerencial: use “Limpar” lá'
+    };
+    if (m) return {
+      nome: 'EARL — simulação v' + m[1],
+      apaga: true,
+      obs: 'dados fictícios; ao abrir a simulação de novo, ela recomeça do início'
+    };
+    if (!g) return {
+      nome: 'EARL completo e outros arquivos sem prefixo',
+      obs: 'não se apaga por aqui'
+    };
+    return {
+      nome: 'Outro arquivo (' + g.slice(0, -1) + ')' + este,
+      obs: 'não se apaga por aqui'
+    };
+  };
+  var engMilhoes = n => (n / 1e6).toLocaleString('pt-BR', {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2
+  }) + ' mi';
+  var engEspacoApagar = (g, nome) => askConfirm({
+    title: 'Apagar ' + nome,
+    okLabel: 'Apagar',
+    danger: true,
+    msg: engH("span", null, 'Apagar do navegador os dados de “' + nome + '”?'),
+    hint: 'Os dados da Engenharia, do Gerencial e do EARL completo não são tocados.',
+    onOk: () => {
+      var A = window.EARL_ARMAZ;
+      try {
+        var del = [];
+        for (var i = 0; i < localStorage.length; i++) {
+          var k = localStorage.key(i);
+          if (k && k.indexOf(g) === 0) del.push(k);
+        }
+        del.forEach(k => A.R.call(localStorage, k));
+      } catch (e) {}
+      var med = engEspacoMedir();
+      setEngEspMed(med);
+      if (med.ok && med.pct < 95) setEngEspFalhou(false);
+      setOkMsg('Espaço liberado ✓ — ' + nome);
+      setTimeout(() => setOkMsg(''), 4000);
+    }
+  });
+  var renderEngEspacoAviso = () => {
+    var med = engEspMed;
+    if (!med) return null;
+    var abrir = () => {
+      setEngEspMed(engEspacoMedir());
+      setEngEsp({});
+    };
+    if (!med.ok) return engH("div", {
+      className: "hm-banner ec-esp-aviso"
+    }, engH("div", null, engH("b", null, "⚠ Este arquivo não consegue guardar dados no navegador"), engH("span", null, "O que for lan\xE7ado aqui n\xE3o fica salvo. Isso acontece quando o arquivo \xE9 aberto dentro de uma pr\xE9-visualiza\xE7\xE3o (e-mail, Teams, visualizador de arquivos). Salve o arquivo no computador e abra direto no Chrome ou no Edge.")));
+    if (!engEspFalhou && med.pct < 85) return null;
+    return engH("div", {
+      className: "hm-banner ec-esp-aviso"
+    }, engH("div", null, engH("b", null, engEspFalhou ? '⚠ O espaço do navegador está cheio: o que foi lançado não está sendo salvo' : '⚠ O espaço do navegador está quase cheio (' + fmtNum(Math.round(med.pct)) + '%)'), engH("span", null, "Os arquivos do EARL abertos do disco dividem o mesmo espa\xE7o. Libere espa\xE7o apagando simula\xE7\xF5es e testes antigos.")), engH("button", {
+      className: "btn-r ec-esp-abrir",
+      onClick: abrir
+    }, "Ver e liberar espa\xE7o"));
+  };
+  var renderEngEspaco = () => {
+    if (!engEsp) return null;
+    var med = engEspMed || engEspacoMedir();
+    var fechar = () => setEngEsp(null);
+    var pct = med.ok ? Math.min(100, med.pct) : 0;
+    return engH("div", {
+      className: "overlay",
+      style: {
+        zIndex: 300
+      },
+      onClick: e => {
+        if (e.target === e.currentTarget) fechar();
+      }
+    }, engH("div", {
+      className: "modal ec-esp-modal",
+      onClick: e => e.stopPropagation()
+    }, engH("div", {
+      className: "modal-title"
+    }, engH("span", null, "Espa\xE7o do navegador"), engH("button", {
+      className: "modal-close",
+      onClick: fechar
+    }, "\xD7")), engH("div", {
+      className: "eng-help",
+      style: {
+        marginTop: 0
+      }
+    }, "No Chrome e no Edge, todos os arquivos HTML abertos do disco (EARL completo, simula\xE7\xF5es, Engenharia, Gerencial e testes) dividem o mesmo espa\xE7o, de cerca de 5 milh\xF5es de caracteres. Quando ele enche, nenhum desses arquivos consegue salvar."), !med.ok ? engH("div", {
+      className: "ho-pend"
+    }, 'O navegador não deixa este arquivo usar o armazenamento (' + med.erro + ').') : engH(React.Fragment, null, engH("div", {
+      className: "ec-esp-total"
+    }, engH("b", null, engMilhoes(med.tot) + ' de ~' + engMilhoes(ENG_COTA) + ' de caracteres (' + fmtNum(Math.round(med.pct)) + '%)'), engBarra(pct)), engH("div", {
+      className: "tbl-scroll"
+    }, engH("table", {
+      className: "db-table ec-esp-tab"
+    }, engH("thead", null, engH("tr", null, ['Arquivo', 'Espaço', '%', ''].map((h, k) => engH("th", {
+      key: k
+    }, h)))), engH("tbody", null, med.por.map(x => {
+      var nm = engEspacoNome(x.g);
+      return engH("tr", {
+        key: x.g || '-',
+        'data-g': x.g
+      }, engH("td", null, engH("b", null, nm.nome), engH("span", {
+        className: "ec-pn-sub"
+      }, nm.obs || '')), engH("td", {
+        className: "ec-num"
+      }, engMilhoes(x.n)), engH("td", {
+        className: "ec-num"
+      }, fmtNum(Math.round(x.n / ENG_COTA * 1000) / 10) + '%'), engH("td", null, nm.apaga && engH("button", {
+        className: "btn-o ec-esp-apagar",
+        onClick: () => engEspacoApagar(x.g, nm.nome)
+      }, "Apagar")));
+    }))))), engH("div", {
+      className: "ec-pn-nota"
+    }, "Antes de apagar, se tiver d\xFAvida, use “⬇ Exportar dados”. Os dados da Engenharia, do Gerencial e do EARL completo n\xE3o se apagam por aqui."), engH("div", {
+      className: "ec-foot"
+    }, engH("span", {
+      style: {
+        flex: 1
+      }
+    }), engH("button", {
+      className: "btn-o",
+      onClick: fechar
+    }, "Fechar"))));
+  };
   var renderEngTools = () => hubLocation ? engH("div", {
     className: "eng-tools"
   }, engH("button", {

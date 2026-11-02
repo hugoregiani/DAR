@@ -344,12 +344,13 @@ const kpi = (page, cls) => txt(page, '.' + cls + ' b');
   await page.waitForSelector('.ec-painel');
   const pn = async () => page.evaluate(() => {
     const t = s => (document.querySelector(s) || {}).textContent || '';
-    return {usd: t('.ec-pn-rec-usd b'), usdSub: t('.ec-pn-rec-usd em'), brl: t('.ec-pn-rec-brl b'), cogs: t('.ec-pn-cogs b'), mg: t('.ec-pn-margem b'), mgSub: t('.ec-pn-margem em'), ops: t('.ec-pn-ops b'), opsSub: t('.ec-pn-ops em'),
+    return {usd: t('.ec-pn-rec-usd b'), usdSub: t('.ec-pn-rec-usd em'), op: t('.ec-pn-rec-op b'), opSub: t('.ec-pn-rec-op em'), cards: [...document.querySelectorAll('.ec-painel .ec-kpi span')].map(s => s.textContent), cogs: t('.ec-pn-cogs b'), mg: t('.ec-pn-margem b'), mgSub: t('.ec-pn-margem em'), ops: t('.ec-pn-ops b'), opsSub: t('.ec-pn-ops em'),
       meses: [...document.querySelectorAll('.ec-pn-mes-tab tbody tr')].map(r => r.cells[0].textContent), cts: [...document.querySelectorAll('.ec-pn-ct-tab tbody tr')].map(r => r.cells[0].textContent)};
   });
   let v = await pn();
   conf(v.usd === 'US$ 1.087,50' && v.usdSub === 'realizado US$ 807,50 · previsto US$ 280,00' && v.cogs === 'US$ 25,00' && v.mg === 'US$ 1.062,50' && v.ops === '2', 'painel: receita realizada (com risco 50%) + prevista, COGS e margem', v);
-  conf(v.brl === 'R$ 6.002,50' && v.mgSub === '97,7% da receita · R$ 6.002,50' && v.meses.join() === 'nov/2026' && v.cts.join() === 'Contrato Teste Macaé', 'painel: R$, por mês e por contrato', v);
+  conf(v.cards.join('|') === 'Receita em US$|COGS|Operações|Receita / operação (US$)|Margem em US$', 'painel: cartões na ordem Receita, COGS, Operações, Receita/operação, Margem', v.cards);
+  conf(v.op === 'US$ 543,75' && v.opSub === 'realizado US$ 807,50 · previsto US$ 280,00' && v.mgSub === '97,7% da receita · R$ 6.002,50' && v.meses.join() === 'nov/2026' && v.cts.join() === 'Contrato Teste Macaé', 'painel: receita por operação (US$ 1.087,50 ÷ 2), por mês e por contrato', v);
   await foto(page, 'c7_painel');
   await page.selectOption('.ec-pn-sit', 'real');
   v = await pn();

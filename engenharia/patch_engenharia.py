@@ -47,11 +47,17 @@ ARMAZ = r'''<script>
    misturar com outros arquivos do EARL abertos do disco (file:// divide o mesmo armazenamento). */
 (function(){
   var P='earleng:';var SP=Storage.prototype,G=SP.getItem,S=SP.setItem,R=SP.removeItem;
+  /* armazenamento bloqueado (arquivo aberto dentro de uma pré-visualização): o app abre com um armazenamento
+     só na memória, mostra os dados e avisa que nada fica salvo */
+  function memoria(){var m={},o={getItem:function(k){return Object.prototype.hasOwnProperty.call(m,k)?m[k]:null;},setItem:function(k,v){m[k]=String(v);},removeItem:function(k){delete m[k];},clear:function(){m={};},key:function(i){return Object.keys(m)[i]||null;}};Object.defineProperty(o,'length',{get:function(){return Object.keys(m).length;}});return o;}
+  ['localStorage','sessionStorage'].forEach(function(n){var b=false;try{window[n].getItem('earl');}catch(e){b=true;}
+    if(b){try{Object.defineProperty(window,n,{configurable:true,value:memoria()});}catch(e){}if(n==='localStorage')window.EARL_ARMAZ_BLOQUEADO=true;}});
   SP.getItem=function(k){return G.call(this,P+k);};
   SP.setItem=function(k,v){return S.call(this,P+k,v);};
   SP.removeItem=function(k){return R.call(this,P+k);};
   try{var IO=IDBFactory.prototype.open;IDBFactory.prototype.open=function(n,v){return v===undefined?IO.call(this,P+n):IO.call(this,P+n,v);};}catch(e){}
   window.EARL_ENG_AVULSO=true;
+  window.EARL_ARMAZ={P:P,G:G,S:S,R:R}; /* funções originais, sem prefixo: tela "Espaço do navegador" */
 })();
 </script>'''
 s = s[:a] + ARMAZ + s[b:]
@@ -273,8 +279,15 @@ rep('''        onClick: () => duplicatePlanned(j)
 # e5: risco da receita/COGS na operação (seção 2 do formulário) e etiqueta na Lista
 rep("aparece em roxo no Gantt.')))), React.createElement(\"div\", {", "aparece em roxo no Gantt.')), engRiscoCampo(d, set))), React.createElement(\"div\", {")
 
+# e6: gravação recusada pelo navegador: mensagem certa para a Engenharia e aviso na página inicial
+rep("""      if (!saveDB(next)) setTimeout(() => setSyncErr('⚠ O navegador recusou a gravação — o armazenamento local está cheio ' + 'e esta alteração NÃO foi salva neste aparelho. Costuma ser anexo de nota fiscal grande demais: ' + 'apague anexos antigos em Granéis & HCl (ou exporte o banco) e repita a operação.'), 0);""",
+    """      if (!saveDB(next)) setTimeout(() => {
+        setSyncErr('⚠ O navegador recusou a gravação e esta alteração NÃO foi salva neste computador. O espaço do navegador para arquivos abertos do disco está cheio (ele é dividido com o EARL completo, as simulações, o Gerencial e os testes). Use “Ver e liberar espaço” na página inicial da Engenharia, ou “⬇ Exportar dados” para não perder o que foi feito.');
+        engEspacoFalhou();
+      }, 0);""")
+
 # e5: painel "Receita e COGS" na página inicial da Engenharia
-rep("engContratos.length + ' contrato(s) vigente(s)')), engAlerta(planJobs), React.createElement(\"div\", {", "engContratos.length + ' contrato(s) vigente(s)')), engAlerta(planJobs), renderEngPainel(), React.createElement(\"div\", {")
+rep("engContratos.length + ' contrato(s) vigente(s)')), engAlerta(planJobs), React.createElement(\"div\", {", "engContratos.length + ' contrato(s) vigente(s)')), engAlerta(planJobs), renderEngEspacoAviso(), renderEngPainel(), React.createElement(\"div\", {")
 
 # e6: banco de produtos químicos. A base (quimicos_base.json, tabela Químicos da aba Forecast) entra uma vez
 # em cada computador, no loadDB, quando o banco ainda não tem produtos químicos (flag quimBaseV1).
@@ -320,7 +333,7 @@ rep("  return migrateDB(JSON.parse(JSON.stringify(SEED_DB)));", "  return engQui
 # Código novo (antes de renderHandover) e janelas novas na árvore
 novo = open(os.path.join(AQUI, 'eng_app.js'), encoding='utf-8').read() + '\n' + open(os.path.join(AQUI, 'eng_contratos.js'), encoding='utf-8').read() + '\n' + open(os.path.join(AQUI, 'eng_quimicos.js'), encoding='utf-8').read()
 rep("  var renderHandover = () => {\n", novo.rstrip('\n') + "\n  var renderHandover = () => {\n")
-rep("renderRigForm(), renderConfirmBox(),", "renderEngSondas(), renderEngContratos(), renderEngQuim(), renderEngCons(), renderEngImpDados(), renderEngGer(), renderRigForm(), renderConfirmBox(),")
+rep("renderRigForm(), renderConfirmBox(),", "renderEngSondas(), renderEngContratos(), renderEngQuim(), renderEngEspaco(), renderEngCons(), renderEngImpDados(), renderEngGer(), renderRigForm(), renderConfirmBox(),")
 # sonda salva com data de alteração (para o "juntar" da importação ficar com a mais recente)
 rep("      regiao: regiaoDaBase(rigDraft.base) || rigDraft.regiao || 'nne',", "      regiao: regiaoDaBase(rigDraft.base) || rigDraft.regiao || 'nne',\n      updatedAt: new Date().toISOString(),")
 

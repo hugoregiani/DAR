@@ -184,3 +184,13 @@ td.ec-desc{font-size:12.5px;line-height:1.35}
 .ec-quim-modal>*,.ec-quim-plan>*{flex-shrink:0}
 .ec-quim-tab{min-width:760px}
 .ec-quim-plan .ec-qp-modo{margin-top:12px}
+/* e6: espaço do navegador */
+.ec-esp-aviso{background:#FFF4E5;border-color:#F5C98B;margin:4px 0 14px}
+.ec-esp-aviso>div{flex:1;display:flex;flex-direction:column;gap:2px}
+.ec-esp-aviso b{color:#8A4B00}
+.ec-esp-aviso span{font-size:12.5px;color:var(--ink-2)}
+.ec-esp-modal{width:min(820px,96vw);max-height:92vh;overflow:auto;display:flex;flex-direction:column}
+.ec-esp-modal>*{flex-shrink:0}
+.ec-esp-total{display:flex;flex-direction:column;gap:6px;margin:6px 0 10px;font-size:13px}
+.ec-esp-total .ec-barra{height:10px}
+.ec-esp-tab td:first-child{min-width:240px}

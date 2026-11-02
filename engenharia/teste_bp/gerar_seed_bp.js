@@ -214,11 +214,15 @@ if (!XLSX_ARQ || !HTML || !SAIDA) {
       ops.push(j);
     });
     d.plannedJobs = [...d.plannedJobs, ...ops];
+    // o arquivo de teste fica só com o contrato do BP: os outros vão para "arquivados" (apagar não adianta, a
+    // migração do EARL recria alguns contratos da semente quando faltam)
+    const outros = d.contratos.filter(c => c.id !== ct.id && !c.archived).length;
+    d.contratos.forEach(c => { if (c.id !== ct.id) c.archived = true; });
     d.hoMail = {...(d.hoMail || {}), nome: resp};
     d.gerCfg = {...(d.gerCfg || {}), contratos: [ct.id]};
     saveDB(d);
     return {
-      inicio, itensBanco: itensBanco.length, itensContrato: ct.items.length, novos, rig: rig.id, quimicos: d.quimicos.length, quimIguais, cogsCasing: d.cogsItens.length,
+      contratosAtivos: d.contratos.filter(c => !c.archived).length, outrosArquivados: outros, inicio, itensBanco: itensBanco.length, itensContrato: ct.items.length, novos, rig: rig.id, quimicos: d.quimicos.length, quimIguais, cogsCasing: d.cogsItens.length,
       ops: ops.length, concluidas: ops.filter(j => j.ppuCons).length, risco100: ops.filter(j => j.riscoRec >= 100).map(j => j.id),
       tipos: ops.map(j => j.id + ' ' + j.date + ' ' + (j.tipoOp === TIPO_OUTROS ? j.tipoOutro : j.tipoOp + (j.casing ? ' ' + j.casing : '')) + ' · ' + j.ppuNeeds.length + ' PPU · ' + j.chems.length + ' quím · ' + j.peopleNeeds.map(n => n.qty + ' ' + n.funcao).join(' + ') + (j.ppuCons ? ' · CONSUMO' : '') + (j.riscoRec ? ' · risco ' + j.riscoRec + '%' : '')),
       difPreco, difUnid: [...new Map(difUnid.map(x => [x.sap, x])).values()], avisos
