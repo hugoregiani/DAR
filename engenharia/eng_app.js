@@ -631,8 +631,7 @@
 
   /* Aba "Handovers": os e-mails gerados. */
   var renderHoEmails = () => {
-    var loc = hubLocation === 'macae' ? 'macae' : 'nne';
-    var lista = (db.handovers || []).filter(h => h.status !== 'cancelado' && (h.loc || 'nne') === loc && (!ctSel || h.contratoId === ctSel.id || pjDoContrato({
+    var lista = (db.handovers || []).filter(h => h.status !== 'cancelado' && (!ctSel || h.contratoId === ctSel.id || pjDoContrato({
       contratoLabel: h.contratoLabel
     }, ctSel))).slice().sort((a, b) => String(b.atualizadoEm || b.criadoEm || '').localeCompare(String(a.atualizadoEm || a.criadoEm || '')));
     if (!lista.length) return engH("div", {
@@ -688,7 +687,7 @@
 
   /* Sondas (o cadastro do Ajustes, na região escolhida). */
   var abrirEngSondas = () => {
-    setRigAmbTab(hubLocation === 'macae' ? 'offshore' : 'onshore');
+    setRigAmbTab((db.rigs || []).some(r => r.active !== false && rigAmbiente(r) === 'onshore') ? 'onshore' : 'offshore');
     setEngSondas(true);
   };
   var renderEngSondas = () => {
@@ -706,7 +705,7 @@
       onClick: e => e.stopPropagation()
     }, engH("div", {
       className: "modal-title"
-    }, engH("span", null, 'Sondas — ' + hoRegiaoLbl(hubLocation === 'macae' ? 'macae' : 'nne')), engH("button", {
+    }, engH("span", null, 'Sondas'), engH("button", {
       className: "modal-close",
       onClick: () => setEngSondas(false)
     }, "\xD7")), renderDBRigs()));
@@ -765,6 +764,10 @@
   var renderEngTools = () => hubLocation ? engH("div", {
     className: "eng-tools"
   }, engH("button", {
+    className: "btn-o",
+    onClick: abrirEngContratos,
+    title: "Contratos, itens PPU, valores em R$ e US$ e reajustes"
+  }, "Contratos"), engH("button", {
     className: "btn-o",
     onClick: abrirEngSondas,
     title: "Cadastro de sondas desta regi\xE3o"

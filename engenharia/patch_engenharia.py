@@ -81,7 +81,7 @@ assert i > 0
 s = s[:i] + css + s[i:]
 
 # ---------------------------------------------------------------- app (código compilado)
-rep("var EARL_VERSION = 'EARL v115';", "var EARL_VERSION = 'EARL Engenharia e1 (base v115)';")
+rep("var EARL_VERSION = 'EARL v115';", "var EARL_VERSION = 'EARL Engenharia e2 (base v115)';")
 rep("var HO_ST = {\n  pendente: {", "var HO_ST = {\n  email: {\n    label: 'Enviado por e-mail',\n    c: '#304220',\n    bg: '#F1F5EC',\n    brd: '#D9E4CC'\n  },\n  pendente: {")
 # quem gera o e-mail assina os registros (sem login)
 rep("  var currentUser = () => authUser && authUser.email || sbUser || '';",
@@ -91,12 +91,22 @@ rep("  var currentUser = () => authUser && authUser.email || sbUser || '';",
 rep("  var needLogin = !authUser && !adminUnlocked;", "  var needLogin = false;")
 rep("  if (authChecking && syncCfgReady(sbCfg)) {", "  if (false) {")
 
-# Só a Engenharia: a aba é sempre 'plan'; sem região, a escolha da região.
+# Só a Engenharia, sem escolha de região: a aba é sempre 'plan' e o recorte é sempre o Brasil
+# (todos os contratos e todas as operações; a região de cada operação sai da sonda).
 rep("  var [mainTab, setMainTab] = useState('home');", "  var [mainTabEstado, setMainTab] = useState('plan');\n  var mainTab = 'plan';")
 rep("      return localStorage.getItem('hal_earl_location_v1') || '';",
-    "      var locSalva = localStorage.getItem('hal_earl_location_v1') || '';\n      return locSalva === 'brasil' ? '' : locSalva;")
-# Trocar de região volta à escolha do contrato (o contrato aberto é da outra região)
-rep("    setHubLocation(loc || '');\n  };", "    setHubLocation(loc || '');\n    setPlanCt('');\n    setPlanDraft(null);\n  };")
+    "      return 'brasil';")
+rep("    setHubLocation(loc || '');\n  };", "    setHubLocation('brasil');\n    setPlanCt('');\n    setPlanDraft(null);\n  };")
+# Trilha: Engenharia / contrato (sem "trocar locação" e sem região)
+rep("    var out = [{\n      key: 'hub',", "    var out = false ? [{\n      key: 'hub',")
+rep("      title: 'Trocar locação'\n    }];\n    if (locLabel) out.push({", "      title: 'Trocar locação'\n    }] : [];\n    if (false) out.push({")
+# Região da operação = base da sonda (ou do contrato)
+rep("    loc: hubLocation === 'macae' ? 'macae' : 'nne',\n    clienteName: '',", "    loc: '',\n    clienteName: '',")
+rep("      loc: draft.loc || (hubLocation === 'macae' ? 'macae' : 'nne'),",
+    "      loc: regiaoDaBase(((db.rigs || []).find(r => r.id === draft.rigId) || {}).base) || ((ct0 => ct0 ? ctrRegioes(ct0)[0] : '')((db.contratos || []).find(c => c.id === draft.contratoId))) || draft.loc || 'nne',")
+rep(": tplMode && hubLocation === 'macae';", ": tplMode && !!ctObj && ctrRegioes(ctObj).includes('macae');")
+# Salvar a operação não mexe no consumo lançado (ele é gravado pela janela de consumo)
+rep("      if (i >= 0) list[i] = {\n        ...clean,\n        log:", "      if (i >= 0) list[i] = {\n        ...clean,\n        ppuCons: list[i].ppuCons,\n        log:")
 rep("  if (safeTab === 'db' && hubLocation !== 'brasil') safeTab = 'home';\n",
     "  if (safeTab === 'db' && hubLocation !== 'brasil') safeTab = 'home';\n  if (hubLocation) safeTab = 'plan';\n")
 
@@ -110,8 +120,20 @@ rep("  var navHome = useCallback(() => {\n    clearSubState();",
     "  var navHome = useCallback(() => {\n    setPlanCt('');\n    setPlanDraft(null);\n    clearSubState();")
 # Ajustes não existe aqui
 rep("  var irParaAjustes = tab => {\n    if (tab) setDbTab(tab);", "  var irParaAjustes = tab => {\n    return;\n    if (tab) setDbTab(tab);")
-rep(r'''"Cadastre os contratos e as linhas PPU em Ajustes \u2192 Contratos."), React.createElement("button", {''',
-    r'''"Nenhum contrato vigente cadastrado para esta regi\xE3o."), false && React.createElement("button", {''')
+rep(r'''"Cadastre os contratos e as linhas PPU em Ajustes \u2192 Contratos."), React.createElement("button", {
+      className: "btn-r",
+      style: {
+        marginTop: 12
+      },
+      onClick: () => irParaAjustes('contratos')
+    }, "Abrir Contratos em Ajustes (Brasil) \u2192")));''',
+    r'''"Cadastre os contratos e os itens PPU no bot\xE3o Contratos."), React.createElement("button", {
+      className: "btn-r",
+      style: {
+        marginTop: 12
+      },
+      onClick: () => abrirEngContratos()
+    }, "Abrir Contratos \u2192")));''')
 
 # Cabeçalho: sem sino de pendências, sem "Configurar sync"; título "Engenharia".
 rep('''}, "EARL"))), React.createElement("div", {
@@ -182,7 +204,7 @@ rep("}, hoAtual.status === 'reprovado' && !travado ? '✎ Revisar e reenviar' : 
 rep('''      className: "eng-mb"
     }, (() => {
       var mob = mobOfPlanned(d);''', '''      className: "eng-mb"
-    }, hoEmailBanner(hoAtual), (() => {
+    }, hoEmailBanner(hoAtual), engConsBanner(d), (() => {
       var mob = mobOfPlanned(d);''')
 # Janela do handover
 rep("}, hd.editId ? ro ? 'Handover' : 'Revisar handover devolvido' : 'Enviar handover'), React.createElement(\"div\", {",
@@ -217,7 +239,7 @@ rep(r'placeholder: "Informa\xE7\xF5es para a coordena\xE7\xE3o, a log\xEDstica e
 rep("  var renderPlanHandovers = () => {", "  var renderPlanHandovers = () => renderHoEmails();\n  var renderPlanHandoversEARL = () => {")
 # Lista: selo do e-mail e botão
 rep('''pjBadge(j.status), j.contingencia && React.createElement("div", {
-        className: "eng-cont-pill"''', '''pjBadge(j.status), hoEmailTag(j), j.contingencia && React.createElement("div", {
+        className: "eng-cont-pill"''', '''pjBadge(j.status), hoEmailTag(j), engConsTag(j), j.contingencia && React.createElement("div", {
         className: "eng-cont-pill"''')
 rep('''        onClick: () => abrirHandover(j)
       }, "Handover \\u2192")));''', '''        onClick: () => abrirHandover(j)
@@ -227,10 +249,31 @@ rep('''        onClick: () => abrirHandover(j)
 rep(r'Toda sonda ganha a sua p\xE1gina no app Sondas, com o invent\xE1rio a bordo (DAR), servi\xE7os, pessoas e hist\xF3rico."',
     r'As sondas cadastradas aqui aparecem no campo Sonda das opera\xE7\xF5es da Engenharia."')
 
+# Contratos: aba "Consumo e receita", consumo de PPU na operação e na Lista
+rep("[['gantt', 'Gantt'], ['cal', 'Calendário'], ['list', 'Lista'], ['ho', 'Handovers']]",
+    "[['gantt', 'Gantt'], ['cal', 'Calendário'], ['list', 'Lista'], ['ho', 'Handovers'], ['rec', 'Consumo e receita']]")
+rep("planView === 'ho' && renderPlanHandovers()));", "planView === 'ho' && renderPlanHandovers(), planView === 'rec' && renderEngReceita()));")
+rep('''      onClick: () => setLogView(d.id)
+    }, "\\u2630 Log"),''', '''      onClick: () => setLogView(d.id)
+    }, "\\u2630 Log"), !tplMode && d.id && React.createElement("button", {
+      className: "btn-o ec-btn-cons",
+      title: "Lan\\xE7ar o consumo de PPU desta opera\\xE7\\xE3o (baixa o saldo do contrato e gera a receita)",
+      onClick: () => abrirEngCons(d)
+    }, "\\u03A3 Consumo PPU"),''')
+rep('''        onClick: () => duplicatePlanned(j)
+      }, "Duplicar"),''', '''        onClick: () => duplicatePlanned(j)
+      }, "Duplicar"), React.createElement("button", {
+        className: "btn-o ec-btn-cons",
+        style: {
+          fontSize: 10
+        },
+        onClick: () => abrirEngCons(j)
+      }, "\\u03A3 Consumo"),''')
+
 # Código novo (antes de renderHandover) e janelas novas na árvore
-novo = open(os.path.join(AQUI, 'eng_app.js'), encoding='utf-8').read()
+novo = open(os.path.join(AQUI, 'eng_app.js'), encoding='utf-8').read() + '\n' + open(os.path.join(AQUI, 'eng_contratos.js'), encoding='utf-8').read()
 rep("  var renderHandover = () => {\n", novo.rstrip('\n') + "\n  var renderHandover = () => {\n")
-rep("renderRigForm(), renderConfirmBox(),", "renderEngSondas(), renderRigForm(), renderConfirmBox(),")
+rep("renderRigForm(), renderConfirmBox(),", "renderEngSondas(), renderEngContratos(), renderEngCons(), renderRigForm(), renderConfirmBox(),")
 
 open(OUT, 'w', encoding='utf-8').write(s)
 print('ok →', OUT, '(%.1f MB)' % (len(s.encode('utf-8')) / 1e6))

@@ -74,7 +74,7 @@ O CSP está em `globalHeaders`. Ele precisa de `'unsafe-inline'` e `'unsafe-eval
 
 ---
 
-## 4-E. Desmembramento: EARL Engenharia (avulso), e1 — pasta `engenharia/` do repositório `hugoregiani/DAR`
+## 4-E. Desmembramento: EARL Engenharia (avulso), e1 e e2 — pasta `engenharia/` do repositório `hugoregiani/DAR`
 
 Pedido do Hugo (01/11/2026): como o EARL ainda não pode ser usado online, separar a **Engenharia** num HTML próprio, **sem login**, e trocar o envio do handover (que ia para a Coordenação/Logística) por um **e-mail .eml** gerado no app. Parte do `EARL_HAL_CMT_115_SIMULACAO.html` (compilado) pelo `engenharia/patch_engenharia.py`, que insere `engenharia/eng_app.js` (código novo, dentro do `App`, antes de `renderHandover`) e `engenharia/eng.css`. Saída: `engenharia/EARL_Engenharia.html` (~8,4 MB). Versão: `EARL_VERSION = 'EARL Engenharia e1 (base v115)'`.
 
@@ -90,6 +90,53 @@ Pedido do Hugo (01/11/2026): como o EARL ainda não pode ser usado online, separ
   - Aba **Handovers** = `renderHoEmails` (cartões com assunto, Para/Cc, versão, "⬇ Baixar o e-mail" e "Revisar / nova versão →"). Lista: selo `hoEmailTag` "✉ handover vN" e botão "✉ Handover vN →".
 - **Testes:** `engenharia/tests/e2e_engenharia.js` (58 verificações; abre por `file://` com a internet bloqueada): sem login, só Nordeste/Sudeste, operação offshore com PPU/químicas/casing/pessoal/equipamentos, handover → e-mail (assunto, nome do arquivo, `X-Unsent`, Para/Cc, corpo HTML e texto, 300 + 100% = 600), aba Handovers e baixar de novo, versão 2 (REV 2, destinatários salvos, tirar da lista), persistência e prefixo, backup e restaurar, sonda nova no Nordeste + handover onshore de bombeio (VIDA N/A), Voltar, celular e console sem erro.
 - **Pendências:** os textos novos ainda não estão em `I18N_EN`/`I18N_ES`; a lista de destinatários começa vazia (sem DL padrão); contratos e linhas PPU só vêm da semente, porque o Ajustes não veio junto (para incluir um contrato, use o EARL completo e restaure o backup); a ida de volta ao EARL completo é pelo backup `.json` (mesmo formato de `hal_cmt_db_v1`).
+
+### e2 (02/11/2026): Engenharia direto, sem região, e Contratos com valores, reajustes, consumo e receita
+
+Pedido do Hugo, feito sobre a e1. O código novo fica em `engenharia/eng_contratos.js`, inserido junto com o `eng_app.js`. Versão: `EARL Engenharia e2 (base v115)`.
+
+- **Sem a escolha de região:** `hubLocation` é sempre `'brasil'` (a inicialização devolve `'brasil'` e `setLocation` grava `'brasil'`), então a Engenharia mostra todos os contratos e operações. A trilha fica só com Engenharia / contrato. `newPlanDraft` nasce com `loc:''`; `savePlanned` grava `loc` pela base da sonda (`regiaoDaBase`), senão pelo contrato (`ctrRegioes`). O offshore do template vem do contrato. A janela Sondas abre na aba onshore se houver sonda onshore; senão, na offshore. A aba Handovers lista todas.
+- **Modelo (compatível com o EARL):**
+  - `db.contratos[].items[]` ganham `brl` e `usd` (valor unitário inicial);
+  - o contrato ganha `inicio` e `reajustes[] = {id, desde, obs, em, por, precos: {ref: {brl?, usd?}}}`;
+  - `plannedJobs[].ppuCons = {data, linhas: [{ref, desc, unit, qty}], em, por}`.
+  - O preço numa data é `ctPreco(ct, ref, data)`: o valor inicial e, por cima, os reajustes com `desde ≤ data`, em ordem, item a item e moeda a moeda.
+  - O saldo usa `ctrItensNaData` (com os aditivos do EARL) menos o consumo lançado em todas as operações não canceladas do contrato (`engConsDoCt`).
+  - A receita de cada linha é a quantidade × o preço na data do serviço.
+  - `savePlanned` preserva o `ppuCons` gravado: só a janela de consumo mexe nele.
+- **Janela Contratos** (`renderEngContratos`; botão "Contratos" na barra e na aba de receita):
+  - **Lista:** busca e arquivados.
+  - **Editor:** cliente (datalist; cria o cliente com `ensureClientIn`), nome, número, tipo, início da vigência e bases; tabela de itens editável, com Consumido e Disponível e, havendo reajuste, "Vigente hoje"; "＋ Linha"; salvar, arquivar, e excluir só quando não há operação.
+  - **Proteção:** o código do item usado em operação (`engRefsUsados`: `ppuNeeds` ou `ppuCons`) fica só leitura e o item não pode ser tirado.
+  - **Planilha** (`engLerPlanilha` + `engPlanLinhas`): xlsx, xls ou CSV.
+    - O cabeçalho é reconhecido pelo nome da coluna (Item/Ref/Código, Descrição, Unidade, Saldo/Quantidade, Valor R$/Preço/BRL, US$/USD/Dólar); sem cabeçalho, vale a ordem A a F.
+    - O CSV é lido como texto: UTF-8 e, se falhar, Windows-1252, com `raw:true`, porque o SheetJS leria "1.500,00" como 1,5 e "1.10" como 1,1.
+    - Os números passam por `engNum`, que aceita "1.234,56", "1,234.56" e "1.000" (milhar).
+    - Os códigos usam o texto formatado da célula.
+    - Modos: atualizar e acrescentar, ou substituir a lista (os itens usados em operações ficam).
+    - "⬇ Baixar planilha / Modelo" gera o xlsx com o mesmo cabeçalho.
+  - **Reajuste** (`renderEngReaj`): data "a partir de" (sem repetir a data de outro reajuste), observação, "% R$" e "% US$" aplicados sobre o valor vigente na data, valores linha a linha ou carregados da planilha (só os itens do contrato), coluna de variação e aviso de quantas operações com consumo a partir da data mudam de receita. O reajuste é salvo na hora junto com o contrato, e o × apaga com confirmação.
+- **Consumo de PPU** (`abrirEngCons` / `renderEngCons`):
+  - **Onde abre:** botão "Σ Consumo PPU" no rodapé da operação, "Σ Consumo" na Lista e botões na aba de receita.
+  - **Data do serviço:** o padrão é a data da operação, e os preços valem nessa data.
+  - **Linhas:** começam com os itens PPU previstos; "⇩ Copiar previsto"; "＋ Acrescentar item do contrato…".
+  - **Colunas:** previsto, consumido, disponível (contratado menos o consumo das outras operações), valor R$/US$ e total.
+  - **Avisos:** acima do saldo (salva mesmo assim) e item sem valor (fica fora da receita).
+  - **Gravação:** salvar ou "Apagar consumo", com log na operação ("Consumo de PPU lançado/alterado/apagado").
+  - **Onde aparece:** selo "Σ R$ …" na Lista (`engConsTag`) e faixa na janela da operação (`engConsBanner`).
+- **Aba "Consumo e receita"** (`planView 'rec'`, `renderEngReceita`; respeita os filtros da barra):
+  - **Barra:** período do serviço (de/até) e "⬇ Excel" (abas Operações, Itens e Lançamentos).
+  - **Indicadores:** receita em R$, em US$, operações com consumo (e quantas já passaram sem consumo) e lançamentos sem valor.
+  - **Num contrato:** receita por operação, saldo por item PPU (contratado, consumido, saldo, barra de % usado, valor vigente e receita no período) e receita por mês.
+  - **Na Visão geral:** receita por contrato (abre o contrato), por operação e por mês.
+  - A página inicial sem contrato abre a janela Contratos.
+- **Celular:** a barra de abas da Engenharia rola dentro dela (`.toolbar>.db-tabs{max-width:100%}`) e a trilha não mostra o separador sozinho.
+- **Testes:**
+  - O `tests/harness.js` aceita `hoje` (relógio do navegador fixo).
+  - O relógio fixo do Playwright tenta rodar um script na pré-visualização do e-mail (iframe com `sandbox`); esse aviso é ignorado.
+  - Com o relógio fixo, as transições de CSS não andam: um botão que acabou de ser habilitado aparece cinza na foto, mas funciona.
+  - `tests/e2e_engenharia.js` (61) e `tests/e2e_contratos.js` (45): lista, contrato novo por xlsx (com "1.10", "1.000" e "250,50") e por CSV Windows-1252 com ";", linha sem código, 10% em R$, reajuste em US$ pela planilha, valor vigente antes e depois do reajuste, consumo com previsto copiado e item acrescentado (R$ 8.705,00 / US$ 1.615,00), aviso acima do saldo, receita do contrato (R$ 17.395,00 / US$ 3.095,00), saldo por item, por mês, período, Excel, aviso de reajuste retroativo, trava do código, planilha baixada, consumo preservado ao salvar a operação, Visão geral, apagar consumo e persistência.
+- **Pendências:** os textos novos não estão em EN/ES; não há câmbio (R$ e US$ são valores independentes do contrato, sem conversão); o consumo é lançado à mão (o HI de campo não existe nesta versão); medição/boletim por período e por contrato ficam para depois, se pedirem.
 
 ---
 

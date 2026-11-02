@@ -48,17 +48,15 @@ async function escolher(page, titulo, busca, qtds) {
 const fld = (page, rot) => page.locator('.eng-modal .fld').filter({has: page.locator('label', {hasText: rot})}).first();
 
 (async () => {
-  const {browser, page, errs} = await abrir(ARQ, {h: 1000});
-  await page.waitForSelector('.hub-card', {timeout: 60000});
+  const {browser, page, errs} = await abrir(ARQ, {h: 1000, hoje: '2026-11-02'});
+  await page.waitForSelector('.eng2-card', {timeout: 60000});
   console.log('Abertura');
   const corpo0 = await page.innerText('body');
   conf(!/SENHA|Entrar como administrador|Acesso restrito/i.test(corpo0), 'abre sem login e sem senha');
   conf(!/SIMULAÇÃO/.test(corpo0), 'sem o selo da simulação');
-  conf(await page.locator('.hub-card').count() === 2, 'escolha de região só com Nordeste e Sudeste');
-  await foto(page, '01_regiao');
-
-  await page.click('.hub-card[aria-label="SUDESTE"]');
-  await page.waitForSelector('.eng2-card');
+  conf(await page.locator('.hub-card').count() === 0, 'sem a escolha de região: abre direto na Engenharia');
+  conf(await page.locator('.eng2-card').count() === 17, 'todos os contratos (16) + Visão geral na página inicial', await page.locator('.eng2-card').count());
+  conf(!(await page.locator('.crumb-hub, .crumb-loc').count()), 'trilha sem "trocar locação" e sem região');
   const corpo1 = await page.innerText('body');
   conf(/Engenharia/.test(corpo1) && /Sondas/.test(corpo1) && /Backup/.test(corpo1), 'abre direto na Engenharia, com Sondas · Backup · Restaurar');
   conf(!/Configurar sync|SAIR ADMIN|Coordenação|Logística\n/.test(corpo1), 'sem sync, admin ou outros apps');
@@ -206,18 +204,18 @@ const fld = (page, rot) => page.locator('.eng-modal .fld').filter({has: page.loc
   conf(rest[0] === 1 && rest[1] === 1 && rest[2] === 2, 'restaurar traz a operação e o handover v2 de volta', rest);
 
   console.log('Nordeste: sonda nova + handover onshore');
-  await page.click('.crumb-hub');
-  await page.click('.hub-card[aria-label="NORDESTE"]');
   await page.click('.eng-tools button:has-text("Sondas")');
   await page.waitForSelector('.eng-sondas-modal');
   await page.click('.eng-sondas-modal button:has-text("+ Nova sonda")');
   await page.waitForSelector('.rf-modal');
   await foto(page, '07_sonda');
   await page.fill('.rf-modal input >> nth=0', 'SPT-TESTE');
+  await page.locator('.rf-modal select').filter({has: page.locator('option', {hasText: 'Rigless'})}).first().selectOption({label: 'Onshore'});
   const selBase = page.locator('.rf-modal select').filter({has: page.locator('option', {hasText: 'Catu'})}).first();
   await selBase.selectOption({label: 'Catu'});
   await page.click('.rf-modal .btn-r');
   await page.waitForTimeout(300);
+  await page.click('.eng-sondas-modal .db-tab:has-text("Onshore")');
   conf(/SPT-TESTE/.test(await page.innerText('.eng-sondas-modal')), 'sonda cadastrada pela Engenharia');
   await page.click('.eng-sondas-modal .modal-close');
   await page.click('.eng2-card:has-text("PBR Land")');
@@ -238,6 +236,8 @@ const fld = (page, rot) => page.locator('.eng-modal .fld').filter({has: page.loc
   const e3 = await baixar(page, () => page.click('.hm-gerar'));
   const m3 = lerEml(e3.txt);
   conf(/Pessoal \(1\)/.test(m3.html) && /Engenharia Nordeste/.test(m3.html), 'onshore: pessoal por função e cabeçalho Nordeste');
+  const locs = await page.evaluate(() => JSON.parse(localStorage.getItem('hal_cmt_db_v1')).plannedJobs.map(j => j.well + ':' + j.loc).sort());
+  conf(locs.join() === '7-CP-10-BA:nne,7-MRL-99-RJS:macae', 'região de cada operação vem da base da sonda', locs);
 
   console.log('Voltar');
   await page.reload();
@@ -249,11 +249,10 @@ const fld = (page, rot) => page.locator('.eng-modal .fld').filter({has: page.loc
   conf(await page.locator('.eng2-ctbar').count() === 0 && await page.locator('.eng2-card').count() > 0, 'Voltar do contrato leva à página inicial da Engenharia');
   await page.click('.nav-back-btn');
   await page.waitForTimeout(300);
-  conf(await page.locator('.hub-card').count() === 2, 'Voltar da página inicial da Engenharia leva à escolha da região');
+  conf(await page.locator('.hub-card').count() === 0 && await page.locator('.eng2-card').count() > 0, 'Voltar na página inicial fica na Engenharia (não há tela de região)');
 
   console.log('Celular');
   await page.setViewportSize({width: 390, height: 844});
-  await page.click('.hub-card[aria-label="SUDESTE"]');
   await page.waitForTimeout(300);
   const larg = await page.evaluate(() => document.documentElement.scrollWidth);
   conf(larg <= 392, 'sem rolagem lateral no celular', larg);
