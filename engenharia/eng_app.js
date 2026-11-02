@@ -711,55 +711,186 @@
     }, "\xD7")), renderDBRigs()));
   };
 
-  /* Backup: os dados ficam só neste navegador, então dá para salvar e restaurar um arquivo. */
-  var engBackup = () => {
+  /* Exportar / importar dados: o app é offline e os dados ficam só neste navegador. Para levar a outro
+     computador, exporta-se um .json com tudo e importa-se lá — substituindo ou juntando (fica o registro
+     mais recente de cada item: operações, handovers, contratos, sondas, templates…). */
+  var [engImpDados, setEngImpDados] = useState(null);
+  var engAgoraTxt = () => {
+    var d = new Date(),
+      p = n => String(n).padStart(2, '0');
+    return d.getFullYear() + '-' + p(d.getMonth() + 1) + '-' + p(d.getDate()) + '_' + p(d.getHours()) + 'h' + p(d.getMinutes());
+  };
+  var engResumoDb = d => ({
+    contratos: (d.contratos || []).filter(c => c && !c.archived).length,
+    precos: (d.contratos || []).reduce((a, c) => a + (c.items || []).filter(i => i.brl != null || i.usd != null).length, 0),
+    reajustes: (d.contratos || []).reduce((a, c) => a + (c.reajustes || []).length, 0),
+    operacoes: (d.plannedJobs || []).length,
+    consumos: (d.plannedJobs || []).filter(j => j.ppuCons).length,
+    handovers: (d.handovers || []).length,
+    sondas: (d.rigs || []).length,
+    templates: (d.opTemplates || []).length
+  });
+  var engExportar = () => {
     try {
       var blob = new Blob([JSON.stringify({
         app: 'EARL Engenharia',
         versao: EARL_VERSION,
         geradoEm: new Date().toISOString(),
+        por: (db.hoMail || {}).nome || '',
+        resumo: engResumoDb(db),
         db
       })], {
         type: 'application/json'
       });
-      forceDownload([new File([blob], 'EARL_Engenharia_backup_' + todayStr() + '.json', {
+      forceDownload([new File([blob], 'EARL_Engenharia_dados_' + engAgoraTxt() + '.json', {
         type: 'application/json'
       })]);
-      setOkMsg('Backup salvo ✓ — guarde o arquivo .json em lugar seguro');
-      setTimeout(() => setOkMsg(''), 4500);
+      setOkMsg('Dados exportados ✓ — leve o arquivo .json para o outro computador e use “⬆ Importar dados” lá');
+      setTimeout(() => setOkMsg(''), 6000);
     } catch (e) {
-      setSyncErr('Falha ao gerar o backup: ' + (e && e.message || e));
+      setSyncErr('Falha ao exportar os dados: ' + (e && e.message || e));
     }
   };
-  var engRestaurar = file => {
+  var engImportarArquivo = file => {
     if (!file) return;
     var r = new FileReader();
     r.onload = () => {
-      var dados;
       try {
         var j = JSON.parse(String(r.result || ''));
-        dados = j && j.db ? j.db : j;
-        if (!dados || typeof dados !== 'object' || !Array.isArray(dados.people) || !Array.isArray(dados.rigs)) throw new Error('o arquivo não é um backup do EARL');
+        var dados = j && j.db ? j.db : j;
+        if (!dados || typeof dados !== 'object' || !Array.isArray(dados.people) || !Array.isArray(dados.rigs)) throw new Error('o arquivo não é uma exportação do EARL');
+        setEngImpDados({
+          nome: file.name,
+          dados,
+          geradoEm: j && j.geradoEm || '',
+          por: j && j.por || ''
+        });
       } catch (e) {
-        setSyncErr('Não foi possível restaurar: ' + (e && e.message || e));
-        return;
+        setSyncErr('Não foi possível importar: ' + (e && e.message || e));
       }
-      askConfirm({
-        title: 'Restaurar backup',
-        okLabel: 'Restaurar',
-        danger: true,
-        msg: engH("span", null, 'Substituir os dados deste navegador pelo backup ', engH("b", null, file.name), '?'),
-        hint: (dados.plannedJobs || []).length + ' operação(ões), ' + (dados.handovers || []).length + ' handover(s) e ' + (dados.rigs || []).length + ' sonda(s) no arquivo. O que está hoje neste navegador é substituído.',
-        onOk: () => {
-          if (!saveDB(dados)) {
-            setSyncErr('O navegador não deixou gravar o backup (armazenamento cheio).');
-            return;
-          }
-          location.reload();
-        }
-      });
     };
     r.readAsText(file);
+  };
+  /* Junta dois bancos: listas com id são unidas e, no mesmo id, fica o registro alterado por último. */
+  var engMarca = x => {
+    if (!x || typeof x !== 'object') return '';
+    var l = [x.updatedAt, x.atualizadoEm, x.criadoEm, x.createdAt, x.ppuCons && x.ppuCons.em, x.email && x.email.em];
+    (x.log || []).forEach(e => l.push(e && e.em));
+    return l.filter(v => typeof v === 'string').sort().pop() || '';
+  };
+  var engMesclarDb = (atual, novo) => {
+    var out = {
+      ...atual
+    };
+    Object.keys(novo || {}).forEach(k => {
+      var a = atual[k],
+        b = novo[k];
+      if (a == null) {
+        out[k] = b;
+        return;
+      }
+      var comId = l => Array.isArray(l) && l.every(x => x && typeof x === 'object' && x.id != null);
+      if (Array.isArray(a) && Array.isArray(b) && comId(a) && comId(b)) {
+        var m = new Map();
+        a.forEach(x => m.set(x.id, x));
+        b.forEach(x => {
+          var y = m.get(x.id);
+          if (!y || engMarca(x) > engMarca(y)) m.set(x.id, x);
+        });
+        out[k] = [...m.values()];
+        return;
+      }
+      if (k === 'hoMail' && a && b && typeof a === 'object') out[k] = {
+        ...b,
+        ...a,
+        emails: [...new Set([...(a.emails || []), ...(b.emails || [])])]
+      };
+    });
+    return out;
+  };
+  var renderEngImpDados = () => {
+    var im = engImpDados;
+    if (!im) return null;
+    var ra = engResumoDb(db),
+      rb = engResumoDb(im.dados),
+      rj = engResumoDb(engMesclarDb(db, im.dados));
+    var linhas = [['Contratos', 'contratos'], ['Itens com valor', 'precos'], ['Reajustes', 'reajustes'], ['Operações', 'operacoes'], ['Consumos lançados', 'consumos'], ['Handovers', 'handovers'], ['Sondas', 'sondas'], ['Templates', 'templates']];
+    var aplicar = modo => {
+      var final = modo === 'juntar' ? engMesclarDb(db, im.dados) : im.dados;
+      if (!saveDB(final)) {
+        setSyncErr('O navegador não deixou gravar os dados (armazenamento cheio).');
+        return;
+      }
+      location.reload();
+    };
+    var fechar = () => setEngImpDados(null);
+    return engH("div", {
+      className: "overlay",
+      style: {
+        zIndex: 300
+      },
+      onClick: e => {
+        if (e.target === e.currentTarget) fechar();
+      }
+    }, engH("div", {
+      className: "modal ec-imp-dados",
+      onClick: e => e.stopPropagation()
+    }, engH("div", {
+      className: "modal-title"
+    }, engH("span", null, "⬆ Importar dados"), engH("button", {
+      className: "modal-close",
+      onClick: fechar
+    }, "\xD7")), engH("div", {
+      className: "hm-sum"
+    }, engH("div", {
+      className: "hm-k"
+    }, "Arquivo"), engH("div", {
+      className: "hm-arq"
+    }, im.nome), im.geradoEm && engH("div", {
+      className: "hm-k"
+    }, "Exportado"), im.geradoEm && engH("div", {
+      className: "hm-arq"
+    }, fmtDH(im.geradoEm) + (im.por ? ' · ' + im.por : ''))), engH("div", {
+      className: "tbl-scroll"
+    }, engH("table", {
+      className: "db-table ec-imp-tab"
+    }, engH("thead", null, engH("tr", null, engH("th", null), engH("th", null, "Neste computador"), engH("th", null, "No arquivo"), engH("th", null, "Depois de juntar"))), engH("tbody", null, linhas.map(([rot, k]) => engH("tr", {
+      key: k
+    }, engH("td", null, rot), engH("td", {
+      className: "ec-num"
+    }, ra[k]), engH("td", {
+      className: "ec-num"
+    }, rb[k]), engH("td", {
+      className: "ec-num"
+    }, rj[k])))))), engH("div", {
+      className: "ec-imp-opcoes"
+    }, engH("div", {
+      className: "ec-imp-op"
+    }, engH("b", null, "Juntar"), engH("span", null, "Acrescenta o que veio do arquivo ao que j\xE1 est\xE1 aqui. Quando o mesmo registro (opera\xE7\xE3o, handover, contrato, sonda…) existe nos dois, fica o alterado por \xFAltimo. O que foi apagado num computador volta ao juntar."), engH("button", {
+      className: "btn-r ec-juntar",
+      onClick: () => aplicar('juntar')
+    }, "Juntar com os dados deste computador")), engH("div", {
+      className: "ec-imp-op"
+    }, engH("b", null, "Substituir"), engH("span", null, "Os dados deste computador passam a ser exatamente os do arquivo. Use para levar tudo para um computador novo."), engH("button", {
+      className: "btn-o ec-substituir",
+      onClick: () => askConfirm({
+        title: 'Substituir os dados',
+        okLabel: 'Substituir',
+        danger: true,
+        msg: engH("span", null, "Apagar os dados deste computador e ficar com os do arquivo?"),
+        hint: 'Se tiver dúvida, exporte os dados daqui antes.',
+        onOk: () => aplicar('substituir')
+      })
+    }, "Substituir pelos dados do arquivo"))), engH("div", {
+      className: "ec-foot"
+    }, engH("span", {
+      style: {
+        flex: 1
+      }
+    }), engH("button", {
+      className: "btn-o",
+      onClick: fechar
+    }, "Cancelar"))));
   };
   var renderEngTools = () => hubLocation ? engH("div", {
     className: "eng-tools"
@@ -770,16 +901,16 @@
   }, "Contratos"), engH("button", {
     className: "btn-o",
     onClick: abrirEngSondas,
-    title: "Cadastro de sondas desta regi\xE3o"
+    title: "Cadastro de sondas"
   }, "Sondas"), engH("button", {
-    className: "btn-o",
-    onClick: engBackup,
-    title: "Salvar todos os dados num arquivo .json"
-  }, "⬇ Backup"), engH("button", {
-    className: "btn-o",
+    className: "btn-o eng-exportar",
+    onClick: engExportar,
+    title: "Baixa um arquivo .json com todos os dados (contratos, valores, reajustes, opera\xE7\xF5es, consumos, handovers, sondas e templates) para guardar ou levar para outro computador"
+  }, "⬇ Exportar dados"), engH("button", {
+    className: "btn-o eng-importar",
     onClick: () => engRestRef.current && engRestRef.current.click(),
-    title: "Restaurar os dados de um arquivo de backup"
-  }, "⬆ Restaurar"), engH("input", {
+    title: "Carrega um arquivo exportado de outro computador (juntar ou substituir)"
+  }, "⬆ Importar dados"), engH("input", {
     ref: engRestRef,
     type: "file",
     accept: "application/json,.json",
@@ -789,7 +920,7 @@
     onChange: e => {
       var f = e.target.files && e.target.files[0];
       e.target.value = '';
-      engRestaurar(f);
+      engImportarArquivo(f);
     }
   })) : null;
   /* =================== fim EARL ENGENHARIA (avulso) =================== */

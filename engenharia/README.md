@@ -21,7 +21,7 @@ A Engenharia do EARL separada do resto do sistema, para usar **sem servidor, sem
   - **Na Visão geral:** receita por contrato.
   - Tem filtro por período do serviço e **⬇ Excel** com as abas Operações, Itens e Lançamentos.
 - **Sondas:** botão na barra, para cadastrar sondas. O cadastro já vem com as 41 sondas offshore; as do Nordeste precisam ser cadastradas.
-- **Backup e Restaurar:** botões na barra (veja abaixo).
+- **Exportar dados e Importar dados:** botões na barra, para levar tudo de um computador para outro (veja abaixo).
 
 ## O que não tem
 
@@ -45,13 +45,17 @@ Não tem login, escolha de região, Coordenação, Logística, Pessoal, Equipame
 5. Depois do serviço, o engenheiro abre a operação → **Σ Consumo PPU** → confere a data do serviço → informa as quantidades → **Salvar consumo**.
 6. Para acompanhar: aba **Consumo e receita** do contrato (ou da Visão geral).
 
-## Onde ficam os dados (importante)
+## Onde ficam os dados e como levar para outro computador (importante)
 
-Os dados ficam **só no navegador** deste computador. Eles não vão para o servidor nem para outro computador.
+O app funciona offline e os dados ficam **só no navegador** do computador onde foram lançados. Para levar a outro computador:
 
-- Use **⬇ Backup** de vez em quando: ele baixa um arquivo `.json` com tudo. Guarde-o no OneDrive ou na rede.
-- **⬆ Restaurar** carrega um backup e **substitui** os dados do navegador. Serve para trocar de computador ou recuperar o que foi perdido.
-- Limpar os dados de navegação do Chrome ou do Edge apaga as operações.
+1. No computador de origem, clique em **⬇ Exportar dados**. Baixa um arquivo `EARL_Engenharia_dados_AAAA-MM-DD_HHhMM.json` com **tudo**: contratos, itens, valores, reajustes, operações, consumos, handovers, destinatários dos e-mails, sondas e templates.
+2. Leve o arquivo (OneDrive, rede, e-mail, pendrive) e abra o mesmo `EARL_Engenharia.html` no outro computador.
+3. Lá, clique em **⬆ Importar dados** e escolha o arquivo. A janela compara o que há neste computador, o que há no arquivo e como fica depois de juntar.
+   - **Juntar com os dados deste computador:** soma os dois. Quando o mesmo registro existe nos dois, fica o alterado por último. Use quando os dois computadores lançaram coisas. Atenção: o que foi apagado num computador volta ao juntar.
+   - **Substituir pelos dados do arquivo:** este computador fica exatamente igual ao arquivo. Use num computador novo.
+
+Exporte também de vez em quando, como cópia de segurança. Limpar os dados de navegação do Chrome ou do Edge apaga as operações deste computador.
 
 ## Para quem mexe no código
 
@@ -66,6 +70,6 @@ Os dados ficam **só no navegador** deste computador. Eles não vão para o serv
 - Cada troca do patch confere que o trecho original existe. Com `CHECAR=1`, o script lista todas as falhas de uma vez.
 - Os dados ficam com o prefixo `earleng:` no armazenamento do navegador, para não misturar com outros arquivos do EARL abertos do disco.
 - Testes, com o arquivo aberto do disco, a internet bloqueada e o relógio do navegador fixo em 02/11/2026:
-  - `node tests/e2e_engenharia.js EARL_Engenharia.html [pasta-das-telas]`: 61 verificações (abertura, handover e e-mail, sondas, backup);
-  - `node tests/e2e_contratos.js EARL_Engenharia.html [pasta-das-telas]`: 45 verificações (contratos, planilhas, reajustes, consumo e receita).
-- Versão: `EARL_VERSION = 'EARL Engenharia e2 (base v115)'`.
+  - `node tests/e2e_engenharia.js EARL_Engenharia.html [pasta-das-telas]`: 62 verificações (abertura, handover e e-mail, sondas, exportar e importar substituindo);
+  - `node tests/e2e_contratos.js EARL_Engenharia.html [pasta-das-telas]`: 55 verificações (contratos, planilhas, reajustes, consumo, receita, juntar dados de outro computador e tela pequena 1366×768).
+- Versão: `EARL_VERSION = 'EARL Engenharia e3 (base v115)'`.

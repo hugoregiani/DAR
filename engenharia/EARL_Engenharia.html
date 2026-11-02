@@ -3513,6 +3513,19 @@ td.ec-desc{font-size:12.5px;line-height:1.35}
 .ec-unit{width:96px}
 .toolbar>.db-tabs{max-width:100%;min-width:0}
 @media(max-width:760px){.crumbs .crumb-sep{display:none}}
+/* e3: nas janelas (flex em coluna com altura máxima) as tabelas não podem encolher até sumir —
+   quem rola é a janela; a tabela de itens tem altura mínima e rola por dentro quando é longa. */
+.ec-modal>*,.hm-modal>*,.eng-sondas-modal>*,.ec-imp-dados>*{flex-shrink:0}
+.ec-itens-wrap{min-height:180px;max-height:60vh}
+.ec-imp-dados{width:min(760px,96vw);max-height:92vh;overflow:auto}
+.ec-imp-tab td,.ec-imp-tab th{padding:3px 10px}
+.ec-imp-opcoes{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:12px}
+@media(max-width:760px){.ec-imp-opcoes{grid-template-columns:1fr}}
+.ec-imp-op{display:flex;flex-direction:column;gap:6px;border:1px solid var(--line,#E2E5E7);border-radius:14px;padding:12px 14px;background:var(--surface,#fff)}
+.ec-imp-op b{font-size:14px}
+.ec-imp-op span{font-size:12.5px;color:var(--ink-2);line-height:1.5;flex:1}
+.ec-imp-op button{align-self:flex-start}
+.ec-modal>.ec-foot{position:sticky;bottom:-20px;margin-bottom:-20px;padding-bottom:20px;background:var(--surface,#fff);z-index:3}
 </style>
 </head>
 <body>
@@ -28066,7 +28079,7 @@ var loadDB = () => {
   } catch (_) {}
   return migrateDB(JSON.parse(JSON.stringify(SEED_DB)));
 };
-var EARL_VERSION = 'EARL Engenharia e2 (base v115)';
+var EARL_VERSION = 'EARL Engenharia e3 (base v115)';
 var fnSafe = v => String(v == null ? '' : v).replace(/[\\/]/g, '-').replace(/["*?<>|:]/g, '').replace(/\s+/g, ' ').trim();
 var sanitizeFileName = fnSafe;
 var finalizeDateStr = m => {
@@ -62287,55 +62300,186 @@ _Gerado por: ${user}_`;
     }, "\xD7")), renderDBRigs()));
   };
 
-  /* Backup: os dados ficam só neste navegador, então dá para salvar e restaurar um arquivo. */
-  var engBackup = () => {
+  /* Exportar / importar dados: o app é offline e os dados ficam só neste navegador. Para levar a outro
+     computador, exporta-se um .json com tudo e importa-se lá — substituindo ou juntando (fica o registro
+     mais recente de cada item: operações, handovers, contratos, sondas, templates…). */
+  var [engImpDados, setEngImpDados] = useState(null);
+  var engAgoraTxt = () => {
+    var d = new Date(),
+      p = n => String(n).padStart(2, '0');
+    return d.getFullYear() + '-' + p(d.getMonth() + 1) + '-' + p(d.getDate()) + '_' + p(d.getHours()) + 'h' + p(d.getMinutes());
+  };
+  var engResumoDb = d => ({
+    contratos: (d.contratos || []).filter(c => c && !c.archived).length,
+    precos: (d.contratos || []).reduce((a, c) => a + (c.items || []).filter(i => i.brl != null || i.usd != null).length, 0),
+    reajustes: (d.contratos || []).reduce((a, c) => a + (c.reajustes || []).length, 0),
+    operacoes: (d.plannedJobs || []).length,
+    consumos: (d.plannedJobs || []).filter(j => j.ppuCons).length,
+    handovers: (d.handovers || []).length,
+    sondas: (d.rigs || []).length,
+    templates: (d.opTemplates || []).length
+  });
+  var engExportar = () => {
     try {
       var blob = new Blob([JSON.stringify({
         app: 'EARL Engenharia',
         versao: EARL_VERSION,
         geradoEm: new Date().toISOString(),
+        por: (db.hoMail || {}).nome || '',
+        resumo: engResumoDb(db),
         db
       })], {
         type: 'application/json'
       });
-      forceDownload([new File([blob], 'EARL_Engenharia_backup_' + todayStr() + '.json', {
+      forceDownload([new File([blob], 'EARL_Engenharia_dados_' + engAgoraTxt() + '.json', {
         type: 'application/json'
       })]);
-      setOkMsg('Backup salvo ✓ — guarde o arquivo .json em lugar seguro');
-      setTimeout(() => setOkMsg(''), 4500);
+      setOkMsg('Dados exportados ✓ — leve o arquivo .json para o outro computador e use “⬆ Importar dados” lá');
+      setTimeout(() => setOkMsg(''), 6000);
     } catch (e) {
-      setSyncErr('Falha ao gerar o backup: ' + (e && e.message || e));
+      setSyncErr('Falha ao exportar os dados: ' + (e && e.message || e));
     }
   };
-  var engRestaurar = file => {
+  var engImportarArquivo = file => {
     if (!file) return;
     var r = new FileReader();
     r.onload = () => {
-      var dados;
       try {
         var j = JSON.parse(String(r.result || ''));
-        dados = j && j.db ? j.db : j;
-        if (!dados || typeof dados !== 'object' || !Array.isArray(dados.people) || !Array.isArray(dados.rigs)) throw new Error('o arquivo não é um backup do EARL');
+        var dados = j && j.db ? j.db : j;
+        if (!dados || typeof dados !== 'object' || !Array.isArray(dados.people) || !Array.isArray(dados.rigs)) throw new Error('o arquivo não é uma exportação do EARL');
+        setEngImpDados({
+          nome: file.name,
+          dados,
+          geradoEm: j && j.geradoEm || '',
+          por: j && j.por || ''
+        });
       } catch (e) {
-        setSyncErr('Não foi possível restaurar: ' + (e && e.message || e));
-        return;
+        setSyncErr('Não foi possível importar: ' + (e && e.message || e));
       }
-      askConfirm({
-        title: 'Restaurar backup',
-        okLabel: 'Restaurar',
-        danger: true,
-        msg: engH("span", null, 'Substituir os dados deste navegador pelo backup ', engH("b", null, file.name), '?'),
-        hint: (dados.plannedJobs || []).length + ' operação(ões), ' + (dados.handovers || []).length + ' handover(s) e ' + (dados.rigs || []).length + ' sonda(s) no arquivo. O que está hoje neste navegador é substituído.',
-        onOk: () => {
-          if (!saveDB(dados)) {
-            setSyncErr('O navegador não deixou gravar o backup (armazenamento cheio).');
-            return;
-          }
-          location.reload();
-        }
-      });
     };
     r.readAsText(file);
+  };
+  /* Junta dois bancos: listas com id são unidas e, no mesmo id, fica o registro alterado por último. */
+  var engMarca = x => {
+    if (!x || typeof x !== 'object') return '';
+    var l = [x.updatedAt, x.atualizadoEm, x.criadoEm, x.createdAt, x.ppuCons && x.ppuCons.em, x.email && x.email.em];
+    (x.log || []).forEach(e => l.push(e && e.em));
+    return l.filter(v => typeof v === 'string').sort().pop() || '';
+  };
+  var engMesclarDb = (atual, novo) => {
+    var out = {
+      ...atual
+    };
+    Object.keys(novo || {}).forEach(k => {
+      var a = atual[k],
+        b = novo[k];
+      if (a == null) {
+        out[k] = b;
+        return;
+      }
+      var comId = l => Array.isArray(l) && l.every(x => x && typeof x === 'object' && x.id != null);
+      if (Array.isArray(a) && Array.isArray(b) && comId(a) && comId(b)) {
+        var m = new Map();
+        a.forEach(x => m.set(x.id, x));
+        b.forEach(x => {
+          var y = m.get(x.id);
+          if (!y || engMarca(x) > engMarca(y)) m.set(x.id, x);
+        });
+        out[k] = [...m.values()];
+        return;
+      }
+      if (k === 'hoMail' && a && b && typeof a === 'object') out[k] = {
+        ...b,
+        ...a,
+        emails: [...new Set([...(a.emails || []), ...(b.emails || [])])]
+      };
+    });
+    return out;
+  };
+  var renderEngImpDados = () => {
+    var im = engImpDados;
+    if (!im) return null;
+    var ra = engResumoDb(db),
+      rb = engResumoDb(im.dados),
+      rj = engResumoDb(engMesclarDb(db, im.dados));
+    var linhas = [['Contratos', 'contratos'], ['Itens com valor', 'precos'], ['Reajustes', 'reajustes'], ['Operações', 'operacoes'], ['Consumos lançados', 'consumos'], ['Handovers', 'handovers'], ['Sondas', 'sondas'], ['Templates', 'templates']];
+    var aplicar = modo => {
+      var final = modo === 'juntar' ? engMesclarDb(db, im.dados) : im.dados;
+      if (!saveDB(final)) {
+        setSyncErr('O navegador não deixou gravar os dados (armazenamento cheio).');
+        return;
+      }
+      location.reload();
+    };
+    var fechar = () => setEngImpDados(null);
+    return engH("div", {
+      className: "overlay",
+      style: {
+        zIndex: 300
+      },
+      onClick: e => {
+        if (e.target === e.currentTarget) fechar();
+      }
+    }, engH("div", {
+      className: "modal ec-imp-dados",
+      onClick: e => e.stopPropagation()
+    }, engH("div", {
+      className: "modal-title"
+    }, engH("span", null, "⬆ Importar dados"), engH("button", {
+      className: "modal-close",
+      onClick: fechar
+    }, "\xD7")), engH("div", {
+      className: "hm-sum"
+    }, engH("div", {
+      className: "hm-k"
+    }, "Arquivo"), engH("div", {
+      className: "hm-arq"
+    }, im.nome), im.geradoEm && engH("div", {
+      className: "hm-k"
+    }, "Exportado"), im.geradoEm && engH("div", {
+      className: "hm-arq"
+    }, fmtDH(im.geradoEm) + (im.por ? ' · ' + im.por : ''))), engH("div", {
+      className: "tbl-scroll"
+    }, engH("table", {
+      className: "db-table ec-imp-tab"
+    }, engH("thead", null, engH("tr", null, engH("th", null), engH("th", null, "Neste computador"), engH("th", null, "No arquivo"), engH("th", null, "Depois de juntar"))), engH("tbody", null, linhas.map(([rot, k]) => engH("tr", {
+      key: k
+    }, engH("td", null, rot), engH("td", {
+      className: "ec-num"
+    }, ra[k]), engH("td", {
+      className: "ec-num"
+    }, rb[k]), engH("td", {
+      className: "ec-num"
+    }, rj[k])))))), engH("div", {
+      className: "ec-imp-opcoes"
+    }, engH("div", {
+      className: "ec-imp-op"
+    }, engH("b", null, "Juntar"), engH("span", null, "Acrescenta o que veio do arquivo ao que j\xE1 est\xE1 aqui. Quando o mesmo registro (opera\xE7\xE3o, handover, contrato, sonda…) existe nos dois, fica o alterado por \xFAltimo. O que foi apagado num computador volta ao juntar."), engH("button", {
+      className: "btn-r ec-juntar",
+      onClick: () => aplicar('juntar')
+    }, "Juntar com os dados deste computador")), engH("div", {
+      className: "ec-imp-op"
+    }, engH("b", null, "Substituir"), engH("span", null, "Os dados deste computador passam a ser exatamente os do arquivo. Use para levar tudo para um computador novo."), engH("button", {
+      className: "btn-o ec-substituir",
+      onClick: () => askConfirm({
+        title: 'Substituir os dados',
+        okLabel: 'Substituir',
+        danger: true,
+        msg: engH("span", null, "Apagar os dados deste computador e ficar com os do arquivo?"),
+        hint: 'Se tiver dúvida, exporte os dados daqui antes.',
+        onOk: () => aplicar('substituir')
+      })
+    }, "Substituir pelos dados do arquivo"))), engH("div", {
+      className: "ec-foot"
+    }, engH("span", {
+      style: {
+        flex: 1
+      }
+    }), engH("button", {
+      className: "btn-o",
+      onClick: fechar
+    }, "Cancelar"))));
   };
   var renderEngTools = () => hubLocation ? engH("div", {
     className: "eng-tools"
@@ -62346,16 +62490,16 @@ _Gerado por: ${user}_`;
   }, "Contratos"), engH("button", {
     className: "btn-o",
     onClick: abrirEngSondas,
-    title: "Cadastro de sondas desta regi\xE3o"
+    title: "Cadastro de sondas"
   }, "Sondas"), engH("button", {
-    className: "btn-o",
-    onClick: engBackup,
-    title: "Salvar todos os dados num arquivo .json"
-  }, "⬇ Backup"), engH("button", {
-    className: "btn-o",
+    className: "btn-o eng-exportar",
+    onClick: engExportar,
+    title: "Baixa um arquivo .json com todos os dados (contratos, valores, reajustes, opera\xE7\xF5es, consumos, handovers, sondas e templates) para guardar ou levar para outro computador"
+  }, "⬇ Exportar dados"), engH("button", {
+    className: "btn-o eng-importar",
     onClick: () => engRestRef.current && engRestRef.current.click(),
-    title: "Restaurar os dados de um arquivo de backup"
-  }, "⬆ Restaurar"), engH("input", {
+    title: "Carrega um arquivo exportado de outro computador (juntar ou substituir)"
+  }, "⬆ Importar dados"), engH("input", {
     ref: engRestRef,
     type: "file",
     accept: "application/json,.json",
@@ -62365,7 +62509,7 @@ _Gerado por: ${user}_`;
     onChange: e => {
       var f = e.target.files && e.target.files[0];
       e.target.value = '';
-      engRestaurar(f);
+      engImportarArquivo(f);
     }
   })) : null;
   /* =================== fim EARL ENGENHARIA (avulso) =================== */
@@ -62698,7 +62842,8 @@ _Gerado por: ${user}_`;
         regiao: ctrRegioes(dr)[0],
         version: dr.version || 1,
         aditivos: dr.aditivos || [],
-        archived: !!dr.archived
+        archived: !!dr.archived,
+        atualizadoEm: new Date().toISOString()
       };
       var l = [...(d.contratos || [])];
       var i = l.findIndex(c => c.id === id);
@@ -62956,6 +63101,16 @@ _Gerado por: ${user}_`;
         }]
       }
     }));
+    var addLinha2 = () => {
+      addLinha();
+      // a linha nova entra no fim da lista: rola até ela e põe o cursor no código
+      setTimeout(() => {
+        var w = document.querySelector('.ec-modal .ec-itens-wrap');
+        if (w) w.scrollTop = w.scrollHeight;
+        var ins = document.querySelectorAll('.ec-modal .ec-itens input.ec-ref');
+        if (ins.length) ins[ins.length - 1].focus();
+      }, 60);
+    };
     var inp = (i, k, extra) => engH("input", {
       className: 'ipt ec-in ec-' + k,
       value: k === 'ref' || k === 'desc' || k === 'unit' ? i[k] || '' : engNumTxt(i[k]),
@@ -63107,7 +63262,7 @@ _Gerado por: ${user}_`;
       }
     }), engH("button", {
       className: "btn-o",
-      onClick: addLinha
+      onClick: addLinha2
     }, "＋ Linha"), engH("button", {
       className: "btn-o ec-carregar",
       onClick: () => engCarregar('itens'),
@@ -75086,6 +75241,7 @@ ${transferDraft.notes ? '<p><b>Observações:</b> ' + esc(transferDraft.notes) +
       ...rigDraft,
       name: String(rigDraft.name).trim(),
       regiao: regiaoDaBase(rigDraft.base) || rigDraft.regiao || 'nne',
+      updatedAt: new Date().toISOString(),
       clientId: cli ? cli.id : '',
       client: cli ? cli.name : rigDraft.client || ''
     };
@@ -107639,7 +107795,7 @@ ${transferDraft.notes ? '<p><b>Observações:</b> ' + esc(transferDraft.notes) +
     style: {
       flex: 1
     }
-  }, okMsg)), renderMainTabs(), safeTab === 'home' && renderHome(), safeTab === 'mob' && !planAssumed && renderSupQueue(), safeTab === 'mob' && planAssumed && React.createElement(React.Fragment, null, renderPlanRef(), renderStepper(), step === 1 && renderStep1(), step === 2 && renderStep2(), step === 3 && renderStep3(), step === 4 && renderStepChem(), step === 5 && renderStep4(), step === 6 && renderStep5(), renderMobFooter()), safeTab === 'ops' && renderOps(), safeTab === 'plan' && renderPlanejamento(), safeTab === 'coord' && renderCoord(), safeTab === 'logi' && renderLogi(), safeTab === 'lab' && renderLab(), safeTab === 'pes' && React.createElement(React.Fragment, null, secBar('pes'), renderParteApp('pessoal')), safeTab === 'eqp' && React.createElement(React.Fragment, null, secBar('eqp'), renderParteApp('equipamentos')), safeTab === 'dar' && renderDarFor(null), safeTab === 'rig' && renderRigXray(), safeTab === 'sl' && React.createElement(React.Fragment, null, hubLocation !== 'brasil' && secBar('pes'), renderEscalas()), safeTab === 'pab' && React.createElement(React.Fragment, null, secBar('pes'), renderPesBordo(), renderPesDesForm(), renderEmbForm()), safeTab === 'bulk' && renderBulk(), safeTab === 'chem' && renderChem(), safeTab === 'fc' && renderForecast(), safeTab === 'ind' && renderIndicadores(), safeTab === 'pfl' && React.createElement(React.Fragment, null, hubLocation !== 'brasil' && secBar('pes'), renderPerfis()), safeTab === 'equip' && React.createElement(React.Fragment, null, secBar(hubLocation === 'brasil' ? 'eqpBr' : 'eqp'), renderEquipmentWithScroll()), safeTab === 'eqs' && React.createElement(React.Fragment, null, secBar(hubLocation === 'brasil' ? 'eqpBr' : 'eqp'), renderEqSondas()), safeTab === 'hi' && hiMob && React.createElement(React.Fragment, null, renderHIStepper(), hiStep === 6 && renderHIEquipe(), hiStep === 7 && renderHIEquip(), hiStep === 8 && renderHI6(), hiStep === 9 && renderHI7(), hiStep === 10 && renderHI8(), hiStep === 11 && renderHI9(), hiStep === 12 && renderHI10(), renderHIFooter()), safeTab === 'jl' && jlMob && renderJL(), safeTab === 'db' && adminUnlocked && renderDB(), safeTab === 'ana' && adminUnlocked && renderAnalytics(mobs.filter(mobNoRecorte)), safeTab === 'br' && adminUnlocked && renderBrasil(), renderAvisos(), renderPlanForm(), renderHandover(), renderHoReview(), renderCoordRev(), renderParteRev(), renderLogView(), renderEnvView(), renderEmbModal(), renderCiencia(), renderAmoView(), renderAmoSup(), renderAmoLog(), renderAmoLab(), renderAmoFoto(), renderAdicForm(), renderProcView(), safeTab !== 'rig' && renderExpForm(), safeTab !== 'rig' && renderAmoForm(), renderReleaseGate(), renderPlanCascade(), renderEngSondas(), renderEngContratos(), renderEngCons(), renderRigForm(), renderConfirmBox(), renderDiaPanel(), escalaPrompt && (() => {
+  }, okMsg)), renderMainTabs(), safeTab === 'home' && renderHome(), safeTab === 'mob' && !planAssumed && renderSupQueue(), safeTab === 'mob' && planAssumed && React.createElement(React.Fragment, null, renderPlanRef(), renderStepper(), step === 1 && renderStep1(), step === 2 && renderStep2(), step === 3 && renderStep3(), step === 4 && renderStepChem(), step === 5 && renderStep4(), step === 6 && renderStep5(), renderMobFooter()), safeTab === 'ops' && renderOps(), safeTab === 'plan' && renderPlanejamento(), safeTab === 'coord' && renderCoord(), safeTab === 'logi' && renderLogi(), safeTab === 'lab' && renderLab(), safeTab === 'pes' && React.createElement(React.Fragment, null, secBar('pes'), renderParteApp('pessoal')), safeTab === 'eqp' && React.createElement(React.Fragment, null, secBar('eqp'), renderParteApp('equipamentos')), safeTab === 'dar' && renderDarFor(null), safeTab === 'rig' && renderRigXray(), safeTab === 'sl' && React.createElement(React.Fragment, null, hubLocation !== 'brasil' && secBar('pes'), renderEscalas()), safeTab === 'pab' && React.createElement(React.Fragment, null, secBar('pes'), renderPesBordo(), renderPesDesForm(), renderEmbForm()), safeTab === 'bulk' && renderBulk(), safeTab === 'chem' && renderChem(), safeTab === 'fc' && renderForecast(), safeTab === 'ind' && renderIndicadores(), safeTab === 'pfl' && React.createElement(React.Fragment, null, hubLocation !== 'brasil' && secBar('pes'), renderPerfis()), safeTab === 'equip' && React.createElement(React.Fragment, null, secBar(hubLocation === 'brasil' ? 'eqpBr' : 'eqp'), renderEquipmentWithScroll()), safeTab === 'eqs' && React.createElement(React.Fragment, null, secBar(hubLocation === 'brasil' ? 'eqpBr' : 'eqp'), renderEqSondas()), safeTab === 'hi' && hiMob && React.createElement(React.Fragment, null, renderHIStepper(), hiStep === 6 && renderHIEquipe(), hiStep === 7 && renderHIEquip(), hiStep === 8 && renderHI6(), hiStep === 9 && renderHI7(), hiStep === 10 && renderHI8(), hiStep === 11 && renderHI9(), hiStep === 12 && renderHI10(), renderHIFooter()), safeTab === 'jl' && jlMob && renderJL(), safeTab === 'db' && adminUnlocked && renderDB(), safeTab === 'ana' && adminUnlocked && renderAnalytics(mobs.filter(mobNoRecorte)), safeTab === 'br' && adminUnlocked && renderBrasil(), renderAvisos(), renderPlanForm(), renderHandover(), renderHoReview(), renderCoordRev(), renderParteRev(), renderLogView(), renderEnvView(), renderEmbModal(), renderCiencia(), renderAmoView(), renderAmoSup(), renderAmoLog(), renderAmoLab(), renderAmoFoto(), renderAdicForm(), renderProcView(), safeTab !== 'rig' && renderExpForm(), safeTab !== 'rig' && renderAmoForm(), renderReleaseGate(), renderPlanCascade(), renderEngSondas(), renderEngContratos(), renderEngCons(), renderEngImpDados(), renderRigForm(), renderConfirmBox(), renderDiaPanel(), escalaPrompt && (() => {
     var e = escalaPrompt;
     var membros = (e.team.members || []).map(id => (db.people || []).find(p => p.id === id)).filter(Boolean);
     var aceitar = () => {

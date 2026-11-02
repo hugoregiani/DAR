@@ -326,7 +326,8 @@
         regiao: ctrRegioes(dr)[0],
         version: dr.version || 1,
         aditivos: dr.aditivos || [],
-        archived: !!dr.archived
+        archived: !!dr.archived,
+        atualizadoEm: new Date().toISOString()
       };
       var l = [...(d.contratos || [])];
       var i = l.findIndex(c => c.id === id);
@@ -584,6 +585,16 @@
         }]
       }
     }));
+    var addLinha2 = () => {
+      addLinha();
+      // a linha nova entra no fim da lista: rola até ela e põe o cursor no código
+      setTimeout(() => {
+        var w = document.querySelector('.ec-modal .ec-itens-wrap');
+        if (w) w.scrollTop = w.scrollHeight;
+        var ins = document.querySelectorAll('.ec-modal .ec-itens input.ec-ref');
+        if (ins.length) ins[ins.length - 1].focus();
+      }, 60);
+    };
     var inp = (i, k, extra) => engH("input", {
       className: 'ipt ec-in ec-' + k,
       value: k === 'ref' || k === 'desc' || k === 'unit' ? i[k] || '' : engNumTxt(i[k]),
@@ -735,7 +746,7 @@
       }
     }), engH("button", {
       className: "btn-o",
-      onClick: addLinha
+      onClick: addLinha2
     }, "＋ Linha"), engH("button", {
       className: "btn-o ec-carregar",
       onClick: () => engCarregar('itens'),

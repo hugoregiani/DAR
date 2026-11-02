@@ -74,7 +74,7 @@ O CSP está em `globalHeaders`. Ele precisa de `'unsafe-inline'` e `'unsafe-eval
 
 ---
 
-## 4-E. Desmembramento: EARL Engenharia (avulso), e1 e e2 — pasta `engenharia/` do repositório `hugoregiani/DAR`
+## 4-E. Desmembramento: EARL Engenharia (avulso), e1, e2 e e3 — pasta `engenharia/` do repositório `hugoregiani/DAR`
 
 Pedido do Hugo (01/11/2026): como o EARL ainda não pode ser usado online, separar a **Engenharia** num HTML próprio, **sem login**, e trocar o envio do handover (que ia para a Coordenação/Logística) por um **e-mail .eml** gerado no app. Parte do `EARL_HAL_CMT_115_SIMULACAO.html` (compilado) pelo `engenharia/patch_engenharia.py`, que insere `engenharia/eng_app.js` (código novo, dentro do `App`, antes de `renderHandover`) e `engenharia/eng.css`. Saída: `engenharia/EARL_Engenharia.html` (~8,4 MB). Versão: `EARL_VERSION = 'EARL Engenharia e1 (base v115)'`.
 
@@ -137,6 +137,25 @@ Pedido do Hugo, feito sobre a e1. O código novo fica em `engenharia/eng_contrat
   - Com o relógio fixo, as transições de CSS não andam: um botão que acabou de ser habilitado aparece cinza na foto, mas funciona.
   - `tests/e2e_engenharia.js` (61) e `tests/e2e_contratos.js` (45): lista, contrato novo por xlsx (com "1.10", "1.000" e "250,50") e por CSV Windows-1252 com ";", linha sem código, 10% em R$, reajuste em US$ pela planilha, valor vigente antes e depois do reajuste, consumo com previsto copiado e item acrescentado (R$ 8.705,00 / US$ 1.615,00), aviso acima do saldo, receita do contrato (R$ 17.395,00 / US$ 3.095,00), saldo por item, por mês, período, Excel, aviso de reajuste retroativo, trava do código, planilha baixada, consumo preservado ao salvar a operação, Visão geral, apagar consumo e persistência.
 - **Pendências:** os textos novos não estão em EN/ES; não há câmbio (R$ e US$ são valores independentes do contrato, sem conversão); o consumo é lançado à mão (o HI de campo não existe nesta versão); medição/boletim por período e por contrato ficam para depois, se pedirem.
+
+### e3 (02/11/2026): itens PPU visíveis em tela menor, e exportar/importar dados para outro computador
+
+Retorno do Hugo sobre a e2, com 3 fotos:
+- **Itens PPU sumindo:** num contrato existente e no contrato novo, as linhas não apareciam. Causa: o `.modal` é flex em coluna com `max-height`, e a `.ec-itens-wrap` (`overflow:auto`) encolhia até sumir quando faltava altura (22 px em 1366×768; zero no Windows dele).
+  - Correção: `.ec-modal>*, .hm-modal>*, .eng-sondas-modal>*, .ec-imp-dados>*{flex-shrink:0}`, com a tabela em `min-height:180px` e `max-height:60vh`; quem rola é a janela.
+  - O rodapé do contrato, do reajuste e do consumo (`.ec-modal>.ec-foot`) ficou fixo no fim da janela.
+  - "＋ Linha" (`addLinha2`) rola até a linha nova e põe o foco no código.
+- **Exportar dados / Importar dados** (no lugar de Backup / Restaurar):
+  - **Exportar:** `EARL_Engenharia_dados_AAAA-MM-DD_HHhMM.json` = `{app, versao, geradoEm, por, resumo, db}`.
+  - **Importar** (`engImportarArquivo` → janela `renderEngImpDados`, renderizada na árvore principal porque a barra de vidro prende `position:fixed`): mostra a tabela "neste computador × no arquivo × depois de juntar" (contratos, itens com valor, reajustes, operações, consumos, handovers, sondas e templates) e oferece **Juntar** ou **Substituir** (com confirmação). As duas opções gravam com `saveDB` e recarregam.
+  - **Juntar** (`engMesclarDb`): listas cujos itens têm `id` são unidas; no mesmo `id` fica o de maior `engMarca` (o maior entre `updatedAt`, `atualizadoEm`, `criadoEm`, `createdAt`, `ppuCons.em`, `email.em` e os `log[].em`). `hoMail.emails` também é unido. Chaves que só existem no arquivo entram; as demais ficam como estão. Apagados voltam (está dito na tela).
+  - Para isso, o contrato salvo ganhou `atualizadoEm` e a sonda salva (`saveRig`), `updatedAt`.
+- **Testes:**
+  - `e2e_engenharia` (62): exportar → apagar → importar → Substituir.
+  - `e2e_contratos` (55) ganhou:
+    - outro computador: exporta, cria uma operação noutro navegador e junta (3 operações, consumo, contrato com valores e reajustes, mesma receita);
+    - tela 1366×768: tabela de 132 itens visível, rodapé visível, "＋ Linha" com foco e campos visíveis, contrato novo com 3 linhas.
+- Versão: `EARL Engenharia e3 (base v115)`.
 
 ---
 

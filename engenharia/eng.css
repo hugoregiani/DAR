@@ -109,3 +109,16 @@ td.ec-desc{font-size:12.5px;line-height:1.35}
 .ec-unit{width:96px}
 .toolbar>.db-tabs{max-width:100%;min-width:0}
 @media(max-width:760px){.crumbs .crumb-sep{display:none}}
+/* e3: nas janelas (flex em coluna com altura máxima) as tabelas não podem encolher até sumir —
+   quem rola é a janela; a tabela de itens tem altura mínima e rola por dentro quando é longa. */
+.ec-modal>*,.hm-modal>*,.eng-sondas-modal>*,.ec-imp-dados>*{flex-shrink:0}
+.ec-itens-wrap{min-height:180px;max-height:60vh}
+.ec-imp-dados{width:min(760px,96vw);max-height:92vh;overflow:auto}
+.ec-imp-tab td,.ec-imp-tab th{padding:3px 10px}
+.ec-imp-opcoes{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:12px}
+@media(max-width:760px){.ec-imp-opcoes{grid-template-columns:1fr}}
+.ec-imp-op{display:flex;flex-direction:column;gap:6px;border:1px solid var(--line,#E2E5E7);border-radius:14px;padding:12px 14px;background:var(--surface,#fff)}
+.ec-imp-op b{font-size:14px}
+.ec-imp-op span{font-size:12.5px;color:var(--ink-2);line-height:1.5;flex:1}
+.ec-imp-op button{align-self:flex-start}
+.ec-modal>.ec-foot{position:sticky;bottom:-20px;margin-bottom:-20px;padding-bottom:20px;background:var(--surface,#fff);z-index:3}

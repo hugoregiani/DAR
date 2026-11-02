@@ -58,7 +58,7 @@ const fld = (page, rot) => page.locator('.eng-modal .fld').filter({has: page.loc
   conf(await page.locator('.eng2-card').count() === 17, 'todos os contratos (16) + Visão geral na página inicial', await page.locator('.eng2-card').count());
   conf(!(await page.locator('.crumb-hub, .crumb-loc').count()), 'trilha sem "trocar locação" e sem região');
   const corpo1 = await page.innerText('body');
-  conf(/Engenharia/.test(corpo1) && /Sondas/.test(corpo1) && /Backup/.test(corpo1), 'abre direto na Engenharia, com Sondas · Backup · Restaurar');
+  conf(/Engenharia/.test(corpo1) && /Sondas/.test(corpo1) && /Exportar dados/.test(corpo1) && /Importar dados/.test(corpo1), 'abre direto na Engenharia, com Contratos · Sondas · Exportar dados · Importar dados');
   conf(!/Configurar sync|SAIR ADMIN|Coordenação|Logística\n/.test(corpo1), 'sem sync, admin ou outros apps');
   conf(await page.locator('.app-tile').count() === 0, 'sem o menu de apps');
   await foto(page, '02_engenharia');
@@ -184,12 +184,12 @@ const fld = (page, rot) => page.locator('.eng-modal .fld').filter({has: page.loc
   conf(await page.locator('.eng-modal button', {hasText: 'Handover v2 — revisar / reenviar'}).count() === 1, 'botão "✉ Handover v2 — revisar / reenviar"');
   await page.click('.eng-modal button:has-text("Cancelar")');
 
-  console.log('Backup');
-  const bk = await baixar(page, () => page.click('.eng-tools button:has-text("Backup")'));
+  console.log('Exportar dados');
+  const bk = await baixar(page, () => page.click('.eng-tools button:has-text("Exportar dados")'));
   const bj = JSON.parse(bk.txt);
-  conf(/^EARL_Engenharia_backup_\d{4}-\d{2}-\d{2}\.json$/.test(bk.nome) && bj.db.handovers.length === 1 && bj.db.plannedJobs.length === 1, 'backup .json com a operação e o handover');
+  conf(/^EARL_Engenharia_dados_\d{4}-\d{2}-\d{2}_\d{2}h\d{2}\.json$/.test(bk.nome) && bj.db.handovers.length === 1 && bj.db.plannedJobs.length === 1, 'exportação .json com a operação e o handover', bk.nome);
 
-  console.log('Restaurar');
+  console.log('Importar dados (substituir)');
   const bkPath = path.join(require('os').tmpdir(), bk.nome);
   fs.writeFileSync(bkPath, bk.txt);
   await page.evaluate(() => { const d = JSON.parse(localStorage.getItem('hal_cmt_db_v1')); d.plannedJobs = []; d.handovers = []; localStorage.setItem('hal_cmt_db_v1', JSON.stringify(d)); });
@@ -197,11 +197,13 @@ const fld = (page, rot) => page.locator('.eng-modal .fld').filter({has: page.loc
   await page.waitForSelector('.eng2-card, .eng2-ctbar', {timeout: 60000});
   conf(await page.evaluate(() => JSON.parse(localStorage.getItem('hal_cmt_db_v1')).plannedJobs.length) === 0, 'dados apagados antes de restaurar');
   await page.setInputFiles('.eng-tools input[type=file]', bkPath);
-  await page.waitForSelector('.modal-title:has-text("Restaurar backup")');
-  await Promise.all([page.waitForEvent('load'), page.locator('.modal').filter({hasText: 'Restaurar backup'}).locator('button', {hasText: /^Restaurar$/}).click()]);
+  await page.waitForSelector('.ec-imp-dados');
+  conf(/Operações 0 1 1/.test((await page.innerText('.ec-imp-tab')).replace(/\s+/g, ' ')), 'importar mostra este computador × arquivo × depois de juntar');
+  await page.click('.ec-substituir');
+  await Promise.all([page.waitForEvent('load'), page.locator('.modal').filter({hasText: 'Substituir os dados'}).locator('button', {hasText: /^Substituir$/}).click()]);
   await page.waitForSelector('.eng2-card, .eng2-ctbar', {timeout: 60000});
   const rest = await page.evaluate(() => { const d = JSON.parse(localStorage.getItem('hal_cmt_db_v1')); return [d.plannedJobs.length, d.handovers.length, d.handovers[0].versao]; });
-  conf(rest[0] === 1 && rest[1] === 1 && rest[2] === 2, 'restaurar traz a operação e o handover v2 de volta', rest);
+  conf(rest[0] === 1 && rest[1] === 1 && rest[2] === 2, 'substituir traz a operação e o handover v2 de volta', rest);
 
   console.log('Nordeste: sonda nova + handover onshore');
   await page.click('.eng-tools button:has-text("Sondas")');
