@@ -282,6 +282,21 @@ Pedido do Hugo: montar um banco de dados de produtos químicos com SAP, descriç
 - **Painel da página inicial:** pedido do Hugo, os cartões ficam na ordem Receita (US$), COGS, Operações, **Receita / operação (US$)** (`ec-pn-rec-op`, receita ÷ operações que contam, sem as de risco 100%; realizado e previsto em separado; `engSomaV` ganhou `nFR`/`nFP`) e Margem. O cartão "Receita em R$" saiu; as tabelas continuam com R$. O Gerencial ainda tem o layout antigo dos cartões.
 - **Testes:** `e2e_espaco` 12 (novo), `e2e_bp` 38 (+ só BP ativo, receita/operação, alteração salva, sem espaço, versão anterior, bloqueado), `e2e_contratos` 76, `e2e_quimicos` 36, `e2e_engenharia` 62 e `e2e_gerencial` 30.
 
+### EARL Gerencial g3 (03/11/2026): tabela única com drill-down e filtro por mês
+
+Pedido do Hugo: no Gerencial, em vez de três tabelas (por mês, cliente e região), uma tabela só, com os filtros e drill-down (mês › cliente › sonda › operação…). O filtro de data vai só até o mês.
+
+- **Aba "Receita e margem"** (agora a primeira e a padrão, `S.tab = 'receita'`):
+  - `telas.receita` monta uma tabela `t-dd` em árvore a partir de `A.linhas` (o mesmo `valorOp`: realizado + previsto × fator de risco).
+  - **Dimensões:** `DIMS` (`mes`, `ano`, `cliente`, `contrato`, `regiao`, `tipoct`, `sonda`, `poco`, `tipoop`, `situacao`), cada uma com `k` (chave), `r` (rótulo) e `cron` (ordem cronológica; as outras vão pela receita).
+  - **Níveis:** `S.drill.niveis` (padrão `['mes', 'cliente', 'sonda']`, guardado em `earlger:drill`). As operações vêm sempre depois do último nível.
+  - **Estado aberto:** `S.drill.abertos` guarda caminhos `/k1/k2` (`encodeURIComponent`). "Mostrar até" põe `S.drill.mostrar = profundidade`, aplicado no próximo `render`.
+  - **Barra "Abrir por":** selects `.dd-sel[data-nivel]`, × `[data-ddrm]` e "＋ nível" `[data-a=ddAdd]`, que pega o próximo de cliente › contrato › sonda › poço…; trocar níveis zera os abertos.
+  - **Linhas:** grupo `tr.dd-g.dd-n{d}[data-dd]` e operação `tr.dd-op` (`.fora` no risco 100%). A coluna R$ só aparece se houver valor em R$.
+  - Saem `porCli`/`porReg`; `porMes` continua para a aba "Por mês" do Excel.
+- **Filtro de período:** `input type="month"` ("Mês de" / "até o mês"); `noPer` compara `AAAA-MM`.
+- **Testes:** `e2e_gerencial` 41; `e2e_bp` 41: cada mês do drill-down = Σ RECEITA FINAL / COGS FINAL da planilha; out/2026 › BP › NS-39 com as 4 operações (2 fora); filtro set–out/2026 = US$ 1.586.949,26 em 9 operações.
+
 ---
 
 ## 4. Última mudança: v115 (Inventário a bordo: "Movimentar material" em cada contentor e na sacaria, em todas as categorias; Logística: desfazer a divisão da tesoura)

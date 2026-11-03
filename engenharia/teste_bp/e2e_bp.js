@@ -226,6 +226,25 @@ const usd = v => 'US$ ' + v.toLocaleString('pt-BR', {minimumFractionDigits: 2, m
   conf(k.ops === '27' && k.sub === '9 realizada(s) · 18 prevista(s) · 2 fora (risco 100%)', 'gerencial: 27 operações, 9 realizadas, 18 previstas, 2 fora', k.sub);
   conf(perto(valor(k.sr.split('·')[0]), T.recR) && perto(valor(k.sr.split('·')[1]), T.recP), 'gerencial: realizado ' + usd(T.recR) + ' · previsto ' + usd(T.recP), k.sr);
   await foto(p, 'bp6_gerencial');
+  // tabela única com drill-down: cada mês = soma da planilha (RECEITA FINAL e COGS FINAL pela data da operação)
+  const porMesPl = {};
+  pl.forEach(o => { const m = o.data.slice(0, 7); const x = porMesPl[m] || (porMesPl[m] = {n: 0, rec: 0, cogs: 0}); x.n++; x.rec += o.receitaFinal; x.cogs += o.cogsFinal; });
+  const MES = ['jan', 'fev', 'mar', 'abr', 'mai', 'jun', 'jul', 'ago', 'set', 'out', 'nov', 'dez'];
+  const mesG = await p.$$eval('.t-dd tbody tr.dd-n0', l => l.map(r => [r.cells[0].textContent.replace('▸', '').trim(), r.cells[1].firstChild.textContent.trim(), r.cells[2].querySelector('b').textContent, r.cells[3].textContent]));
+  const difMes = Object.keys(porMesPl).sort().map((m, i) => { const e = porMesPl[m], g = mesG[i] || []; const rot = MES[Number(m.slice(5)) - 1] + '/' + m.slice(0, 4); return g[0] === rot && Number(g[1]) === e.n && perto(valor(g[2]), e.rec) && perto(valor(g[3]), e.cogs) ? null : {m, planilha: e, gerencial: g}; }).filter(Boolean);
+  conf(mesG.length === Object.keys(porMesPl).length && !difMes.length, 'drill-down: os ' + mesG.length + ' meses batem com a planilha (operações, receita final e COGS final)', difMes.length ? difMes : mesG.length);
+  await p.click('.t-dd tr.dd-g:has-text("out/2026")');
+  await p.click('.t-dd tr.dd-g.dd-n1:has-text("BP")');
+  await p.click('.t-dd tr.dd-g.dd-n2:has-text("NS-39")');
+  const opsOut = await p.$$eval('.t-dd tbody tr.dd-op', l => l.map(r => r.cells[0].textContent.slice(0, 10) + (r.classList.contains('fora') ? ' fora' : '')));
+  conf(opsOut.join() === '01/10/2026,15/10/2026 fora,28/10/2026,28/10/2026 fora' || opsOut.join() === '01/10/2026,15/10/2026 fora,28/10/2026 fora,28/10/2026', 'out/2026 › BP › NS-39: as 4 operações, com a LCP e a DISPUTA SPACER marcadas “fora”', opsOut);
+  await foto(p, 'bp6b_drill');
+  // filtro por mês: set/2026 a out/2026
+  await p.fill('[data-f="de"]', '2026-09');
+  await p.fill('[data-f="ate"]', '2026-10');
+  const sel = pl.filter(o => o.data >= '2026-09' && o.data < '2026-11');
+  conf(perto(valor(await txt(p, '.k-rec-usd b')), soma(sel, 'receitaFinal')) && await txt(p, '.k-ops b') === String(sel.length), 'filtro de set/2026 a out/2026: ' + usd(soma(sel, 'receitaFinal')) + ' em ' + sel.length + ' operações', await txt(p, '.k-rec-usd b'));
+  await p.click('[data-a="limparf"]');
   await p.click('.tab[data-tab="ops"]');
   const linhas = await p.locator('.t-ops tbody tr').count();
   const foraG = await p.locator('.t-ops tbody tr:has-text("fora (risco 100%)")').count();

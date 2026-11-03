@@ -22,14 +22,17 @@ Tudo é **realizado + previsto**, com o risco de cada operação aplicado:
 - **Realizado:** operações com consumo lançado.
 - **Previsto:** operações ainda sem consumo, pelo que a engenharia planejou.
 
-- **Filtros:** período do serviço, cliente, contrato, região e tipo de contrato.
+- **Filtros:** período por **mês** (mês de / até o mês, sem o dia), cliente, contrato, região e tipo de contrato.
 - **Indicadores:**
   - receita em US$ e em R$ (realizado · previsto);
   - COGS e margem;
   - operações (realizadas, previstas e "fora", com risco 100%);
   - homem-dia lançado e previsto a realizar.
 - **Contratos:** receita, COGS e margem por contrato, com o engenheiro e a data do arquivo, as operações e o uso do contrato em valor. Clique no contrato para filtrar.
-- **Receita e margem:** por mês, por cliente e por região.
+- **Receita e margem** (aba inicial): **uma tabela só, com drill-down**.
+  - **Níveis:** o padrão é **Mês › Cliente › Sonda › Operações**. Em "Abrir por" dá para trocar cada nível, tirar (×) ou acrescentar (**＋ nível**). As opções são mês, ano, cliente, contrato, região, tipo de contrato, sonda, poço, tipo de operação e situação. A escolha fica guardada.
+  - **Abrir e fechar:** clique numa linha para abrir o próximo nível; no último nível aparecem as operações, com data, poço, tipo, sonda, contrato, SO e situação. **Mostrar até** abre tudo até o nível escolhido de uma vez.
+  - **Colunas:** operações (realizadas, previstas, fora), receita US$ (realizado · previsto), COGS, margem, receita por operação (sem as de risco 100%) e, quando houver valores em R$, receita R$. A linha de total fica no fim.
 - **Itens PPU:** contratado, consumido, saldo, % usado, a realizar, receita e valor vigente, por contrato e item.
 - **Químicas** e **Casing equipment:** planejado × lançado por SAP, com o COGS, o número de operações e os contratos.
 - **Pessoal:** por função, pessoas e homem-dia planejado × lançado.
@@ -64,11 +67,11 @@ Tudo é **realizado + previsto**, com o risco de cada operação aplicado:
   - `realizado` traz `data`, `ppu` com os valores, `quimicas`, `casing`, `cogs` e `pessoal`; `receita` é a receita bruta do realizado.
 - Os dados ficam em `localStorage` com o prefixo `earlger:`.
 - **Testes de ponta a ponta:**
-  - dois engenheiros geram arquivos no app de Engenharia, e o Gerencial carrega por arquivos, `.zip` e pasta (30 verificações);
-  - o teste BP (`../engenharia/teste_bp/e2e_bp.js`) confere o Gerencial contra os totais da planilha do BP: receita, COGS, margem, operações fora, aba Operações e Excel.
+  - dois engenheiros geram arquivos no app de Engenharia, e o Gerencial carrega por arquivos, `.zip` e pasta. Inclui o drill-down (níveis, abrir/fechar, trocar, tirar e acrescentar nível, guardar a escolha) e o filtro por mês (41 verificações);
+  - o teste BP (`../engenharia/teste_bp/e2e_bp.js`) confere o Gerencial contra os totais da planilha do BP: receita, COGS, margem, operações fora, cada mês do drill-down, o filtro por mês, aba Operações e Excel.
 
   ```bash
   node tests/e2e_gerencial.js ../engenharia/EARL_Engenharia.html EARL_Gerencial.html [pasta-das-telas]
   ```
 
-- Versão: `EARL Gerencial g2`.
+- Versão: `EARL Gerencial g3`.
