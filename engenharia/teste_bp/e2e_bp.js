@@ -245,6 +245,18 @@ const usd = v => 'US$ ' + v.toLocaleString('pt-BR', {minimumFractionDigits: 2, m
   const sel = pl.filter(o => o.data >= '2026-09' && o.data < '2026-11');
   conf(perto(valor(await txt(p, '.k-rec-usd b')), soma(sel, 'receitaFinal')) && await txt(p, '.k-ops b') === String(sel.length), 'filtro de set/2026 a out/2026: ' + usd(soma(sel, 'receitaFinal')) + ' em ' + sel.length + ' operações', await txt(p, '.k-rec-usd b'));
   await p.click('[data-a="limparf"]');
+  // gráfico por mês: um grupo por mês, de ago/2026 a mai/2027 (fev/2027 vazio), receita e COGS = planilha
+  conf(!(await p.locator('.k-rec-brl').count()) && perto(valor(await txt(p, '.k-rec-op b')), PL.rec / pl.filter(o => o.risco < 1).length), 'gerencial: sem cartão em R$; receita por operação = planilha', await txt(p, '.k-rec-op b'));
+  await p.click('[data-vis="grafico"]');
+  await p.waitForSelector('.g-svg');
+  const grupos = await p.$$eval('.g-mes', l => l.map(g => g.getAttribute('aria-label')));
+  const esperado = [];
+  for (let m = '2026-08'; m <= '2027-05'; m = (Number(m.slice(5)) === 12 ? (Number(m.slice(0, 4)) + 1) + '-01' : m.slice(0, 5) + String(Number(m.slice(5)) + 1).padStart(2, '0'))) esperado.push(m);
+  const difG = esperado.map((m, i) => { const e = porMesPl[m] || {rec: 0, cogs: 0}; const lb = grupos[i] || ''; const mm = /^(\w+\/\d{4}): receita (US\$ [\d.,]+), COGS (US\$ [\d.,]+)$/.exec(lb); const rot = MES[Number(m.slice(5)) - 1] + '/' + m.slice(0, 4); return mm && mm[1] === rot && perto(valor(mm[2]), e.rec) && perto(valor(mm[3]), e.cogs) ? null : {m, e, lb}; }).filter(Boolean);
+  conf(grupos.length === 10 && !difG.length, 'gráfico por mês: 10 meses (fev/2027 vazio), receita e COGS de cada mês = planilha', difG.length ? difG : grupos.length);
+  await p.locator('.g-mes').nth(2).hover();
+  await foto(p, 'bp6c_grafico');
+  await p.click('[data-vis="tabela"]');
   await p.click('.tab[data-tab="ops"]');
   const linhas = await p.locator('.t-ops tbody tr').count();
   const foraG = await p.locator('.t-ops tbody tr:has-text("fora (risco 100%)")').count();

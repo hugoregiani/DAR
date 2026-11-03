@@ -297,6 +297,21 @@ Pedido do Hugo: no Gerencial, em vez de três tabelas (por mês, cliente e regi�
 - **Filtro de período:** `input type="month"` ("Mês de" / "até o mês"); `noPer` compara `AAAA-MM`.
 - **Testes:** `e2e_gerencial` 41; `e2e_bp` 41: cada mês do drill-down = Σ RECEITA FINAL / COGS FINAL da planilha; out/2026 › BP › NS-39 com as 4 operações (2 fora); filtro set–out/2026 = US$ 1.586.949,26 em 9 operações.
 
+### EARL Gerencial g4 (03/11/2026): só US$ e gráfico de barras por mês
+
+Pedido do Hugo: tirar a coluna de receita em R$ e deixar só os valores em dólares; permitir ver em gráfico de barras, mês a mês.
+
+- **Indicadores:** sai "Receita em R$". A ordem passa a ser a da Engenharia: Receita US$ · COGS US$ · Operações · Receita / operação (US$) (`k-rec-op`; ÷ operações sem as de risco 100%, realizado e previsto em separado; `soma` ganhou `nFR`/`nFP`) · Margem US$ · Pessoal (homem-dia). Os textos menores não mostram mais R$.
+- **Drill-down:** sem a coluna R$; só US$.
+- **Gráfico** (`S.vis`, guardado em `earlger:vis`; chave `.vis-tg [data-vis]` no cabeçalho do cartão):
+  - `desenharGrafico(A)` desenha um SVG com a largura real de `#graf` (é chamado depois do `innerHTML` e de novo no `resize`).
+  - **Meses:** contínuos do primeiro ao último com operação (mês vazio fica com o espaço).
+  - **Colunas:** receita realizada (`#2a78d6`) e prevista (`#1baf7a`) empilhadas, com 2px de vão; COGS (`#eb6834`) ao lado. São as 3 primeiras cores do palette de referência do skill dataviz, validadas com `--pairs all`; o verde-água fica abaixo de 3:1, por isso a tabela é a vista acessível.
+  - **Marcas:** colunas de no máximo 24px, ponta arredondada de 4px, base reta; grade em linha fina; eixo compacto ("250 mil", "1,5 mi").
+  - **Interação:** tooltip por mês (`g-tip`, montado com `textContent`, valor antes do rótulo); foco pelo teclado; clique ou Enter abre o mês na tabela (`S.drill.abertos`, quando o 1º nível é Mês).
+- **Mantidos:** os valores em R$ continuam nas abas Contratos, Itens PPU e Operações e no Excel.
+- **Testes:** `e2e_gerencial` 46 (cartões, só US$, gráfico, tooltip, guardar a escolha, clique abre a tabela); `e2e_bp` 43 (10 meses no gráfico, fev/2027 vazio, receita e COGS de cada mês = planilha; receita/operação = planilha).
+
 ---
 
 ## 4. Última mudança: v115 (Inventário a bordo: "Movimentar material" em cada contentor e na sacaria, em todas as categorias; Logística: desfazer a divisão da tesoura)
