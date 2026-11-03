@@ -329,6 +329,20 @@ Pedido do Hugo: o drill-down deve ir até o item PPU; e ele não viu o gráfico 
   - `e2e_gerencial` 50: itens PPU somam a operação; ocultar e mostrar o gráfico e guardar a escolha; legenda sem tendência com 1 mês.
   - `e2e_bp` 48: 13 5/8" Intermed = 18 itens = US$ 827.061,86; DISPUTA SPACER = 7 itens a US$ 0,00 com o bruto; a linear = regressão calculada da planilha; a média móvel = médias da planilha.
 
+### EARL Gerencial g6 (03/11/2026): gráfico por mês, por mês e cliente, e por cliente (barras horizontais)
+
+Pedido do Hugo (ele achou o gráfico): poder ver o gráfico como está e também por cliente no mês, e um gráfico de barras por cliente com os clientes no eixo vertical.
+
+- **Formas de ver** (`S.gmodo`, guardado em `earlger:gmodo`; botões `.g-modos [data-gmodo]` no cartão):
+  - **`mes`:** o de antes.
+  - **`mescli`:** uma coluna por mês, empilhada por cliente; segmentos `path[data-c][data-v]` com 2px de vão; a tendência vale para as duas formas por mês.
+  - **`cli`** (`desenharClientes`): barras horizontais (`barraH`, ponta arredondada à direita). Clientes no eixo vertical, ordenados pela receita; em cada linha, a receita (realizada + prevista) e o COGS; valor compacto na ponta (`.g-vl`); tooltip com receita, COGS, margem, receita/operação e operações. Clique alterna `S.f.cliente` (filtra a página). A seleção "Tendência" some nesta forma.
+- **Cores dos clientes** (`coresClientes(C)`): usa as 8 cores do palette de referência (validadas como pares vizinhos), pela ordem da receita total **sem filtro**, para o filtro não trocar as cores. Acima de 8 clientes, do 8º em diante vira "Outros clientes" (cinza).
+- **Código comum:** `legenda(itens)` e `dica(box)` montam a legenda e o tooltip por DOM (`textContent`) para as três formas. A legenda saiu do HTML fixo e vai para `#g-leg`.
+- **Testes:**
+  - `e2e_gerencial` 60: arquivo com 3 clientes montado no teste, que confere as cores fixas, a soma por mês, a ordem e os valores por cliente, os tooltips, o clique que filtra, a cor que se mantém com o filtro e a forma guardada.
+  - `e2e_bp` 50: por mês e cliente = 9 meses só BP, somando a RECEITA FINAL; por cliente = BP US$ 4,4 mi.
+
 ---
 
 ## 4. Última mudança: v115 (Inventário a bordo: "Movimentar material" em cada contentor e na sacaria, em todas as categorias; Logística: desfazer a divisão da tesoura)

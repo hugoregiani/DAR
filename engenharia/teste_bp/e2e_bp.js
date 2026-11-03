@@ -275,6 +275,15 @@ const usd = v => 'US$ ' + v.toLocaleString('pt-BR', {minimumFractionDigits: 2, m
   const tMm = (await p.getAttribute('.g-tend', 'data-v')).split(';');
   conf(tMm[0] === '' && tMm[1] === '' && tMm.slice(2).every((v, i) => perto(Number(v), (yMes[i] + yMes[i + 1] + yMes[i + 2]) / 3, 0.01)) && await p.locator('.g-tdot').count() === 8, 'média móvel de 3 meses: 8 pontos (do 3º mês em diante) = média da planilha', tMm);
   await p.selectOption('[data-tend]', 'linear');
+  await p.click('[data-gmodo="mescli"]');
+  await p.waitForSelector('.g-svg');
+  const segBP = await p.$$eval('path[data-c]', l => l.map(x => [x.dataset.c, Number(x.dataset.v)]));
+  conf(segBP.length === 9 && segBP.every(x => x[0] === 'BP') && perto(segBP.reduce((a, x) => a + x[1], 0), PL.rec, 0.05), 'por mês e cliente: 9 meses com receita, tudo BP, somando ' + usd(PL.rec), segBP.length);
+  await p.click('[data-gmodo="cli"]');
+  await p.waitForSelector('.g-cli');
+  conf((await p.$$eval('.g-cli', l => l.map(g => g.dataset.cli + ' ' + g.querySelector('.g-vl').textContent))).join() === 'BP US$ 4,4 mi', 'por cliente: uma barra, BP, US$ 4,4 mi');
+  await foto(p, 'bp6d_por_cliente');
+  await p.click('[data-gmodo="mes"]');
   await p.click('.tab[data-tab="ops"]');
   const linhas = await p.locator('.t-ops tbody tr').count();
   const foraG = await p.locator('.t-ops tbody tr:has-text("fora (risco 100%)")').count();

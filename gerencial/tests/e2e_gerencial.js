@@ -255,6 +255,47 @@ async function arquivoGerencial(page, nome, arq) {
     await p.waitForSelector('.kpi.k-rec-usd');
     conf(await txt(p, '.k-rec-usd b') === 'US$ 1.540,00', 'carregar a pasta: mesmo consolidado');
   }
+  console.log('Gráficos por cliente (3 clientes)');
+  {
+    const ops = [['c_pb', '2026-09-10', 3000], ['c_pb', '2026-10-12', 4500], ['c_sh', '2026-09-20', 1500], ['c_sh', '2026-11-08', 4200], ['c_eq', '2026-10-25', 900]];
+    const pac = {tipo: 'EARL-Gerencial', formato: 2, app: 'teste', geradoEm: '2026-11-03T09:00:00.000Z', por: 'Teste',
+      contratos: [['c_pb', 'Contrato PB', 'Petrobras'], ['c_sh', 'Contrato Shell', 'Shell'], ['c_eq', 'Contrato Equinor', 'Equinor']].map(([id, nome, cliente]) => ({id, nome, numero: '', cliente, tipo: 'Serviço', regiao: 'Sudeste', bases: [], itens: [], reajustes: []})),
+      operacoes: ops.map(([ct, data, v], k) => ({id: 'op' + k, contratoId: ct, sonda: 'NS-1', poco: 'P-' + k, tipo: 'Squeeze', revestimento: '', data, duracao: 1, status: 'planejada', risco: 0, contingencia: false,
+        previsto: {ppu: [{ref: '1.1', desc: 'Taxa', unit: 'dia', qtd: 1, usd: v, valorUsd: v, valorBrl: null}], receita: {usd: v, brl: 0, semValor: 0}, cogs: {usd: v / 10, brl: 0, semCogs: 0}, quimicas: [], casing: [], pessoal: [], equipamentos: []}, realizado: null, receita: null}))};
+    const V = await abrir(GER, {h: 1000, hoje: '2026-11-03'});
+    const q = V.page;
+    await q.waitForSelector('#drop');
+    await q.setInputFiles('#inArq', [{name: 'tres_clientes.json', mimeType: 'application/json', buffer: Buffer.from(JSON.stringify(pac))}]);
+    await q.waitForSelector('.g-svg');
+    conf((await q.$$eval('.g-modos button', l => l.map(b => b.textContent))).join('|') === 'Por mês|Por mês e cliente|Por cliente' && await q.locator('.g-modos button.on[data-gmodo="mes"]').count() === 1, 'o gráfico abre “Por mês”, com as opções “Por mês e cliente” e “Por cliente”');
+    await q.click('[data-gmodo="mescli"]');
+    await q.waitForSelector('.g-svg');
+    const leg = await q.$$eval('.g-leg span', l => l.map(s => s.textContent + ' ' + s.querySelector('i').style.background));
+    const segs = await q.$$eval('.g-mes', l => l.map(g => [...g.querySelectorAll('path[data-c]')].map(p => p.dataset.c + '=' + p.dataset.v + ' ' + p.getAttribute('fill')).join(' + ')));
+    conf(/^Petrobras rgb\(42, 120, 214\)$/.test(leg[0]) && /^Shell rgb\(235, 104, 52\)$/.test(leg[1]) && /^Equinor rgb\(27, 175, 122\)$/.test(leg[2]) && /Tendência linear/.test(leg[3]), 'por mês e cliente: legenda com os clientes (cor fixa, pela receita) e a tendência', leg);
+    conf(segs.join(' | ') === 'Petrobras=3000 #2a78d6 + Shell=1500 #eb6834 | Petrobras=4500 #2a78d6 + Equinor=900 #1baf7a | Shell=4200 #eb6834', 'cada mês empilha os clientes: set = Petrobras 3.000 + Shell 1.500; out = Petrobras 4.500 + Equinor 900; nov = Shell 4.200', segs);
+    await q.locator('.g-mes').nth(1).hover();
+    const tipC = await txt(q, '.g-tip');
+    conf(/^out\/2026 US\$ 4\.500,00 Petrobras US\$ 900,00 Equinor US\$ 5\.400,00 receita total/.test(tipC), 'tooltip do mês com o valor de cada cliente e o total', tipC);
+    await foto(q, 'g5_mes_cliente');
+    await q.click('[data-gmodo="cli"]');
+    await q.waitForSelector('.g-cli');
+    const cl = await q.$$eval('.g-cli', l => l.map(g => g.dataset.cli + ' ' + g.querySelector('.g-vl').textContent));
+    conf(cl.join(' | ') === 'Petrobras US$ 7,5 mil | Shell US$ 5,7 mil | Equinor US$ 900', 'por cliente: barras horizontais, clientes no eixo vertical, da maior receita para a menor, com o valor na ponta', cl);
+    await q.locator('.g-cli').nth(1).hover();
+    conf(/^Shell US\$ 0,00 receita realizada US\$ 5\.700,00 receita prevista US\$ 570,00 COGS US\$ 5\.700,00 receita total .* US\$ 2\.850,00 receita por operação 2 operação/.test(await txt(q, '.g-tip')), 'tooltip do cliente: receita, COGS, margem, receita por operação e operações', await txt(q, '.g-tip'));
+    await foto(q, 'g6_por_cliente');
+    await q.locator('.g-cli[data-cli="Shell"]').click();
+    conf(await q.inputValue('[data-f="cliente"]') === 'Shell' && await txt(q, '.k-rec-usd b') === 'US$ 5.700,00', 'clicar no cliente filtra a página por ele');
+    await q.click('[data-gmodo="mescli"]');
+    await q.waitForSelector('.g-svg');
+    conf((await q.$$eval('path[data-c]', l => l.map(p => p.dataset.c + ' ' + p.getAttribute('fill')))).every(x => x === 'Shell #eb6834'), 'com o filtro, a Shell continua com a mesma cor');
+    await q.reload();
+    await q.waitForSelector('.g-svg');
+    conf(await q.locator('.g-modos button.on[data-gmodo="mescli"]').count() === 1, 'a forma de ver o gráfico fica guardada');
+    conf(V.errs.length === 0, 'gráficos por cliente: nenhum erro', V.errs.slice(0, 3));
+    await V.browser.close();
+  }
   console.log('Celular');
   await p.setViewportSize({width: 390, height: 844});
   await p.waitForTimeout(300);

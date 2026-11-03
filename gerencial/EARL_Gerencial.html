@@ -110,7 +110,13 @@ tr.fora td{color:var(--ink-3)}
 .g-ty{font-size:11px;fill:var(--ink-3);text-anchor:end}
 .g-un{font-weight:700}
 .g-tx{font-size:11px;fill:var(--ink-3);text-anchor:middle}
-.g-mes{cursor:pointer;outline:none}
+.g-mes,.g-cli{cursor:pointer;outline:none}
+.g-cli:hover .g-bg,.g-cli:focus .g-bg,.g-cli.on .g-bg{fill:#F1F2F3}
+.g-cli:focus-visible .g-bg{stroke:var(--ink-3);stroke-width:1}
+.g-cy{font-size:12px;fill:var(--ink-2);text-anchor:end}
+.g-cli.on .g-cy{fill:var(--ink);font-weight:700}
+.g-vl{font-size:11.5px;fill:var(--ink);font-weight:600}
+.g-modos button{font-size:12px;padding:5px 10px}
 .g-bg{fill:transparent}
 .g-mes:hover .g-bg,.g-mes:focus .g-bg{fill:#F1F2F3}
 .g-mes:focus-visible .g-bg{stroke:var(--ink-3);stroke-width:1}
@@ -192,7 +198,7 @@ https://github.com/nodeca/pako/blob/main/LICENSE
    Para cada contrato vale o arquivo mais novo. Tudo fica neste navegador (localStorage, prefixo earlger:). */
 (function () {
   'use strict';
-  var VERSAO = 'EARL Gerencial g5';
+  var VERSAO = 'EARL Gerencial g6';
   var CHAVE = 'earlger:pacotes_v1';
   var $ = function (s) { return document.querySelector(s); };
   var esc = function (v) { return String(v == null ? '' : v).replace(/[&<>"']/g, function (c) { return {'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'}[c]; }); };
@@ -207,10 +213,10 @@ https://github.com/nodeca/pako/blob/main/LICENSE
   var hojeTxt = function () { var d = new Date(), p = function (n) { return String(n).padStart(2, '0'); }; return d.getFullYear() + '-' + p(d.getMonth() + 1) + '-' + p(d.getDate()); };
   var r4 = function (v) { return Math.round(v * 10000) / 10000; };
 
-  var S = {pacotes: [], tab: 'receita', f: {de: '', ate: '', cliente: '', contrato: '', regiao: '', tipo: '', busca: ''}, soComConsumo: true, msg: null, drill: {niveis: ['mes', 'cliente', 'sonda'], abertos: {}, mostrar: null}, graf: true, tend: 'linear'};
+  var S = {pacotes: [], tab: 'receita', f: {de: '', ate: '', cliente: '', contrato: '', regiao: '', tipo: '', busca: ''}, soComConsumo: true, msg: null, drill: {niveis: ['mes', 'cliente', 'sonda'], abertos: {}, mostrar: null}, graf: true, tend: 'linear', gmodo: 'mes'};
   try { S.pacotes = JSON.parse(localStorage.getItem(CHAVE) || '[]') || []; } catch (e) { S.pacotes = []; }
   try { var t0 = localStorage.getItem('earlger:tab'); if (t0) S.tab = t0; } catch (e) {}
-  try { if (localStorage.getItem('earlger:graf') === 'oculto') S.graf = false; var t1 = localStorage.getItem('earlger:tend'); if (t1 === 'linear' || t1 === 'mm3' || t1 === 'nenhuma') S.tend = t1; } catch (e) {}
+  try { if (localStorage.getItem('earlger:graf') === 'oculto') S.graf = false; var t1 = localStorage.getItem('earlger:tend'); if (t1 === 'linear' || t1 === 'mm3' || t1 === 'nenhuma') S.tend = t1; var t2 = localStorage.getItem('earlger:gmodo'); if (t2 === 'mes' || t2 === 'mescli' || t2 === 'cli') S.gmodo = t2; } catch (e) {}
   try { var n0 = JSON.parse(localStorage.getItem('earlger:drill') || 'null'); if (Array.isArray(n0) && n0.length) S.drill.niveis = n0; } catch (e) {}
   var gravar = function () {
     try { localStorage.setItem(CHAVE, JSON.stringify(S.pacotes)); return true; }
@@ -451,13 +457,16 @@ https://github.com/nodeca/pako/blob/main/LICENSE
      validadas juntas (validate_palette.js --pairs all). O aqua fica abaixo de 3:1: a tabela é a vista acessível. */
   var COR = {real: '#2a78d6', cogs: '#eb6834', prev: '#1baf7a'};
   var TEND = {linear: 'Tendência linear da receita', mm3: 'Média móvel de 3 meses da receita'};
+  var GMODOS = [['mes', 'Por mês'], ['mescli', 'Por mês e cliente'], ['cli', 'Por cliente']];
   var cartaoGrafico = function () {
-    return '<div class="card g-card"><div class="card-h"><h2>Receita e COGS por mês</h2><label class="g-ctl">Tendência <select data-tend>' +
-      [['linear', 'Linear'], ['mm3', 'Média móvel 3 meses'], ['nenhuma', 'Sem tendência']].map(function (o) { return '<option value="' + o[0] + '"' + (S.tend === o[0] ? ' selected' : '') + '>' + o[1] + '</option>'; }).join('') +
-      '</select></label><button class="btn-o g-ocultar" data-a="grafOcultar">Ocultar gráfico</button></div>' +
-      '<div class="g-leg"><span><i style="background:' + COR.real + '"></i>Receita realizada</span><span><i style="background:' + COR.prev + '"></i>Receita prevista</span><span><i style="background:' + COR.cogs + '"></i>COGS</span>' +
-      (TEND[S.tend] ? '<span class="g-leg-tend"><i class="g-lk' + (S.tend === 'linear' ? ' tr' : '') + '"></i>' + TEND[S.tend] + '</span>' : '') + '</div>' +
-      '<div id="graf" class="graf"></div><p class="nota">US$, com o risco de cada operação aplicado. Passe o mouse num mês para ver os valores; clique para abrir o mês na tabela abaixo. A tendência usa a receita total de cada mês (realizado + previsto); mês sem operação conta como zero.</p></div>';
+    var tit = S.gmodo === 'cli' ? 'Receita e COGS por cliente' : S.gmodo === 'mescli' ? 'Receita por mês e cliente' : 'Receita e COGS por mês';
+    var nota = S.gmodo === 'cli' ? 'US$, com o risco de cada operação aplicado, no período e nos filtros escolhidos. Passe o mouse num cliente para ver os valores; clique para filtrar por ele (clique de novo para tirar o filtro).'
+      : 'US$, com o risco de cada operação aplicado. Passe o mouse num mês para ver os valores; clique para abrir o mês na tabela abaixo. A tendência usa a receita total de cada mês (realizado + previsto); mês sem operação conta como zero.' + (S.gmodo === 'mescli' ? ' Cada cliente tem sempre a mesma cor.' : '');
+    return '<div class="card g-card"><div class="card-h"><h2>' + tit + '</h2>' +
+      '<div class="vis-tg g-modos" role="group" aria-label="Ver o gráfico">' + GMODOS.map(function (m) { return '<button class="' + (S.gmodo === m[0] ? 'on' : '') + '" data-gmodo="' + m[0] + '">' + m[1] + '</button>'; }).join('') + '</div>' +
+      (S.gmodo !== 'cli' ? '<label class="g-ctl">Tendência <select data-tend>' + [['linear', 'Linear'], ['mm3', 'Média móvel 3 meses'], ['nenhuma', 'Sem tendência']].map(function (o) { return '<option value="' + o[0] + '"' + (S.tend === o[0] ? ' selected' : '') + '>' + o[1] + '</option>'; }).join('') + '</select></label>' : '') +
+      '<button class="btn-o g-ocultar" data-a="grafOcultar">Ocultar gráfico</button></div>' +
+      '<div class="g-leg" id="g-leg"></div><div id="graf" class="graf"></div><p class="nota">' + nota + '</p></div>';
   };
   var mesSeg = function (m) { var y = Number(m.slice(0, 4)), mo = Number(m.slice(5, 7)) + 1; if (mo > 12) { mo = 1; y++; } return y + '-' + String(mo).padStart(2, '0'); };
   var passoBom = function (v) { var p = Math.pow(10, Math.floor(Math.log10(v))), n = v / p; return (n <= 1 ? 1 : n <= 2 ? 2 : n <= 2.5 ? 2.5 : n <= 5 ? 5 : 10) * p; };
@@ -467,16 +476,29 @@ https://github.com/nodeca/pako/blob/main/LICENSE
     var r = redondo ? Math.min(4, w / 2, h) : 0, b = yTop + h;
     return '<path d="M' + x + ',' + b + 'V' + (yTop + r) + (r ? 'A' + r + ',' + r + ' 0 0 1 ' + (x + r) + ',' + yTop : '') + 'H' + (x + w - r) + (r ? 'A' + r + ',' + r + ' 0 0 1 ' + (x + w) + ',' + (yTop + r) : '') + 'V' + b + 'Z" fill="' + cor + '"/>';
   };
-  var desenharGrafico = function (A) {
+  var desenharGrafico = function (A, C) {
     var box = $('#graf');
     if (!box) return;
+    box.style.minHeight = S.gmodo === 'cli' ? '0' : '';
+    if (S.gmodo === 'cli') return desenharClientes(box, A);
+    var porCli = S.gmodo === 'mescli', cores = porCli ? coresClientes(C) : null;
     var g = {};
     A.linhas.forEach(function (x) { var m = String(x.data).slice(0, 7); (g[m] = g[m] || []).push(x); });
     var ks = Object.keys(g).sort();
-    if (!ks.length) { box.innerHTML = '<p class="vazio">Nada no filtro.</p>'; return; }
+    if (!ks.length) { legenda([]); box.innerHTML = '<p class="vazio">Nada no filtro.</p>'; return; }
     var meses = [];
     for (var m = ks[0]; m <= ks[ks.length - 1]; m = mesSeg(m)) meses.push(m);
-    var dados = meses.map(function (k) { var t = soma(g[k] || []); t.k = k; return t; });
+    var presentes = {};
+    var dados = meses.map(function (k) {
+      var t = soma(g[k] || []); t.k = k;
+      if (porCli) {
+        var sg = {};
+        (g[k] || []).forEach(function (x) { var c = cores[x.o._ct.cliente || '—']; var s0 = sg[c.rot] || (sg[c.rot] = {rot: c.rot, cor: c.cor, ord: c.ord, v: 0}); s0.v += x.rU; });
+        t.segs = Object.keys(sg).map(function (r) { return sg[r]; }).sort(function (a, b) { return a.ord - b.ord; });
+        t.segs.forEach(function (s0) { presentes[s0.rot] = s0; });
+      }
+      return t;
+    });
     var W = Math.max(300, box.clientWidth), H = 310, mL = 58, mR = 8, mT = 26, mB = 30;
     var pw = W - mL - mR, ph = H - mT - mB;
     // tendência da receita total do mês: reta dos mínimos quadrados ou média móvel de 3 meses
@@ -487,26 +509,34 @@ https://github.com/nodeca/pako/blob/main/LICENSE
       var bb = sxx ? sxy / sxx : 0;
       tv = ys.map(function (v, i) { return ym + bb * (i - xm); });
     } else if (S.tend === 'mm3' && ys.length >= 3) tv = ys.map(function (v, i) { return i < 2 ? null : (ys[i] + ys[i - 1] + ys[i - 2]) / 3; });
-    var max = Math.max.apply(null, [1].concat(dados.map(function (t) { return Math.max(t.rU, t.cU); })).concat((tv || []).filter(function (v) { return v != null; })));
+    var max = Math.max.apply(null, [1].concat(dados.map(function (t) { return porCli ? t.rU : Math.max(t.rU, t.cU); })).concat((tv || []).filter(function (v) { return v != null; })));
     var passo = passoBom(max / 4), topo = Math.ceil(max / passo) * passo;
     var y = function (v) { return mT + ph - v / topo * ph; };
-    var band = pw / dados.length, bw = Math.max(3, Math.min(24, (band * 0.72 - 2) / 2));
+    var band = pw / dados.length, bw = porCli ? Math.max(4, Math.min(24, band * 0.5)) : Math.max(3, Math.min(24, (band * 0.72 - 2) / 2));
     var cada = Math.ceil(46 / band); // rótulo de mês a cada N meses quando a faixa é estreita
-    var s = '<svg class="g-svg" width="' + W + '" height="' + H + '" viewBox="0 0 ' + W + ' ' + H + '" role="img" aria-label="Receita e COGS por mês, em US$">';
+    var s = '<svg class="g-svg" width="' + W + '" height="' + H + '" viewBox="0 0 ' + W + ' ' + H + '" role="img" aria-label="' + (porCli ? 'Receita por mês e cliente' : 'Receita e COGS por mês') + ', em US$">';
     for (var v = 0; v <= topo + 1e-9; v += passo) {
       s += '<line class="g-grade' + (v === 0 ? ' base' : '') + '" x1="' + mL + '" x2="' + (W - mR) + '" y1="' + Math.round(y(v)) + '.5" y2="' + Math.round(y(v)) + '.5"/><text class="g-ty" x="' + (mL - 8) + '" y="' + (y(v) + 4) + '">' + fEixo(v) + '</text>';
     }
     s += '<text class="g-ty g-un" x="' + (mL - 8) + '" y="11">US$</text>';
     dados.forEach(function (t, i) {
-      var cx = mL + band * i + band / 2, x0 = cx - bw - 1, x1 = cx + 1;
-      var yR = y(t.rRU), yT = y(t.rU), temP = t.rPU > 0;
-      s += '<g class="g-mes" tabindex="0" data-i="' + i + '" aria-label="' + esc(fMes(t.k)) + ': receita ' + esc(fUSD(t.rU)) + ', COGS ' + esc(fUSD(t.cU)) + '">' +
-        '<rect class="g-bg" x="' + (mL + band * i + 1) + '" y="' + mT + '" width="' + Math.max(1, band - 2) + '" height="' + ph + '" rx="6"/>' +
-        coluna(x0, yR, bw, mT + ph - yR, COR.real, !temP) +
-        (temP ? coluna(x0, yT, bw, yR - yT - (t.rRU > 0 ? 2 : 0), COR.prev, true) : '') +
-        coluna(x1, y(t.cU), bw, mT + ph - y(t.cU), COR.cogs, true) +
-        (i % cada === 0 ? '<text class="g-tx" x="' + cx + '" y="' + (H - 10) + '">' + esc(MESES[Number(t.k.slice(5, 7)) - 1] + '/' + t.k.slice(2, 4)) + '</text>' : '') +
-        '</g>';
+      var cx = mL + band * i + band / 2, barras = '';
+      if (porCli) {
+        var acc = 0;
+        t.segs.forEach(function (s0, j) {
+          if (!(s0.v > 0)) return;
+          var yb = y(acc) - (acc > 0 ? 2 : 0), yt = y(acc + s0.v);
+          var topoSeg = !t.segs.slice(j + 1).some(function (z) { return z.v > 0; });
+          barras += coluna(cx - bw / 2, yt, bw, yb - yt, s0.cor, topoSeg).replace('<path ', '<path data-c="' + esc(s0.rot) + '" data-v="' + r4(s0.v) + '" ');
+          acc += s0.v;
+        });
+      } else {
+        var x0 = cx - bw - 1, x1 = cx + 1, yR = y(t.rRU), yT = y(t.rU), temP = t.rPU > 0;
+        barras = coluna(x0, yR, bw, mT + ph - yR, COR.real, !temP) + (temP ? coluna(x0, yT, bw, yR - yT - (t.rRU > 0 ? 2 : 0), COR.prev, true) : '') + coluna(x1, y(t.cU), bw, mT + ph - y(t.cU), COR.cogs, true);
+      }
+      s += '<g class="g-mes" tabindex="0" data-i="' + i + '" aria-label="' + esc(fMes(t.k)) + ': receita ' + esc(fUSD(t.rU)) + (porCli ? '' : ', COGS ' + esc(fUSD(t.cU))) + '">' +
+        '<rect class="g-bg" x="' + (mL + band * i + 1) + '" y="' + mT + '" width="' + Math.max(1, band - 2) + '" height="' + ph + '" rx="6"/>' + barras +
+        (i % cada === 0 ? '<text class="g-tx" x="' + cx + '" y="' + (H - 10) + '">' + esc(MESES[Number(t.k.slice(5, 7)) - 1] + '/' + t.k.slice(2, 4)) + '</text>' : '') + '</g>';
     });
     if (tv) {
       var pts = tv.map(function (v, i) { return v == null ? null : [mL + band * i + band / 2, y(v)]; }).filter(Boolean);
@@ -516,50 +546,129 @@ https://github.com/nodeca/pako/blob/main/LICENSE
     }
     s += '</svg>';
     box.innerHTML = s;
-    var lt = document.querySelector('.g-leg-tend');
-    if (lt) { lt.style.display = tv ? '' : 'none'; if (!tv) { var av = document.createElement('p'); av.className = 'nota g-sem-tend'; av.textContent = S.tend === 'mm3' ? 'A média móvel precisa de pelo menos 3 meses no filtro.' : 'A tendência precisa de pelo menos 2 meses no filtro.'; box.appendChild(av); } }
-    var tip = document.createElement('div');
-    tip.className = 'g-tip';
-    box.appendChild(tip);
-    var linha = function (cor, valor, rot, cls) {
-      var r = document.createElement('div'); r.className = 'g-tl';
-      var k = document.createElement('i'); k.style.background = cor || 'transparent'; if (cls) k.className = cls; r.appendChild(k);
-      var b = document.createElement('b'); b.textContent = valor; r.appendChild(b);
-      var sp = document.createElement('span'); sp.textContent = rot; r.appendChild(sp);
-      tip.appendChild(r);
-    };
-    var mostrar = function (i, px) {
+    var leg = porCli ? Object.keys(presentes).map(function (r) { return presentes[r]; }).sort(function (a, b) { return a.ord - b.ord; }).map(function (x) { return {cor: x.cor, rot: x.rot}; })
+      : [{cor: COR.real, rot: 'Receita realizada'}, {cor: COR.prev, rot: 'Receita prevista'}, {cor: COR.cogs, rot: 'COGS'}];
+    if (tv) leg.push({linha: 1, tr: S.tend === 'linear', rot: TEND[S.tend]});
+    legenda(leg);
+    if (!tv && TEND[S.tend]) { var av = document.createElement('p'); av.className = 'nota g-sem-tend'; av.textContent = S.tend === 'mm3' ? 'A média móvel precisa de pelo menos 3 meses no filtro.' : 'A tendência precisa de pelo menos 2 meses no filtro.'; box.appendChild(av); }
+    var T = dica(box);
+    var mostrar = function (i) {
       var t = dados[i];
-      tip.textContent = '';
-      var h4 = document.createElement('div'); h4.className = 'g-tt'; h4.textContent = fMes(t.k); tip.appendChild(h4);
-      linha(COR.real, fUSD(t.rRU), 'receita realizada');
-      linha(COR.prev, fUSD(t.rPU), 'receita prevista');
-      linha(COR.cogs, fUSD(t.cU), 'COGS');
-      linha('', fUSD(t.rU), 'receita total');
-      if (tv && tv[i] != null) linha('', fUSD(tv[i]), S.tend === 'linear' ? 'tendência linear' : 'média móvel 3 meses', 'g-lk' + (S.tend === 'linear' ? ' tr' : ''));
-      linha('', fUSD(t.rU - t.cU) + ' (' + margemTxt(t.rU, t.cU) + ')', 'margem');
-      linha('', String(t.n), 'operação(ões): ' + t.nR + ' real. · ' + t.nP + ' prev.' + (t.nF ? ' · ' + t.nF + ' fora' : ''));
-      tip.style.display = 'block';
-      var cx = mL + band * i + band / 2, tw = tip.offsetWidth;
-      tip.style.left = Math.max(0, cx + band / 2 + tw + 8 > W ? cx - band / 2 - tw - 4 : cx + band / 2 + 4) + 'px';
-      tip.style.top = mT + 'px';
+      T.inicio(fMes(t.k));
+      if (porCli) t.segs.forEach(function (s0) { T.linha(s0.cor, fUSD(s0.v), s0.rot); });
+      else { T.linha(COR.real, fUSD(t.rRU), 'receita realizada'); T.linha(COR.prev, fUSD(t.rPU), 'receita prevista'); T.linha(COR.cogs, fUSD(t.cU), 'COGS'); }
+      T.linha('', fUSD(t.rU), 'receita total');
+      if (tv && tv[i] != null) T.linha('', fUSD(tv[i]), S.tend === 'linear' ? 'tendência linear' : 'média móvel 3 meses', 'g-lk' + (S.tend === 'linear' ? ' tr' : ''));
+      if (!porCli) T.linha('', fUSD(t.rU - t.cU) + ' (' + margemTxt(t.rU, t.cU) + ')', 'margem');
+      T.linha('', String(t.n), 'operação(ões): ' + t.nR + ' real. · ' + t.nP + ' prev.' + (t.nF ? ' · ' + t.nF + ' fora' : ''));
+      var cx = mL + band * i + band / 2, tw = T.el.offsetWidth;
+      T.pos(Math.max(0, cx + band / 2 + tw + 8 > W ? cx - band / 2 - tw - 4 : cx + band / 2 + 4), mT);
     };
-    var esconder = function () { tip.style.display = 'none'; };
     box.querySelectorAll('.g-mes').forEach(function (el) {
       var i = Number(el.dataset.i);
-      el.addEventListener('pointerenter', function () { mostrar(i); });
-      el.addEventListener('pointerleave', esconder);
-      el.addEventListener('focus', function () { mostrar(i); });
-      el.addEventListener('blur', esconder);
       var abrir = function () {
         if (S.drill.niveis[0] === 'mes') { S.drill.abertos = {}; S.drill.abertos['/' + encodeURIComponent(dados[i].k)] = 1; }
         render();
         var alvo = document.querySelector('.t-dd tr.dd-n0.on') || document.querySelector('.t-dd');
         if (alvo && alvo.scrollIntoView) alvo.scrollIntoView({block: 'center'});
       };
-      el.addEventListener('click', abrir);
-      el.addEventListener('keydown', function (e) { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); abrir(); } });
+      T.ligar(el, function () { mostrar(i); }, abrir);
     });
+  };
+  /* barras horizontais por cliente: os clientes no eixo vertical, ordenados pela receita */
+  var barraH = function (x, yTop, w, h, cor, redondo) {
+    if (!(w > 0.5)) return '';
+    var r = redondo ? Math.min(4, w, h / 2) : 0;
+    return '<path d="M' + x + ',' + yTop + 'H' + (x + w - r) + (r ? 'A' + r + ',' + r + ' 0 0 1 ' + (x + w) + ',' + (yTop + r) : '') + 'V' + (yTop + h - r) + (r ? 'A' + r + ',' + r + ' 0 0 1 ' + (x + w - r) + ',' + (yTop + h) : '') + 'H' + x + 'Z" fill="' + cor + '"/>';
+  };
+  var desenharClientes = function (box, A) {
+    var g = {};
+    A.linhas.forEach(function (x) { var k = x.o._ct.cliente || '—'; (g[k] = g[k] || []).push(x); });
+    var ls = Object.keys(g).map(function (k) { var t = soma(g[k]); t.k = k; return t; }).sort(function (a, b) { return b.rU - a.rU || a.k.localeCompare(b.k, 'pt'); });
+    legenda([{cor: COR.real, rot: 'Receita realizada'}, {cor: COR.prev, rot: 'Receita prevista'}, {cor: COR.cogs, rot: 'COGS'}]);
+    if (!ls.length) { box.innerHTML = '<p class="vazio">Nada no filtro.</p>'; return; }
+    var W = Math.max(300, box.clientWidth), row = 52, bh = 16;
+    var maxLen = Math.max.apply(null, ls.map(function (t) { return t.k.length; }));
+    var mL = Math.min(Math.round(W * 0.34), Math.max(70, maxLen * 7 + 18)), mR = 92, mT = 6, mB = 26;
+    var H = mT + ls.length * row + mB, pw = Math.max(40, W - mL - mR);
+    var max = Math.max.apply(null, [1].concat(ls.map(function (t) { return Math.max(t.rU, t.cU); })));
+    var passo = passoBom(max / 4), topo = Math.ceil(max / passo) * passo;
+    var x = function (v) { return mL + v / topo * pw; };
+    var cabe = Math.max(4, Math.floor((mL - 18) / 7));
+    var s = '<svg class="g-svg" width="' + W + '" height="' + H + '" viewBox="0 0 ' + W + ' ' + H + '" role="img" aria-label="Receita e COGS por cliente, em US$">';
+    for (var v = 0; v <= topo + 1e-9; v += passo) {
+      s += '<line class="g-grade' + (v === 0 ? ' base' : '') + '" x1="' + Math.round(x(v)) + '.5" x2="' + Math.round(x(v)) + '.5" y1="' + mT + '" y2="' + (H - mB) + '"/><text class="g-tx" x="' + x(v) + '" y="' + (H - 8) + '">' + fEixo(v) + '</text>';
+    }
+    ls.forEach(function (t, i) {
+      var y0 = mT + i * row + (row - 2 * bh - 2) / 2, xR = x(t.rRU), xT = x(t.rU), temP = t.rPU > 0, gap = t.rRU > 0 ? 2 : 0;
+      var nome = t.k.length > cabe ? t.k.slice(0, cabe - 1) + '…' : t.k;
+      s += '<g class="g-cli' + (S.f.cliente === t.k ? ' on' : '') + '" tabindex="0" data-i="' + i + '" data-cli="' + esc(t.k) + '" aria-label="' + esc(t.k) + ': receita ' + esc(fUSD(t.rU)) + ', COGS ' + esc(fUSD(t.cU)) + '">' +
+        '<rect class="g-bg" x="2" y="' + (mT + i * row + 2) + '" width="' + (W - 4) + '" height="' + (row - 4) + '" rx="6"/>' +
+        '<text class="g-cy" x="' + (mL - 10) + '" y="' + (y0 + bh + 5) + '">' + esc(nome) + '</text>' +
+        barraH(mL, y0, xR - mL, bh, COR.real, !temP) + (temP ? barraH(xR + gap, y0, xT - xR - gap, bh, COR.prev, true) : '') +
+        barraH(mL, y0 + bh + 2, x(t.cU) - mL, bh, COR.cogs, true) +
+        '<text class="g-vl" x="' + (xT + 6) + '" y="' + (y0 + bh - 4) + '">US$ ' + fEixo(t.rU) + '</text></g>';
+    });
+    s += '</svg>';
+    box.innerHTML = s;
+    var T = dica(box);
+    box.querySelectorAll('.g-cli').forEach(function (el) {
+      var i = Number(el.dataset.i), t = ls[i];
+      T.ligar(el, function () {
+        var nC = t.n - t.nF;
+        T.inicio(t.k);
+        T.linha(COR.real, fUSD(t.rRU), 'receita realizada'); T.linha(COR.prev, fUSD(t.rPU), 'receita prevista'); T.linha(COR.cogs, fUSD(t.cU), 'COGS');
+        T.linha('', fUSD(t.rU), 'receita total');
+        T.linha('', fUSD(t.rU - t.cU) + ' (' + margemTxt(t.rU, t.cU) + ')', 'margem');
+        T.linha('', nC ? fUSD(t.rU / nC) : '—', 'receita por operação');
+        T.linha('', String(t.n), 'operação(ões): ' + t.nR + ' real. · ' + t.nP + ' prev.' + (t.nF ? ' · ' + t.nF + ' fora' : ''));
+        var tw = T.el.offsetWidth, th = T.el.offsetHeight, yb = mT + (i + 1) * row;
+        T.pos(Math.max(0, Math.min(W - tw, x(t.rU) + 12)), yb + th + 4 > H ? Math.max(0, mT + i * row - th - 4) : yb);
+      }, function () { S.f.cliente = S.f.cliente === t.k ? '' : t.k; render(); });
+    });
+  };
+  /* tooltip e legenda (texto sempre por textContent) */
+  var dica = function (box) {
+    var el = document.createElement('div'); el.className = 'g-tip'; box.appendChild(el);
+    var api = {el: el};
+    api.inicio = function (titulo) { el.textContent = ''; var h = document.createElement('div'); h.className = 'g-tt'; h.textContent = titulo; el.appendChild(h); el.style.display = 'block'; };
+    api.linha = function (cor, valor, rot, cls) {
+      var r = document.createElement('div'); r.className = 'g-tl';
+      var k = document.createElement('i'); k.style.background = cor || 'transparent'; if (cls) k.className = cls; r.appendChild(k);
+      var b = document.createElement('b'); b.textContent = valor; r.appendChild(b);
+      var sp = document.createElement('span'); sp.textContent = rot; r.appendChild(sp);
+      el.appendChild(r);
+    };
+    api.pos = function (l, t) { el.style.left = l + 'px'; el.style.top = t + 'px'; };
+    api.ligar = function (alvo, mostrar, clicar) {
+      var esconder = function () { el.style.display = 'none'; };
+      alvo.addEventListener('pointerenter', mostrar); alvo.addEventListener('pointerleave', esconder);
+      alvo.addEventListener('focus', mostrar); alvo.addEventListener('blur', esconder);
+      alvo.addEventListener('click', clicar);
+      alvo.addEventListener('keydown', function (e) { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); clicar(); } });
+    };
+    return api;
+  };
+  var legenda = function (itens) {
+    var el = $('#g-leg');
+    if (!el) return;
+    el.textContent = '';
+    itens.forEach(function (it) {
+      var sp = document.createElement('span'), i = document.createElement('i');
+      if (it.linha) i.className = 'g-lk' + (it.tr ? ' tr' : ''); else i.style.background = it.cor;
+      sp.appendChild(i); sp.appendChild(document.createTextNode(it.rot)); el.appendChild(sp);
+    });
+  };
+  /* cor fixa por cliente: ordem da receita total de todos os arquivos (sem filtro), para o filtro não trocar as cores */
+  var PAL_CLI = ['#2a78d6', '#eb6834', '#1baf7a', '#eda100', '#e87ba4', '#008300', '#6250d6', '#e34948'], COR_OUTROS = '#8A9095';
+  var coresClientes = function (C) {
+    var tot = {}, tudo = {noPer: function () { return true; }};
+    C.contratos.forEach(function (c) { tot[c.cliente || '—'] = tot[c.cliente || '—'] || 0; });
+    C.ops.forEach(function (o) { var v = valorOp(o, tudo), k = o._ct.cliente || '—'; tot[k] = (tot[k] || 0) + (v ? v.rU : 0); });
+    var ks = Object.keys(tot).sort(function (a, b) { return tot[b] - tot[a] || a.localeCompare(b, 'pt'); });
+    var muitos = ks.length > PAL_CLI.length, m = {};
+    ks.forEach(function (k, i) { m[k] = muitos && i >= PAL_CLI.length - 1 ? {cor: COR_OUTROS, rot: 'Outros clientes', ord: PAL_CLI.length - 1} : {cor: PAL_CLI[i], rot: k, ord: i}; });
+    return m;
   };
   var tRedim = null;
   window.addEventListener('resize', function () { clearTimeout(tRedim); tRedim = setTimeout(function () { if (S.tab === 'receita' && S.graf && $('#graf')) render(); }, 150); });
@@ -608,7 +717,7 @@ https://github.com/nodeca/pako/blob/main/LICENSE
     h += '<div class="tabs">' + tabs.map(function (t) { return '<button class="tab' + (S.tab === t[0] ? ' on' : '') + '" data-tab="' + t[0] + '">' + esc(t[1]) + '</button>'; }).join('') + '</div>';
     h += telas[S.tab] ? telas[S.tab](C, F, A) : '';
     app.innerHTML = h;
-    if (S.tab === 'receita' && S.graf) desenharGrafico(A);
+    if (S.tab === 'receita' && S.graf) desenharGrafico(A, C);
     var on = app.querySelector('.tab.on'); if (on) { var tb = on.parentNode; tb.scrollLeft = on.offsetLeft - 20; }
   };
   var linhaValores = function (t) {
@@ -767,8 +876,9 @@ https://github.com/nodeca/pako/blob/main/LICENSE
 
   /* ---------- eventos ---------- */
   document.addEventListener('click', function (e) {
-    var t = e.target.closest('[data-a],[data-tab],[data-ct],[data-rm],[data-dd],[data-ddrm],[data-ddmostrar]');
+    var t = e.target.closest('[data-a],[data-tab],[data-ct],[data-rm],[data-dd],[data-ddrm],[data-ddmostrar],[data-gmodo]');
     if (!t) return;
+    if (t.dataset.gmodo) { S.gmodo = t.dataset.gmodo; try { localStorage.setItem('earlger:gmodo', S.gmodo); } catch (x) {} render(); return; }
     if (t.dataset.dd != null) { var D = S.drill; if (D.abertos[t.dataset.dd]) delete D.abertos[t.dataset.dd]; else D.abertos[t.dataset.dd] = 1; render(); return; }
     if (t.dataset.ddrm != null) { S.drill.niveis.splice(Number(t.dataset.ddrm), 1); gravarNiveis(); render(); return; }
     if (t.dataset.ddmostrar != null) { S.drill.mostrar = Number(t.dataset.ddmostrar); render(); return; }

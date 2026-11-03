@@ -29,11 +29,15 @@ Tudo é **realizado + previsto**, com o risco de cada operação aplicado:
   - **Níveis:** o padrão é **Mês › Cliente › Sonda › Operações › Itens PPU**. Em "Abrir por" dá para trocar cada nível, tirar (×) ou acrescentar (**＋ nível**). As opções são mês, ano, cliente, contrato, região, tipo de contrato, sonda, poço, tipo de operação e situação. A escolha fica guardada.
   - **Abrir e fechar:** clique numa linha para abrir o próximo nível. Depois do último nível aparecem as operações, com data, poço, tipo, sonda, contrato, SO e situação. Clicando na operação, aparecem os **itens PPU** dela: item, descrição, quantidade × valor unitário e receita em US$ (com o risco da operação; "bruto" quando há risco), e o % da operação. **Mostrar até** abre tudo até o nível escolhido de uma vez, inclusive até os itens PPU.
   - **Colunas, só em US$:** operações (realizadas, previstas, fora), receita (realizado · previsto), COGS, margem e receita por operação (sem as de risco 100%). A linha de total fica no fim.
-  - **Gráfico por mês**, em cima da tabela (**Ocultar gráfico** esconde, e a escolha fica guardada):
-    - receita realizada e prevista empilhadas, com o COGS ao lado; os meses sem operação aparecem vazios, na ordem;
-    - **tendência** da receita total do mês: **linear** (reta dos mínimos quadrados), **média móvel de 3 meses** ou sem tendência. Mês sem operação conta como zero;
-    - passando o mouse num mês aparecem os valores, inclusive o da tendência; clicando, o mês abre na tabela;
-    - as cores (azul, verde-água e laranja) foram conferidas para daltonismo.
+  - **Gráfico**, em cima da tabela (**Ocultar gráfico** esconde; a escolha fica guardada). Três formas de ver:
+    - **Por mês:** receita realizada e prevista empilhadas, com o COGS ao lado;
+    - **Por mês e cliente:** a receita de cada mês empilhada por cliente;
+    - **Por cliente:** barras horizontais, com os clientes no eixo vertical, da maior receita para a menor. Cada cliente tem a receita (realizada + prevista) e o COGS, com o valor na ponta. Clicando no cliente, a página toda filtra por ele.
+  - **Detalhes dos gráficos:**
+    - **meses vazios:** nas formas por mês, aparecem na ordem, sem barra;
+    - **tendência da receita total do mês** (formas por mês): **linear** (reta dos mínimos quadrados), **média móvel de 3 meses** ou sem tendência; mês sem operação conta como zero;
+    - **mouse e clique:** passando o mouse aparecem os valores (inclusive o da tendência); clicando num mês, ele abre na tabela;
+    - **cores dos clientes:** cada cliente tem sempre a mesma cor, pela receita total de todos os arquivos, e o filtro não troca as cores. Com mais de 8 clientes, os menores ficam juntos em "Outros clientes". As cores foram conferidas para daltonismo.
   - **Valores em R$:** saíram desta aba e dos indicadores. Continuam nas abas Contratos, Itens PPU e Operações e no Excel.
 - **Itens PPU:** contratado, consumido, saldo, % usado, a realizar, receita e valor vigente, por contrato e item.
 - **Químicas** e **Casing equipment:** planejado × lançado por SAP, com o COGS, o número de operações e os contratos.
@@ -69,11 +73,11 @@ Tudo é **realizado + previsto**, com o risco de cada operação aplicado:
   - `realizado` traz `data`, `ppu` com os valores, `quimicas`, `casing`, `cogs` e `pessoal`; `receita` é a receita bruta do realizado.
 - Os dados ficam em `localStorage` com o prefixo `earlger:`.
 - **Testes de ponta a ponta:**
-  - dois engenheiros geram arquivos no app de Engenharia, e o Gerencial carrega por arquivos, `.zip` e pasta. Inclui os indicadores em US$, o drill-down (níveis, abrir/fechar, trocar, tirar e acrescentar nível, guardar a escolha, itens PPU somando a receita da operação), o gráfico por mês (ocultar/mostrar, tooltip) e o filtro por mês (50 verificações);
-  - o teste BP (`../engenharia/teste_bp/e2e_bp.js`) confere o Gerencial contra os totais da planilha do BP: receita, COGS, margem, operações fora, cada mês do drill-down e do gráfico, os itens PPU, a tendência linear e a média móvel, o filtro por mês, aba Operações e Excel.
+  - dois engenheiros geram arquivos no app de Engenharia, e o Gerencial carrega por arquivos, `.zip` e pasta. Inclui os indicadores em US$, o drill-down (níveis, abrir/fechar, trocar, tirar e acrescentar nível, guardar a escolha, itens PPU somando a receita da operação), o gráfico (por mês, por mês e cliente e por cliente; ocultar/mostrar; tooltip; cores fixas por cliente; clicar no cliente filtra) e o filtro por mês (60 verificações);
+  - o teste BP (`../engenharia/teste_bp/e2e_bp.js`) confere o Gerencial contra os totais da planilha do BP: receita, COGS, margem, operações fora, cada mês do drill-down e do gráfico, os itens PPU, a tendência linear e a média móvel, as formas por cliente, o filtro por mês, aba Operações e Excel.
 
   ```bash
   node tests/e2e_gerencial.js ../engenharia/EARL_Engenharia.html EARL_Gerencial.html [pasta-das-telas]
   ```
 
-- Versão: `EARL Gerencial g5`.
+- Versão: `EARL Gerencial g6`.
