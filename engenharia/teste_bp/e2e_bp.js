@@ -236,8 +236,17 @@ const usd = v => 'US$ ' + v.toLocaleString('pt-BR', {minimumFractionDigits: 2, m
   await p.click('.t-dd tr.dd-g:has-text("out/2026")');
   await p.click('.t-dd tr.dd-g.dd-n1:has-text("BP")');
   await p.click('.t-dd tr.dd-g.dd-n2:has-text("NS-39")');
-  const opsOut = await p.$$eval('.t-dd tbody tr.dd-op', l => l.map(r => r.cells[0].textContent.slice(0, 10) + (r.classList.contains('fora') ? ' fora' : '')));
+  const opsOut = await p.$$eval('.t-dd tbody tr.dd-op', l => l.map(r => r.cells[0].textContent.replace(/^[▸▾]/, '').slice(0, 10) + (r.classList.contains('fora') ? ' fora' : '')));
   conf(opsOut.join() === '01/10/2026,15/10/2026 fora,28/10/2026,28/10/2026 fora' || opsOut.join() === '01/10/2026,15/10/2026 fora,28/10/2026 fora,28/10/2026', 'out/2026 › BP › NS-39: as 4 operações, com a LCP e a DISPUTA SPACER marcadas “fora”', opsOut);
+  const sIt = pl.find(o => o.desc === '13 5/8" Intermed' && o.risco === 0), sFora = pl.find(o => o.desc === '13 5/8" Intermed' && o.risco >= 1);
+  const itensDe = async sel => { await p.click(sel); return p.$$eval('.t-dd tbody tr', l => { const r = []; let dentro = false; l.forEach(x => { if (x.classList.contains('dd-op')) dentro = x.classList.contains('on'); else if (dentro && x.classList.contains('dd-it')) r.push([x.cells[0].innerText.replace(/\s+/g, ' ').trim(), x.cells[2].innerText.replace(/\s+/g, ' ').trim()]); }); return r; }); };
+  let it9 = await itensDe('.t-dd tr.dd-op:not(.fora):has-text("28/10/2026")');
+  const somaIt = l => l.reduce((a, x) => a + valor(x[1].split('bruto')[0]), 0);
+  conf(it9.length === 18 && perto(somaIt(it9), sIt.receita, 0.05) && it9.some(x => /^2\.1 · Tuned Defense Spacer 11\.970 lbr × US\$ 34,91$/.test(x[0])), 'item PPU: a 13 5/8" Intermed abre nos 18 itens, que somam ' + usd(sIt.receita) + ' (= planilha)', [it9.length, somaIt(it9)]);
+  await p.click('.t-dd tr.dd-op.on');
+  const itF = await itensDe('.t-dd tr.dd-op.fora:has-text("28/10/2026")');
+  conf(itF.length === 7 && itF.every(x => /^US\$ 0,00 bruto US\$/.test(x[1])) && perto(itF.reduce((a, x) => a + valor(x[1].split('bruto')[1]), 0), sFora.receita, 0.05), 'item PPU da DISPUTA SPACER (risco 100%): 7 itens com US$ 0,00 e o valor bruto (= planilha ' + usd(sFora.receita) + ')', itF.slice(0, 2));
+  await p.click('.t-dd tr.dd-op.on');
   await foto(p, 'bp6b_drill');
   // filtro por mês: set/2026 a out/2026
   await p.fill('[data-f="de"]', '2026-09');
@@ -247,16 +256,25 @@ const usd = v => 'US$ ' + v.toLocaleString('pt-BR', {minimumFractionDigits: 2, m
   await p.click('[data-a="limparf"]');
   // gráfico por mês: um grupo por mês, de ago/2026 a mai/2027 (fev/2027 vazio), receita e COGS = planilha
   conf(!(await p.locator('.k-rec-brl').count()) && perto(valor(await txt(p, '.k-rec-op b')), PL.rec / pl.filter(o => o.risco < 1).length), 'gerencial: sem cartão em R$; receita por operação = planilha', await txt(p, '.k-rec-op b'));
-  await p.click('[data-vis="grafico"]');
   await p.waitForSelector('.g-svg');
   const grupos = await p.$$eval('.g-mes', l => l.map(g => g.getAttribute('aria-label')));
   const esperado = [];
   for (let m = '2026-08'; m <= '2027-05'; m = (Number(m.slice(5)) === 12 ? (Number(m.slice(0, 4)) + 1) + '-01' : m.slice(0, 5) + String(Number(m.slice(5)) + 1).padStart(2, '0'))) esperado.push(m);
   const difG = esperado.map((m, i) => { const e = porMesPl[m] || {rec: 0, cogs: 0}; const lb = grupos[i] || ''; const mm = /^(\w+\/\d{4}): receita (US\$ [\d.,]+), COGS (US\$ [\d.,]+)$/.exec(lb); const rot = MES[Number(m.slice(5)) - 1] + '/' + m.slice(0, 4); return mm && mm[1] === rot && perto(valor(mm[2]), e.rec) && perto(valor(mm[3]), e.cogs) ? null : {m, e, lb}; }).filter(Boolean);
   conf(grupos.length === 10 && !difG.length, 'gráfico por mês: 10 meses (fev/2027 vazio), receita e COGS de cada mês = planilha', difG.length ? difG : grupos.length);
-  await p.locator('.g-mes').nth(2).hover();
+  const yMes = esperado.map(m => (porMesPl[m] || {rec: 0}).rec);
+  const nM = yMes.length, xm = (nM - 1) / 2, ym = yMes.reduce((a, v) => a + v, 0) / nM;
+  const bM = yMes.reduce((a, v, i) => a + (i - xm) * (v - ym), 0) / yMes.reduce((a, v, i) => a + (i - xm) * (i - xm), 0);
+  const tLin = (await p.getAttribute('.g-tend', 'data-v')).split(';').map(Number);
+  conf(tLin.length === 10 && tLin.every((v, i) => perto(v, ym + bM * (i - xm), 0.01)) && /Tendência linear da receita/.test(await txt(p, '.g-leg')), 'tendência linear: reta dos mínimos quadrados da receita mensal da planilha (de ' + usd(tLin[0]) + ' a ' + usd(tLin[9]) + ')', tLin);
+  await p.locator('.g-mes').nth(3).hover();
+  conf(/US\$ [\d.,]+ tendência linear/.test(await txt(p, '.g-tip')), 'o tooltip mostra o valor da tendência no mês', await txt(p, '.g-tip'));
   await foto(p, 'bp6c_grafico');
-  await p.click('[data-vis="tabela"]');
+  await p.selectOption('[data-tend]', 'mm3');
+  await p.waitForSelector('.g-tdot');
+  const tMm = (await p.getAttribute('.g-tend', 'data-v')).split(';');
+  conf(tMm[0] === '' && tMm[1] === '' && tMm.slice(2).every((v, i) => perto(Number(v), (yMes[i] + yMes[i + 1] + yMes[i + 2]) / 3, 0.01)) && await p.locator('.g-tdot').count() === 8, 'média móvel de 3 meses: 8 pontos (do 3º mês em diante) = média da planilha', tMm);
+  await p.selectOption('[data-tend]', 'linear');
   await p.click('.tab[data-tab="ops"]');
   const linhas = await p.locator('.t-ops tbody tr').count();
   const foraG = await p.locator('.t-ops tbody tr:has-text("fora (risco 100%)")').count();

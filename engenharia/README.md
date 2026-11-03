@@ -124,7 +124,7 @@ node teste_bp/e2e_bp.js Contrato_BP_Teste_EARL.xlsx EARL_Engenharia_BP_teste.htm
   - só o contrato BP fica ativo; os outros contratos do EARL vão para "arquivados";
   - os dados guardados no navegador só valem se forem desta mesma versão do teste (marca `testeBP`);
   - sem espaço no navegador, ou com o armazenamento bloqueado, o teste abre com os dados da planilha mesmo assim, e a etiqueta avisa que as alterações não ficam salvas.
-- **Verificação:** o `e2e_bp.js` (43 verificações) confere, operação por operação, a receita, a receita final, o COGS, o COGS final, o risco, a situação e o homem-dia contra os totais da própria planilha. Confere também o painel da página inicial (com a receita por operação), a aba do contrato, uma alteração salva, o navegador sem espaço, dados de versão anterior, o armazenamento bloqueado, o arquivo do gerencial e o EARL Gerencial com esse arquivo, incluindo cada mês do drill-down e do gráfico, o filtro por mês e o Excel. Na pasta de saída fica o arquivo do gerencial do BP.
+- **Verificação:** o `e2e_bp.js` (48 verificações) confere, operação por operação, a receita, a receita final, o COGS, o COGS final, o risco, a situação e o homem-dia contra os totais da própria planilha. Confere também o painel da página inicial (com a receita por operação), a aba do contrato, uma alteração salva, o navegador sem espaço, dados de versão anterior, o armazenamento bloqueado, o arquivo do gerencial e o EARL Gerencial com esse arquivo, incluindo cada mês do drill-down e do gráfico, os itens PPU, a tendência, o filtro por mês e o Excel. Na pasta de saída fica o arquivo do gerencial do BP.
 
 ## Para quem mexe no código
 

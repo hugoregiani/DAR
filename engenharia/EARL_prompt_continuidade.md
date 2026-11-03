@@ -312,6 +312,23 @@ Pedido do Hugo: tirar a coluna de receita em R$ e deixar só os valores em dóla
 - **Mantidos:** os valores em R$ continuam nas abas Contratos, Itens PPU e Operações e no Excel.
 - **Testes:** `e2e_gerencial` 46 (cartões, só US$, gráfico, tooltip, guardar a escolha, clique abre a tabela); `e2e_bp` 43 (10 meses no gráfico, fev/2027 vazio, receita e COGS de cada mês = planilha; receita/operação = planilha).
 
+### EARL Gerencial g5 (03/11/2026): drill-down até o item PPU e gráfico sempre visível com tendência
+
+Pedido do Hugo: o drill-down deve ir até o item PPU; e ele não viu o gráfico de barras (estava atrás da chave "Tabela | Gráfico"); quer o gráfico com curva de tendência.
+
+- **Item PPU:**
+  - **Linha da operação:** `linhaOp(x, d, cam)` cria a linha com `data-dd` = caminho + `/op:<id>` (abre e fecha como os grupos).
+  - **Itens:** `itensOp(x)` usa o PPU do realizado (ou do previsto): `valorUsd`, ou quantidade × `usd`, ou o valor do contrato. Multiplica pelo fator de risco, então a soma dá a receita da operação. Ordem: valor decrescente.
+  - **Linha do item:** `tr.dd-it` com item, descrição, quantidade × valor unitário, receita (com "bruto" se houver risco) e % da operação.
+  - **Mostrar até:** ganhou "Itens PPU" (`data-ddmostrar = niveis.length + 1`). O cabeçalho termina em "› Operação › Item PPU".
+- **Gráfico:**
+  - **Cartão próprio:** saiu a chave Tabela/Gráfico (`S.vis`). `cartaoGrafico()` fica sempre em cima da tabela; `S.graf` (`earlger:graf`) liga "Ocultar gráfico" / "Mostrar gráfico por mês". Clique no mês abre o mês na tabela e rola até ele.
+  - **Tendência** (`S.tend`, `earlger:tend`): `linear` (mínimos quadrados sobre a receita total de cada mês, com mês vazio = 0) ou `mm3` (média móvel de 3 meses, do 3º mês em diante, com pontos) ou `nenhuma`.
+  - **Desenho:** linha de 2px na cor do texto (tracejada na linear) com `clipPath` na área do gráfico; `data-v` guarda os valores para os testes. A legenda tem a chave de linha e some, com aviso, quando há menos de 2 (ou 3) meses. O tooltip mostra o valor da tendência.
+- **Testes:**
+  - `e2e_gerencial` 50: itens PPU somam a operação; ocultar e mostrar o gráfico e guardar a escolha; legenda sem tendência com 1 mês.
+  - `e2e_bp` 48: 13 5/8" Intermed = 18 itens = US$ 827.061,86; DISPUTA SPACER = 7 itens a US$ 0,00 com o bruto; a linear = regressão calculada da planilha; a média móvel = médias da planilha.
+
 ---
 
 ## 4. Última mudança: v115 (Inventário a bordo: "Movimentar material" em cada contentor e na sacaria, em todas as categorias; Logística: desfazer a divisão da tesoura)

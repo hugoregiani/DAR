@@ -84,6 +84,19 @@ details.ajuda summary{cursor:pointer;font-weight:700;color:var(--ink)}
 tr.fora td{color:var(--ink-3)}
 .card-h{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:6px}
 .card-h h2{margin:0;flex:1}
+.g-card{margin-bottom:14px}
+.g-ctl{display:inline-flex;align-items:center;gap:6px;font-size:10.5px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--ink-3)}
+.g-ctl select{border:1px solid var(--line-2);border-radius:10px;padding:5px 8px;background:#fff;font:inherit;font-size:12.5px;letter-spacing:0;text-transform:none;color:var(--ink);font-weight:400}
+.g-ocultar,.g-mostrar{font-size:12px;padding:5px 10px}
+.g-leg i.g-lk,.g-tl i.g-lk{width:16px;height:0;border-radius:0;border-top:2px solid var(--ink);background:transparent!important}
+.g-leg i.g-lk.tr,.g-tl i.g-lk.tr{border-top-style:dashed}
+.g-tend{fill:none;stroke:var(--ink);stroke-width:2;stroke-linecap:round;stroke-linejoin:round;pointer-events:none}
+.g-tend.tr{stroke-dasharray:6 5}
+.g-tdot{fill:var(--ink);stroke:#fff;stroke-width:2;pointer-events:none}
+.t-dd tr.dd-op[data-dd]{cursor:pointer}
+.t-dd tr.dd-op[data-dd]:hover td{background:#FAFBFB}
+.t-dd tr.dd-it td{font-size:12px;color:var(--ink-2);background:#FCFCFC}
+.t-dd tr.dd-it td b{color:var(--ink)}
 .vis-tg{display:inline-flex;background:var(--soft);border:1px solid var(--line);border-radius:999px;padding:3px}
 .vis-tg button{border:0;background:transparent;border-radius:999px;padding:5px 12px;font:inherit;font-size:12.5px;font-weight:600;color:var(--ink-2);cursor:pointer}
 .vis-tg button.on{background:#fff;color:var(--ink);box-shadow:0 1px 2px rgba(0,0,0,.12)}
@@ -179,7 +192,7 @@ https://github.com/nodeca/pako/blob/main/LICENSE
    Para cada contrato vale o arquivo mais novo. Tudo fica neste navegador (localStorage, prefixo earlger:). */
 (function () {
   'use strict';
-  var VERSAO = 'EARL Gerencial g4';
+  var VERSAO = 'EARL Gerencial g5';
   var CHAVE = 'earlger:pacotes_v1';
   var $ = function (s) { return document.querySelector(s); };
   var esc = function (v) { return String(v == null ? '' : v).replace(/[&<>"']/g, function (c) { return {'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'}[c]; }); };
@@ -194,10 +207,10 @@ https://github.com/nodeca/pako/blob/main/LICENSE
   var hojeTxt = function () { var d = new Date(), p = function (n) { return String(n).padStart(2, '0'); }; return d.getFullYear() + '-' + p(d.getMonth() + 1) + '-' + p(d.getDate()); };
   var r4 = function (v) { return Math.round(v * 10000) / 10000; };
 
-  var S = {pacotes: [], tab: 'receita', f: {de: '', ate: '', cliente: '', contrato: '', regiao: '', tipo: '', busca: ''}, soComConsumo: true, msg: null, drill: {niveis: ['mes', 'cliente', 'sonda'], abertos: {}, mostrar: null}, vis: 'tabela'};
+  var S = {pacotes: [], tab: 'receita', f: {de: '', ate: '', cliente: '', contrato: '', regiao: '', tipo: '', busca: ''}, soComConsumo: true, msg: null, drill: {niveis: ['mes', 'cliente', 'sonda'], abertos: {}, mostrar: null}, graf: true, tend: 'linear'};
   try { S.pacotes = JSON.parse(localStorage.getItem(CHAVE) || '[]') || []; } catch (e) { S.pacotes = []; }
   try { var t0 = localStorage.getItem('earlger:tab'); if (t0) S.tab = t0; } catch (e) {}
-  try { if (localStorage.getItem('earlger:vis') === 'grafico') S.vis = 'grafico'; } catch (e) {}
+  try { if (localStorage.getItem('earlger:graf') === 'oculto') S.graf = false; var t1 = localStorage.getItem('earlger:tend'); if (t1 === 'linear' || t1 === 'mm3' || t1 === 'nenhuma') S.tend = t1; } catch (e) {}
   try { var n0 = JSON.parse(localStorage.getItem('earlger:drill') || 'null'); if (Array.isArray(n0) && n0.length) S.drill.niveis = n0; } catch (e) {}
   var gravar = function () {
     try { localStorage.setItem(CHAVE, JSON.stringify(S.pacotes)); return true; }
@@ -437,7 +450,15 @@ https://github.com/nodeca/pako/blob/main/LICENSE
      Receita: realizado + previsto empilhados; COGS ao lado. Cores: 3 primeiras do palette de referência,
      validadas juntas (validate_palette.js --pairs all). O aqua fica abaixo de 3:1: a tabela é a vista acessível. */
   var COR = {real: '#2a78d6', cogs: '#eb6834', prev: '#1baf7a'};
-  var visTg = function () { return '<div class="vis-tg" role="group" aria-label="Visualização"><button class="' + (S.vis !== 'grafico' ? 'on' : '') + '" data-vis="tabela">Tabela</button><button class="' + (S.vis === 'grafico' ? 'on' : '') + '" data-vis="grafico">Gráfico por mês</button></div>'; };
+  var TEND = {linear: 'Tendência linear da receita', mm3: 'Média móvel de 3 meses da receita'};
+  var cartaoGrafico = function () {
+    return '<div class="card g-card"><div class="card-h"><h2>Receita e COGS por mês</h2><label class="g-ctl">Tendência <select data-tend>' +
+      [['linear', 'Linear'], ['mm3', 'Média móvel 3 meses'], ['nenhuma', 'Sem tendência']].map(function (o) { return '<option value="' + o[0] + '"' + (S.tend === o[0] ? ' selected' : '') + '>' + o[1] + '</option>'; }).join('') +
+      '</select></label><button class="btn-o g-ocultar" data-a="grafOcultar">Ocultar gráfico</button></div>' +
+      '<div class="g-leg"><span><i style="background:' + COR.real + '"></i>Receita realizada</span><span><i style="background:' + COR.prev + '"></i>Receita prevista</span><span><i style="background:' + COR.cogs + '"></i>COGS</span>' +
+      (TEND[S.tend] ? '<span class="g-leg-tend"><i class="g-lk' + (S.tend === 'linear' ? ' tr' : '') + '"></i>' + TEND[S.tend] + '</span>' : '') + '</div>' +
+      '<div id="graf" class="graf"></div><p class="nota">US$, com o risco de cada operação aplicado. Passe o mouse num mês para ver os valores; clique para abrir o mês na tabela abaixo. A tendência usa a receita total de cada mês (realizado + previsto); mês sem operação conta como zero.</p></div>';
+  };
   var mesSeg = function (m) { var y = Number(m.slice(0, 4)), mo = Number(m.slice(5, 7)) + 1; if (mo > 12) { mo = 1; y++; } return y + '-' + String(mo).padStart(2, '0'); };
   var passoBom = function (v) { var p = Math.pow(10, Math.floor(Math.log10(v))), n = v / p; return (n <= 1 ? 1 : n <= 2 ? 2 : n <= 2.5 ? 2.5 : n <= 5 ? 5 : 10) * p; };
   var fEixo = function (v) { return v >= 1e6 ? nf(0, 1)(v / 1e6) + ' mi' : v >= 1e3 ? nf(0, 1)(v / 1e3) + ' mil' : nf(0, 0)(v); };
@@ -458,7 +479,15 @@ https://github.com/nodeca/pako/blob/main/LICENSE
     var dados = meses.map(function (k) { var t = soma(g[k] || []); t.k = k; return t; });
     var W = Math.max(300, box.clientWidth), H = 310, mL = 58, mR = 8, mT = 26, mB = 30;
     var pw = W - mL - mR, ph = H - mT - mB;
-    var max = Math.max.apply(null, [1].concat(dados.map(function (t) { return Math.max(t.rU, t.cU); })));
+    // tendência da receita total do mês: reta dos mínimos quadrados ou média móvel de 3 meses
+    var ys = dados.map(function (t) { return t.rU; }), tv = null;
+    if (S.tend === 'linear' && ys.length >= 2) {
+      var n = ys.length, xm = (n - 1) / 2, ym = ys.reduce(function (a, v) { return a + v; }, 0) / n, sxy = 0, sxx = 0;
+      ys.forEach(function (v, i) { sxy += (i - xm) * (v - ym); sxx += (i - xm) * (i - xm); });
+      var bb = sxx ? sxy / sxx : 0;
+      tv = ys.map(function (v, i) { return ym + bb * (i - xm); });
+    } else if (S.tend === 'mm3' && ys.length >= 3) tv = ys.map(function (v, i) { return i < 2 ? null : (ys[i] + ys[i - 1] + ys[i - 2]) / 3; });
+    var max = Math.max.apply(null, [1].concat(dados.map(function (t) { return Math.max(t.rU, t.cU); })).concat((tv || []).filter(function (v) { return v != null; })));
     var passo = passoBom(max / 4), topo = Math.ceil(max / passo) * passo;
     var y = function (v) { return mT + ph - v / topo * ph; };
     var band = pw / dados.length, bw = Math.max(3, Math.min(24, (band * 0.72 - 2) / 2));
@@ -479,14 +508,22 @@ https://github.com/nodeca/pako/blob/main/LICENSE
         (i % cada === 0 ? '<text class="g-tx" x="' + cx + '" y="' + (H - 10) + '">' + esc(MESES[Number(t.k.slice(5, 7)) - 1] + '/' + t.k.slice(2, 4)) + '</text>' : '') +
         '</g>';
     });
+    if (tv) {
+      var pts = tv.map(function (v, i) { return v == null ? null : [mL + band * i + band / 2, y(v)]; }).filter(Boolean);
+      s += '<clipPath id="g-clip"><rect x="' + mL + '" y="' + mT + '" width="' + pw + '" height="' + ph + '"/></clipPath>' +
+        '<path class="g-tend' + (S.tend === 'linear' ? ' tr' : '') + '" clip-path="url(#g-clip)" data-v="' + tv.map(function (v) { return v == null ? '' : r4(v); }).join(';') + '" d="' + pts.map(function (p, i) { return (i ? 'L' : 'M') + p[0].toFixed(1) + ',' + p[1].toFixed(1); }).join('') + '"/>' +
+        (S.tend === 'mm3' ? pts.map(function (p) { return '<circle class="g-tdot" cx="' + p[0].toFixed(1) + '" cy="' + p[1].toFixed(1) + '" r="4"/>'; }).join('') : '');
+    }
     s += '</svg>';
     box.innerHTML = s;
+    var lt = document.querySelector('.g-leg-tend');
+    if (lt) { lt.style.display = tv ? '' : 'none'; if (!tv) { var av = document.createElement('p'); av.className = 'nota g-sem-tend'; av.textContent = S.tend === 'mm3' ? 'A média móvel precisa de pelo menos 3 meses no filtro.' : 'A tendência precisa de pelo menos 2 meses no filtro.'; box.appendChild(av); } }
     var tip = document.createElement('div');
     tip.className = 'g-tip';
     box.appendChild(tip);
-    var linha = function (cor, valor, rot) {
+    var linha = function (cor, valor, rot, cls) {
       var r = document.createElement('div'); r.className = 'g-tl';
-      var k = document.createElement('i'); k.style.background = cor || 'transparent'; r.appendChild(k);
+      var k = document.createElement('i'); k.style.background = cor || 'transparent'; if (cls) k.className = cls; r.appendChild(k);
       var b = document.createElement('b'); b.textContent = valor; r.appendChild(b);
       var sp = document.createElement('span'); sp.textContent = rot; r.appendChild(sp);
       tip.appendChild(r);
@@ -499,6 +536,7 @@ https://github.com/nodeca/pako/blob/main/LICENSE
       linha(COR.prev, fUSD(t.rPU), 'receita prevista');
       linha(COR.cogs, fUSD(t.cU), 'COGS');
       linha('', fUSD(t.rU), 'receita total');
+      if (tv && tv[i] != null) linha('', fUSD(tv[i]), S.tend === 'linear' ? 'tendência linear' : 'média móvel 3 meses', 'g-lk' + (S.tend === 'linear' ? ' tr' : ''));
       linha('', fUSD(t.rU - t.cU) + ' (' + margemTxt(t.rU, t.cU) + ')', 'margem');
       linha('', String(t.n), 'operação(ões): ' + t.nR + ' real. · ' + t.nP + ' prev.' + (t.nF ? ' · ' + t.nF + ' fora' : ''));
       tip.style.display = 'block';
@@ -514,17 +552,17 @@ https://github.com/nodeca/pako/blob/main/LICENSE
       el.addEventListener('focus', function () { mostrar(i); });
       el.addEventListener('blur', esconder);
       var abrir = function () {
-        S.vis = 'tabela';
-        try { localStorage.setItem('earlger:vis', 'tabela'); } catch (x) {}
         if (S.drill.niveis[0] === 'mes') { S.drill.abertos = {}; S.drill.abertos['/' + encodeURIComponent(dados[i].k)] = 1; }
         render();
+        var alvo = document.querySelector('.t-dd tr.dd-n0.on') || document.querySelector('.t-dd');
+        if (alvo && alvo.scrollIntoView) alvo.scrollIntoView({block: 'center'});
       };
       el.addEventListener('click', abrir);
       el.addEventListener('keydown', function (e) { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); abrir(); } });
     });
   };
   var tRedim = null;
-  window.addEventListener('resize', function () { clearTimeout(tRedim); tRedim = setTimeout(function () { if (S.tab === 'receita' && S.vis === 'grafico' && $('#graf')) render(); }, 150); });
+  window.addEventListener('resize', function () { clearTimeout(tRedim); tRedim = setTimeout(function () { if (S.tab === 'receita' && S.graf && $('#graf')) render(); }, 150); });
   var margemTxt = function (r, c) { return r ? fN((r - c) / r * 100) + '%' : '—'; };
 
   var telaVazia = function () {
@@ -570,7 +608,7 @@ https://github.com/nodeca/pako/blob/main/LICENSE
     h += '<div class="tabs">' + tabs.map(function (t) { return '<button class="tab' + (S.tab === t[0] ? ' on' : '') + '" data-tab="' + t[0] + '">' + esc(t[1]) + '</button>'; }).join('') + '</div>';
     h += telas[S.tab] ? telas[S.tab](C, F, A) : '';
     app.innerHTML = h;
-    if (S.tab === 'receita' && S.vis === 'grafico') desenharGrafico(A);
+    if (S.tab === 'receita' && S.graf) desenharGrafico(A);
     var on = app.querySelector('.tab.on'); if (on) { var tb = on.parentNode; tb.scrollLeft = on.offsetLeft - 20; }
   };
   var linhaValores = function (t) {
@@ -599,12 +637,27 @@ https://github.com/nodeca/pako/blob/main/LICENSE
           '<td class="n">' + fUSD(t.cU) + '</td><td class="n">' + fUSD(t.rU - t.cU) + sub(margemTxt(t.rU, t.cU)) + '</td>' +
           '<td class="n">' + (nC ? fUSD(t.rU / nC) : '—') + '</td>';
       };
-      var linhaOp = function (x, d) {
-        var o = x.o;
-        return '<tr class="dd-op' + (x.f === 0 ? ' fora' : '') + '"><td' + pad(d) + '>' + fD(x.data) + ' · <b>' + esc(o.poco || '—') + '</b> · ' + esc(o.tipo || '—') + (o.revestimento ? ' ' + esc(o.revestimento) : '') +
-          sub([o.sonda || '—', o._ct.nome, o.so ? 'SO ' + o.so : ''].filter(Boolean).map(esc).join(' · ')) + '</td><td class="n">' + stTag(o) + '</td>' +
+      // itens PPU da operação: o lançado (realizada) ou o previsto, × o fator de risco (a soma dá a receita da operação)
+      var itensOp = function (x) {
+        var o = x.o, lista = (x.tipo === 'real' ? o.realizado.ppu : (o.previsto || {}).ppu) || [];
+        return lista.filter(function (l) { return l && l.qtd; }).map(function (l) {
+          var i = precoItem(o, l.ref), pu = l.usd != null ? l.usd : i.usd != null ? i.usd : null;
+          var g = l.valorUsd != null ? l.valorUsd : pu != null ? l.qtd * pu : null;
+          return {ref: l.ref, desc: l.desc || i.desc || '', unit: l.unit || i.unit || '', qtd: l.qtd, pu: pu, g: g, v: g == null ? null : g * x.f};
+        }).sort(function (a, b) { return (b.v || 0) - (a.v || 0) || String(a.ref).localeCompare(String(b.ref), 'pt', {numeric: true}); });
+      };
+      var linhaOp = function (x, d, cam) {
+        var o = x.o, its = itensOp(x), p = cam + '/' + encodeURIComponent('op:' + o.id);
+        if (D.mostrar != null) { if (d < D.mostrar) D.abertos[p] = 1; else delete D.abertos[p]; }
+        var ab = its.length && !!D.abertos[p];
+        linhas.push('<tr class="dd-op' + (x.f === 0 ? ' fora' : '') + (ab ? ' on' : '') + '"' + (its.length ? ' data-dd="' + esc(p) + '"' : '') + '><td' + pad(d) + '>' + (its.length ? '<span class="dd-tw">' + (ab ? '▾' : '▸') + '</span>' : '<span class="dd-tw"></span>') + fD(x.data) + ' · <b>' + esc(o.poco || '—') + '</b> · ' + esc(o.tipo || '—') + (o.revestimento ? ' ' + esc(o.revestimento) : '') +
+          sub([o.sonda || '—', o._ct.nome, o.so ? 'SO ' + o.so : '', its.length + ' item(ns) PPU'].filter(Boolean).map(esc).join(' · ')) + '</td><td class="n">' + stTag(o) + '</td>' +
           '<td class="n"><b>' + fUSD(x.rU) + '</b>' + (x.f !== 1 ? sub('bruto ' + fUSD(x.gU)) : '') + '</td><td class="n">' + fUSD(x.cU) + '</td><td class="n">' + fUSD(x.rU - x.cU) + sub(margemTxt(x.rU, x.cU)) + '</td>' +
-          '<td class="n"></td></tr>';
+          '<td class="n"></td></tr>');
+        if (ab) its.forEach(function (it) {
+          linhas.push('<tr class="dd-it' + (x.f === 0 ? ' fora' : '') + '"><td' + pad(d + 1) + '><b>' + esc(it.ref) + '</b> · ' + esc(it.desc || '—') + sub(esc(fN(it.qtd) + ' ' + (it.unit || '')) + ' × ' + (it.pu != null ? 'US$ ' + nf(2, 4)(it.pu) : 'sem valor em US$')) + '</td><td class="n"></td>' +
+            '<td class="n"><b>' + (it.v == null ? '—' : fUSD(it.v)) + '</b>' + (x.f !== 1 && it.g != null ? sub('bruto ' + fUSD(it.g)) : '') + '</td><td class="n"></td><td class="n"></td><td class="n">' + (it.v != null && x.rU ? fN(it.v / x.rU * 100) + '% da op.' : '') + '</td></tr>');
+        });
       };
       var linhas = [];
       var nivel = function (ls, d, cam) {
@@ -619,7 +672,7 @@ https://github.com/nodeca/pako/blob/main/LICENSE
           linhas.push('<tr class="dd-g dd-n' + d + (ab ? ' on' : '') + '" data-dd="' + esc(p) + '"><td' + pad(d) + '><span class="dd-tw">' + (ab ? '▾' : '▸') + '</span>' + esc(dim.r ? dim.r(t.k) : t.k) + '</td>' + valores(t) + '</tr>');
           if (!ab) return;
           if (d + 1 < niv.length) nivel(t.ls, d + 1, p);
-          else t.ls.slice().sort(function (a, b) { return String(a.data).localeCompare(String(b.data)); }).forEach(function (x) { linhas.push(linhaOp(x, d + 1)); });
+          else t.ls.slice().sort(function (a, b) { return String(a.data).localeCompare(String(b.data)); }).forEach(function (x) { linhaOp(x, d + 1, p); });
         });
       };
       nivel(A.linhas, 0, '');
@@ -629,14 +682,11 @@ https://github.com/nodeca/pako/blob/main/LICENSE
           (niv.length > 1 ? '<button class="btn-x dd-rm" title="Tirar este nível" data-ddrm="' + i + '">×</button>' : '');
       };
       var barraN = '<div class="dd-bar"><span class="dd-l">Abrir por</span>' + niv.map(function (k, i) { return '<span class="dd-niv">' + opc(i) + '</span>'; }).join('<span class="dd-seta">›</span>') +
-        '<span class="dd-seta">›</span><span class="dd-fim">Operações</span>' + (niv.length < DIM_ORDEM.length ? '<button class="btn-o dd-add" data-a="ddAdd">＋ nível</button>' : '') +
-        '<span class="sp"></span><span class="dd-l">Mostrar até</span><span class="dd-ate">' + niv.map(function (k, i) { return '<button class="btn-o" data-ddmostrar="' + i + '">' + esc(DIMS[k].t) + '</button>'; }).join('') + '<button class="btn-o" data-ddmostrar="' + niv.length + '">Operações</button></span></div>';
-      var cab = [niv.map(function (k) { return DIMS[k].t; }).join(' › ') + ' › Operação', N('Operações'), N('Receita US$'), N('COGS US$'), N('Margem US$'), N('Receita / operação US$')];
-      if (S.vis === 'grafico') return '<div class="card"><div class="card-h"><h2>Receita e COGS por mês</h2>' + visTg() + '</div>' +
-        '<div class="g-leg"><span><i style="background:' + COR.real + '"></i>Receita realizada</span><span><i style="background:' + COR.prev + '"></i>Receita prevista</span><span><i style="background:' + COR.cogs + '"></i>COGS</span></div>' +
-        '<div id="graf" class="graf"></div><p class="nota">US$, com o risco de cada operação aplicado. Passe o mouse num mês para ver os valores; clique para abrir o mês na tabela. Data = data do serviço (realizada) ou data planejada (prevista).</p></div>';
-      return '<div class="card"><div class="card-h"><h2>Receita, COGS e margem</h2>' + visTg() + '</div>' + barraN + tabela(cab, linhas, '<tr><td>Total</td>' + valores(A.T) + '</tr>', 't-dd') +
-        '<p class="nota">Clique numa linha para abrir o próximo nível. Data = data do serviço (realizada) ou data planejada (prevista). Receita e COGS já com o risco de cada operação; “Receita / operação” não conta as operações com risco 100%.</p></div>';
+        '<span class="dd-seta">›</span><span class="dd-fim">Operações › Itens PPU</span>' + (niv.length < DIM_ORDEM.length ? '<button class="btn-o dd-add" data-a="ddAdd">＋ nível</button>' : '') +
+        '<span class="sp"></span><span class="dd-l">Mostrar até</span><span class="dd-ate">' + niv.map(function (k, i) { return '<button class="btn-o" data-ddmostrar="' + i + '">' + esc(DIMS[k].t) + '</button>'; }).join('') + '<button class="btn-o" data-ddmostrar="' + niv.length + '">Operações</button><button class="btn-o" data-ddmostrar="' + (niv.length + 1) + '">Itens PPU</button></span></div>';
+      var cab = [niv.map(function (k) { return DIMS[k].t; }).join(' › ') + ' › Operação › Item PPU', N('Operações'), N('Receita US$'), N('COGS US$'), N('Margem US$'), N('Receita / operação US$')];
+      return (S.graf ? cartaoGrafico() : '') + '<div class="card"><div class="card-h"><h2>Receita, COGS e margem</h2>' + (S.graf ? '' : '<button class="btn-o g-mostrar" data-a="grafMostrar">Mostrar gráfico por mês</button>') + '</div>' + barraN + tabela(cab, linhas, '<tr><td>Total</td>' + valores(A.T) + '</tr>', 't-dd') +
+        '<p class="nota">Clique numa linha para abrir o próximo nível, até os itens PPU de cada operação. Data = data do serviço (realizada) ou data planejada (prevista). Receita e COGS já com o risco de cada operação; “Receita / operação” não conta as operações com risco 100%.</p></div>';
     },
     ppu: function (C, F, A) {
       var l = A.ppu.filter(function (x) { return !S.soComConsumo || x.cons > 0 || x.aR > 0; });
@@ -717,9 +767,8 @@ https://github.com/nodeca/pako/blob/main/LICENSE
 
   /* ---------- eventos ---------- */
   document.addEventListener('click', function (e) {
-    var t = e.target.closest('[data-a],[data-tab],[data-ct],[data-rm],[data-dd],[data-ddrm],[data-ddmostrar],[data-vis]');
+    var t = e.target.closest('[data-a],[data-tab],[data-ct],[data-rm],[data-dd],[data-ddrm],[data-ddmostrar]');
     if (!t) return;
-    if (t.dataset.vis) { S.vis = t.dataset.vis; try { localStorage.setItem('earlger:vis', S.vis); } catch (x) {} render(); return; }
     if (t.dataset.dd != null) { var D = S.drill; if (D.abertos[t.dataset.dd]) delete D.abertos[t.dataset.dd]; else D.abertos[t.dataset.dd] = 1; render(); return; }
     if (t.dataset.ddrm != null) { S.drill.niveis.splice(Number(t.dataset.ddrm), 1); gravarNiveis(); render(); return; }
     if (t.dataset.ddmostrar != null) { S.drill.mostrar = Number(t.dataset.ddmostrar); render(); return; }
@@ -730,6 +779,7 @@ https://github.com/nodeca/pako/blob/main/LICENSE
     if (a === 'arq') $('#inArq').click();
     else if (a === 'pasta') $('#inPasta').click();
     else if (a === 'excel') excel();
+    else if (a === 'grafOcultar' || a === 'grafMostrar') { S.graf = a === 'grafMostrar'; try { localStorage.setItem('earlger:graf', S.graf ? 'visivel' : 'oculto'); } catch (x) {} render(); }
     else if (a === 'ddAdd') { var livre = ['cliente', 'contrato', 'sonda', 'poco', 'tipoop', 'regiao', 'tipoct', 'situacao', 'mes', 'ano'].filter(function (k) { return S.drill.niveis.indexOf(k) < 0; })[0]; if (livre) { S.drill.niveis.push(livre); gravarNiveis(); render(); } }
     else if (a === 'limparf') { S.f = {de: '', ate: '', cliente: '', contrato: '', regiao: '', tipo: '', busca: ''}; render(); }
     else if (a === 'limpar') { if (confirm('Tirar todos os arquivos carregados deste navegador?')) { S.pacotes = []; gravar(); render(); } }
@@ -737,6 +787,7 @@ https://github.com/nodeca/pako/blob/main/LICENSE
   document.addEventListener('change', function (e) {
     var t = e.target;
     if (t.dataset && t.dataset.f) { S.f[t.dataset.f] = t.value; render(); return; }
+    if (t.dataset && t.dataset.tend != null) { S.tend = t.value; try { localStorage.setItem('earlger:tend', S.tend); } catch (x) {} render(); return; }
     if (t.dataset && t.dataset.nivel != null) { S.drill.niveis[Number(t.dataset.nivel)] = t.value; gravarNiveis(); render(); return; }
     if (t.dataset && t.dataset.a === 'soCons') { S.soComConsumo = t.checked; render(); return; }
     if (t.id === 'inArq' || t.id === 'inPasta') { var fs = Array.from(t.files || []); t.value = ''; if (fs.length) processar(fs); }
