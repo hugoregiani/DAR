@@ -22,13 +22,17 @@ Tudo é **realizado + previsto**, com o risco de cada operação aplicado:
 - **Realizado:** operações com consumo lançado.
 - **Previsto:** operações ainda sem consumo, pelo que a engenharia planejou.
 
-- **Filtros:** período por **mês** (mês de / até o mês, sem o dia), **ano**, **trimestre** (T1 a T4), cliente, contrato, região e tipo de contrato. Valem para todas as abas e para os indicadores, como os segmentadores do Excel. O trimestre sem ano pega o mesmo trimestre de todos os anos.
-- **Indicadores (só US$):** receita (realizado · previsto), COGS, operações (realizadas, previstas e "fora", com risco 100%), receita por operação (sem as de risco 100%), margem e homem-dia lançado e previsto a realizar.
+- **Filtros** (valem para todas as abas e para os indicadores, como os segmentadores do Excel):
+  - **Ano:** um ano por vez. Abre no ano de hoje (ou no mais recente, se não houver operação nele). Não tem "Todos".
+  - **Quarto:** Q1 (jan–mar), Q2, Q3 ou Q4.
+  - **Mês (início e fim):** uma caixa só. Clicando nela aparecem os 12 meses do ano: clique no mês inicial e depois no final (a ordem não importa). Um clique só e clique fora = um mês só. "Ano todo" limpa.
+  - **O quarto sobressai ao mês:** com um quarto escolhido, vale o quarto, os meses escolhidos são limpos e a caixa do mês fica travada mostrando o quarto.
+  - Cliente, contrato, região e tipo de contrato. **Limpar filtros** limpa tudo menos o ano.
+  - "Tipo Receita" do Excel (Drilling contract, Serviços, Outros) não existe nos arquivos dos engenheiros. O mais perto é o filtro **Tipo de contrato**.
+- **Indicadores (só US$, 5 cartões do mesmo tamanho):** receita (realizado · previsto), COGS, operações (realizadas, previstas e "fora", com risco 100%), receita por operação (sem as de risco 100%) e margem. O homem-dia fica na aba Pessoal.
 - **Contratos:** receita, COGS e margem por contrato, com o engenheiro e a data do arquivo, as operações e o uso do contrato em valor. Clique no contrato para filtrar.
-- **Receita e margem** (aba inicial): **uma tabela só, com drill-down**.
-  - **Níveis:** o padrão é **Mês › Cliente › Sonda › Operações › Itens PPU**. Em "Abrir por" dá para trocar cada nível, tirar (×) ou acrescentar (**＋ nível**). As opções são mês, ano, cliente, contrato, região, tipo de contrato, sonda, poço, tipo de operação e situação. A escolha fica guardada.
-  - **Abrir e fechar:** clique numa linha para abrir o próximo nível. Depois do último nível aparecem as operações, com data, poço, tipo, sonda, contrato, SO e situação. Clicando na operação, aparecem os **itens PPU** dela: item, descrição, quantidade × valor unitário e receita em US$ (com o risco da operação; "bruto" quando há risco), e o % da operação. **Mostrar até** abre tudo até o nível escolhido de uma vez, inclusive até os itens PPU.
-  - **Colunas, só em US$:** operações (realizadas, previstas, fora), receita (realizado · previsto), COGS, margem e receita por operação (sem as de risco 100%). A linha de total fica no fim.
+- **Receita e margem** (aba inicial), por ano, no formato do "Relatório Receita" do Excel:
+  - **Cards Q1, Q2, Q3, Q4 e Total do ano:** receita, COGS, margem e operações de cada quarto e do ano (com os filtros de cliente, contrato, região e tipo; sem o quarto/mês escolhido, para mostrar o ano todo). Clicar num quarto escolhe o quarto; clicar de novo, ou no total, volta ao ano todo.
   - **Gráfico**, em cima da tabela (**Ocultar gráfico** esconde; a escolha fica guardada). Três formas de ver:
     - **Por mês:** receita realizada e prevista empilhadas, com o COGS ao lado;
     - **Por mês e cliente:** a receita de cada mês empilhada por cliente;
@@ -36,23 +40,23 @@ Tudo é **realizado + previsto**, com o risco de cada operação aplicado:
   - **Detalhes dos gráficos:**
     - **meses vazios:** nas formas por mês, aparecem na ordem, sem barra;
     - **tendência da receita total do mês** (formas por mês): **linear** (reta dos mínimos quadrados), **média móvel de 3 meses** ou sem tendência; mês sem operação conta como zero;
-    - **mouse e clique:** passando o mouse aparecem os valores (inclusive o da tendência); clicando num mês, ele abre na tabela;
+    - **mouse e clique:** passando o mouse aparecem os valores (inclusive o da tendência); clicando num mês, a coluna dele fica destacada na tabela;
     - **cores dos clientes:** cada cliente tem sempre a mesma cor, pela receita total de todos os arquivos, e o filtro não troca as cores. Com mais de 8 clientes, os menores ficam juntos em "Outros clientes". As cores foram conferidas para daltonismo.
+  - **Tabela "Receita, COGS e margem — ano"** (matriz; substituiu a tabela de drill-down por mês):
+    - **Linhas:** Cliente › Contrato › Sonda › Poço › Operação › Item PPU, com a quantidade de operações de cada grupo. Clique numa linha para abrir ou fechar. **Mostrar até** abre tudo até Cliente, Contrato (o padrão), Sonda, Poço, Operação ou Item PPU.
+    - **Colunas:** quarto (Q1/2026…) › mês › **Receita** e **COGS**, o **total de cada quarto** (em verde) e o **Total** (Receita, COGS e Margem). Só aparecem os meses com operação no período.
+    - **Valores:** US$, com o risco de cada operação aplicado. A realizada vai pela data do serviço e a prevista pela data planejada. Célula vazia = sem operação no mês; operação com risco 100% aparece em cinza, com 0,00. COGS em vermelho, como no Excel.
+    - **Operação:** data, tipo, revestimento, situação (realizada/prevista), risco e SO. **Item PPU:** item, descrição, quantidade × valor unitário e a receita no mês da operação (com o risco; "bruto" quando há risco). COGS e margem do item ficam em branco.
+    - **Ordem:** clientes e grupos da maior receita para a menor; operações por data; itens pela receita.
+    - A tabela rola dentro do quadro, com o cabeçalho e a primeira coluna fixos. A linha **Total do ano** é igual ao indicador "Receita em US$" e ao card do ano.
+    - **⬇ Excel desta tabela:** baixa a matriz como está na tela (linhas abertas), com o cabeçalho em 3 linhas mescladas, uma coluna por nível (Cliente, Contrato, Sonda, Poço, Operação, Item PPU) e números de verdade.
   - **Valores em R$:** saíram desta aba e dos indicadores. Continuam nas abas Contratos, Itens PPU e Operações e no Excel.
-- **Receita por mês (matriz)** (g7): no formato do "Relatório Receita" do Excel.
-  - **Linhas:** Cliente › Contrato › Sonda › Poço › Operação, com a quantidade de operações de cada grupo. Clique numa linha para abrir ou fechar. **Mostrar até** abre tudo até Cliente, Contrato (o padrão), Sonda, Poço ou Operação.
-  - **Colunas:** trimestre (T1/2026…) › mês › **Receita** e **COGS**, o **total de cada trimestre** (em verde) e o **Total** (Receita, COGS e Margem). Só aparecem os meses com operação.
-  - **Valores:** US$, com o risco de cada operação aplicado. A realizada vai pela data do serviço e a prevista pela data planejada. Célula vazia = sem operação no mês; operação com risco 100% aparece em cinza, com 0,00. COGS em vermelho, como no Excel.
-  - **Ordem:** clientes e grupos da maior receita para a menor; operações por data.
-  - A tabela rola dentro do quadro, com o cabeçalho e a primeira coluna fixos. A linha **Total geral** é igual ao indicador "Receita em US$".
-  - **⬇ Excel desta tabela:** baixa a matriz como está na tela (linhas abertas), com o cabeçalho em 3 linhas mescladas, uma coluna por nível (Cliente, Contrato, Sonda, Poço, Operação) e números de verdade.
-  - "Tipo Receita" do Excel (Drilling contract, Serviços, Outros) não existe nos arquivos dos engenheiros. O mais perto é o filtro **Tipo de contrato**.
 - **Itens PPU:** contratado, consumido, saldo, % usado, a realizar, receita e valor vigente, por contrato e item.
 - **Químicas** e **Casing equipment:** planejado × lançado por SAP, com o COGS, o número de operações e os contratos.
 - **Pessoal:** por função, pessoas e homem-dia planejado × lançado.
 - **Operações:** todas as operações, com situação (realizada ou prevista), risco, receita bruta e com risco, COGS e margem. Tem busca.
 - **Arquivos:** os arquivos carregados e se estão em uso.
-- **⬇ Excel consolidado:** abas Contratos, Receita por mês (a matriz com todas as operações abertas), Por mês, Itens PPU, Químicas, Casing, Pessoal, Operações e Lançamentos (cada linha lançada).
+- **⬇ Excel consolidado** (do ano e dos filtros escolhidos): abas Contratos, Receita <ano> (a matriz com tudo aberto até os itens PPU), Por mês, Itens PPU, Químicas, Casing, Pessoal, Operações e Lançamentos (cada linha lançada).
 
 ## Regras de cálculo
 
@@ -81,9 +85,9 @@ Tudo é **realizado + previsto**, com o risco de cada operação aplicado:
   - `realizado` traz `data`, `ppu` com os valores, `quimicas`, `casing`, `cogs` e `pessoal`; `receita` é a receita bruta do realizado.
 - Os dados ficam em `localStorage` com o prefixo `earlger:`.
 - **Testes de ponta a ponta:**
-  - dois engenheiros geram arquivos no app de Engenharia, e o Gerencial carrega por arquivos, `.zip` e pasta. Inclui os indicadores em US$, o drill-down (níveis, abrir/fechar, trocar, tirar e acrescentar nível, guardar a escolha, itens PPU somando a receita da operação), o gráfico (por mês, por mês e cliente e por cliente; ocultar/mostrar; tooltip; cores fixas por cliente; clicar no cliente filtra) e o filtro por mês (60 verificações);
-  - a matriz (`tests/e2e_matriz.js`, 35 verificações) monta arquivos sintéticos (2 engenheiros, 4 clientes, 16 operações de dez/2025 a fev/2027, realizadas e previstas, risco 0/50/100%). Confere célula a célula (mês, trimestre e total) contra uma conta feita no próprio teste, o abrir e fechar, os filtros Ano, Trimestre, Cliente e Mês, o Excel da tabela, a aba nova do Excel consolidado e o celular;
-  - o teste BP (`../engenharia/teste_bp/e2e_bp.js`) confere o Gerencial contra os totais da planilha do BP: receita, COGS, margem, operações fora, cada mês do drill-down e do gráfico, os itens PPU, a tendência linear e a média móvel, as formas por cliente, o filtro por mês, aba Operações e Excel.
+  - dois engenheiros geram arquivos no app de Engenharia, e o Gerencial carrega por arquivos, `.zip` e pasta. Inclui os 5 indicadores em US$, os cards dos quartos, a matriz do ano (cliente › contrato, até as operações e os itens PPU, que somam a receita da operação), o gráfico (por mês, por mês e cliente e por cliente; ocultar/mostrar; tooltip; cores fixas por cliente; clicar no cliente filtra; clicar no mês destaca a coluna) e o filtro de período numa caixa só, com o quarto valendo no lugar dos meses (62 verificações);
+  - a visão por ano (`tests/e2e_matriz.js`, 46 verificações) monta arquivos sintéticos (2 engenheiros, 4 clientes, 16 operações de dez/2025 a fev/2027, realizadas e previstas, risco 0/50/100%, itens PPU). Confere os 5 cartões do mesmo tamanho (sem Pessoal), os cards Q1–Q4 e do ano, célula a célula da matriz (mês, quarto e total) contra uma conta feita no próprio teste, cada ano, a caixa de período (início e fim, ordem invertida, um mês só, clique fora, Esc), o quarto sobressaindo ao mês, o clique nos cards, o abrir e fechar até o item PPU, o destaque do mês pelo gráfico, o Excel da tabela e do consolidado e o celular;
+  - o teste BP (`../engenharia/teste_bp/e2e_bp.js`) confere o Gerencial contra os totais da planilha do BP, ano a ano (2026 e 2027, que somam a planilha): receita, COGS, margem, operações fora, os cards dos quartos, cada mês da matriz e do gráfico, os itens PPU, a tendência linear e a média móvel, as formas por cliente, o período e o quarto, aba Operações e Excel.
 
   ```bash
   node tests/e2e_gerencial.js ../engenharia/EARL_Engenharia.html EARL_Gerencial.html [pasta-das-telas]
@@ -93,4 +97,4 @@ Tudo é **realizado + previsto**, com o risco de cada operação aplicado:
   node tests/e2e_matriz.js EARL_Gerencial.html [pasta-das-telas]
   ```
 
-- Versão: `EARL Gerencial g7`.
+- Versão: `EARL Gerencial g8`.

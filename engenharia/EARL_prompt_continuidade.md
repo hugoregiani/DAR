@@ -360,6 +360,18 @@ Pedido do Hugo (foto da planilha "Relatório Receita": clientes nas linhas, trim
   - `e2e_bp` 50;
   - com o arquivo real do BP + 3 clientes, o Total geral da matriz = indicadores (US$ 6.796.331,22 de receita; US$ 1.455.836,59 de COGS).
 
+### EARL Gerencial g8 (05/11/2026): a matriz no lugar da tabela, visão por ano, cards dos quartos, período numa caixa só
+
+Pedido do Hugo: não criar aba nova, e sim pôr a matriz no lugar da tabela "Receita, COGS e margem"; tirar o cartão Pessoal (homem-dia) e redistribuir os outros; visão por ano, com cards dos quartos e do total do ano; "quarto" no lugar de "trimestre" (Q1… no lugar de T1…); o filtro de mês numa caixa só (mês inicial e final), com o quarto sobressaindo ao mês.
+
+- **Aba "Receita e margem"** (`telas.receita`): `cartoesQuartos(C)` + gráfico + `cartaoMatriz(F, A)`. Saíram a aba `matriz` (quem tinha `earlger:tab = matriz` cai em `receita`) e todo o drill-down antigo (`DIMS`, `S.drill`, `earlger:drill`, `.t-dd`).
+- **Matriz:** mesma da g7, com quartos `Q1/2026` (`colunasMx`, `quartoMx`) e um nível a mais, o **Item PPU** (`itensOpMx`; a operação com itens abre/fecha por `data-mx` = caminho + `op:<id>`; "Mostrar até" vai de 0 Cliente a 5 Item PPU). Linha de item: só receita, COGS e margem em branco (`celulasMx(t, qs, semCogs)`). Células de mês têm `data-mes`; clique no mês do gráfico (`S.mxVer` → `verMesNaTabela`) destaca a coluna (`.mx-hl`) e rola até ela. Total = "Total <ano>".
+- **Cards dos quartos** (`.qc`, `data-q` 1–4 e '' para o ano): somam o ano com os filtros de cliente/contrato/região/tipo, sem quarto/mês (`filtrar(C, true)`). Clique escolhe o quarto (de novo, ou no total, volta ao ano todo) e limpa os meses.
+- **Filtros** (`S.f = {ano, tri, mIni, mFim, cliente, contrato, regiao, tipo, busca}`; `filtrar().noPer`): ano obrigatório (`anosDe`, `anoPadrao` = ano de hoje ou o mais recente; sem "Todos"); quarto (`tri`) vale no lugar dos meses e limpa `mIni/mFim`; mês numa caixa só (`.mes-box` → `popMes()`, `data-mesb`: 1º clique = início, 2º = fim, inverte se vier antes; clique fora ou Esc fecha; com quarto, a caixa fica `disabled`). "Limpar filtros" mantém o ano.
+- **Cartões:** 5 (sem `k-hd`), `grid-template-columns:repeat(5,1fr)`; no celular a Margem ocupa a linha toda.
+- **Excel:** "Excel desta tabela" = `EARL_Gerencial_receita_<ano>[_período]_<data>.xlsx`, aba "Receita <ano>", coluna "Item PPU"; o consolidado tem a aba "Receita <ano>" (tudo aberto) e vale para o ano/filtros escolhidos.
+- **Testes:** `e2e_matriz` 46 (reescrito para a visão por ano), `e2e_gerencial` 62, `e2e_bp` 56 (agora ano a ano: 2026 e 2027 somam a planilha; cards dos quartos; meses da matriz; itens PPU; período e quarto; gráfico de ago–dez/2026).
+
 ---
 
 ## 4. Última mudança: v115 (Inventário a bordo: "Movimentar material" em cada contentor e na sacaria, em todas as categorias; Logística: desfazer a divisão da tesoura)

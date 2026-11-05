@@ -39,7 +39,7 @@ h1:before{content:"";position:absolute;left:-22px;top:-12px;width:18px;height:18
 .f label{font-size:10.5px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--ink-3)}
 .f input,.f select{border:1px solid var(--line-2);border-radius:10px;padding:7px 10px;background:#fff;min-width:0}
 .f select{max-width:240px}
-.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:10px;margin:10px 0}
+.kpis{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:10px;margin:10px 0}
 .kpi{background:#fff;border:1px solid var(--line);border-radius:16px;padding:12px 14px;display:flex;flex-direction:column;gap:2px}
 .kpi span{font-size:10.5px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--ink-3)}
 .kpi{container-type:inline-size}
@@ -93,10 +93,6 @@ tr.fora td{color:var(--ink-3)}
 .g-tend{fill:none;stroke:var(--ink);stroke-width:2;stroke-linecap:round;stroke-linejoin:round;pointer-events:none}
 .g-tend.tr{stroke-dasharray:6 5}
 .g-tdot{fill:var(--ink);stroke:#fff;stroke-width:2;pointer-events:none}
-.t-dd tr.dd-op[data-dd]{cursor:pointer}
-.t-dd tr.dd-op[data-dd]:hover td{background:#FAFBFB}
-.t-dd tr.dd-it td{font-size:12px;color:var(--ink-2);background:#FCFCFC}
-.t-dd tr.dd-it td b{color:var(--ink)}
 .vis-tg{display:inline-flex;background:var(--soft);border:1px solid var(--line);border-radius:999px;padding:3px}
 .vis-tg button{border:0;background:transparent;border-radius:999px;padding:5px 12px;font:inherit;font-size:12.5px;font-weight:600;color:var(--ink-2);cursor:pointer}
 .vis-tg button.on{background:#fff;color:var(--ink);box-shadow:0 1px 2px rgba(0,0,0,.12)}
@@ -128,21 +124,9 @@ tr.fora td{color:var(--ink-3)}
 .g-tl span{color:var(--ink-3)}
 .dd-bar{display:flex;flex-wrap:wrap;align-items:center;gap:6px;margin:4px 0 12px}
 .dd-l{font-size:10.5px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--ink-3);margin-right:2px}
-.dd-niv{display:inline-flex;align-items:center;gap:2px}
-.dd-sel{border:1px solid var(--line-2);border-radius:10px;padding:6px 8px;background:#fff;font:inherit;font-size:13px}
-.dd-seta{color:var(--ink-3);font-weight:700}
-.dd-fim{font-size:13px;color:var(--ink-2);border:1px dashed var(--line-2);border-radius:10px;padding:5px 9px}
 .dd-ate{display:inline-flex;gap:4px;flex-wrap:wrap}
-.dd-ate .btn-o,.dd-add{font-size:12px;padding:5px 10px}
-.t-dd tr.dd-g{cursor:pointer}
-.t-dd tr.dd-g:hover td{background:#FAFBFB}
-.t-dd tr.dd-g td:first-child{font-weight:600;white-space:nowrap}
-.t-dd tr.dd-n0 td{background:#F6F7F8}
-.t-dd tr.dd-n0:hover td{background:#EEF0F1}
-.t-dd tr.dd-g.on td:first-child{color:var(--acc,#CC0000)}
+.dd-ate .btn-o{font-size:12px;padding:5px 10px}
 .dd-tw{display:inline-block;width:16px;color:var(--ink-3);font-size:11px}
-.t-dd tr.dd-op td{font-size:12.5px}
-.t-dd tr.dd-op td:first-child{white-space:normal;min-width:260px}
 tr.fora td b{color:var(--ink-3)}
 .t-mx{width:auto;min-width:100%;font-size:12px}
 .mx-wrap{max-height:72vh;overflow:auto;border:1px solid var(--line);border-radius:12px}
@@ -170,8 +154,40 @@ tr.fora td b{color:var(--ink-3)}
 .t-mx tfoot td{background:var(--soft)}
 .t-mx tfoot td.mx-q{background:#DDEBD3}
 .mx-xls{font-size:12px;padding:5px 10px}
-@media(max-width:760px){.t-mx .mx-rot{min-width:150px;max-width:200px}}
-@media(max-width:1100px){.kpis{grid-template-columns:repeat(3,minmax(0,1fr))}}
+.qcards{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:10px;margin:2px 0 12px}
+button.kpi{font:inherit;color:inherit;text-align:left;cursor:pointer;align-items:stretch}
+.qc{border-width:1px;transition:border-color .12s,box-shadow .12s}
+.qc:hover{border-color:var(--ink-3)}
+.qc span i{font-style:normal;font-weight:400;letter-spacing:0;text-transform:none;color:var(--ink-3)}
+.qc.on{border-color:var(--red);box-shadow:0 0 0 2px rgba(204,0,0,.18)}
+.qc .qc-n{color:var(--ink-3)}
+.qc.dest span i{color:rgba(255,255,255,.8)}
+.qc.dest.on{box-shadow:0 0 0 3px rgba(204,0,0,.28);border-color:transparent}
+.qc.dest .qc-n{color:rgba(255,255,255,.8)}
+.mes-f{position:relative}
+.mes-box{border:1px solid var(--line-2);border-radius:10px;padding:7px 10px;background:#fff;min-width:170px;display:flex;align-items:center;justify-content:space-between;gap:10px;cursor:pointer;text-align:left}
+.mes-box:hover{border-color:var(--ink-3)}
+.mes-box:disabled{background:var(--soft);color:var(--ink-2);cursor:not-allowed}
+.mes-ic{color:var(--ink-3);font-size:11px}
+.mes-pop{position:absolute;top:100%;left:0;margin-top:4px;z-index:30;background:#fff;border:1px solid var(--line-2);border-radius:14px;box-shadow:0 8px 24px rgba(0,0,0,.14);padding:10px;width:280px}
+.mes-pop-t{font-size:12px;color:var(--ink-2);margin:0 2px 8px}
+.mes-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:4px}
+.mes-b{border:1px solid var(--line);background:#fff;border-radius:8px;padding:7px 0;font:inherit;font-size:13px;cursor:pointer}
+.mes-b:hover{border-color:var(--ink-3)}
+.mes-b.on{background:#FBEFEF;border-color:#F0C9C9;color:var(--red-dk)}
+.mes-b.ponta{background:var(--red);border-color:var(--red);color:#fff;font-weight:700}
+.mes-pop-r{display:flex;justify-content:space-between;gap:6px;margin-top:10px}
+.mes-pop-r .btn-o{font-size:12px;padding:5px 12px}
+.t-mx tr.mx-op[data-mx]{cursor:pointer}
+.t-mx tr.mx-op[data-mx]:hover td{background:#FAFBFB}
+.t-mx tr.mx-op.on > td.mx-rot{color:var(--red)}
+.t-mx tr.mx-it td{font-size:11.5px;color:var(--ink-2);background:#FCFCFC}
+.t-mx tr.mx-it td.mx-q{background:#EEF6EA}
+.t-mx tr.mx-it td.mx-rot b{color:var(--ink)}
+.t-mx .mx-hl{background:#FFF4D6!important}
+.t-mx th.mx-hl{background:#FCE7AE!important;color:var(--ink)}
+@media(max-width:760px){.t-mx .mx-rot{min-width:150px;max-width:200px}.qcards{grid-template-columns:1fr 1fr}.qc-ano,.kpis .k-margem{grid-column:1/-1}.mes-box{min-width:0;width:100%}}
+@media(max-width:1100px){.kpis,.qcards{grid-template-columns:repeat(3,minmax(0,1fr))}}
 @media(max-width:760px){.hdr{gap:10px;padding:0 12px}.hdr img{height:24px}.hdr .ver{display:none}h1{font-size:30px;padding-left:22px}h1:before{left:0;top:-6px}.f select{max-width:100%}.f{flex:1 1 140px}.kpis{grid-template-columns:1fr 1fr}.kpi b{font-size:min(17px,10.5cqi)}.kpi em{font-size:11px}}
 @media print{.bar,.tabs,.filtros{display:none}}
 </style>
@@ -189,7 +205,7 @@ tr.fora td b{color:var(--ink-3)}
    Para cada contrato vale o arquivo mais novo. Tudo fica neste navegador (localStorage, prefixo earlger:). */
 (function () {
   'use strict';
-  var VERSAO = 'EARL Gerencial g7';
+  var VERSAO = 'EARL Gerencial g8';
   var CHAVE = 'earlger:pacotes_v1';
   var $ = function (s) { return document.querySelector(s); };
   var esc = function (v) { return String(v == null ? '' : v).replace(/[&<>"']/g, function (c) { return {'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'}[c]; }); };
@@ -204,11 +220,10 @@ tr.fora td b{color:var(--ink-3)}
   var hojeTxt = function () { var d = new Date(), p = function (n) { return String(n).padStart(2, '0'); }; return d.getFullYear() + '-' + p(d.getMonth() + 1) + '-' + p(d.getDate()); };
   var r4 = function (v) { return Math.round(v * 10000) / 10000; };
 
-  var S = {pacotes: [], tab: 'receita', f: {de: '', ate: '', ano: '', tri: '', cliente: '', contrato: '', regiao: '', tipo: '', busca: ''}, soComConsumo: true, msg: null, drill: {niveis: ['mes', 'cliente', 'sonda'], abertos: {}, mostrar: null}, graf: true, tend: 'linear', gmodo: 'mes', mx: {abertos: {}, mostrar: 1}};
+  var S = {pacotes: [], tab: 'receita', f: {ano: '', tri: '', mIni: 0, mFim: 0, cliente: '', contrato: '', regiao: '', tipo: '', busca: ''}, soComConsumo: true, msg: null, graf: true, tend: 'linear', gmodo: 'mes', mx: {abertos: {}, mostrar: 1}, mesPop: false, mesPasso: 0, mxVer: null};
   try { S.pacotes = JSON.parse(localStorage.getItem(CHAVE) || '[]') || []; } catch (e) { S.pacotes = []; }
-  try { var t0 = localStorage.getItem('earlger:tab'); if (t0) S.tab = t0; } catch (e) {}
+  try { var t0 = localStorage.getItem('earlger:tab'); if (t0) S.tab = t0 === 'matriz' ? 'receita' : t0; } catch (e) {}
   try { if (localStorage.getItem('earlger:graf') === 'oculto') S.graf = false; var t1 = localStorage.getItem('earlger:tend'); if (t1 === 'linear' || t1 === 'mm3' || t1 === 'nenhuma') S.tend = t1; var t2 = localStorage.getItem('earlger:gmodo'); if (t2 === 'mes' || t2 === 'mescli' || t2 === 'cli') S.gmodo = t2; } catch (e) {}
-  try { var n0 = JSON.parse(localStorage.getItem('earlger:drill') || 'null'); if (Array.isArray(n0) && n0.length) S.drill.niveis = n0; } catch (e) {}
   var gravar = function () {
     try { localStorage.setItem(CHAVE, JSON.stringify(S.pacotes)); return true; }
     catch (e) { aviso('O navegador não deixou guardar os arquivos (armazenamento cheio). Eles valem até fechar a página.', true); return false; }
@@ -295,7 +310,7 @@ tr.fora td b{color:var(--ink-3)}
     });
     return {contratos: contratos, ops: ops, uso: uso};
   };
-  var filtrar = function (C) {
+  var filtrar = function (C, soAno) {
     var f = S.f;
     var ctOk = function (c) {
       return (!f.cliente || c.cliente === f.cliente) && (!f.contrato || c.id === f.contrato) && (!f.regiao || c.regiao === f.regiao) && (!f.tipo || c.tipo === f.tipo);
@@ -303,14 +318,21 @@ tr.fora td b{color:var(--ink-3)}
     var cts = C.contratos.filter(ctOk);
     var ids = {}; cts.forEach(function (c) { ids[c.id] = 1; });
     var ops = C.ops.filter(function (o) { return ids[o.contratoId]; });
+    // um ano por vez; o quarto vale no lugar dos meses; soAno = sem quarto/mês (cards dos quartos)
     var noPer = function (d) {
-      var m = String(d || '').slice(0, 7);
-      return (!f.de || m >= f.de) && (!f.ate || m <= f.ate) && (!f.ano || m.slice(0, 4) === f.ano) && (!f.tri || triDe(m) === Number(f.tri));
+      var m = String(d || '').slice(0, 7), mo = Number(m.slice(5, 7));
+      if (f.ano && m.slice(0, 4) !== f.ano) return false;
+      if (soAno) return true;
+      if (f.tri) return triDe(m) === Number(f.tri);
+      return !f.mIni || (mo >= f.mIni && mo <= f.mFim);
     };
     return {cts: cts, ops: ops, noPer: noPer};
   };
   var triDe = function (m) { return Math.floor((Number(String(m).slice(5, 7)) - 1) / 3) + 1; };
   var dataOp = function (o) { return o.realizado ? o.realizado.data : o.data; };
+  var anosDe = function (C) { return C.ops.map(function (o) { return String(dataOp(o) || '').slice(0, 4); }).filter(function (a, i, l) { return /^\d{4}$/.test(a) && l.indexOf(a) === i; }).sort(); };
+  // ano padrão: o ano de hoje, se houver operação nele; senão, o mais recente
+  var anoPadrao = function (anos) { var h = String(new Date().getFullYear()); return anos.indexOf(h) >= 0 ? h : anos[anos.length - 1] || ''; };
   /* Risco da operação (0–100%): receita e COGS contam × (1 − risco). Com 100% a operação aparece, mas fica fora. */
   var fatorOp = function (o) { var r = Number(o.risco) || 0; return r > 0 ? Math.max(0, 1 - Math.min(100, r) / 100) : 1; };
   var precoItem = function (o, ref) { return (o._ct.itens || []).find(function (x) { return x.ref === ref; }) || {}; };
@@ -433,21 +455,6 @@ tr.fora td b{color:var(--ink-3)}
     var s = o.realizado ? '<span class="tag t-ok">realizada</span>' : o.status === 'handover' ? '<span class="tag t-ho">prevista · handover enviado</span>' : '<span class="tag t-pl">prevista</span>';
     return s + (r >= 100 ? ' <span class="tag t-old">fora (risco 100%)</span>' : r > 0 ? ' <span class="tag t-ho">risco ' + fN(r) + '%</span>' : '');
   };
-  /* dimensões do drill-down: k = chave do grupo, r = rótulo, cron = ordem cronológica (senão, pela receita) */
-  var DIMS = {
-    mes: {t: 'Mês', k: function (x) { return String(x.data).slice(0, 7); }, r: fMes, cron: 1},
-    ano: {t: 'Ano', k: function (x) { return String(x.data).slice(0, 4); }, cron: 1},
-    cliente: {t: 'Cliente', k: function (x) { return x.o._ct.cliente || '—'; }},
-    contrato: {t: 'Contrato', k: function (x) { return x.o._ct.nome || '—'; }},
-    regiao: {t: 'Região', k: function (x) { return x.o.regiao || x.o._ct.regiao || '—'; }},
-    tipoct: {t: 'Tipo de contrato', k: function (x) { return x.o._ct.tipo || '—'; }},
-    sonda: {t: 'Sonda', k: function (x) { return x.o.sonda || '—'; }},
-    poco: {t: 'Poço', k: function (x) { return x.o.poco || '—'; }},
-    tipoop: {t: 'Tipo de operação', k: function (x) { return x.o.tipo || '—'; }},
-    situacao: {t: 'Situação', k: function (x) { return x.tipo === 'real' ? 'Realizada' : 'Prevista'; }}
-  };
-  var DIM_ORDEM = ['mes', 'ano', 'cliente', 'contrato', 'regiao', 'tipoct', 'sonda', 'poco', 'tipoop', 'situacao'];
-  var gravarNiveis = function () { S.drill.abertos = {}; try { localStorage.setItem('earlger:drill', JSON.stringify(S.drill.niveis)); } catch (x) {} };
   /* ---- gráfico de barras por mês (SVG) ----
      Receita: realizado + previsto empilhados; COGS ao lado. Cores: 3 primeiras do palette de referência,
      validadas juntas (validate_palette.js --pairs all). O aqua fica abaixo de 3:1: a tabela é a vista acessível. */
@@ -457,7 +464,7 @@ tr.fora td b{color:var(--ink-3)}
   var cartaoGrafico = function () {
     var tit = S.gmodo === 'cli' ? 'Receita e COGS por cliente' : S.gmodo === 'mescli' ? 'Receita por mês e cliente' : 'Receita e COGS por mês';
     var nota = S.gmodo === 'cli' ? 'US$, com o risco de cada operação aplicado, no período e nos filtros escolhidos. Passe o mouse num cliente para ver os valores; clique para filtrar por ele (clique de novo para tirar o filtro).'
-      : 'US$, com o risco de cada operação aplicado. Passe o mouse num mês para ver os valores; clique para abrir o mês na tabela abaixo. A tendência usa a receita total de cada mês (realizado + previsto); mês sem operação conta como zero.' + (S.gmodo === 'mescli' ? ' Cada cliente tem sempre a mesma cor.' : '');
+      : 'US$, com o risco de cada operação aplicado. Passe o mouse num mês para ver os valores; clique para ver o mês na tabela abaixo. A tendência usa a receita total de cada mês (realizado + previsto); mês sem operação conta como zero.' + (S.gmodo === 'mescli' ? ' Cada cliente tem sempre a mesma cor.' : '');
     return '<div class="card g-card"><div class="card-h"><h2>' + tit + '</h2>' +
       '<div class="vis-tg g-modos" role="group" aria-label="Ver o gráfico">' + GMODOS.map(function (m) { return '<button class="' + (S.gmodo === m[0] ? 'on' : '') + '" data-gmodo="' + m[0] + '">' + m[1] + '</button>'; }).join('') + '</div>' +
       (S.gmodo !== 'cli' ? '<label class="g-ctl">Tendência <select data-tend>' + [['linear', 'Linear'], ['mm3', 'Média móvel 3 meses'], ['nenhuma', 'Sem tendência']].map(function (o) { return '<option value="' + o[0] + '"' + (S.tend === o[0] ? ' selected' : '') + '>' + o[1] + '</option>'; }).join('') + '</select></label>' : '') +
@@ -562,12 +569,7 @@ tr.fora td b{color:var(--ink-3)}
     };
     box.querySelectorAll('.g-mes').forEach(function (el) {
       var i = Number(el.dataset.i);
-      var abrir = function () {
-        if (S.drill.niveis[0] === 'mes') { S.drill.abertos = {}; S.drill.abertos['/' + encodeURIComponent(dados[i].k)] = 1; }
-        render();
-        var alvo = document.querySelector('.t-dd tr.dd-n0.on') || document.querySelector('.t-dd');
-        if (alvo && alvo.scrollIntoView) alvo.scrollIntoView({block: 'center'});
-      };
+      var abrir = function () { S.mxVer = dados[i].k; render(); };
       T.ligar(el, function () { mostrar(i); }, abrir);
     });
   };
@@ -691,31 +693,33 @@ tr.fora td b{color:var(--ink-3)}
     $('#ver').textContent = VERSAO;
     var app = $('#app');
     if (!S.pacotes.length) { app.innerHTML = telaVazia(); return; }
-    var C = consolidar(), F = filtrar(C), A = agregar(F), f = S.f, T = A.T;
+    var C = consolidar(), anos = anosDe(C);
+    if (anos.indexOf(S.f.ano) < 0) S.f.ano = anoPadrao(anos);
+    var F = filtrar(C), A = agregar(F), f = S.f, T = A.T;
     var h = '<h1>Gerencial</h1><p class="sub">' + C.contratos.length + ' contrato(s) de ' + uniq(S.pacotes.map(function (p) { return p.pac.por || '—'; })).length + ' engenheiro(s) · ' + C.ops.length + ' operação(ões) · realizado + previsto, com o risco aplicado</p>' + barraTopo();
     h += '<div class="filtros">' +
-      '<div class="f"><label>Mês de</label><input type="month" data-f="de" value="' + esc(f.de) + '"></div>' +
-      '<div class="f"><label>até o mês</label><input type="month" data-f="ate" value="' + esc(f.ate) + '"></div>' +
-      '<div class="f"><label>Ano</label><select data-f="ano">' + opcoes(uniq(C.ops.map(function (o) { return String(dataOp(o) || '').slice(0, 4); }).filter(function (a) { return /^\d{4}$/.test(a); })), f.ano, 'Todos') + '</select></div>' +
-      '<div class="f"><label>Trimestre</label><select data-f="tri">' + opcoes([1, 2, 3, 4].map(function (q) { return {v: String(q), t: 'T' + q + ' (' + MESES.slice(q * 3 - 3, q * 3).join(', ') + ')'}; }), f.tri, 'Todos') + '</select></div>' +
+      '<div class="f"><label>Ano</label><select data-f="ano">' + anos.map(function (a) { return '<option' + (a === f.ano ? ' selected' : '') + '>' + esc(a) + '</option>'; }).join('') + '</select></div>' +
+      '<div class="f"><label>Quarto</label><select data-f="tri">' + opcoes([1, 2, 3, 4].map(function (q) { return {v: String(q), t: 'Q' + q + ' (' + MESES.slice(q * 3 - 3, q * 3).join(', ') + ')'}; }), f.tri, 'Todos') + '</select></div>' +
+      '<div class="f mes-f"><label>Mês (início e fim)</label><button type="button" class="mes-box" data-a="mesAbrir"' + (f.tri ? ' disabled title="Com um quarto escolhido, vale o quarto. Escolha “Todos” em Quarto para escolher os meses."' : ' title="Clique no mês inicial e depois no final"') + '>' +
+        esc(f.tri ? periodoTxt() + ' · vale o quarto' : f.mIni ? periodoTxt() + '/' + f.ano : 'Ano todo') + '<span class="mes-ic">▾</span></button>' + (S.mesPop && !f.tri ? popMes() : '') + '</div>' +
       '<div class="f"><label>Cliente</label><select data-f="cliente">' + opcoes(uniq(C.contratos.map(function (c) { return c.cliente; })), f.cliente, 'Todos') + '</select></div>' +
       '<div class="f"><label>Contrato</label><select data-f="contrato">' + opcoes(C.contratos.map(function (c) { return {v: c.id, t: c.nome}; }), f.contrato, 'Todos') + '</select></div>' +
       '<div class="f"><label>Região</label><select data-f="regiao">' + opcoes(uniq(C.contratos.map(function (c) { return c.regiao; })), f.regiao, 'Todas') + '</select></div>' +
       '<div class="f"><label>Tipo de contrato</label><select data-f="tipo">' + opcoes(uniq(C.contratos.map(function (c) { return c.tipo; })), f.tipo, 'Todos') + '</select></div>' +
-      ((f.de || f.ate || f.ano || f.tri || f.cliente || f.contrato || f.regiao || f.tipo) ? '<button class="btn-o" data-a="limparf">Limpar filtros</button>' : '') + '</div>';
+      ((f.tri || f.mIni || f.cliente || f.contrato || f.regiao || f.tipo) ? '<button class="btn-o" data-a="limparf">Limpar filtros</button>' : '') + '</div>';
     var nC = T.n - T.nF, nCR = T.nR - T.nFR, nCP = T.nP - T.nFP;
     h += '<div class="kpis">' +
       '<div class="kpi dest k-rec-usd"><span>Receita em US$</span><b>' + fUSD(T.rU) + '</b><em>realizado ' + fUSD(T.rRU) + ' · previsto ' + fUSD(T.rPU) + '</em></div>' +
       '<div class="kpi k-cogs"><span>COGS em US$</span><b>' + fUSD(T.cU) + '</b><em>realizado ' + fUSD(T.cRU) + ' · previsto ' + fUSD(T.cPU) + '</em></div>' +
       '<div class="kpi k-ops"><span>Operações</span><b>' + T.n + '</b><em>' + T.nR + ' realizada(s) · ' + T.nP + ' prevista(s)' + (T.nF ? ' · ' + T.nF + ' fora (risco 100%)' : '') + '</em></div>' +
       '<div class="kpi k-rec-op"><span>Receita / operação (US$)</span><b>' + (nC ? fUSD(T.rU / nC) : '—') + '</b><em>realizado ' + (nCR ? fUSD(T.rRU / nCR) : '—') + ' · previsto ' + (nCP ? fUSD(T.rPU / nCP) : '—') + (T.nF ? ' · sem as ' + T.nF + ' fora' : '') + '</em></div>' +
-      '<div class="kpi k-margem"><span>Margem em US$</span><b>' + fUSD(T.rU - T.cU) + '</b><em>' + margemTxt(T.rU, T.cU) + ' da receita</em></div>' +
-      '<div class="kpi k-hd"><span>Pessoal (homem-dia)</span><b>' + fN(T.hdR) + '</b><em>lançado · ' + fN(T.hdP) + ' previsto a realizar</em></div></div>';
-    var tabs = [['receita', 'Receita e margem'], ['matriz', 'Receita por mês (matriz)'], ['contratos', 'Contratos'], ['ppu', 'Itens PPU'], ['quim', 'Químicas'], ['cas', 'Casing equipment'], ['pes', 'Pessoal'], ['ops', 'Operações'], ['fontes', 'Arquivos (' + S.pacotes.length + ')']];
+      '<div class="kpi k-margem"><span>Margem em US$</span><b>' + fUSD(T.rU - T.cU) + '</b><em>' + margemTxt(T.rU, T.cU) + ' da receita</em></div></div>';
+    var tabs = [['receita', 'Receita e margem'], ['contratos', 'Contratos'], ['ppu', 'Itens PPU'], ['quim', 'Químicas'], ['cas', 'Casing equipment'], ['pes', 'Pessoal'], ['ops', 'Operações'], ['fontes', 'Arquivos (' + S.pacotes.length + ')']];
     h += '<div class="tabs">' + tabs.map(function (t) { return '<button class="tab' + (S.tab === t[0] ? ' on' : '') + '" data-tab="' + t[0] + '">' + esc(t[1]) + '</button>'; }).join('') + '</div>';
     h += telas[S.tab] ? telas[S.tab](C, F, A) : '';
     app.innerHTML = h;
     if (S.tab === 'receita' && S.graf) desenharGrafico(A, C);
+    if (S.mxVer) { verMesNaTabela(S.mxVer); S.mxVer = null; }
     var on = app.querySelector('.tab.on'); if (on) { var tb = on.parentNode; tb.scrollLeft = on.offsetLeft - 20; }
   };
   var linhaValores = function (t) {
@@ -733,67 +737,7 @@ tr.fora td b{color:var(--ink-3)}
         '<p class="nota">Receita e COGS = realizado (consumo lançado) + previsto (operações ainda sem consumo), × (1 − risco da operação). Operações com risco 100% ficam fora. “Uso do contrato” = valor consumido ÷ valor contratado. Clique no contrato para filtrar.</p></div>';
     },
     receita: function (C, F, A) {
-      var D = S.drill;
-      var niv = D.niveis.filter(function (k, i) { return DIMS[k] && D.niveis.indexOf(k) === i; });
-      if (!niv.length) niv = ['mes'];
-      var pad = function (d) { return ' style="padding-left:' + (10 + d * 22) + 'px"'; };
-      var valores = function (t) {
-        var nC = t.n - t.nF;
-        return '<td class="n">' + t.n + sub(t.nR + ' real. · ' + t.nP + ' prev.' + (t.nF ? ' · ' + t.nF + ' fora' : '')) + '</td>' +
-          '<td class="n"><b>' + fUSD(t.rU) + '</b>' + sub('real. ' + fUSD(t.rRU) + ' · prev. ' + fUSD(t.rPU)) + '</td>' +
-          '<td class="n">' + fUSD(t.cU) + '</td><td class="n">' + fUSD(t.rU - t.cU) + sub(margemTxt(t.rU, t.cU)) + '</td>' +
-          '<td class="n">' + (nC ? fUSD(t.rU / nC) : '—') + '</td>';
-      };
-      // itens PPU da operação: o lançado (realizada) ou o previsto, × o fator de risco (a soma dá a receita da operação)
-      var itensOp = function (x) {
-        var o = x.o, lista = (x.tipo === 'real' ? o.realizado.ppu : (o.previsto || {}).ppu) || [];
-        return lista.filter(function (l) { return l && l.qtd; }).map(function (l) {
-          var i = precoItem(o, l.ref), pu = l.usd != null ? l.usd : i.usd != null ? i.usd : null;
-          var g = l.valorUsd != null ? l.valorUsd : pu != null ? l.qtd * pu : null;
-          return {ref: l.ref, desc: l.desc || i.desc || '', unit: l.unit || i.unit || '', qtd: l.qtd, pu: pu, g: g, v: g == null ? null : g * x.f};
-        }).sort(function (a, b) { return (b.v || 0) - (a.v || 0) || String(a.ref).localeCompare(String(b.ref), 'pt', {numeric: true}); });
-      };
-      var linhaOp = function (x, d, cam) {
-        var o = x.o, its = itensOp(x), p = cam + '/' + encodeURIComponent('op:' + o.id);
-        if (D.mostrar != null) { if (d < D.mostrar) D.abertos[p] = 1; else delete D.abertos[p]; }
-        var ab = its.length && !!D.abertos[p];
-        linhas.push('<tr class="dd-op' + (x.f === 0 ? ' fora' : '') + (ab ? ' on' : '') + '"' + (its.length ? ' data-dd="' + esc(p) + '"' : '') + '><td' + pad(d) + '>' + (its.length ? '<span class="dd-tw">' + (ab ? '▾' : '▸') + '</span>' : '<span class="dd-tw"></span>') + fD(x.data) + ' · <b>' + esc(o.poco || '—') + '</b> · ' + esc(o.tipo || '—') + (o.revestimento ? ' ' + esc(o.revestimento) : '') +
-          sub([o.sonda || '—', o._ct.nome, o.so ? 'SO ' + o.so : '', its.length + ' item(ns) PPU'].filter(Boolean).map(esc).join(' · ')) + '</td><td class="n">' + stTag(o) + '</td>' +
-          '<td class="n"><b>' + fUSD(x.rU) + '</b>' + (x.f !== 1 ? sub('bruto ' + fUSD(x.gU)) : '') + '</td><td class="n">' + fUSD(x.cU) + '</td><td class="n">' + fUSD(x.rU - x.cU) + sub(margemTxt(x.rU, x.cU)) + '</td>' +
-          '<td class="n"></td></tr>');
-        if (ab) its.forEach(function (it) {
-          linhas.push('<tr class="dd-it' + (x.f === 0 ? ' fora' : '') + '"><td' + pad(d + 1) + '><b>' + esc(it.ref) + '</b> · ' + esc(it.desc || '—') + sub(esc(fN(it.qtd) + ' ' + (it.unit || '')) + ' × ' + (it.pu != null ? 'US$ ' + nf(2, 4)(it.pu) : 'sem valor em US$')) + '</td><td class="n"></td>' +
-            '<td class="n"><b>' + (it.v == null ? '—' : fUSD(it.v)) + '</b>' + (x.f !== 1 && it.g != null ? sub('bruto ' + fUSD(it.g)) : '') + '</td><td class="n"></td><td class="n"></td><td class="n">' + (it.v != null && x.rU ? fN(it.v / x.rU * 100) + '% da op.' : '') + '</td></tr>');
-        });
-      };
-      var linhas = [];
-      var nivel = function (ls, d, cam) {
-        var dim = DIMS[niv[d]], g = {};
-        ls.forEach(function (x) { var k = dim.k(x); (g[k] = g[k] || []).push(x); });
-        var gs = Object.keys(g).map(function (k) { var t = soma(g[k]); t.k = k; t.ls = g[k]; return t; });
-        gs.sort(dim.cron ? function (a, b) { return a.k.localeCompare(b.k); } : function (a, b) { return (b.rU + b.rB) - (a.rU + a.rB) || a.k.localeCompare(b.k, 'pt'); });
-        gs.forEach(function (t) {
-          var p = cam + '/' + encodeURIComponent(t.k);
-          if (D.mostrar != null) { if (d < D.mostrar) D.abertos[p] = 1; else delete D.abertos[p]; }
-          var ab = !!D.abertos[p];
-          linhas.push('<tr class="dd-g dd-n' + d + (ab ? ' on' : '') + '" data-dd="' + esc(p) + '"><td' + pad(d) + '><span class="dd-tw">' + (ab ? '▾' : '▸') + '</span>' + esc(dim.r ? dim.r(t.k) : t.k) + '</td>' + valores(t) + '</tr>');
-          if (!ab) return;
-          if (d + 1 < niv.length) nivel(t.ls, d + 1, p);
-          else t.ls.slice().sort(function (a, b) { return String(a.data).localeCompare(String(b.data)); }).forEach(function (x) { linhaOp(x, d + 1, p); });
-        });
-      };
-      nivel(A.linhas, 0, '');
-      D.mostrar = null;
-      var opc = function (i) {
-        return '<select class="dd-sel" data-nivel="' + i + '">' + DIM_ORDEM.filter(function (k) { return k === niv[i] || niv.indexOf(k) < 0; }).map(function (k) { return '<option value="' + k + '"' + (k === niv[i] ? ' selected' : '') + '>' + esc(DIMS[k].t) + '</option>'; }).join('') + '</select>' +
-          (niv.length > 1 ? '<button class="btn-x dd-rm" title="Tirar este nível" data-ddrm="' + i + '">×</button>' : '');
-      };
-      var barraN = '<div class="dd-bar"><span class="dd-l">Abrir por</span>' + niv.map(function (k, i) { return '<span class="dd-niv">' + opc(i) + '</span>'; }).join('<span class="dd-seta">›</span>') +
-        '<span class="dd-seta">›</span><span class="dd-fim">Operações › Itens PPU</span>' + (niv.length < DIM_ORDEM.length ? '<button class="btn-o dd-add" data-a="ddAdd">＋ nível</button>' : '') +
-        '<span class="sp"></span><span class="dd-l">Mostrar até</span><span class="dd-ate">' + niv.map(function (k, i) { return '<button class="btn-o" data-ddmostrar="' + i + '">' + esc(DIMS[k].t) + '</button>'; }).join('') + '<button class="btn-o" data-ddmostrar="' + niv.length + '">Operações</button><button class="btn-o" data-ddmostrar="' + (niv.length + 1) + '">Itens PPU</button></span></div>';
-      var cab = [niv.map(function (k) { return DIMS[k].t; }).join(' › ') + ' › Operação › Item PPU', N('Operações'), N('Receita US$'), N('COGS US$'), N('Margem US$'), N('Receita / operação US$')];
-      return (S.graf ? cartaoGrafico() : '') + '<div class="card"><div class="card-h"><h2>Receita, COGS e margem</h2>' + (S.graf ? '' : '<button class="btn-o g-mostrar" data-a="grafMostrar">Mostrar gráfico por mês</button>') + '</div>' + barraN + tabela(cab, linhas, '<tr><td>Total</td>' + valores(A.T) + '</tr>', 't-dd') +
-        '<p class="nota">Clique numa linha para abrir o próximo nível, até os itens PPU de cada operação. Data = data do serviço (realizada) ou data planejada (prevista). Receita e COGS já com o risco de cada operação; “Receita / operação” não conta as operações com risco 100%.</p></div>';
+      return cartoesQuartos(C) + (S.graf ? cartaoGrafico() : '') + cartaoMatriz(F, A);
     },
     ppu: function (C, F, A) {
       var l = A.ppu.filter(function (x) { return !S.soComConsumo || x.cons > 0 || x.aR > 0; });
@@ -832,16 +776,17 @@ tr.fora td b{color:var(--ink-3)}
         '<p class="nota">Quando o mesmo contrato está em mais de um arquivo, vale o gerado por último.</p></div>';
     }
   };
-  /* ---------- Receita por mês (matriz) — como o "Relatório Receita" do Excel ----------
-     Linhas: Cliente › Contrato › Sonda › Poço › Operação (abre e fecha). Colunas: trimestre › mês › Receita e COGS,
-     o total de cada trimestre e o total geral. US$, com o risco de cada operação aplicado. Os filtros do topo
-     (mês, ano, trimestre, cliente, contrato, região, tipo) valem aqui, como os segmentadores do Excel. */
+  /* ---------- Receita, COGS e margem por ano (matriz) — como o "Relatório Receita" do Excel ----------
+     Linhas: Cliente › Contrato › Sonda › Poço › Operação › Item PPU (abre e fecha). Colunas: quarto (Q1…Q4) › mês ›
+     Receita e COGS, o total de cada quarto e o Total (Receita, COGS, Margem). Um ano por vez (filtro Ano); o quarto
+     escolhido vale no lugar dos meses. US$, com o risco de cada operação aplicado. */
   var NIV_MX = [
     {t: 'Cliente', k: function (x) { return x.o._ct.cliente || '—'; }},
     {t: 'Contrato', k: function (x) { return x.o._ct.nome || '—'; }},
     {t: 'Sonda', k: function (x) { return x.o.sonda || '—'; }},
     {t: 'Poço', k: function (x) { return x.o.poco || '—'; }}
   ];
+  var MX_ATE = ['Cliente', 'Contrato', 'Sonda', 'Poço', 'Operação', 'Item PPU'];
   var somaMx = function (ls) {
     var t = {m: {}, r: 0, c: 0, n: ls.length, nF: 0};
     ls.forEach(function (x) {
@@ -850,29 +795,39 @@ tr.fora td b{color:var(--ink-3)}
     });
     return t;
   };
-  var triMx = function (t, tri) {
+  var quartoMx = function (t, qd) {
     var v = {r: 0, c: 0, n: 0};
-    tri.meses.forEach(function (m) { var c = t.m[m]; if (c) { v.r += c.r; v.c += c.c; v.n += c.n; } });
+    qd.meses.forEach(function (m) { var c = t.m[m]; if (c) { v.r += c.r; v.c += c.c; v.n += c.n; } });
     return v;
   };
+  // colunas: os meses com operação, agrupados por quarto (Q1/2026 …)
   var colunasMx = function (A) {
     var meses = A.linhas.map(function (x) { return String(x.data).slice(0, 7); }).filter(function (m, i, l) { return /^\d{4}-\d{2}$/.test(m) && l.indexOf(m) === i; }).sort();
-    var tris = [];
+    var qs = [];
     meses.forEach(function (m) {
-      var k = m.slice(0, 4) + '-T' + triDe(m), u = tris[tris.length - 1];
-      if (!u || u.k !== k) tris.push(u = {k: k, rot: 'T' + triDe(m) + '/' + m.slice(0, 4), meses: []});
+      var k = m.slice(0, 4) + '-Q' + triDe(m), u = qs[qs.length - 1];
+      if (!u || u.k !== k) qs.push(u = {k: k, rot: 'Q' + triDe(m) + '/' + m.slice(0, 4), meses: []});
       u.meses.push(m);
     });
-    return tris;
+    return qs;
   };
   var rotOpMx = function (x) { var o = x.o; return fD(x.data) + ' · ' + (o.tipo || '—') + (o.revestimento ? ' ' + o.revestimento : ''); };
   var subOpMx = function (x) {
     var o = x.o, r = Number(o.risco) || 0;
     return [x.tipo === 'real' ? 'realizada' : 'prevista', r >= 100 ? 'fora (risco 100%)' : r > 0 ? 'risco ' + fN(r) + '%' : '', o.so ? 'SO ' + o.so : ''].filter(Boolean).join(' · ');
   };
-  // percorre a árvore; abrir(d, caminho) diz se o grupo está aberto
+  // itens PPU da operação: o lançado (realizada) ou o previsto, × o fator de risco (a soma dá a receita da operação)
+  var itensOpMx = function (x) {
+    var o = x.o, lista = (x.tipo === 'real' ? o.realizado.ppu : (o.previsto || {}).ppu) || [];
+    return lista.filter(function (l) { return l && l.qtd; }).map(function (l) {
+      var i = precoItem(o, l.ref), pu = l.usd != null ? l.usd : i.usd != null ? i.usd : null;
+      var g = l.valorUsd != null ? l.valorUsd : pu != null ? l.qtd * pu : null;
+      return {ref: l.ref, desc: l.desc || i.desc || '', unit: l.unit || i.unit || '', qtd: l.qtd, pu: pu, g: g, v: g == null ? null : g * x.f};
+    }).sort(function (a, b) { return (b.v || 0) - (a.v || 0) || String(a.ref).localeCompare(String(b.ref), 'pt', {numeric: true}); });
+  };
+  // percorre a árvore; abrir(d, caminho) diz se o grupo (ou a operação, d = 4) está aberto
   var arvoreMx = function (A, abrir) {
-    var out = [];
+    var out = [], nN = NIV_MX.length;
     var rec = function (ls, d, cam, rots) {
       var nv = NIV_MX[d], g = {};
       ls.forEach(function (x) { var k = nv.k(x); (g[k] = g[k] || []).push(x); });
@@ -880,11 +835,17 @@ tr.fora td b{color:var(--ink-3)}
       gs.sort(function (a, b) { return b.r - a.r || a.k.localeCompare(b.k, 'pt'); });
       gs.forEach(function (t) {
         var p = cam + '/' + encodeURIComponent(t.k), ab = abrir(d, p), rr = rots.concat([t.k]);
-        out.push({d: d, p: p, rot: t.k, rots: rr, t: t, ab: ab, folha: false});
+        out.push({d: d, p: p, rot: t.k, rots: rr, t: t, ab: ab, tipo: 'g'});
         if (!ab) return;
-        if (d + 1 < NIV_MX.length) rec(t.ls, d + 1, p, rr);
-        else t.ls.slice().sort(function (a, b) { return String(a.data).localeCompare(String(b.data)); }).forEach(function (x) {
-          out.push({d: d + 1, rot: rotOpMx(x), rots: rr.concat([rotOpMx(x)]), t: somaMx([x]), x: x, folha: true});
+        if (d + 1 < nN) { rec(t.ls, d + 1, p, rr); return; }
+        t.ls.slice().sort(function (a, b) { return String(a.data).localeCompare(String(b.data)); }).forEach(function (x) {
+          var its = itensOpMx(x), po = p + '/' + encodeURIComponent('op:' + x.o.id), abo = its.length ? abrir(nN, po) : false, ro = rr.concat([rotOpMx(x)]);
+          out.push({d: nN, p: its.length ? po : null, rot: rotOpMx(x), rots: ro, t: somaMx([x]), x: x, ab: abo, tipo: 'op', nIt: its.length});
+          if (abo) its.forEach(function (it) {
+            var m = String(x.data).slice(0, 7), v = it.v || 0, ti = {m: {}, r: v, c: 0, n: it.v == null ? 0 : 1, nF: 0};
+            if (it.v != null) ti.m[m] = {r: v, c: 0, n: 1};
+            out.push({d: nN + 1, rot: it.ref + ' · ' + (it.desc || '—'), rots: ro.concat([it.ref + ' · ' + (it.desc || '—')]), t: ti, x: x, it: it, tipo: 'it'});
+          });
         });
       });
     };
@@ -892,94 +853,136 @@ tr.fora td b{color:var(--ink-3)}
     return out;
   };
   var fV = nf(2, 2);
-  var celMx = function (v, n, cls) { return '<td class="n ' + cls + (n && v < 0 ? ' neg' : '') + '">' + (n ? fV(v) : '') + '</td>'; };
-  var celulasMx = function (t, tris) {
-    var h = '';
-    tris.forEach(function (tri) {
-      tri.meses.forEach(function (m) { var c = t.m[m]; h += celMx(c ? c.r : 0, c && c.n, 'mx-r mx-ini') + celMx(c ? c.c : 0, c && c.n, 'mx-c'); });
-      var q = triMx(t, tri);
-      h += celMx(q.r, q.n, 'mx-r mx-q mx-ini') + celMx(q.c, q.n, 'mx-c mx-q');
+  var celMx = function (v, n, cls, mes) { return '<td class="n ' + cls + (n && v < 0 ? ' neg' : '') + '"' + (mes ? ' data-mes="' + mes + '"' : '') + '>' + (n ? fV(v) : '') + '</td>'; };
+  // semCogs: linha de item PPU (só receita; COGS e margem ficam em branco)
+  var celulasMx = function (t, qs, semCogs) {
+    var h = '', nc = function (n) { return semCogs ? 0 : n; };
+    qs.forEach(function (qd) {
+      qd.meses.forEach(function (m) { var c = t.m[m]; h += celMx(c ? c.r : 0, c && c.n, 'mx-r mx-ini', m) + celMx(c ? c.c : 0, nc(c && c.n), 'mx-c', m); });
+      var q = quartoMx(t, qd);
+      h += celMx(q.r, q.n, 'mx-r mx-q mx-ini') + celMx(q.c, nc(q.n), 'mx-c mx-q');
     });
-    return h + celMx(t.r, t.n, 'mx-r mx-t mx-ini') + celMx(t.c, t.n, 'mx-c mx-t') + celMx(t.r - t.c, t.n, 'mx-t');
+    return h + celMx(t.r, t.n, 'mx-r mx-t mx-ini') + celMx(t.c, nc(t.n), 'mx-c mx-t') + celMx(t.r - t.c, nc(t.n), 'mx-t');
   };
-  var MX_ATE = ['Cliente', 'Contrato', 'Sonda', 'Poço', 'Operação'];
-  telas.matriz = function (C, F, A) {
-    var M = S.mx, tris = colunasMx(A);
+  var periodoTxt = function () {
+    var f = S.f;
+    if (f.tri) { var q = Number(f.tri); return 'Q' + q + ' (' + MESES[q * 3 - 3] + ' – ' + MESES[q * 3 - 1] + ')'; }
+    if (f.mIni) return f.mIni === f.mFim ? MESES[f.mIni - 1] : MESES[f.mIni - 1] + ' – ' + MESES[f.mFim - 1];
+    return '';
+  };
+  // cards Q1–Q4 e total do ano: o ano todo (com os filtros de cliente, contrato, região e tipo), sem o quarto/mês escolhido
+  var cartoesQuartos = function (C) {
+    var F0 = filtrar(C, true), ls = F0.ops.map(function (o) { return valorOp(o, F0); }).filter(Boolean), g = {1: [], 2: [], 3: [], 4: []};
+    ls.forEach(function (x) { var q = triDe(String(x.data).slice(0, 7)); if (g[q]) g[q].push(x); });
+    var card = function (q, t, rot, per, cls) {
+      var on = q ? S.f.tri === String(q) : !S.f.tri && !S.f.mIni;
+      return '<button type="button" class="kpi qc ' + cls + (on ? ' on' : '') + '" data-q="' + (q || '') + '" title="' + (q ? 'Ver só o Q' + q + ' (clique de novo para ver o ano todo)' : 'Ver o ano todo') + '">' +
+        '<span>' + esc(rot) + ' <i>' + esc(per) + '</i></span><b>' + fUSD(t.rU) + '</b>' +
+        '<em>COGS ' + fUSD(t.cU) + '</em><em>margem ' + fUSD(t.rU - t.cU) + ' (' + margemTxt(t.rU, t.cU) + ')</em><em class="qc-n">' + (t.n ? t.n + ' operação(ões)' + (t.nF ? ' · ' + t.nF + ' fora' : '') : 'sem operação') + '</em></button>';
+    };
+    return '<div class="qcards">' + [1, 2, 3, 4].map(function (q) { return card(q, soma(g[q]), 'Q' + q, MESES[q * 3 - 3] + '–' + MESES[q * 3 - 1], 'qc-q'); }).join('') +
+      card(0, soma(ls), 'Total ' + (S.f.ano || ''), 'jan–dez', 'dest qc-ano') + '</div>';
+  };
+  var cartaoMatriz = function (F, A) {
+    var M = S.mx, qs = colunasMx(A);
     var rows = arvoreMx(A, function (d, p) {
       if (M.mostrar != null) { if (d < M.mostrar) M.abertos[p] = 1; else delete M.abertos[p]; }
       return !!M.abertos[p];
     });
     M.mostrar = null;
     var pad = function (d) { return ' style="padding-left:' + (8 + d * 18) + 'px"'; };
-    var cab1 = '<tr><th rowspan="3" class="mx-rot">' + NIV_MX.map(function (n) { return n.t; }).join(' › ') + ' › Operação</th>' +
-      tris.map(function (tri) { return '<th class="mx-tri mx-ini" colspan="' + (tri.meses.length * 2 + 2) + '">' + esc(tri.rot) + '</th>'; }).join('') +
+    var cab1 = '<tr><th rowspan="3" class="mx-rot">' + NIV_MX.map(function (n) { return n.t; }).join(' › ') + ' › Operação › Item PPU</th>' +
+      qs.map(function (qd) { return '<th class="mx-tri mx-ini" colspan="' + (qd.meses.length * 2 + 2) + '">' + esc(qd.rot) + '</th>'; }).join('') +
       '<th class="mx-tri mx-t mx-ini" colspan="3" rowspan="2">Total</th></tr>';
-    var cab2 = '<tr>' + tris.map(function (tri) {
-      return tri.meses.map(function (m) { return '<th class="mx-mes mx-ini" colspan="2">' + esc(fMes(m)) + '</th>'; }).join('') + '<th class="mx-mes mx-q mx-ini" colspan="2">Total ' + esc(tri.rot) + '</th>';
+    var cab2 = '<tr>' + qs.map(function (qd) {
+      return qd.meses.map(function (m) { return '<th class="mx-mes mx-ini" colspan="2" data-mes="' + m + '">' + esc(fMes(m)) + '</th>'; }).join('') + '<th class="mx-mes mx-q mx-ini" colspan="2">Total ' + esc(qd.rot) + '</th>';
     }).join('') + '</tr>';
-    var par = '<th class="n mx-ini">Receita</th><th class="n">COGS</th>';
-    var cab3 = '<tr>' + tris.map(function (tri) { return tri.meses.map(function () { return par; }).join('') + par.replace('n mx-ini', 'n mx-q mx-ini').replace('"n"', '"n mx-q"'); }).join('') +
-      '<th class="n mx-t mx-ini">Receita</th><th class="n mx-t">COGS</th><th class="n mx-t">Margem</th></tr>';
+    var cab3 = '<tr>' + qs.map(function (qd) {
+      return qd.meses.map(function (m) { return '<th class="n mx-ini" data-mes="' + m + '">Receita</th><th class="n" data-mes="' + m + '">COGS</th>'; }).join('') + '<th class="n mx-q mx-ini">Receita</th><th class="n mx-q">COGS</th>';
+    }).join('') + '<th class="n mx-t mx-ini">Receita</th><th class="n mx-t">COGS</th><th class="n mx-t">Margem</th></tr>';
     var corpo = rows.map(function (r) {
-      if (r.folha) {
-        return '<tr class="mx-op' + (r.x.f === 0 ? ' fora' : '') + '"><td class="mx-rot"' + pad(r.d) + '><span class="dd-tw"></span>' + esc(r.rot) + sub(esc(subOpMx(r.x))) + '</td>' + celulasMx(r.t, tris) + '</tr>';
+      if (r.tipo === 'it') {
+        var it = r.it;
+        return '<tr class="mx-it' + (r.x.f === 0 ? ' fora' : '') + '"><td class="mx-rot"' + pad(r.d) + '><b>' + esc(it.ref) + '</b> · ' + esc(it.desc || '—') +
+          sub(esc(fN(it.qtd) + ' ' + (it.unit || '')) + ' × ' + (it.pu != null ? 'US$ ' + nf(2, 4)(it.pu) : 'sem valor em US$') + (r.x.f !== 1 && it.g != null ? ' · bruto ' + esc(fUSD(it.g)) : '')) + '</td>' + celulasMx(r.t, qs, true) + '</tr>';
+      }
+      if (r.tipo === 'op') {
+        return '<tr class="mx-op' + (r.x.f === 0 ? ' fora' : '') + (r.ab ? ' on' : '') + '"' + (r.p ? ' data-mx="' + esc(r.p) + '"' : '') + '><td class="mx-rot"' + pad(r.d) + '><span class="dd-tw">' + (r.nIt ? (r.ab ? '▾' : '▸') : '') + '</span>' + esc(r.rot) +
+          sub(esc(subOpMx(r.x) + (r.nIt ? ' · ' + r.nIt + ' item(ns) PPU' : ''))) + '</td>' + celulasMx(r.t, qs) + '</tr>';
       }
       return '<tr class="mx-g mx-n' + r.d + (r.ab ? ' on' : '') + '" data-mx="' + esc(r.p) + '"><td class="mx-rot"' + pad(r.d) + '><span class="dd-tw">' + (r.ab ? '▾' : '▸') + '</span>' + esc(r.rot) +
-        ' <span class="sub2">' + r.t.n + ' op.</span></td>' + celulasMx(r.t, tris) + '</tr>';
+        ' <span class="sub2">' + r.t.n + ' op.</span></td>' + celulasMx(r.t, qs) + '</tr>';
     }).join('');
     var tot = somaMx(A.linhas);
-    var tab = tris.length
-      ? '<div class="tw mx-wrap"><table class="t-mx"><thead>' + cab1 + cab2 + cab3 + '</thead><tbody>' + corpo + '</tbody><tfoot><tr><td class="mx-rot">Total geral <span class="sub2">' + tot.n + ' op.</span></td>' + celulasMx(tot, tris) + '</tr></tfoot></table></div>'
+    var tab = qs.length
+      ? '<div class="tw mx-wrap"><table class="t-mx"><thead>' + cab1 + cab2 + cab3 + '</thead><tbody>' + corpo + '</tbody><tfoot><tr><td class="mx-rot">Total ' + esc(S.f.ano || '') + ' <span class="sub2">' + tot.n + ' op.</span></td>' + celulasMx(tot, qs) + '</tr></tfoot></table></div>'
       : '<p class="vazio">Nada no filtro.</p>';
+    var per = periodoTxt();
     var barraM = '<div class="dd-bar"><span class="dd-l">Mostrar até</span><span class="dd-ate">' + MX_ATE.map(function (t, i) { return '<button class="btn-o" data-mxmostrar="' + i + '">' + t + '</button>'; }).join('') + '</span>' +
-      '<span class="sp"></span><button class="btn-o mx-xls" data-a="mxExcel"' + (tris.length ? '' : ' disabled') + ' title="Baixa a tabela como está na tela (as linhas abertas)">⬇ Excel desta tabela</button></div>';
-    return '<div class="card"><div class="card-h"><h2>Receita e COGS por mês (US$)</h2></div>' + barraM + tab +
-      '<p class="nota">Como o “Relatório Receita” do Excel: clientes nas linhas (clique para abrir contrato, sonda, poço e operação), trimestres e meses nas colunas, com o total de cada trimestre (em verde) e o total geral. ' +
-      'Valores em US$, com o risco de cada operação aplicado: realizada pela data do serviço, prevista pela data planejada. Célula vazia = sem operação no mês. ' +
-      'Os filtros do topo (mês, ano, trimestre, cliente, contrato, região e tipo de contrato) valem para esta tabela, como os segmentadores do Excel.</p></div>';
+      '<span class="sp"></span><button class="btn-o mx-xls" data-a="mxExcel"' + (qs.length ? '' : ' disabled') + ' title="Baixa a tabela como está na tela (as linhas abertas)">⬇ Excel desta tabela</button></div>';
+    return '<div class="card mx-card"><div class="card-h"><h2>Receita, COGS e margem — ' + esc(S.f.ano || '') + (per ? ' · ' + esc(per) : '') + ' (US$)</h2>' + (S.graf ? '' : '<button class="btn-o g-mostrar" data-a="grafMostrar">Mostrar gráfico por mês</button>') + '</div>' + barraM + tab +
+      '<p class="nota">Clientes nas linhas (clique para abrir contrato, sonda, poço, operação e itens PPU); quartos e meses nas colunas, com o total de cada quarto (em verde) e o total. ' +
+      'Valores em US$, com o risco de cada operação aplicado: realizada pela data do serviço, prevista pela data planejada. Célula vazia = sem operação no mês; operação com risco 100% em cinza, com 0,00.</p></div>';
+  };
+  // seletor de período: uma caixa só; clique no mês inicial e depois no final (dentro do ano escolhido)
+  var popMes = function () {
+    var f = S.f;
+    return '<div class="mes-pop" role="dialog" aria-label="Escolher o período"><div class="mes-pop-t">' + (S.mesPasso ? 'Agora clique no mês final' : 'Clique no mês inicial e depois no final') + ' · ' + esc(f.ano) + '</div><div class="mes-grid">' +
+      MESES.map(function (m, i) { var n = i + 1, dentro = f.mIni && n >= f.mIni && n <= f.mFim; return '<button type="button" class="mes-b' + (dentro ? ' on' : '') + (dentro && (n === f.mIni || n === f.mFim) ? ' ponta' : '') + '" data-mesb="' + n + '">' + m + '</button>'; }).join('') +
+      '</div><div class="mes-pop-r"><button type="button" class="btn-o" data-a="mesTodos">Ano todo</button><button type="button" class="btn-o" data-a="mesFechar">Fechar</button></div></div>';
+  };
+  // clique num mês do gráfico: destaca o mês na tabela e rola até ele
+  var verMesNaTabela = function (m) {
+    var wrap = document.querySelector('.mx-wrap'), th = wrap && wrap.querySelector('th.mx-mes[data-mes="' + m + '"]');
+    var card = document.querySelector('.mx-card');
+    if (card && card.scrollIntoView) card.scrollIntoView({block: 'start'});
+    if (!th) return;
+    wrap.querySelectorAll('[data-mes="' + m + '"]').forEach(function (el) { el.classList.add('mx-hl'); });
+    var rot = wrap.querySelector('th.mx-rot');
+    wrap.scrollLeft = Math.max(0, th.offsetLeft - (rot ? rot.offsetWidth : 0) - 12);
   };
   // planilha da matriz: abrir(d, caminho) decide as linhas (como na tela, ou tudo aberto)
   var abaMatriz = function (A, abrir) {
-    var tris = colunasMx(A), rows = arvoreMx(A, abrir);
-    var nL = NIV_MX.length + 2; // Nível + Cliente…Poço + Operação
-    var h1 = ['Nível'].concat(NIV_MX.map(function (n) { return n.t; })).concat(['Operação']), h2 = h1.map(function () { return null; }), h3 = h1.map(function () { return null; });
+    var qs = colunasMx(A), rows = arvoreMx(A, abrir);
+    var nL = NIV_MX.length + 3; // Nível + Cliente…Poço + Operação + Item PPU
+    var h1 = ['Nível'].concat(NIV_MX.map(function (n) { return n.t; })).concat(['Operação', 'Item PPU']), h2 = h1.map(function () { return null; }), h3 = h1.map(function () { return null; });
     var merges = h1.map(function (x, c) { return {s: {r: 0, c: c}, e: {r: 2, c: c}}; });
     var c0 = nL;
-    tris.forEach(function (tri) {
-      var w = tri.meses.length * 2 + 2;
-      h1.push(tri.rot); for (var i = 1; i < w; i++) h1.push(null);
+    qs.forEach(function (qd) {
+      var w = qd.meses.length * 2 + 2;
+      h1.push(qd.rot); for (var i = 1; i < w; i++) h1.push(null);
       merges.push({s: {r: 0, c: c0}, e: {r: 0, c: c0 + w - 1}});
-      tri.meses.forEach(function (m, j) { h2.push(fMes(m), null); h3.push('Receita', 'COGS'); merges.push({s: {r: 1, c: c0 + j * 2}, e: {r: 1, c: c0 + j * 2 + 1}}); });
-      h2.push('Total ' + tri.rot, null); h3.push('Receita', 'COGS'); merges.push({s: {r: 1, c: c0 + w - 2}, e: {r: 1, c: c0 + w - 1}});
+      qd.meses.forEach(function (m, j) { h2.push(fMes(m), null); h3.push('Receita', 'COGS'); merges.push({s: {r: 1, c: c0 + j * 2}, e: {r: 1, c: c0 + j * 2 + 1}}); });
+      h2.push('Total ' + qd.rot, null); h3.push('Receita', 'COGS'); merges.push({s: {r: 1, c: c0 + w - 2}, e: {r: 1, c: c0 + w - 1}});
       c0 += w;
     });
     h1.push('Total', null, null); h2.push(null, null, null); h3.push('Receita', 'COGS', 'Margem');
     merges.push({s: {r: 0, c: c0}, e: {r: 1, c: c0 + 2}});
-    var vals = function (t) {
-      var v = [], num = function (x, n) { return n ? r4(x) : null; };
-      tris.forEach(function (tri) {
-        tri.meses.forEach(function (m) { var c = t.m[m]; v.push(num(c ? c.r : 0, c && c.n), num(c ? c.c : 0, c && c.n)); });
-        var q = triMx(t, tri); v.push(num(q.r, q.n), num(q.c, q.n));
+    var vals = function (t, semCogs) {
+      var v = [], num = function (x, n) { return n ? r4(x) : null; }, nc = function (n) { return semCogs ? 0 : n; };
+      qs.forEach(function (qd) {
+        qd.meses.forEach(function (m) { var c = t.m[m]; v.push(num(c ? c.r : 0, c && c.n), num(c ? c.c : 0, nc(c && c.n))); });
+        var q = quartoMx(t, qd); v.push(num(q.r, q.n), num(q.c, nc(q.n)));
       });
-      return v.concat([num(t.r, t.n), num(t.c, t.n), num(t.r - t.c, t.n)]);
+      return v.concat([num(t.r, t.n), num(t.c, nc(t.n)), num(t.r - t.c, nc(t.n))]);
     };
     var aoa = [h1, h2, h3];
     rows.forEach(function (r) {
       var rot = r.rots.slice(); while (rot.length < nL - 1) rot.push(null);
-      aoa.push([r.folha ? 'Operação' : NIV_MX[r.d].t].concat(rot).concat(vals(r.t)));
+      aoa.push([r.tipo === 'it' ? 'Item PPU' : r.tipo === 'op' ? 'Operação' : NIV_MX[r.d].t].concat(rot).concat(vals(r.t, r.tipo === 'it')));
     });
-    aoa.push(['Total geral'].concat(h1.slice(1, nL).map(function () { return null; })).concat(vals(somaMx(A.linhas))));
+    aoa.push(['Total ' + (S.f.ano || '')].concat(h1.slice(1, nL).map(function () { return null; })).concat(vals(somaMx(A.linhas))));
     var ws = XLSX.utils.aoa_to_sheet(aoa);
     ws['!merges'] = merges;
-    ws['!cols'] = [{wch: 10}, {wch: 18}, {wch: 26}, {wch: 14}, {wch: 16}, {wch: 30}].concat(h1.slice(nL).map(function () { return {wch: 14}; }));
+    ws['!cols'] = [{wch: 10}, {wch: 18}, {wch: 26}, {wch: 14}, {wch: 16}, {wch: 30}, {wch: 34}].concat(h1.slice(nL).map(function () { return {wch: 14}; }));
     for (var r = 3; r < aoa.length; r++) for (var c = nL; c < h1.length; c++) { var ref = XLSX.utils.encode_cell({r: r, c: c}); if (ws[ref] && ws[ref].t === 'n') ws[ref].z = '#,##0.00'; }
     return ws;
   };
   var excelMatriz = function () {
     var A = agregar(filtrar(consolidar()));
-    var wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, abaMatriz(A, function (d, p) { return !!S.mx.abertos[p]; }), 'Receita por mês');
-    baixarXlsx(wb, 'EARL_Gerencial_receita_por_mes_' + hojeTxt() + '.xlsx');
+    var wb = XLSX.utils.book_new(), per = periodoTxt();
+    XLSX.utils.book_append_sheet(wb, abaMatriz(A, function (d, p) { return !!S.mx.abertos[p]; }), 'Receita ' + (S.f.ano || ''));
+    baixarXlsx(wb, 'EARL_Gerencial_receita_' + (S.f.ano || '') + (per ? '_' + per.replace(/[^\wÀ-ú]+/g, '-').replace(/^-|-$/g, '') : '') + '_' + hojeTxt() + '.xlsx');
   };
   var baixarXlsx = function (wb, nome) {
     var buf = XLSX.write(wb, {bookType: 'xlsx', type: 'array'});
@@ -1004,7 +1007,7 @@ tr.fora td b{color:var(--ink-3)}
     var cols = function (t) { return [t.n, t.nR, t.nP, t.nF, r4(t.rRU), r4(t.rPU), r4(t.rU), r4(t.rRB), r4(t.rPB), r4(t.rB), r4(t.cU), r4(t.cB), r4(t.rU - t.cU), r4(t.rB - t.cB)]; };
     var cab = ['Operações', 'Realizadas', 'Previstas', 'Fora (risco 100%)', 'Receita realizada US$', 'Receita prevista US$', 'Receita US$', 'Receita realizada R$', 'Receita prevista R$', 'Receita R$', 'COGS US$', 'COGS R$', 'Margem US$', 'Margem R$'];
     aba('Contratos', [['Contrato', 'Número', 'Cliente', 'Região', 'Tipo', 'Engenheiro', 'Arquivo gerado em'].concat(cab).concat(['Uso do contrato (valor) %'])].concat(A.porCt.map(function (x) { return [x.c.nome, x.c.numero || '', x.c.cliente, x.c.regiao, x.c.tipo, x.c._por, fDH(x.c._gerado)].concat(cols(x.t)).concat([x.pctValor == null ? null : r4(x.pctValor)]); })).concat([['Total', '', '', '', '', '', ''].concat(cols(T))]), [30, 16, 18, 12, 18, 20, 16].concat(cab.map(function () { return 14; })));
-    XLSX.utils.book_append_sheet(wb, abaMatriz(A, function () { return true; }), 'Receita por mês');
+    XLSX.utils.book_append_sheet(wb, abaMatriz(A, function () { return true; }), 'Receita ' + (S.f.ano || ''));
     aba('Por mês', [['Mês'].concat(cab)].concat(A.porMes.map(function (x) { return [fMes(x.k)].concat(cols(x)); })), [12].concat(cab.map(function () { return 14; })));
     aba('Itens PPU', [['Contrato', 'Item', 'Descrição', 'Unid.', 'Contratado', 'Consumido', 'Saldo', '% usado', 'Lançado no período', 'A realizar', 'Receita US$', 'Receita R$', 'Valor vigente US$', 'Valor vigente R$']].concat(A.ppu.map(function (x) { return [x.c.nome, x.i.ref, x.i.desc || '', x.i.unit || '', x.i.contratado, x.cons, x.saldo, x.pct == null ? null : r4(x.pct), x.per, x.aR, r4(x.u), r4(x.b), x.i.usd, x.i.brl]; })), [26, 10, 50, 8, 12, 12, 12, 9, 14, 12, 14, 14, 14, 14]);
     var matA = function (lista) { return [['SAP', 'Produto', 'Unid.', 'COGS unit. US$', 'COGS unit. R$', 'Planejado', 'Lançado', 'A realizar', 'COGS US$', 'COGS R$', 'Contratos']].concat(lista.map(function (x) { return [x.sap, x.nome, x.unid, x.cu, x.cb, r4(x.plan), r4(x.real), r4(x.aR), r4(x.cU), r4(x.cB), x.ctsL.join(', ')]; })); };
@@ -1032,14 +1035,19 @@ tr.fora td b{color:var(--ink-3)}
 
   /* ---------- eventos ---------- */
   document.addEventListener('click', function (e) {
-    var t = e.target.closest('[data-a],[data-tab],[data-ct],[data-rm],[data-dd],[data-ddrm],[data-ddmostrar],[data-gmodo],[data-mx],[data-mxmostrar]');
+    var t = e.target.closest('[data-a],[data-tab],[data-ct],[data-rm],[data-gmodo],[data-mx],[data-mxmostrar],[data-q],[data-mesb]');
+    if (S.mesPop && !e.target.closest('.mes-f')) { S.mesPop = false; S.mesPasso = 0; if (!t) { render(); return; } } // clique fora fecha o seletor de meses
     if (!t) return;
+    if (t.dataset.mesb != null) {
+      var nm = Number(t.dataset.mesb);
+      if (!S.mesPasso) { S.f.mIni = S.f.mFim = nm; S.mesPasso = 1; }
+      else { if (nm < S.f.mIni) { S.f.mFim = S.f.mIni; S.f.mIni = nm; } else S.f.mFim = nm; S.mesPasso = 0; S.mesPop = false; }
+      render(); return;
+    }
+    if (t.dataset.q != null) { var q = t.dataset.q; S.f.tri = q && S.f.tri !== q ? q : ''; S.f.mIni = S.f.mFim = 0; S.mesPop = false; render(); return; }
     if (t.dataset.gmodo) { S.gmodo = t.dataset.gmodo; try { localStorage.setItem('earlger:gmodo', S.gmodo); } catch (x) {} render(); return; }
     if (t.dataset.mx != null) { var M = S.mx; if (M.abertos[t.dataset.mx]) delete M.abertos[t.dataset.mx]; else M.abertos[t.dataset.mx] = 1; render(); return; }
     if (t.dataset.mxmostrar != null) { S.mx.mostrar = Number(t.dataset.mxmostrar); render(); return; }
-    if (t.dataset.dd != null) { var D = S.drill; if (D.abertos[t.dataset.dd]) delete D.abertos[t.dataset.dd]; else D.abertos[t.dataset.dd] = 1; render(); return; }
-    if (t.dataset.ddrm != null) { S.drill.niveis.splice(Number(t.dataset.ddrm), 1); gravarNiveis(); render(); return; }
-    if (t.dataset.ddmostrar != null) { S.drill.mostrar = Number(t.dataset.ddmostrar); render(); return; }
     if (t.dataset.tab) { S.tab = t.dataset.tab; try { localStorage.setItem('earlger:tab', S.tab); } catch (x) {} render(); return; }
     if (t.dataset.ct) { S.f.contrato = S.f.contrato === t.dataset.ct ? '' : t.dataset.ct; render(); return; }
     if (t.dataset.rm != null) { S.pacotes.splice(Number(t.dataset.rm), 1); gravar(); render(); aviso('Arquivo tirado'); return; }
@@ -1048,16 +1056,17 @@ tr.fora td b{color:var(--ink-3)}
     else if (a === 'pasta') $('#inPasta').click();
     else if (a === 'excel') excel();
     else if (a === 'grafOcultar' || a === 'grafMostrar') { S.graf = a === 'grafMostrar'; try { localStorage.setItem('earlger:graf', S.graf ? 'visivel' : 'oculto'); } catch (x) {} render(); }
-    else if (a === 'ddAdd') { var livre = ['cliente', 'contrato', 'sonda', 'poco', 'tipoop', 'regiao', 'tipoct', 'situacao', 'mes', 'ano'].filter(function (k) { return S.drill.niveis.indexOf(k) < 0; })[0]; if (livre) { S.drill.niveis.push(livre); gravarNiveis(); render(); } }
-    else if (a === 'limparf') { S.f = {de: '', ate: '', ano: '', tri: '', cliente: '', contrato: '', regiao: '', tipo: '', busca: ''}; render(); }
+    else if (a === 'limparf') { S.f = {ano: S.f.ano, tri: '', mIni: 0, mFim: 0, cliente: '', contrato: '', regiao: '', tipo: '', busca: ''}; render(); } // o ano fica
+    else if (a === 'mesAbrir') { S.mesPop = !S.mesPop; S.mesPasso = 0; render(); }
+    else if (a === 'mesTodos') { S.f.mIni = S.f.mFim = 0; S.mesPop = false; S.mesPasso = 0; render(); }
+    else if (a === 'mesFechar') { S.mesPop = false; S.mesPasso = 0; render(); }
     else if (a === 'mxExcel') excelMatriz();
     else if (a === 'limpar') { if (confirm('Tirar todos os arquivos carregados deste navegador?')) { S.pacotes = []; gravar(); render(); } }
   });
   document.addEventListener('change', function (e) {
     var t = e.target;
-    if (t.dataset && t.dataset.f) { S.f[t.dataset.f] = t.value; render(); return; }
+    if (t.dataset && t.dataset.f) { S.f[t.dataset.f] = t.value; if (t.dataset.f === 'tri' && t.value) { S.f.mIni = S.f.mFim = 0; } S.mesPop = false; render(); return; } // o quarto vale no lugar dos meses
     if (t.dataset && t.dataset.tend != null) { S.tend = t.value; try { localStorage.setItem('earlger:tend', S.tend); } catch (x) {} render(); return; }
-    if (t.dataset && t.dataset.nivel != null) { S.drill.niveis[Number(t.dataset.nivel)] = t.value; gravarNiveis(); render(); return; }
     if (t.dataset && t.dataset.a === 'soCons') { S.soComConsumo = t.checked; render(); return; }
     if (t.id === 'inArq' || t.id === 'inPasta') { var fs = Array.from(t.files || []); t.value = ''; if (fs.length) processar(fs); }
   });
@@ -1065,6 +1074,7 @@ tr.fora td b{color:var(--ink-3)}
     var t = e.target;
     if (t.dataset && t.dataset.f === 'busca') { S.f.busca = t.value; var pos = t.selectionStart; render(); var n = document.querySelector('[data-f="busca"]'); if (n) { n.focus(); try { n.setSelectionRange(pos, pos); } catch (x) {} } }
   });
+  document.addEventListener('keydown', function (e) { if (e.key === 'Escape' && S.mesPop) { S.mesPop = false; S.mesPasso = 0; render(); } });
   document.addEventListener('dragover', function (e) { e.preventDefault(); var d = $('#drop'); if (d) d.classList.add('on'); });
   document.addEventListener('dragleave', function () { var d = $('#drop'); if (d) d.classList.remove('on'); });
   document.addEventListener('drop', async function (e) {
