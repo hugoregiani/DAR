@@ -126,9 +126,9 @@ const h2txt = M => M.h2.map(h => h.t);
   await page.evaluate(() => { const m = document.getElementById('msg'); if (m) m.remove(); });
 
   console.log('Tela: a matriz no lugar da tabela, sem aba nova; 5 cartões do mesmo tamanho');
-  conf((await page.textContent('#ver')).includes('g9'), 'versão g9');
+  conf((await page.textContent('#ver')).includes('g10'), 'versão g10');
   const abas = await page.$$eval('.tab', l => l.map(b => b.textContent.trim()));
-  conf(abas[0] === 'Receita e margem' && abas[1] === 'Contratos' && !abas.some(a => /matriz/i.test(a)), 'sem aba separada: a matriz fica na aba "Receita e margem"', abas);
+  conf(abas[0] === 'Receita e margem' && abas[1] === 'Comparar registros (0)' && abas[2] === 'Contratos' && !abas.some(a => /matriz/i.test(a)), 'sem aba separada: a matriz fica na aba "Receita e margem"', abas);
   conf(await page.locator('.tab.on[data-tab="receita"] ').count() === 1 && await page.locator('.t-mx').count() === 1 && await page.locator('.t-dd').count() === 0, 'a matriz substitui a tabela "Receita, COGS e margem"');
   const kp = await page.$$eval('.kpis .kpi', l => l.map(k => { const r = k.getBoundingClientRect(); return {t: k.querySelector('span').textContent, w: Math.round(r.width), y: Math.round(r.top)}; }));
   conf(kp.map(k => k.t).join('|') === 'Receita em US$|COGS em US$|Operações|Receita / operação (US$)|Margem em US$' && !(await page.locator('.k-hd').count()), 'sem o cartão "Pessoal (homem-dia)"', kp.map(k => k.t));

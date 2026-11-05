@@ -380,6 +380,15 @@ Pedido do Hugo: nos cards dos quartos e do ano, tirar margem e operações, deix
 - Filtro: o clique já filtrava (g8). Agora o card mostra "clique para filtrar" ao passar o mouse (`.qc-dica`, opacidade 0 → 1), "filtrando ✕" no quarto escolhido (`.qc-f`) e "ver o ano todo" no card do ano quando há quarto ou meses escolhidos; `aria-pressed` e `title` dizem o mesmo.
 - Testes: `e2e_matriz` 48 (altura ≤ 90 px, só receita/COGS, avisos de filtro), `e2e_gerencial` 62, `e2e_bp` 56.
 
+### EARL Gerencial g10 (05/11/2026): registros por data, aba "Comparar registros" e Receita/COGS/Margem nos gráficos
+
+Pedido do Hugo: botão para registrar as informações e uma aba para comparar as alterações entre registros (% de receita e COGS em gráficos e numa tabela como a matriz); registros por data, sobrescrevendo na mesma data e removendo quando preciso; nos gráficos, escolher só receita, só COGS, receita e COGS ou margem.
+
+- **Registros** (`S.regs`, `earlger:registros_v1`, `lerRegs`/`gravarRegs`): `montarFoto(C)` guarda todas as operações (sem filtros) em formato compacto — `cts: [[id, nome, cliente, região, tipo]]`, `ops: [[ctIdx, opId, sonda, poço, operação, data, realizada, risco, receita, COGS, SO]]` (US$ com risco, `valorOp` com período livre, 2 casas). Registro = `{v:1, data, em, obs, cts, ops}`, um por data. Janela `#dlg` (`abrirRegistrar`/`atualizarDlg`/`salvarRegistro`): data (padrão hoje), observação, aviso e botão "Sobrescrever" quando a data já existe; Esc/clique fora fecham; armazenamento cheio = aviso e nada muda. `removerRegistro` (confirm), `exportarRegs`/`importarRegs` (`#inReg`; mesma data fica o `em` mais novo).
+- **Aba `cmp`** (`telas.cmp`): `linhasReg(reg)` expande a foto (cache por objeto), `filtraLinhas` aplica os filtros do topo (`periodoOk` agora é a função única de período, usada também por `filtrar`). Base/Comparar (`S.cmp.a/b`, `cmpPadrao`: penúltimo × último, ou o único × Agora; "agora" = `montarFoto` dos arquivos carregados). Cards (`vMed`, `pctVar`, `fPct`, `fDelta`, `clsVar`: COGS que sobe = desfavorável). Gráficos `desenharEvolucao` (uma coluna por registro + Agora, % sobre o anterior) e `desenharVarMes` (Δ% por mês; "novo" quando a base é 0; traço no zero quando não mudou); clicar num mês da variação destaca a coluna na tabela. Tabela `arvoreCx`/`celulasCx` (meses: comparado + Δ%; total: base, comparado, Δ US$, Δ%; operações ligadas por contrato+id com `statusOpCx`; "só o que mudou"); `excelComparacao`.
+- **Mostrar nos gráficos** (`S.gmet` = rec/cogs/ambos/mg, `earlger:gmet`; `seletorMet`): `desenharGrafico` e `desenharClientes` reescritos com `escala()` (aceita negativos), `colunaZ`/`colunaBaixo`/`barraHEsq`; tendência sobre a medida escolhida (`tendRot`). "Receita e COGS" é o gráfico de antes.
+- **Testes:** `e2e_registros` 54 (novo), `e2e_matriz` 48, `e2e_gerencial` 62, `e2e_bp` 56.
+
 ---
 
 ## 4. Última mudança: v115 (Inventário a bordo: "Movimentar material" em cada contentor e na sacaria, em todas as categorias; Logística: desfazer a divisão da tesoura)

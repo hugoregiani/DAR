@@ -33,7 +33,9 @@ Tudo é **realizado + previsto**, com o risco de cada operação aplicado:
 - **Contratos:** receita, COGS e margem por contrato, com o engenheiro e a data do arquivo, as operações e o uso do contrato em valor. Clique no contrato para filtrar.
 - **Receita e margem** (aba inicial), por ano, no formato do "Relatório Receita" do Excel:
   - **Cards Q1, Q2, Q3, Q4 e Total do ano** (baixos, numa linha): só a receita e o COGS de cada quarto e do ano (com os filtros de cliente, contrato, região e tipo; sem o quarto/mês escolhido, para mostrar o ano todo). **São filtros:** passando o mouse aparece "clique para filtrar"; clicando num quarto, a página toda filtra por ele e o card mostra "filtrando ✕"; clicando de novo, ou no card do ano ("ver o ano todo"), volta ao ano todo.
-  - **Gráfico**, em cima da tabela (**Ocultar gráfico** esconde; a escolha fica guardada). Três formas de ver:
+  - **Gráfico**, em cima da tabela (**Ocultar gráfico** esconde; a escolha fica guardada).
+    - **Mostrar** (g10): **Receita**, **COGS**, **Receita e COGS** (o padrão, como antes) ou **Margem** (receita − COGS; a negativa fica em vermelho, abaixo do zero). Vale para as três formas de ver, para a tendência e para os gráficos da aba "Comparar registros"; a escolha fica guardada.
+    - Três formas de ver:
     - **Por mês:** receita realizada e prevista empilhadas, com o COGS ao lado;
     - **Por mês e cliente:** a receita de cada mês empilhada por cliente;
     - **Por cliente:** barras horizontais, com os clientes no eixo vertical, da maior receita para a menor. Cada cliente tem a receita (realizada + prevista) e o COGS, com o valor na ponta. Clicando no cliente, a página toda filtra por ele.
@@ -51,6 +53,18 @@ Tudo é **realizado + previsto**, com o risco de cada operação aplicado:
     - A tabela rola dentro do quadro, com o cabeçalho e a primeira coluna fixos. A linha **Total do ano** é igual ao indicador "Receita em US$" e ao card do ano.
     - **⬇ Excel desta tabela:** baixa a matriz como está na tela (linhas abertas), com o cabeçalho em 3 linhas mescladas, uma coluna por nível (Cliente, Contrato, Sonda, Poço, Operação, Item PPU) e números de verdade.
   - **Valores em R$:** saíram desta aba e dos indicadores. Continuam nas abas Contratos, Itens PPU e Operações e no Excel.
+- **📌 Registrar** (barra do topo, g10): guarda uma foto de **todas** as operações carregadas (todos os anos, clientes e contratos, sem os filtros), com a receita e o COGS em US$ já com o risco, na data escolhida (padrão: hoje) e com uma observação opcional.
+  - **Um registro por data:** se já houver registro na data, a janela avisa e o botão vira **Sobrescrever**.
+  - Fica neste navegador (`earlger:registros_v1`, formato compacto). Se o navegador estiver cheio, ele avisa e nada muda.
+- **Comparar registros** (aba, g10):
+  - **Lista dos registros** (e "Agora", os arquivos carregados), com data, hora do registro, observação, contratos, operações, receita, COGS e margem do ano/filtros escolhidos. Tem **🗑** para remover um registro (com confirmação), **⬇ Exportar registros** (.json) e **⬆ Importar registros** (junta com os daqui; na mesma data fica o registrado por último).
+  - **Base** e **Comparar com** (qualquer registro ou "Agora"; **⇄** inverte). Abre comparando o penúltimo com o último registro (com um registro só, ele com "Agora").
+  - **Cards** de Receita, COGS e Margem (valor comparado, valor da base, diferença em US$ e %) e de Operações (novas e removidas).
+  - **Gráfico "em cada registro":** uma coluna por registro (e Agora), com a variação % sobre o registro anterior em cima.
+  - **Gráfico "Variação % por mês":** quanto cada mês mudou da base para o comparado; "novo" = mês sem valor na base.
+  - **Tabela** no formato da matriz: Cliente › Contrato › Sonda › Poço › Operação nas linhas; quarto › mês nas colunas, com o valor no registro comparado e o **Δ%** sobre a base, o total de cada quarto e o **Total** (base, comparado, Δ US$, Δ%). As operações são ligadas pelo contrato + número da operação, e cada uma diz o que mudou: nova, removida, data, risco, passou a realizada, valor mudou ou sem alteração. **Só o que mudou** esconde o resto; **⬇ Excel da comparação** baixa como está na tela.
+  - **Cores:** verde = favorável, vermelho = desfavorável (receita e margem que sobem são favoráveis; COGS que sobe é desfavorável).
+  - **Mostrar** (Receita, COGS, Receita e COGS, Margem) vale para os gráficos e para a tabela; os filtros do topo (ano, quarto, mês, cliente, contrato, região, tipo) também.
 - **Itens PPU:** contratado, consumido, saldo, % usado, a realizar, receita e valor vigente, por contrato e item.
 - **Químicas** e **Casing equipment:** planejado × lançado por SAP, com o COGS, o número de operações e os contratos.
 - **Pessoal:** por função, pessoas e homem-dia planejado × lançado.
@@ -87,6 +101,7 @@ Tudo é **realizado + previsto**, com o risco de cada operação aplicado:
 - **Testes de ponta a ponta:**
   - dois engenheiros geram arquivos no app de Engenharia, e o Gerencial carrega por arquivos, `.zip` e pasta. Inclui os 5 indicadores em US$, os cards dos quartos, a matriz do ano (cliente › contrato, até as operações e os itens PPU, que somam a receita da operação), o gráfico (por mês, por mês e cliente e por cliente; ocultar/mostrar; tooltip; cores fixas por cliente; clicar no cliente filtra; clicar no mês destaca a coluna) e o filtro de período numa caixa só, com o quarto valendo no lugar dos meses (62 verificações);
   - a visão por ano (`tests/e2e_matriz.js`, 48 verificações) monta arquivos sintéticos (2 engenheiros, 4 clientes, 16 operações de dez/2025 a fev/2027, realizadas e previstas, risco 0/50/100%, itens PPU). Confere os 5 cartões do mesmo tamanho (sem Pessoal), os cards Q1–Q4 e do ano, célula a célula da matriz (mês, quarto e total) contra uma conta feita no próprio teste, cada ano, a caixa de período (início e fim, ordem invertida, um mês só, clique fora, Esc), o quarto sobressaindo ao mês, o clique nos cards, o abrir e fechar até o item PPU, o destaque do mês pelo gráfico, o Excel da tabela e do consolidado e o celular;
+  - registros e comparação (`tests/e2e_registros.js`, 54 verificações): registra a versão 1 dos arquivos em 01/10/2026 e a versão 2 em 01/11/2026 (operação nova, removida, data, risco e valor mudados, passou a realizada, margem negativa). Confere contra uma conta feita no próprio teste os cards, os dois gráficos, a linha de total da tabela (mês, quarto e total), o que mudou em cada operação, "só o que mudou", Receita/COGS/Margem na comparação e na aba Receita (por mês, por cliente, por mês e cliente), filtros, Agora, inverter, Excel, sobrescrever na mesma data, remover, exportar/importar, armazenamento cheio, Esc/clique fora e celular;
   - o teste BP (`../engenharia/teste_bp/e2e_bp.js`) confere o Gerencial contra os totais da planilha do BP, ano a ano (2026 e 2027, que somam a planilha): receita, COGS, margem, operações fora, os cards dos quartos, cada mês da matriz e do gráfico, os itens PPU, a tendência linear e a média móvel, as formas por cliente, o período e o quarto, aba Operações e Excel.
 
   ```bash
@@ -97,4 +112,8 @@ Tudo é **realizado + previsto**, com o risco de cada operação aplicado:
   node tests/e2e_matriz.js EARL_Gerencial.html [pasta-das-telas]
   ```
 
-- Versão: `EARL Gerencial g9`.
+  ```bash
+  node tests/e2e_registros.js EARL_Gerencial.html [pasta-das-telas]
+  ```
+
+- Versão: `EARL Gerencial g10`.
