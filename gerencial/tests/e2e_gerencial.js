@@ -230,7 +230,7 @@ async function arquivoGerencial(page, nome, arq) {
   console.log('Excel');
   const xl = await baixar(p, () => p.click('[data-a="excel"]'));
   const wb = await p.evaluate(b => { const w = XLSX.read(b, {type: 'base64'}); return {n: w.SheetNames, ops: XLSX.utils.sheet_to_json(w.Sheets['Operações'], {header: 1}).length, lanc: XLSX.utils.sheet_to_json(w.Sheets['Lançamentos'], {header: 1}).length}; }, fs.readFileSync(xl.path).toString('base64'));
-  conf(xl.nome === 'EARL_Gerencial_consolidado_2026-11-02.xlsx' && wb.n.join() === 'Contratos,Por mês,Itens PPU,Químicas,Casing,Pessoal,Operações,Lançamentos' && wb.ops === 4, 'Excel consolidado com 8 abas', wb);
+  conf(xl.nome === 'EARL_Gerencial_consolidado_2026-11-02.xlsx' && wb.n.join() === 'Contratos,Receita por mês,Por mês,Itens PPU,Químicas,Casing,Pessoal,Operações,Lançamentos' && wb.ops === 4, 'Excel consolidado com 9 abas', wb);
   console.log('Persistência, zip e pasta');
   await p.reload();
   await p.waitForSelector('.kpi.k-rec-usd');

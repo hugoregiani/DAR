@@ -74,7 +74,7 @@ O CSP está em `globalHeaders`. Ele precisa de `'unsafe-inline'` e `'unsafe-eval
 
 ---
 
-## 4-E. Desmembramento: EARL Engenharia (avulso) e1 a e6, EARL Gerencial g2 e teste BP — pasta `engenharia/` do repositório `hugoregiani/DAR`
+## 4-E. Desmembramento: EARL Engenharia (avulso) e1 a e6, EARL Gerencial g2–g7 e teste BP — pasta `engenharia/` do repositório `hugoregiani/DAR`
 
 Pedido do Hugo (01/11/2026): como o EARL ainda não pode ser usado online, separar a **Engenharia** num HTML próprio, **sem login**, e trocar o envio do handover (que ia para a Coordenação/Logística) por um **e-mail .eml** gerado no app. Parte do `EARL_HAL_CMT_115_SIMULACAO.html` (compilado) pelo `engenharia/patch_engenharia.py`, que insere `engenharia/eng_app.js` (código novo, dentro do `App`, antes de `renderHandover`) e `engenharia/eng.css`. Saída: `engenharia/EARL_Engenharia.html` (~8,4 MB). Versão: `EARL_VERSION = 'EARL Engenharia e1 (base v115)'`.
 
@@ -342,6 +342,23 @@ Pedido do Hugo (ele achou o gráfico): poder ver o gráfico como está e também
 - **Testes:**
   - `e2e_gerencial` 60: arquivo com 3 clientes montado no teste, que confere as cores fixas, a soma por mês, a ordem e os valores por cliente, os tooltips, o clique que filtra, a cor que se mantém com o filtro e a forma guardada.
   - `e2e_bp` 50: por mês e cliente = 9 meses só BP, somando a RECEITA FINAL; por cliente = BP US$ 4,4 mi.
+
+### EARL Gerencial g7 (05/11/2026): Receita por mês em matriz, como o "Relatório Receita" do Excel
+
+Pedido do Hugo (foto da planilha "Relatório Receita": clientes nas linhas, trimestre › mês › Receita/COGS nas colunas, segmentadores de Ano, Contrato, Cliente, Mês, Quarter e Tipo Receita). Ele escolheu "visão igual no Gerencial", mantendo a tabela de drill-down.
+
+- **Aba nova `matriz`** ("Receita por mês (matriz)", logo depois de "Receita e margem"; `telas.matriz`):
+  - linhas `NIV_MX` = Cliente › Contrato › Sonda › Poço, e embaixo as operações. `arvoreMx(A, abrir)` percorre a árvore; `abrir(d, caminho)` vem da tela (`S.mx.abertos`/`S.mx.mostrar`, padrão: abre os clientes até o contrato) ou do Excel (tudo aberto);
+  - colunas `colunasMx(A)`: só os meses com operação, agrupados em trimestres (`T1/2026`), cada mês com Receita | COGS, o total do trimestre (`.mx-q`, verde) e o Total (Receita, COGS, Margem). `somaMx`/`triMx` somam `x.rU`/`x.cU` (já com o risco) por mês;
+  - célula vazia = sem operação no mês; risco 100% = linha cinza com 0,00. Cabeçalho (`thead` sticky) e 1ª coluna (`.mx-rot` sticky) fixos; o quadro `.mx-wrap` rola (máx. 72vh);
+  - cliques: `[data-mx]` abre/fecha, `[data-mxmostrar]` = mostrar até (0 Cliente … 4 Operação).
+- **Filtros novos no topo:** `Ano` e `Trimestre` (`S.f.ano`, `S.f.tri`, em `filtrar().noPer`, com `triDe(m)`). Valem para todas as abas e os indicadores. "Tipo Receita" não existe nos arquivos: o mais perto é "Tipo de contrato".
+- **Excel:** `abaMatriz(A, abrir)` monta a planilha (cabeçalho em 3 linhas mescladas, colunas Nível + Cliente…Operação, números `#,##0.00`). "⬇ Excel desta tabela" (`excelMatriz`) baixa como está na tela; o Excel consolidado ganhou a aba "Receita por mês" (2ª aba, tudo aberto). `baixarXlsx(wb, nome)` é o download comum.
+- **Testes:**
+  - `gerencial/tests/e2e_matriz.js` 35: dados sintéticos, conferência célula a célula contra conta própria, abrir/fechar, filtros, Excel, celular;
+  - `e2e_gerencial` 60 (lista de abas do Excel atualizada);
+  - `e2e_bp` 50;
+  - com o arquivo real do BP + 3 clientes, o Total geral da matriz = indicadores (US$ 6.796.331,22 de receita; US$ 1.455.836,59 de COGS).
 
 ---
 
