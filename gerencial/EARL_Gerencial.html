@@ -129,7 +129,7 @@ tr.fora td{color:var(--ink-3)}
 .dd-tw{display:inline-block;width:16px;color:var(--ink-3);font-size:11px}
 tr.fora td b{color:var(--ink-3)}
 .t-mx{width:auto;min-width:100%;font-size:12px}
-.mx-wrap{max-height:72vh;overflow:auto;border:1px solid var(--line);border-radius:12px}
+.mx-wrap{overflow:auto}
 .t-mx thead{position:sticky;top:0;z-index:3}
 .t-mx th{text-align:center;padding:5px 8px}
 .t-mx th.n{text-align:right}
@@ -168,6 +168,19 @@ tr.fora td b{color:var(--ink-3)}
 .dlg-f label.dlg-chk{flex-direction:row;align-items:center;gap:8px;font-size:13px;font-weight:400;letter-spacing:0;text-transform:none;color:var(--ink)}
 .dlg-f label.dlg-chk input{border:0;padding:0}
 .dlg-r{flex-wrap:wrap}
+.tw15{overflow:auto;border:1px solid var(--line);border-radius:12px;scrollbar-width:auto;scrollbar-color:#B8BEC2 var(--soft)}
+.tw15::-webkit-scrollbar{width:12px;height:12px}
+.tw15::-webkit-scrollbar-track{background:var(--soft)}
+.tw15::-webkit-scrollbar-thumb{background:#B8BEC2;border-radius:8px;border:3px solid var(--soft)}
+.tw15::-webkit-scrollbar-thumb:hover{background:#8A9095}
+.tw15::-webkit-scrollbar-corner{background:var(--soft)}
+.tw15 > table > thead{position:sticky;top:0;z-index:3}
+.tw15 > table > tfoot{position:sticky;bottom:0;z-index:3}
+.tw15 > table > tfoot td{background:#fff;box-shadow:0 -1px 0 var(--line-2)}
+.tw15 > .t-mx > tfoot td{background:var(--soft)}
+.tw15 > .t-mx > tfoot td.mx-q{background:#DDEBD3}
+.tw15 > .t-mx > tfoot td.mx-t{background:#F1F2F3}
+.t-ppu td.ppu-proj{font-weight:700}
 .tf-h{display:inline-flex;align-items:center;gap:3px}
 th.n .tf-h{justify-content:flex-end;width:100%}
 .tf-s{border:0;background:transparent;padding:0;margin:0;font:inherit;font-size:inherit;font-weight:inherit;letter-spacing:inherit;text-transform:inherit;color:inherit;cursor:pointer;display:inline-flex;align-items:center;gap:4px;white-space:nowrap}
@@ -336,7 +349,7 @@ https://github.com/nodeca/pako/blob/main/LICENSE
    Para cada contrato vale o arquivo mais novo. Tudo fica neste navegador (localStorage, prefixo earlger:). */
 (function () {
   'use strict';
-  var VERSAO = 'EARL Gerencial g12';
+  var VERSAO = 'EARL Gerencial g13';
   var CHAVE = 'earlger:pacotes_v1';
   var $ = function (s) { return document.querySelector(s); };
   var esc = function (v) { return String(v == null ? '' : v).replace(/[&<>"']/g, function (c) { return {'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'}[c]; }); };
@@ -523,28 +536,32 @@ https://github.com/nodeca/pako/blob/main/LICENSE
       return Object.keys(g).map(function (k) { var t = soma(g[k]); t.k = k; return t; });
     };
     var porMes = grupo(function (x) { return String(x.data).slice(0, 7); }).sort(function (a, b) { return a.k.localeCompare(b.k); });
-    // itens PPU: saldo pelo consumo lançado (todo o período); no filtro, o lançado e o a realizar com a receita considerada
+    // itens PPU (por contrato e item):
+    //  - consumido = o que foi lançado nas operações já concluídas (todo o contrato, sem filtro de período) e o valor realizado em US$;
+    //  - lançado no período = o lançado nas concluídas com data do serviço na seleção (ano/quarto/mês), e o valor em US$;
+    //  - a realizar = o previsto nas operações ainda não concluídas (todo o contrato), × (1 − risco), e o valor em US$;
+    //  - projetado = consumido + a realizar (quantidade e US$). O valor de cada linha vem do arquivo (preço da data da operação).
     var ppu = [];
+    var valUsd = function (o, l) { var i = precoItem(o, l.ref); return l.valorUsd != null ? l.valorUsd : i.usd != null ? (l.qtd || 0) * i.usd : 0; };
     F.cts.forEach(function (c) {
-      var tot = {}, per = {}, aR = {}, rU = {}, rB = {}, desc = {};
-      F.ops.filter(function (o) { return o.contratoId === c.id && o.realizado; }).forEach(function (o) { (o.realizado.ppu || []).forEach(function (l) { tot[l.ref] = (tot[l.ref] || 0) + (l.qtd || 0); desc[l.ref] = desc[l.ref] || l; }); });
-      linhas.filter(function (x) { return x.o.contratoId === c.id; }).forEach(function (x) {
-        var lista = x.tipo === 'real' ? x.o.realizado.ppu : (x.o.previsto || {}).ppu;
-        (lista || []).forEach(function (l) {
-          var i = precoItem(x.o, l.ref);
-          var vU = l.valorUsd != null ? l.valorUsd : i.usd != null ? (l.qtd || 0) * i.usd : 0;
-          var vB = l.valorBrl != null ? l.valorBrl : i.brl != null ? (l.qtd || 0) * i.brl : 0;
-          desc[l.ref] = desc[l.ref] || l;
-          if (x.tipo === 'real') per[l.ref] = (per[l.ref] || 0) + (l.qtd || 0); else aR[l.ref] = (aR[l.ref] || 0) + (l.qtd || 0);
-          rU[l.ref] = (rU[l.ref] || 0) + vU * x.f; rB[l.ref] = (rB[l.ref] || 0) + vB * x.f;
-        });
+      var z = function () { return {q: 0, u: 0}; }, cons = {}, per = {}, aR = {}, desc = {};
+      var soma1 = function (m, r, q, u) { var x = m[r] || (m[r] = z()); x.q += q; x.u += u; };
+      F.ops.filter(function (o) { return o.contratoId === c.id; }).forEach(function (o) {
+        if (o.realizado) {
+          var noP = F.noPer(o.realizado.data);
+          (o.realizado.ppu || []).forEach(function (l) { desc[l.ref] = desc[l.ref] || l; var u = valUsd(o, l); soma1(cons, l.ref, l.qtd || 0, u); if (noP) soma1(per, l.ref, l.qtd || 0, u); });
+        } else {
+          var f = fatorOp(o);
+          ((o.previsto || {}).ppu || []).forEach(function (l) { desc[l.ref] = desc[l.ref] || l; soma1(aR, l.ref, (l.qtd || 0) * f, valUsd(o, l) * f); });
+        }
       });
       var refs = (c.itens || []).map(function (i) { return i.ref; });
       Object.keys(desc).forEach(function (r) { if (refs.indexOf(r) < 0) refs.push(r); });
       refs.forEach(function (r) {
         var i = (c.itens || []).find(function (x) { return x.ref === r; }) || {ref: r, desc: (desc[r] || {}).desc, unit: (desc[r] || {}).unit, contratado: null};
-        var cons = tot[r] || 0;
-        ppu.push({c: c, i: i, cons: cons, saldo: i.contratado != null ? i.contratado - cons : null, pct: i.contratado ? cons / i.contratado * 100 : null, per: per[r] || 0, aR: aR[r] || 0, u: rU[r] || 0, b: rB[r] || 0});
+        var cs = cons[r] || z(), pe = per[r] || z(), ar = aR[r] || z();
+        ppu.push({c: c, i: i, cons: cs.q, consU: cs.u, saldo: i.contratado != null ? i.contratado - cs.q : null, pct: i.contratado ? cs.q / i.contratado * 100 : null,
+          per: pe.q, perU: pe.u, aR: ar.q, aRU: ar.u, proj: cs.q + ar.q, projU: cs.u + ar.u});
       });
     });
     // químicas e casing: planejado (todas as operações com data no período), lançado, a realizar e COGS considerado
@@ -582,7 +599,7 @@ https://github.com/nodeca/pako/blob/main/LICENSE
   var barra = function (pct, verm) { var w = Math.max(0, Math.min(100, pct || 0)); return '<div class="barra"><i class="' + (verm ? 'r' : '') + '" style="width:' + w.toFixed(1) + '%"></i></div>'; };
   var pctCel = function (pct) { return pct == null ? '—' : '<div class="pct">' + barra(pct, pct > 100) + '<span' + (pct > 100 ? ' class="neg"' : '') + '>' + fN(pct) + '%</span></div>'; };
   var tabela = function (cab, linhas, rodape, cls) {
-    return '<div class="tw"><table class="' + (cls || '') + '"><thead><tr>' + cab.map(function (h) { return '<th' + (h.n ? ' class="n"' : '') + '>' + esc(h.t || h) + '</th>'; }).join('') + '</tr></thead><tbody>' +
+    return '<div class="tw tw15"><table class="' + (cls || '') + '"><thead><tr>' + cab.map(function (h) { return '<th' + (h.n ? ' class="n"' : '') + '>' + esc(h.t || h) + '</th>'; }).join('') + '</tr></thead><tbody>' +
       (linhas.length ? linhas.join('') : '<tr><td colspan="' + cab.length + '" class="vazio">Nada no filtro.</td></tr>') + '</tbody>' + (rodape ? '<tfoot>' + rodape + '</tfoot>' : '') + '</table></div>';
   };
   var N = function (t) { return {t: t, n: 1}; };
@@ -874,7 +891,7 @@ https://github.com/nodeca/pako/blob/main/LICENSE
     return m;
   };
   var tRedim = null;
-  window.addEventListener('resize', function () { clearTimeout(tRedim); tRedim = setTimeout(function () { if ((S.tab === 'receita' && S.graf && $('#graf')) || S.tab === 'cmp') render(); }, 150); });
+  window.addEventListener('resize', function () { clearTimeout(tRedim); tRedim = setTimeout(function () { if ((S.tab === 'receita' && S.graf && $('#graf')) || S.tab === 'cmp') render(); else ajustarTw15(); }, 150); });
   var margemTxt = function (r, c) { return r ? fN((r - c) / r * 100) + '%' : '—'; };
 
   var telaVazia = function () {
@@ -929,6 +946,22 @@ https://github.com/nodeca/pako/blob/main/LICENSE
     if (S.tab === 'cmp' && _cmp) { var ge = $('#g-evo'); if (ge) desenharEvolucao(ge, _cmp.serie); document.querySelectorAll('.g-var-box').forEach(function (el) { desenharVarMes(el, _cmp, el.dataset.k); }); }
     if (S.mxVer) { verMesNaTabela(S.mxVer); S.mxVer = null; }
     var on = app.querySelector('.tab.on'); if (on) { var tb = on.parentNode; tb.scrollLeft = on.offsetLeft - 20; }
+    ajustarTw15();
+  };
+  /* tabelas: só 15 linhas visíveis; o resto rola dentro do quadro (cabeçalho e total fixos) */
+  var LINHAS_VISIVEIS = 15;
+  var ajustarTw15 = function () {
+    document.querySelectorAll('.tw15').forEach(function (w) {
+      var t = w.querySelector('table'); if (!t) return;
+      var rows = t.tBodies[0] ? t.tBodies[0].rows : [];
+      w.style.maxHeight = '';
+      if (rows.length <= LINHAS_VISIVEIS) { w.classList.remove('tw15-rola'); return; }
+      var h = (t.tHead ? t.tHead.offsetHeight : 0) + (t.tFoot ? t.tFoot.offsetHeight : 0);
+      for (var i = 0; i < LINHAS_VISIVEIS; i++) h += rows[i].offsetHeight;
+      var barra = w.scrollWidth > w.clientWidth ? w.offsetHeight - w.clientHeight : 0; // altura da barra horizontal
+      w.style.maxHeight = (h + barra + 2) + 'px';
+      w.classList.add('tw15-rola');
+    });
   };
   var linhaValores = function (t) {
     return '<td class="n"><b>' + fUSD(t.rU) + '</b>' + sub('real. ' + fUSD(t.rRU) + ' · prev. ' + fUSD(t.rPU)) + '</td><td class="n">' + fBRL(t.rB) + '</td><td class="n">' + fUSD(t.cU) + '</td><td class="n">' + fUSD(t.rU - t.cU) + sub(margemTxt(t.rU, t.cU)) + '</td>';
@@ -978,7 +1011,7 @@ https://github.com/nodeca/pako/blob/main/LICENSE
     }).join('');
     var info = (nF || st.s != null) ? '<div class="tf-info"><span>' + [nF ? 'Mostrando ' + vis.length + ' de ' + rows.length + ' linha(s) (' + Object.keys(st.f).map(function (ci) { return esc(cols[ci].t) + ': ' + st.f[ci].length + ' selecionado(s)'; }).join(', ') + ')' : '', st.s != null ? 'ordenado por ' + esc(cols[st.s].t) + (st.d > 0 ? ' (crescente)' : ' (decrescente)') : ''].filter(Boolean).join(' · ') +
       '</span><button type="button" class="btn-o tf-clr" data-tfclr="' + id + '">Limpar ordem e seleção</button></div>' : '';
-    return {vis: vis, html: info + '<div class="tw"><table class="' + (o.cls || '') + '"><thead><tr>' + th + '</tr></thead><tbody>' +
+    return {vis: vis, html: info + '<div class="tw tw15"><table class="' + (o.cls || '') + '"><thead><tr>' + th + '</tr></thead><tbody>' +
       (corpo || '<tr><td colspan="' + cols.length + '" class="vazio">Nada no filtro.</td></tr>') + '</tbody>' + (o.rod ? '<tfoot>' + o.rod(vis) + '</tfoot>' : '') + '</table></div>'};
   };
   // painel de seleção (▾): ordem, busca, (Selecionar tudo), um item por valor com a contagem e "só este"
@@ -1072,6 +1105,7 @@ https://github.com/nodeca/pako/blob/main/LICENSE
     ppu: function (C, F, A) {
       var l = A.ppu.filter(function (x) { return !S.soComConsumo || x.cons > 0 || x.aR > 0; });
       var num = function (t, g, fmt) { return {t: t, n: 1, h: function (x) { var v = g(x); return v == null ? '—' : fmt(v); }, v: g, f: function (x) { var v = g(x); return v == null ? '—' : fmt(v); }}; };
+      var preco = function (x) { return (x.i.usd == null ? '—' : 'US$ ' + nf(2, 4)(x.i.usd)) + '<br><span class="sub2">' + (x.i.brl == null ? '—' : 'R$ ' + nf(2, 4)(x.i.brl)) + '</span>'; };
       var cols = [
         {t: 'Contrato', h: function (x) { return esc(x.c.nome); }, v: function (x) { return x.c.nome || ''; }, f: function (x) { return x.c.nome; }},
         {t: 'Item', h: function (x) { return esc(x.i.ref); }, v: function (x) { return String(x.i.ref || ''); }, f: function (x) { return x.i.ref; }},
@@ -1081,18 +1115,22 @@ https://github.com/nodeca/pako/blob/main/LICENSE
         num('Consumido', function (x) { return x.cons; }, fN),
         Object.assign(num('Saldo', function (x) { return x.saldo; }, fN), {cls: function (x) { return x.saldo != null && x.saldo < 0 ? 'neg' : ''; }}),
         {t: '% usado', st: 'min-width:110px', h: function (x) { return pctCel(x.pct); }, v: function (x) { return x.pct; }, f: function (x) { return x.pct == null ? '—' : fN(x.pct) + '%'; }},
+        {t: 'Preço unitário', n: 1, h: preco, v: function (x) { return x.i.usd != null ? x.i.usd : x.i.brl; }, f: function (x) { return x.i.usd != null ? 'US$ ' + nf(2, 4)(x.i.usd) : x.i.brl != null ? 'R$ ' + nf(2, 4)(x.i.brl) : '—'; }},
+        num('Realizado US$', function (x) { return x.consU; }, fUSD),
         num('Lançado no período', function (x) { return x.per; }, fN),
+        num('Seleção US$', function (x) { return x.perU; }, fUSD),
         num('A realizar', function (x) { return x.aR; }, fN),
-        num('Receita US$', function (x) { return x.u; }, fUSD),
-        num('Receita R$', function (x) { return x.b; }, fBRL),
-        {t: 'Valor vigente', n: 1, h: function (x) { return (x.i.usd == null ? '—' : 'US$ ' + nf(2, 4)(x.i.usd)) + '<br>' + (x.i.brl == null ? '—' : 'R$ ' + nf(2, 4)(x.i.brl)); }, v: function (x) { return x.i.usd != null ? x.i.usd : x.i.brl; }, f: function (x) { return x.i.usd != null ? 'US$ ' + nf(2, 4)(x.i.usd) : x.i.brl != null ? 'R$ ' + nf(2, 4)(x.i.brl) : '—'; }}
+        num('A realizar US$', function (x) { return x.aRU; }, fUSD),
+        num('Projetado', function (x) { return x.proj; }, fN),
+        Object.assign(num('Projetado US$', function (x) { return x.projU; }, fUSD), {cls: function () { return 'ppu-proj'; }})
       ];
       var T = tabelaF('ppu', cols, l, {cls: 't-ppu', rod: function (vis) {
-        var u = vis.reduce(function (a, x) { return a + (x.u || 0); }, 0), b = vis.reduce(function (a, x) { return a + (x.b || 0); }, 0);
-        return '<tr><td colspan="10">Total (' + vis.length + ' item(ns))</td><td class="n">' + fUSD(u) + '</td><td class="n">' + fBRL(b) + '</td><td></td></tr>';
+        var sm = function (k) { return vis.reduce(function (a, x) { return a + (x[k] || 0); }, 0); };
+        return '<tr><td colspan="9">Total (' + vis.length + ' item(ns))</td><td class="n">' + fUSD(sm('consU')) + '</td><td></td><td class="n">' + fUSD(sm('perU')) + '</td><td></td><td class="n">' + fUSD(sm('aRU')) + '</td><td></td><td class="n ppu-proj">' + fUSD(sm('projU')) + '</td></tr>';
       }});
-      return '<div class="card"><h2>Itens PPU — contratado, consumido, saldo e receita</h2><label class="chk"><input type="checkbox" data-a="soCons"' + (S.soComConsumo ? ' checked' : '') + '> só itens com consumo ou previsão</label>' + T.html +
-        '<p class="nota">Consumido e saldo consideram todo o consumo lançado no contrato. “A realizar” = previsto nas operações ainda sem consumo. A receita (lançado + a realizar) segue o filtro e o risco das operações.</p></div>';
+      return '<div class="card"><h2>Itens PPU — contratado, consumido, saldo, período, a realizar e projetado</h2><label class="chk"><input type="checkbox" data-a="soCons"' + (S.soComConsumo ? ' checked' : '') + '> só itens com consumo ou previsão</label>' + T.html +
+        '<p class="nota"><b>Consumido</b> = lançado nas operações já concluídas, em todo o contrato (é o que tira do saldo); <b>Realizado US$</b> = o valor desse consumo. <b>Lançado no período</b> e <b>Seleção US$</b> = só o lançado com data do serviço no ano/quarto/mês escolhido. <b>A realizar</b> = previsto nas operações ainda não concluídas, em todo o contrato, × (1 − risco). <b>Projetado</b> = consumido + a realizar. ' +
+        'Os valores em US$ usam o preço do item na data de cada operação (com os reajustes), como vem do EARL Engenharia. <b>Preço unitário</b> = o valor vigente do item em US$ e em R$.</p></div>';
     },
     quim: function (C, F, A) { return telaMat('Químicas', A.quim, 't-quim', 'quim'); },
     cas: function (C, F, A) { return telaMat('Casing equipment', A.cas, 't-cas', 'cas'); },
@@ -1289,7 +1327,7 @@ https://github.com/nodeca/pako/blob/main/LICENSE
     }).join('');
     var tot = somaMx(A.linhas);
     var tab = qs.length
-      ? '<div class="tw mx-wrap"><table class="t-mx"><thead>' + cab1 + cab2 + cab3 + '</thead><tbody>' + corpo + '</tbody><tfoot><tr><td class="mx-rot">Total ' + esc(S.f.ano || '') + ' <span class="sub2">' + tot.n + ' op.</span></td>' + celulasMx(tot, qs) + '</tr></tfoot></table></div>'
+      ? '<div class="tw mx-wrap tw15"><table class="t-mx"><thead>' + cab1 + cab2 + cab3 + '</thead><tbody>' + corpo + '</tbody><tfoot><tr><td class="mx-rot">Total ' + esc(S.f.ano || '') + ' <span class="sub2">' + tot.n + ' op.</span></td>' + celulasMx(tot, qs) + '</tr></tfoot></table></div>'
       : '<p class="vazio">Nada no filtro.</p>';
     var per = periodoTxt();
     var barraM = '<div class="dd-bar"><span class="dd-l">Mostrar até</span><span class="dd-ate">' + MX_ATE.map(function (t, i) { return '<button class="btn-o" data-mxmostrar="' + i + '">' + t + '</button>'; }).join('') + '</span>' +
@@ -1612,7 +1650,7 @@ https://github.com/nodeca/pako/blob/main/LICENSE
     }).join('');
     var tot = somaCx(itens, nL);
     var tab = qs.length
-      ? '<div class="tw mx-wrap"><table class="t-mx t-cx"><thead>' + cab1 + cab2 + cab3 + '</thead><tbody>' + (corpo || '<tr><td class="mx-rot vazio" colspan="2">Nada mudou no filtro.</td></tr>') + '</tbody><tfoot><tr><td class="mx-rot">Total ' + perTxt + '</td>' + celulasCx(tot, qs, ms) + '</tr></tfoot></table></div>'
+      ? '<div class="tw mx-wrap tw15"><table class="t-mx t-cx"><thead>' + cab1 + cab2 + cab3 + '</thead><tbody>' + (corpo || '<tr><td class="mx-rot vazio" colspan="2">Nada mudou no filtro.</td></tr>') + '</tbody><tfoot><tr><td class="mx-rot">Total ' + perTxt + '</td>' + celulasCx(tot, qs, ms) + '</tr></tfoot></table></div>'
       : '<p class="vazio">Nada no filtro.</p>';
     h += '<div class="card mx-card cx-card"><div class="card-h"><h2>' + nomeM + ' por mês — ' + esc(rotReg(M.base)) + ' → ' + esc(nomeComp) + ' (US$)</h2>' + cabMet() + '</div>' +
       '<div class="dd-bar"><span class="dd-l">Mostrar até</span><span class="dd-ate">' + ['Cliente', 'Contrato', 'Sonda', 'Poço', 'Operação'].map(function (t, i) { return '<button class="btn-o" data-cxmostrar="' + i + '">' + t + '</button>'; }).join('') + '</span>' +
@@ -1915,7 +1953,7 @@ https://github.com/nodeca/pako/blob/main/LICENSE
     aba('Contratos', [['Contrato', 'Número', 'Cliente', 'Região', 'Tipo', 'Engenheiro', 'Arquivo gerado em'].concat(cab).concat(['Uso do contrato (valor) %'])].concat(A.porCt.map(function (x) { return [x.c.nome, x.c.numero || '', x.c.cliente, x.c.regiao, x.c.tipo, x.c._por, fDH(x.c._gerado)].concat(cols(x.t)).concat([x.pctValor == null ? null : r4(x.pctValor)]); })).concat([['Total', '', '', '', '', '', ''].concat(cols(T))]), [30, 16, 18, 12, 18, 20, 16].concat(cab.map(function () { return 14; })));
     XLSX.utils.book_append_sheet(wb, abaMatriz(A, function () { return true; }), 'Receita ' + (S.f.ano || ''));
     aba('Por mês', [['Mês'].concat(cab)].concat(A.porMes.map(function (x) { return [fMes(x.k)].concat(cols(x)); })), [12].concat(cab.map(function () { return 14; })));
-    aba('Itens PPU', [['Contrato', 'Item', 'Descrição', 'Unid.', 'Contratado', 'Consumido', 'Saldo', '% usado', 'Lançado no período', 'A realizar', 'Receita US$', 'Receita R$', 'Valor vigente US$', 'Valor vigente R$']].concat(A.ppu.map(function (x) { return [x.c.nome, x.i.ref, x.i.desc || '', x.i.unit || '', x.i.contratado, x.cons, x.saldo, x.pct == null ? null : r4(x.pct), x.per, x.aR, r4(x.u), r4(x.b), x.i.usd, x.i.brl]; })), [26, 10, 50, 8, 12, 12, 12, 9, 14, 12, 14, 14, 14, 14]);
+    aba('Itens PPU', [['Contrato', 'Item', 'Descrição', 'Unid.', 'Contratado', 'Consumido', 'Saldo', '% usado', 'Preço unitário US$', 'Preço unitário R$', 'Realizado US$', 'Lançado no período', 'Seleção US$', 'A realizar', 'A realizar US$', 'Projetado', 'Projetado US$']].concat(A.ppu.map(function (x) { return [x.c.nome, x.i.ref, x.i.desc || '', x.i.unit || '', x.i.contratado, r4(x.cons), x.saldo == null ? null : r4(x.saldo), x.pct == null ? null : r4(x.pct), x.i.usd, x.i.brl, r4(x.consU), r4(x.per), r4(x.perU), r4(x.aR), r4(x.aRU), r4(x.proj), r4(x.projU)]; })), [26, 10, 50, 8, 12, 12, 12, 9, 14, 14, 14, 14, 14, 12, 14, 12, 14]);
     var matA = function (lista) { return [['SAP', 'Produto', 'Unid.', 'COGS unit. US$', 'COGS unit. R$', 'Planejado', 'Lançado', 'A realizar', 'COGS US$', 'COGS R$', 'Contratos']].concat(lista.map(function (x) { return [x.sap, x.nome, x.unid, x.cu, x.cb, r4(x.plan), r4(x.real), r4(x.aR), r4(x.cU), r4(x.cB), x.ctsL.join(', ')]; })); };
     aba('Químicas', matA(A.quim), [12, 40, 8, 12, 12, 12, 12, 12, 14, 14, 40]);
     aba('Casing', matA(A.cas), [12, 40, 8, 12, 12, 12, 12, 12, 14, 14, 40]);

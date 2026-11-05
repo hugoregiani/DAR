@@ -4,7 +4,7 @@
 
 > **Regra de entrega (pedido do usuário, 05/11/2026):** sempre que houver alteração em qualquer arquivo (EARL, EARL Engenharia, EARL Gerencial, testes), **enviar junto este prompt de continuidade atualizado** — com o que foi feito, o que está pendente e como continuar — e commitá-lo junto com a alteração. Antes de entregar, rodar os testes (os novos e todos os anteriores) e dizer o resultado.
 >
-> **Última atualização:** 05/11/2026 — EARL Gerencial g12 (comparar vários registros, isolar Receita/COGS/Margem no comparativo e compartilhar em HTML). Ver a seção 4-E.
+> **Última atualização:** 05/11/2026 — EARL Gerencial g13 (15 linhas visíveis com rolagem em todas as tabelas; Itens PPU com Preço unitário ao lado do % usado e consumido/período/a realizar/projetado em quantidade e US$). Ver a seção 4-E.
 
 ---
 
@@ -78,7 +78,7 @@ O CSP está em `globalHeaders`. Ele precisa de `'unsafe-inline'` e `'unsafe-eval
 
 ---
 
-## 4-E. Desmembramento: EARL Engenharia (avulso) e1 a e6, EARL Gerencial g2–g12 e teste BP — pasta `engenharia/` do repositório `hugoregiani/DAR`
+## 4-E. Desmembramento: EARL Engenharia (avulso) e1 a e6, EARL Gerencial g2–g13 e teste BP — pasta `engenharia/` do repositório `hugoregiani/DAR`
 
 Pedido do Hugo (01/11/2026): como o EARL ainda não pode ser usado online, separar a **Engenharia** num HTML próprio, **sem login**, e trocar o envio do handover (que ia para a Coordenação/Logística) por um **e-mail .eml** gerado no app. Parte do `EARL_HAL_CMT_115_SIMULACAO.html` (compilado) pelo `engenharia/patch_engenharia.py`, que insere `engenharia/eng_app.js` (código novo, dentro do `App`, antes de `renderHandover`) e `engenharia/eng.css`. Saída: `engenharia/EARL_Engenharia.html` (~8,4 MB). Versão: `EARL_VERSION = 'EARL Engenharia e1 (base v115)'`.
 
@@ -410,6 +410,15 @@ Pedido do Hugo: comparar mais de dois meses (registros) ao mesmo tempo; no compa
 - **Isolar:** cards só das medidas de `MEDIDAS[S.gmet]` (ambos → r, c, m) + Operações; o seletor "Mostrar" está no topo da aba, em cada gráfico e na tabela.
 - **Compartilhar:** `montarCompartilhado(levarRegs, soFiltro)` clona o documento, limpa `#app`/avisos/janelas e põe `<script type="application/json" id="earlger-dados">` com `{tipo: 'EARL-Gerencial-Compartilhado', versao, geradoEm, soFiltro, pacotes, registros, estado: {tab, f, gmet, gmodo, tend, graf, cmp}}`. Na abertura, `DADOS_EMB`/`COMPARTILHADO`: dados de dentro do arquivo, `gravar`/`gravarRegs`/`processar`/drop desligados, estado aplicado antes do 1º render, faixa `.sh-faixa`, sem botões de carregar/registrar/remover. Janela `abrirCompartilhar` (levar registros; só os contratos do filtro — também filtra e remapeia os `cts` dos registros; Para/Assunto/Mensagem) e `compartilhar('html'|'zip'|'eml')` (.eml multipart com `X-Unsent: 1`, assunto em `=?UTF-8?B?…?=`, anexo base64 em linhas de 76).
 - **Testes:** `e2e_compartilhar` 27 (novo), `e2e_registros` 66 (3 registros), `e2e_tabelas` 42, `e2e_matriz` 48, `e2e_gerencial` 62, `e2e_bp` 56.
+
+### EARL Gerencial g13 (05/11/2026): 15 linhas com rolagem e Itens PPU em US$
+
+Pedido do Hugo: nas tabelas das abas Receita, Comparar registros, Contratos, Itens PPU etc., só 15 linhas visíveis, com rolagem vertical e horizontal; em Itens PPU, "Valor vigente" vira "Preço unitário" ao lado de "% usado"; consumido = só operações concluídas, lançado no período = o da seleção, a realizar = previsto não concluído, cada um com o valor total em US$ (realizado, seleção, a realizar e projetado = realizado + a realizar); sem coluna em R$; o preço unitário mostra US$ e R$.
+
+- **15 linhas:** todo quadro de tabela tem a classe `.tw15` (`tabelaF`, `tabela`, matriz e comparação). `ajustarTw15()` (no fim de `render()` e ao redimensionar) mede cabeçalho + 15 primeiras linhas + total + barra horizontal e põe o `max-height`; com até 15 linhas, sem limite. `thead` sticky em cima, `tfoot` sticky embaixo, barras de rolagem visíveis (`::-webkit-scrollbar`, `scrollbar-color`).
+- **Itens PPU** (`agregar` → `A.ppu`): por contrato e item, `cons/consU` (realizado de todas as operações concluídas do contrato), `per/perU` (concluídas com data do serviço no período), `aR/aRU` (previsto das não concluídas, todo o contrato, × `fatorOp`), `proj/projU` = cons + aR. US$ pela linha do arquivo (`valorUsd`, preço da data da operação) ou qtd × preço do item (`valUsd`). Colunas: Contrato, Item, Descrição, Unid., Contratado, Consumido, Saldo, % usado, Preço unitário (US$ e R$), Realizado US$, Lançado no período, Seleção US$, A realizar, A realizar US$, Projetado, Projetado US$; total das 4 colunas em US$ das linhas visíveis. Aba "Itens PPU" do Excel consolidado com as mesmas colunas (preço em US$ e R$ separados).
+- **Câmbio:** o Engenharia guarda, por item do contrato, o preço em US$ e em R$ (com os reajustes); não há taxa de câmbio por data. Se o R$ tiver de sair do US$ pela taxa da data da operação, isso é uma mudança no Engenharia (tabela de câmbio por data) — **pendente**, a combinar com o usuário.
+- **Testes:** `e2e_tabelas` 53, `e2e_registros` 66, `e2e_matriz` 48, `e2e_compartilhar` 27, `e2e_gerencial` 62, `e2e_bp` 56; Engenharia: `e2e_engenharia` 62, `e2e_contratos` 76, `e2e_quimicos` 36, `e2e_espaco` 12.
 
 ---
 

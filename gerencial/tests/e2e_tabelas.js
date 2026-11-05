@@ -90,7 +90,7 @@ const ABAS = [['contratos', 't-cts'], ['ppu', 't-ppu'], ['quim', 't-quim'], ['ca
   await page.setInputFiles('#inArq', [{name: 'eng_ana.json', mimeType: 'application/json', buffer: Buffer.from(JSON.stringify(pacA))}, {name: 'eng_bruno.json', mimeType: 'application/json', buffer: Buffer.from(JSON.stringify(pacB))}]);
   await page.waitForSelector('.kpis');
   await page.evaluate(() => { const m = document.getElementById('msg'); if (m) m.remove(); });
-  conf((await page.textContent('#ver')).includes('g12'), 'versão g12');
+  conf((await page.textContent('#ver')).includes('g13'), 'versão g13');
 
   console.log('Ordem crescente e decrescente em todas as colunas');
   for (const [aba, cls] of ABAS) {
@@ -163,6 +163,41 @@ const ABAS = [['contratos', 't-cts'], ['ppu', 't-ppu'], ['quim', 't-quim'], ['ca
   await page.click('[data-tfclr="cts"]');
   conf(JSON.stringify((await lerTab(page, 't-cts')).ft) === JSON.stringify(total0), 'limpando, o total volta ao de antes');
 
+  console.log('Itens PPU: consumido, lançado no período, a realizar e projetado (quantidade e US$)');
+  const refPpu = tri => {
+    const r = {}, it = k => r[k] || (r[k] = {cons: 0, consU: 0, per: 0, perU: 0, aR: 0, aRU: 0});
+    const nomes = {c1: 'Contrato Alfa', c2: 'Contrato Beta', c3: 'Contrato Gama'};
+    opsA.concat(opsB).forEach(o => {
+      if (o.realizado) {
+        const m = o.realizado.data, noP = m.startsWith('2026') && (!tri || Math.floor((Number(m.slice(5, 7)) - 1) / 3) + 1 === tri);
+        o.realizado.ppu.forEach(l => { const x = it(nomes[o.contratoId] + '|' + l.ref); x.cons += l.qtd; x.consU += l.valorUsd; if (noP) { x.per += l.qtd; x.perU += l.valorUsd; } });
+      } else {
+        const f = o.risco ? Math.max(0, 1 - o.risco / 100) : 1;
+        o.previsto.ppu.forEach(l => { const x = it(nomes[o.contratoId] + '|' + l.ref); x.aR += l.qtd * f; x.aRU += l.valorUsd * f; });
+      }
+    });
+    return r;
+  };
+  const confPpu = async (tri, rot) => {
+    const T = await lerTab(page, 't-ppu'), ref = refPpu(tri), difs = [];
+    const chaves = T.rows.map(r => r[0] + '|' + r[1]);
+    Object.keys(ref).forEach(k => { const e = ref[k], r = T.rows[chaves.indexOf(k)]; const perto = (a, b) => Math.abs(num(a) - b) < 0.011;
+      if (!r || !perto(r[5], e.cons) || !perto(r[9], e.consU) || !perto(r[10], e.per) || !perto(r[11], e.perU) || !perto(r[12], e.aR) || !perto(r[13], e.aRU) || !perto(r[14], e.cons + e.aR) || !perto(r[15], e.consU + e.aRU)) difs.push({k, tela: r, ref: e}); });
+    const soma = (i) => T.rows.reduce((a, r) => a + num(r[i]), 0);
+    conf(!difs.length && T.rows.length === Object.keys(ref).length && [[1, 9], [3, 11], [5, 13], [7, 15]].every(([f, c]) => Math.abs(num(T.ft[f]) - soma(c)) < 0.02), rot, difs.slice(0, 2));
+  };
+  await page.click('.tab[data-tab="ppu"]');
+  const thPpu = (await lerTab(page, 't-ppu')).ths.map(t => t.t);
+  conf(thPpu.join('|') === 'Contrato|Item|Descrição|Unid.|Contratado|Consumido|Saldo|% usado|Preço unitário|Realizado US$|Lançado no período|Seleção US$|A realizar|A realizar US$|Projetado|Projetado US$', 'colunas: "Preço unitário" ao lado de "% usado"; US$ do realizado, da seleção, do a realizar e do projetado; sem R$', thPpu);
+  const precoAlfa = await page.$$eval('.t-ppu tbody tr', l => { const tr = l.find(r => r.children[0].textContent === 'Contrato Alfa' && r.children[1].textContent === '1.1'); return tr ? tr.children[8].innerText.replace(/\s+/g, ' ').trim() : null; });
+  conf(precoAlfa === 'US$ 280,00 R$ 1.512,00', 'preço unitário em US$ e em R$ (Contrato Alfa, item 1.1)', precoAlfa);
+  await confPpu(0, 'ano 2026: consumido (só concluídas), lançado no período, a realizar (× risco) e projetado — quantidade e US$ — e os totais batem com a conta');
+  await page.selectOption('[data-f="tri"]', '1');
+  await confPpu(1, 'só Q1: o lançado no período muda; consumido, a realizar e projetado são do contrato todo');
+  await page.selectOption('[data-f="tri"]', '');
+  const xlP = await (async () => { const [dl] = await Promise.all([page.waitForEvent('download'), page.click('[data-a="excel"]')]); return page.evaluate(b => { const w = XLSX.read(b, {type: 'base64'}); return XLSX.utils.sheet_to_json(w.Sheets['Itens PPU'], {header: 1})[0]; }, fs.readFileSync(await dl.path()).toString('base64')); })();
+  conf(xlP.join('|') === 'Contrato|Item|Descrição|Unid.|Contratado|Consumido|Saldo|% usado|Preço unitário US$|Preço unitário R$|Realizado US$|Lançado no período|Seleção US$|A realizar|A realizar US$|Projetado|Projetado US$', 'Excel consolidado: aba "Itens PPU" com as mesmas colunas', xlP);
+
   console.log('Seleção de itens (outras tabelas)');
   await page.click('.tab[data-tab="ppu"]');
   await abrirPainel(page, 't-ppu', 'Descrição');
@@ -171,8 +206,8 @@ const ABAS = [['contratos', 't-cts'], ['ppu', 't-ppu'], ['quim', 't-quim'], ['ca
   conf(its.filter(i => i.vis).map(i => i.v).join() === 'Taxa de cimentação', 'buscar "taxa" deixa só "Taxa de cimentação" na lista');
   await page.press('#tfPop .tf-q', 'Enter');
   T = await lerTab(page, 't-ppu');
-  const recPpu = T.rows.reduce((a, r) => a + num(r[10]), 0);
-  conf(T.rows.length === 3 && T.rows.every(r => r[2] === 'Taxa de cimentação') && Math.abs(num(T.ft[1]) - recPpu) < 0.01 && /Total \(3 item\(ns\)\)/.test(T.ft[0]), 'Enter aplica só o que ficou visível: 3 linhas (uma por contrato); total da receita = soma delas', T.ft);
+  const projPpu = T.rows.reduce((a, r) => a + num(r[15]), 0);
+  conf(T.rows.length === 3 && T.rows.every(r => r[2] === 'Taxa de cimentação') && Math.abs(num(T.ft[7]) - projPpu) < 0.01 && /Total \(3 item\(ns\)\)/.test(T.ft[0]), 'Enter aplica só o que ficou visível: 3 linhas (uma por contrato); total do projetado = soma delas', T.ft);
   await abrirPainel(page, 't-ppu', 'Descrição');
   await page.click('#tfPop [data-tfa="limpar"]');
   conf(!(await page.locator('.t-ppu .tf-b.on').count()) && (await lerTab(page, 't-ppu')).rows.length > 3, '"Mostrar todos" tira a seleção');
@@ -218,6 +253,40 @@ const ABAS = [['contratos', 't-cts'], ['ppu', 't-ppu'], ['quim', 't-quim'], ['ca
   T = await lerTab(page, 't-ops');
   conf(T.rows.length === 4 && T.rows.every(r => r[1] === 'Contrato Alfa'), 'os filtros do topo continuam valendo nas tabelas (Petrobras: 4 operações)');
   await page.selectOption('[data-f="cliente"]', '');
+
+  console.log('15 linhas visíveis, com rolagem vertical e horizontal');
+  const C4 = ct('c4', 'Contrato Delta', 'TotalEnergies', 'Sudeste', [['1.1', 'Taxa de cimentação', 'dia', 400, 290]]);
+  const opsC = []; for (let k = 0; k < 22; k++) opsC.push(op(C4, '2026-' + String(1 + (k % 12)).padStart(2, '0') + '-' + String(5 + k).padStart(2, '0'), 'NS-' + (40 + (k % 4)), 'P-' + k, 'Squeeze', [['1.1', 1 + (k % 3)]], [], [], [['Operador', 1, 1]]));
+  await page.setInputFiles('#inArq', [{name: 'eng_c.json', mimeType: 'application/json', buffer: Buffer.from(JSON.stringify({tipo: 'EARL-Gerencial', formato: 2, app: 'teste', geradoEm: '2026-11-04T12:00:00.000Z', por: 'Eng. Caio', contratos: [C4], operacoes: opsC}))}]);
+  await page.waitForTimeout(300);
+  const rolagem = cls => page.evaluate(cls => {
+    const t = document.querySelector('table.' + cls), w = t.closest('.tw15'), wr = w.getBoundingClientRect(), barra = w.offsetHeight - w.clientHeight;
+    const topo = wr.top + t.tHead.offsetHeight - 1, fim = wr.bottom - barra - (t.tFoot ? t.tFoot.offsetHeight : 0) + 1;
+    const rows = [...t.tBodies[0].rows], vis = rows.filter(r => { const b = r.getBoundingClientRect(); return b.top >= topo && b.bottom <= fim; }).length;
+    return {n: rows.length, vis, rola: w.classList.contains('tw15-rola'), vert: w.scrollHeight > w.clientHeight, horiz: w.scrollWidth > w.clientWidth, cabTopo: Math.round(t.tHead.getBoundingClientRect().top - wr.top), rodFim: t.tFoot ? Math.round(wr.bottom - barra - t.tFoot.getBoundingClientRect().bottom) : null};
+  }, cls);
+  await page.click('.tab[data-tab="ops"]');
+  let R = await rolagem('t-ops');
+  conf(R.n === 30 && R.vis === 15 && R.rola && R.vert && R.cabTopo <= 1, 'Operações (30 linhas): aparecem 15, com rolagem vertical dentro do quadro', R);
+  await page.$eval('.t-ops', t => { t.closest('.tw15').scrollTop = 99999; });
+  R = await rolagem('t-ops');
+  conf(Math.abs(R.cabTopo) <= 1 && Math.abs(R.rodFim) <= 2, 'rolando até o fim, o cabeçalho continua em cima e o total embaixo', R);
+  await foto(page, 't4_15linhas');
+  await page.setViewportSize({width: 900, height: 900});
+  await page.waitForTimeout(250);
+  R = await rolagem('t-ops');
+  conf(R.horiz && R.vis === 15 && Math.abs(R.cabTopo) <= 1, 'tela mais estreita: barra de rolagem horizontal também, e continuam 15 linhas', R);
+  await page.setViewportSize({width: 1500, height: 950});
+  await page.click('.tab[data-tab="ppu"]');
+  R = await rolagem('t-ppu');
+  conf(R.n === 9 && !R.rola && !R.vert, 'tabela com até 15 linhas (Itens PPU, 9): sem limite, sem rolagem vertical', R);
+  await page.click('.tab[data-tab="receita"]');
+  await page.click('[data-mxmostrar="4"]');
+  R = await rolagem('t-mx');
+  conf(R.n > 15 && R.vis === 15 && R.rola, 'matriz da aba Receita: 15 linhas visíveis, o resto rola', R);
+  await page.click('.tab[data-tab="contratos"]');
+  R = await rolagem('t-cts');
+  conf(R.n === 4 && !R.rola, 'Contratos (4 linhas): sem rolagem', R);
 
   console.log('Celular');
   await page.setViewportSize({width: 390, height: 800});
