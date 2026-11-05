@@ -372,6 +372,14 @@ Pedido do Hugo: não criar aba nova, e sim pôr a matriz no lugar da tabela "Rec
 - **Excel:** "Excel desta tabela" = `EARL_Gerencial_receita_<ano>[_período]_<data>.xlsx`, aba "Receita <ano>", coluna "Item PPU"; o consolidado tem a aba "Receita <ano>" (tudo aberto) e vale para o ano/filtros escolhidos.
 - **Testes:** `e2e_matriz` 46 (reescrito para a visão por ano), `e2e_gerencial` 62, `e2e_bp` 56 (agora ano a ano: 2026 e 2027 somam a planilha; cards dos quartos; meses da matriz; itens PPU; período e quarto; gráfico de ago–dez/2026).
 
+### EARL Gerencial g9 (05/11/2026): cards dos quartos mais baixos e com cara de filtro
+
+Pedido do Hugo: nos cards dos quartos e do ano, tirar margem e operações, deixar o card mais baixo e deixar claro que são filtros.
+
+- `cartoesQuartos`: cada card só com rótulo (`.qc-l`), receita e COGS; ~79 px de altura (antes ~180), `padding:8px 12px`, valor em 19px.
+- Filtro: o clique já filtrava (g8). Agora o card mostra "clique para filtrar" ao passar o mouse (`.qc-dica`, opacidade 0 → 1), "filtrando ✕" no quarto escolhido (`.qc-f`) e "ver o ano todo" no card do ano quando há quarto ou meses escolhidos; `aria-pressed` e `title` dizem o mesmo.
+- Testes: `e2e_matriz` 48 (altura ≤ 90 px, só receita/COGS, avisos de filtro), `e2e_gerencial` 62, `e2e_bp` 56.
+
 ---
 
 ## 4. Última mudança: v115 (Inventário a bordo: "Movimentar material" em cada contentor e na sacaria, em todas as categorias; Logística: desfazer a divisão da tesoura)

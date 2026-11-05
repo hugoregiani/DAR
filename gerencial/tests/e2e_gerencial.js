@@ -161,7 +161,7 @@ async function arquivoGerencial(page, nome, arq) {
   console.log('Receita e margem: cards dos quartos e matriz do ano');
   await p.click('.tab[data-tab="receita"]');
   conf(await p.inputValue('[data-f="ano"]') === '2026' && (await p.$$eval('[data-f="ano"] option', l => l.map(o => o.value))).join() === '2026', 'um ano por vez: 2026 (sem "Todos")');
-  const qc = await p.$$eval('.qc', l => l.map(b => b.querySelector('span').textContent.replace(/\s+/g, ' ').trim() + ' = ' + b.querySelector('b').textContent));
+  const qc = await p.$$eval('.qc', l => l.map(b => b.querySelector('.qc-l > span').textContent.replace(/\s+/g, ' ').trim() + ' = ' + b.querySelector('b').textContent));
   conf(qc.join(' | ') === 'Q1 jan–mar = US$ 0,00 | Q2 abr–jun = US$ 0,00 | Q3 jul–set = US$ 0,00 | Q4 out–dez = US$ 1.540,00 | Total 2026 jan–dez = US$ 1.540,00', 'cards Q1–Q4 e total do ano', qc);
   const mxLinhas = () => p.$$eval('.t-mx tbody tr', l => l.map(r => r.className.replace(/ on$/, '') + ' | ' + r.innerText.replace(/\s+/g, ' ').trim()));
   const mxCab = await p.$$eval('.t-mx thead th', l => l.map(t => t.textContent).join('|'));

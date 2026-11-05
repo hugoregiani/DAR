@@ -160,10 +160,18 @@ button.kpi{font:inherit;color:inherit;text-align:left;cursor:pointer;align-items
 .qc:hover{border-color:var(--ink-3)}
 .qc span i{font-style:normal;font-weight:400;letter-spacing:0;text-transform:none;color:var(--ink-3)}
 .qc.on{border-color:var(--red);box-shadow:0 0 0 2px rgba(204,0,0,.18)}
-.qc .qc-n{color:var(--ink-3)}
 .qc.dest span i{color:rgba(255,255,255,.8)}
 .qc.dest.on{box-shadow:0 0 0 3px rgba(204,0,0,.28);border-color:transparent}
-.qc.dest .qc-n{color:rgba(255,255,255,.8)}
+.qc{padding:8px 12px;gap:1px}
+.qc .qc-l{display:flex;align-items:baseline;justify-content:space-between;gap:6px;min-width:0}
+.qc .qc-l > span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.qc b{font-size:min(19px,9.5cqi)}
+.qc em{font-size:11.5px}
+.qc i.qc-f,.qc i.qc-dica{font-style:normal;font-size:10.5px;font-weight:700;letter-spacing:0;text-transform:none;white-space:nowrap}
+.qc i.qc-f{color:var(--red)}
+.qc i.qc-dica{color:var(--ink-3);opacity:0;transition:opacity .12s}
+.qc:hover i.qc-dica,.qc:focus-visible i.qc-dica{opacity:1}
+.qc.dest i.qc-dica,.qc.dest i.qc-f{color:rgba(255,255,255,.9)}
 .mes-f{position:relative}
 .mes-box{border:1px solid var(--line-2);border-radius:10px;padding:7px 10px;background:#fff;min-width:170px;display:flex;align-items:center;justify-content:space-between;gap:10px;cursor:pointer;text-align:left}
 .mes-box:hover{border-color:var(--ink-3)}
@@ -205,7 +213,7 @@ button.kpi{font:inherit;color:inherit;text-align:left;cursor:pointer;align-items
    Para cada contrato vale o arquivo mais novo. Tudo fica neste navegador (localStorage, prefixo earlger:). */
 (function () {
   'use strict';
-  var VERSAO = 'EARL Gerencial g8';
+  var VERSAO = 'EARL Gerencial g9';
   var CHAVE = 'earlger:pacotes_v1';
   var $ = function (s) { return document.querySelector(s); };
   var esc = function (v) { return String(v == null ? '' : v).replace(/[&<>"']/g, function (c) { return {'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'}[c]; }); };
@@ -876,9 +884,10 @@ button.kpi{font:inherit;color:inherit;text-align:left;cursor:pointer;align-items
     ls.forEach(function (x) { var q = triDe(String(x.data).slice(0, 7)); if (g[q]) g[q].push(x); });
     var card = function (q, t, rot, per, cls) {
       var on = q ? S.f.tri === String(q) : !S.f.tri && !S.f.mIni;
-      return '<button type="button" class="kpi qc ' + cls + (on ? ' on' : '') + '" data-q="' + (q || '') + '" title="' + (q ? 'Ver só o Q' + q + ' (clique de novo para ver o ano todo)' : 'Ver o ano todo') + '">' +
-        '<span>' + esc(rot) + ' <i>' + esc(per) + '</i></span><b>' + fUSD(t.rU) + '</b>' +
-        '<em>COGS ' + fUSD(t.cU) + '</em><em>margem ' + fUSD(t.rU - t.cU) + ' (' + margemTxt(t.rU, t.cU) + ')</em><em class="qc-n">' + (t.n ? t.n + ' operação(ões)' + (t.nF ? ' · ' + t.nF + ' fora' : '') : 'sem operação') + '</em></button>';
+      // card = filtro: o quarto filtra a página toda (clique de novo, ou no total, volta ao ano todo)
+      var dica = q ? (on ? '<i class="qc-f">filtrando ✕</i>' : '<i class="qc-dica">clique para filtrar</i>') : (on ? '' : '<i class="qc-dica">ver o ano todo</i>');
+      return '<button type="button" class="kpi qc ' + cls + (on ? ' on' : '') + '" data-q="' + (q || '') + '" aria-pressed="' + on + '" title="' + (q ? (on ? 'Filtrando o Q' + q + ': clique para voltar ao ano todo' : 'Clique para filtrar o Q' + q) : 'Clique para ver o ano todo') + '">' +
+        '<span class="qc-l"><span>' + esc(rot) + ' <i>' + esc(per) + '</i></span>' + dica + '</span><b>' + fUSD(t.rU) + '</b><em>COGS ' + fUSD(t.cU) + '</em></button>';
     };
     return '<div class="qcards">' + [1, 2, 3, 4].map(function (q) { return card(q, soma(g[q]), 'Q' + q, MESES[q * 3 - 3] + '–' + MESES[q * 3 - 1], 'qc-q'); }).join('') +
       card(0, soma(ls), 'Total ' + (S.f.ano || ''), 'jan–dez', 'dest qc-ano') + '</div>';

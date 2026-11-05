@@ -32,7 +32,7 @@ Tudo é **realizado + previsto**, com o risco de cada operação aplicado:
 - **Indicadores (só US$, 5 cartões do mesmo tamanho):** receita (realizado · previsto), COGS, operações (realizadas, previstas e "fora", com risco 100%), receita por operação (sem as de risco 100%) e margem. O homem-dia fica na aba Pessoal.
 - **Contratos:** receita, COGS e margem por contrato, com o engenheiro e a data do arquivo, as operações e o uso do contrato em valor. Clique no contrato para filtrar.
 - **Receita e margem** (aba inicial), por ano, no formato do "Relatório Receita" do Excel:
-  - **Cards Q1, Q2, Q3, Q4 e Total do ano:** receita, COGS, margem e operações de cada quarto e do ano (com os filtros de cliente, contrato, região e tipo; sem o quarto/mês escolhido, para mostrar o ano todo). Clicar num quarto escolhe o quarto; clicar de novo, ou no total, volta ao ano todo.
+  - **Cards Q1, Q2, Q3, Q4 e Total do ano** (baixos, numa linha): só a receita e o COGS de cada quarto e do ano (com os filtros de cliente, contrato, região e tipo; sem o quarto/mês escolhido, para mostrar o ano todo). **São filtros:** passando o mouse aparece "clique para filtrar"; clicando num quarto, a página toda filtra por ele e o card mostra "filtrando ✕"; clicando de novo, ou no card do ano ("ver o ano todo"), volta ao ano todo.
   - **Gráfico**, em cima da tabela (**Ocultar gráfico** esconde; a escolha fica guardada). Três formas de ver:
     - **Por mês:** receita realizada e prevista empilhadas, com o COGS ao lado;
     - **Por mês e cliente:** a receita de cada mês empilhada por cliente;
@@ -86,7 +86,7 @@ Tudo é **realizado + previsto**, com o risco de cada operação aplicado:
 - Os dados ficam em `localStorage` com o prefixo `earlger:`.
 - **Testes de ponta a ponta:**
   - dois engenheiros geram arquivos no app de Engenharia, e o Gerencial carrega por arquivos, `.zip` e pasta. Inclui os 5 indicadores em US$, os cards dos quartos, a matriz do ano (cliente › contrato, até as operações e os itens PPU, que somam a receita da operação), o gráfico (por mês, por mês e cliente e por cliente; ocultar/mostrar; tooltip; cores fixas por cliente; clicar no cliente filtra; clicar no mês destaca a coluna) e o filtro de período numa caixa só, com o quarto valendo no lugar dos meses (62 verificações);
-  - a visão por ano (`tests/e2e_matriz.js`, 46 verificações) monta arquivos sintéticos (2 engenheiros, 4 clientes, 16 operações de dez/2025 a fev/2027, realizadas e previstas, risco 0/50/100%, itens PPU). Confere os 5 cartões do mesmo tamanho (sem Pessoal), os cards Q1–Q4 e do ano, célula a célula da matriz (mês, quarto e total) contra uma conta feita no próprio teste, cada ano, a caixa de período (início e fim, ordem invertida, um mês só, clique fora, Esc), o quarto sobressaindo ao mês, o clique nos cards, o abrir e fechar até o item PPU, o destaque do mês pelo gráfico, o Excel da tabela e do consolidado e o celular;
+  - a visão por ano (`tests/e2e_matriz.js`, 48 verificações) monta arquivos sintéticos (2 engenheiros, 4 clientes, 16 operações de dez/2025 a fev/2027, realizadas e previstas, risco 0/50/100%, itens PPU). Confere os 5 cartões do mesmo tamanho (sem Pessoal), os cards Q1–Q4 e do ano, célula a célula da matriz (mês, quarto e total) contra uma conta feita no próprio teste, cada ano, a caixa de período (início e fim, ordem invertida, um mês só, clique fora, Esc), o quarto sobressaindo ao mês, o clique nos cards, o abrir e fechar até o item PPU, o destaque do mês pelo gráfico, o Excel da tabela e do consolidado e o celular;
   - o teste BP (`../engenharia/teste_bp/e2e_bp.js`) confere o Gerencial contra os totais da planilha do BP, ano a ano (2026 e 2027, que somam a planilha): receita, COGS, margem, operações fora, os cards dos quartos, cada mês da matriz e do gráfico, os itens PPU, a tendência linear e a média móvel, as formas por cliente, o período e o quarto, aba Operações e Excel.
 
   ```bash
@@ -97,4 +97,4 @@ Tudo é **realizado + previsto**, com o risco de cada operação aplicado:
   node tests/e2e_matriz.js EARL_Gerencial.html [pasta-das-telas]
   ```
 
-- Versão: `EARL Gerencial g8`.
+- Versão: `EARL Gerencial g9`.

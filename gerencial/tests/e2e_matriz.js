@@ -109,7 +109,7 @@ const lerMatriz = page => page.evaluate(() => {
   return {h1: th(0), h2: th(1), h3: th(2), rows, ft: ftd.slice(1).map(c => c.textContent.trim()), ftRot: ftd[0].textContent.replace(/\s+/g, ' ').trim()};
 });
 const kpi = (page, c) => page.evaluate(c => document.querySelector('.' + c + ' b').textContent.trim(), c);
-const cards = page => page.$$eval('.qc', l => l.map(b => ({q: b.dataset.q, on: b.classList.contains('on'), rot: b.querySelector('span').textContent.replace(/\s+/g, ' ').trim(), r: b.querySelector('b').textContent.trim(), em: [...b.querySelectorAll('em')].map(e => e.textContent.trim())})));
+const cards = page => page.$$eval('.qc', l => l.map(b => ({q: b.dataset.q, on: b.classList.contains('on'), rot: b.querySelector('.qc-l > span').textContent.replace(/\s+/g, ' ').trim(), dica: (b.querySelector('.qc-f, .qc-dica') || {}).textContent || '', h: Math.round(b.getBoundingClientRect().height), r: b.querySelector('b').textContent.trim(), em: [...b.querySelectorAll('em')].map(e => e.textContent.trim())})));
 const h2txt = M => M.h2.map(h => h.t);
 
 (async () => {
@@ -126,7 +126,7 @@ const h2txt = M => M.h2.map(h => h.t);
   await page.evaluate(() => { const m = document.getElementById('msg'); if (m) m.remove(); });
 
   console.log('Tela: a matriz no lugar da tabela, sem aba nova; 5 cartões do mesmo tamanho');
-  conf((await page.textContent('#ver')).includes('g8'), 'versão g8');
+  conf((await page.textContent('#ver')).includes('g9'), 'versão g9');
   const abas = await page.$$eval('.tab', l => l.map(b => b.textContent.trim()));
   conf(abas[0] === 'Receita e margem' && abas[1] === 'Contratos' && !abas.some(a => /matriz/i.test(a)), 'sem aba separada: a matriz fica na aba "Receita e margem"', abas);
   conf(await page.locator('.tab.on[data-tab="receita"] ').count() === 1 && await page.locator('.t-mx').count() === 1 && await page.locator('.t-dd').count() === 0, 'a matriz substitui a tabela "Receita, COGS e margem"');
@@ -147,8 +147,10 @@ const h2txt = M => M.h2.map(h => h.t);
   conf(cs.length === 5 && okCards(cs, R26, '2026'), 'Q1, Q2, Q3, Q4 e Total 2026 com a receita de cada um', cs.map(c => c.rot + ' ' + c.r));
   conf(cs.map(c => c.rot).slice(0, 4).join('|') === 'Q1 jan–mar|Q2 abr–jun|Q3 jul–set|Q4 out–dez' && cs[4].on && !cs.slice(0, 4).some(c => c.on), 'rótulos Q1…Q4 (quarto) com os meses; o total do ano está marcado');
   const q1 = R26.filter(x => qDe(x.m) === 1);
-  conf(cs[0].em[0] === 'COGS US$ ' + fV(somaC(q1)) && cs[0].em[1] === 'margem US$ ' + fV(somaR(q1) - somaC(q1)) + ' (' + ((somaR(q1) - somaC(q1)) / somaR(q1) * 100).toLocaleString('pt-BR', {maximumFractionDigits: 2}) + '%)' && cs[0].em[2] === q1.length + ' operação(ões)', 'cada card traz COGS, margem e operações', cs[0].em);
-  conf(cs[2].r === 'US$ 0,00' && cs[2].em[2] === 'sem operação' && /1 fora/.test(cs[3].em[2]), 'quarto vazio: US$ 0,00, "sem operação"; risco 100% contado como "fora"', [cs[2], cs[3].em]);
+  conf(cs.every(c => c.em.length === 1) && cs[0].em[0] === 'COGS US$ ' + fV(somaC(q1)) && cs[4].em[0] === 'COGS US$ ' + fV(somaC(R26)), 'cada card só com a receita e o COGS (sem margem e sem operações)', cs.map(c => c.em));
+  conf(cs.every(c => c.h <= 90), 'cards baixos (até 90 px de altura): ' + cs.map(c => c.h).join(', '), cs.map(c => c.h));
+  conf(cs[2].r === 'US$ 0,00' && cs[2].em[0] === 'COGS US$ 0,00', 'quarto vazio: US$ 0,00', cs[2]);
+  conf(cs.slice(0, 4).every(c => c.dica === 'clique para filtrar') && cs[4].dica === '', 'quartos avisam "clique para filtrar" (aparece passando o mouse)', cs.map(c => c.dica));
 
   console.log('Matriz do ano: quarto › mês › Receita/COGS');
   let M = await lerMatriz(page);
@@ -201,7 +203,8 @@ const h2txt = M => M.h2.map(h => h.t);
   await page.selectOption('[data-f="tri"]', '');
   conf((await page.textContent('.mes-box')).includes('Ano todo') && (await kpi(page, 'k-rec-usd')) === 'US$ ' + fV(somaR(R26)), 'tirando o quarto: volta ao ano todo (o quarto limpou os meses)');
   await page.click('.qc[data-q="1"]');
-  conf(await page.inputValue('[data-f="tri"]') === '1' && (await kpi(page, 'k-rec-usd')) === 'US$ ' + fV(somaR(q1)) && (await cards(page))[0].on, 'clicar no card Q1 escolhe o Q1');
+  cs = await cards(page);
+  conf(await page.inputValue('[data-f="tri"]') === '1' && (await kpi(page, 'k-rec-usd')) === 'US$ ' + fV(somaR(q1)) && cs[0].on && cs[0].dica === 'filtrando ✕' && cs[4].dica === 'ver o ano todo', 'clicar no card Q1 filtra pelo Q1: o card mostra "filtrando ✕" e o do ano "ver o ano todo"', cs.map(c => c.dica));
   await page.click('.qc[data-q="1"]');
   conf(await page.inputValue('[data-f="tri"]') === '', 'clicar de novo no Q1 volta ao ano todo');
   await page.click('.qc[data-q="2"]');
