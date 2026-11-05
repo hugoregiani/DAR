@@ -389,6 +389,15 @@ Pedido do Hugo: botão para registrar as informações e uma aba para comparar a
 - **Mostrar nos gráficos** (`S.gmet` = rec/cogs/ambos/mg, `earlger:gmet`; `seletorMet`): `desenharGrafico` e `desenharClientes` reescritos com `escala()` (aceita negativos), `colunaZ`/`colunaBaixo`/`barraHEsq`; tendência sobre a medida escolhida (`tendRot`). "Receita e COGS" é o gráfico de antes.
 - **Testes:** `e2e_registros` 54 (novo), `e2e_matriz` 48, `e2e_gerencial` 62, `e2e_bp` 56.
 
+### EARL Gerencial g11 (05/11/2026): ordem e seleção de itens nas tabelas
+
+Pedido do Hugo: em todas as tabelas das abas Contratos, Itens PPU, Químicas etc., ordenar crescente/decrescente e selecionar itens isolados.
+
+- **Componente único** `tabelaF(id, cols, rows, {cls, tr, rod})` (substitui `tabela()` nessas abas; `tabela()` ficou só na lista de registros): `cols = [{t, h, v, f, n, cls, st}]` — `h` = HTML da célula, `v` = valor da ordem (vazio sempre no fim; números e texto `localeCompare` pt numérico), `f` = rótulo(s) da seleção (pode ser lista: Contratos de uma química; Data = mês). Estado `S.tf[id] = {s, d, f: {coluna: [rótulos]}}`, em memória. `rod(vis)` recebe só as linhas visíveis (totais novos em Itens PPU e Operações; `somaT` soma os `t` dos contratos).
+- **Cabeçalho:** `[data-tfsort]` (clique alterna ▲/▼), `[data-tff]` abre o painel, `[data-tfclr]` limpa. Painel `#tfPop` (`abrirFiltroTab`, DOM próprio, posição absoluta pela página): ↑/↓, busca, (Selecionar tudo) com estado intermediário, itens com contagem e "só este", Mostrar todos / Cancelar / Aplicar (desligado sem nada marcado); a lista usa as linhas filtradas pelas outras colunas (`filtrarTf(..., menos)`). Fecha com Esc, clique fora e a cada `render()`.
+- IDs: `cts`, `ppu`, `quim`, `cas`, `pes`, `ops`, `fontes`.
+- **Testes:** `e2e_tabelas` 42 (novo), `e2e_registros` 54, `e2e_matriz` 48, `e2e_gerencial` 62, `e2e_bp` 56.
+
 ---
 
 ## 4. Última mudança: v115 (Inventário a bordo: "Movimentar material" em cada contentor e na sacaria, em todas as categorias; Logística: desfazer a divisão da tesoura)

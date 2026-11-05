@@ -154,6 +154,35 @@ tr.fora td b{color:var(--ink-3)}
 .t-mx tfoot td{background:var(--soft)}
 .t-mx tfoot td.mx-q{background:#DDEBD3}
 .mx-xls{font-size:12px;padding:5px 10px}
+.tf-h{display:inline-flex;align-items:center;gap:3px}
+th.n .tf-h{justify-content:flex-end;width:100%}
+.tf-s{border:0;background:transparent;padding:0;margin:0;font:inherit;font-size:inherit;font-weight:inherit;letter-spacing:inherit;text-transform:inherit;color:inherit;cursor:pointer;display:inline-flex;align-items:center;gap:4px;white-space:nowrap}
+.tf-s:hover{color:var(--ink)}
+.tf-ar{font-style:normal;font-size:9px;color:#B8BEC2;letter-spacing:0}
+th.tf-on .tf-s{color:var(--ink)}
+th.tf-on .tf-ar{color:var(--red);font-size:10px}
+.tf-b{border:1px solid transparent;background:transparent;border-radius:6px;width:20px;height:20px;cursor:pointer;color:var(--ink-3);font-size:11px;line-height:1;padding:0;flex:none}
+.tf-b:hover{border-color:var(--line-2);background:#fff;color:var(--ink)}
+.tf-b.on{background:var(--red);border-color:var(--red);color:#fff}
+.tf-info{display:flex;align-items:center;gap:10px;flex-wrap:wrap;font-size:12.5px;color:var(--ink-2);margin:4px 0 8px}
+.tf-clr{font-size:12px;padding:4px 10px}
+.tf-pop{position:absolute;z-index:40;background:#fff;border:1px solid var(--line-2);border-radius:14px;box-shadow:0 8px 24px rgba(0,0,0,.16);padding:10px;width:310px;max-width:calc(100vw - 16px);font-size:13px}
+.tf-pt{font-size:10.5px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--ink-3);margin:0 2px 8px}
+.tf-po{display:flex;gap:6px;margin-bottom:8px}
+.tf-po .btn-o{flex:1;font-size:12px;padding:5px 8px}
+.tf-q{width:100%;border:1px solid var(--line-2);border-radius:10px;padding:6px 9px;margin-bottom:6px}
+.tf-all{display:flex;align-items:center;gap:6px;padding:4px;border-bottom:1px solid var(--line);cursor:pointer;color:var(--ink-2)}
+.tf-list{max-height:240px;overflow-y:auto;margin:4px 0 8px}
+.tf-it{display:flex;align-items:center;gap:4px;padding:0 4px;border-radius:8px}
+.tf-it:hover{background:var(--soft)}
+.tf-it label{display:flex;align-items:center;gap:6px;flex:1;min-width:0;cursor:pointer;padding:4px 0}
+.tf-v{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.tf-it em{font-style:normal;color:var(--ink-3);font-size:11.5px;margin-left:auto;padding-left:6px}
+.tf-so{border:0;background:transparent;color:var(--red-dk);font-size:11.5px;font-weight:700;cursor:pointer;padding:3px 5px;border-radius:6px;white-space:nowrap;opacity:.45}
+.tf-it:hover .tf-so,.tf-so:focus{opacity:1}
+.tf-so:hover{background:#FBEFEF}
+.tf-pr{display:flex;align-items:center;gap:6px}
+.tf-pr .btn-o,.tf-pr .btn-r{font-size:12px;padding:5px 10px}
 .g-bar2{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:0 0 6px}
 .g-mets button{font-size:12px;padding:5px 10px}
 .cx-btn{font-size:12.5px;padding:6px 12px}
@@ -257,7 +286,7 @@ button.kpi{font:inherit;color:inherit;text-align:left;cursor:pointer;align-items
    Para cada contrato vale o arquivo mais novo. Tudo fica neste navegador (localStorage, prefixo earlger:). */
 (function () {
   'use strict';
-  var VERSAO = 'EARL Gerencial g10';
+  var VERSAO = 'EARL Gerencial g11';
   var CHAVE = 'earlger:pacotes_v1';
   var $ = function (s) { return document.querySelector(s); };
   var esc = function (v) { return String(v == null ? '' : v).replace(/[&<>"']/g, function (c) { return {'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'}[c]; }); };
@@ -272,7 +301,7 @@ button.kpi{font:inherit;color:inherit;text-align:left;cursor:pointer;align-items
   var hojeTxt = function () { var d = new Date(), p = function (n) { return String(n).padStart(2, '0'); }; return d.getFullYear() + '-' + p(d.getMonth() + 1) + '-' + p(d.getDate()); };
   var r4 = function (v) { return Math.round(v * 10000) / 10000; };
 
-  var S = {pacotes: [], tab: 'receita', f: {ano: '', tri: '', mIni: 0, mFim: 0, cliente: '', contrato: '', regiao: '', tipo: '', busca: ''}, soComConsumo: true, msg: null, graf: true, tend: 'linear', gmodo: 'mes', mx: {abertos: {}, mostrar: 1}, mesPop: false, mesPasso: 0, mxVer: null, gmet: 'ambos', regs: [], cmp: {a: null, b: null, abertos: {}, mostrar: 1, soMud: false}};
+  var S = {pacotes: [], tab: 'receita', f: {ano: '', tri: '', mIni: 0, mFim: 0, cliente: '', contrato: '', regiao: '', tipo: '', busca: ''}, soComConsumo: true, msg: null, graf: true, tend: 'linear', gmodo: 'mes', mx: {abertos: {}, mostrar: 1}, mesPop: false, mesPasso: 0, mxVer: null, gmet: 'ambos', regs: [], cmp: {a: null, b: null, abertos: {}, mostrar: 1, soMud: false}, tf: {}};
   try { S.pacotes = JSON.parse(localStorage.getItem(CHAVE) || '[]') || []; } catch (e) { S.pacotes = []; }
   try { var t0 = localStorage.getItem('earlger:tab'); if (t0) S.tab = t0 === 'matriz' ? 'receita' : t0; } catch (e) {}
   try { if (localStorage.getItem('earlger:graf') === 'oculto') S.graf = false; var t1 = localStorage.getItem('earlger:tend'); if (t1 === 'linear' || t1 === 'mm3' || t1 === 'nenhuma') S.tend = t1; var t2 = localStorage.getItem('earlger:gmodo'); if (t2 === 'mes' || t2 === 'mescli' || t2 === 'cli') S.gmodo = t2; var t3 = localStorage.getItem('earlger:gmet'); if (t3 === 'rec' || t3 === 'cogs' || t3 === 'ambos' || t3 === 'mg') S.gmet = t3; } catch (e) {}
@@ -810,6 +839,7 @@ button.kpi{font:inherit;color:inherit;text-align:left;cursor:pointer;align-items
   var uniq = function (l) { return l.filter(function (x, i) { return x && l.indexOf(x) === i; }).sort(function (a, b) { return a.localeCompare(b, 'pt'); }); };
 
   var render = function () {
+    fecharFiltroTab();
     $('#ver').textContent = VERSAO;
     var app = $('#app');
     if (!S.pacotes.length) { app.innerHTML = telaVazia(); return; }
@@ -846,54 +876,217 @@ button.kpi{font:inherit;color:inherit;text-align:left;cursor:pointer;align-items
   var linhaValores = function (t) {
     return '<td class="n"><b>' + fUSD(t.rU) + '</b>' + sub('real. ' + fUSD(t.rRU) + ' · prev. ' + fUSD(t.rPU)) + '</td><td class="n">' + fBRL(t.rB) + '</td><td class="n">' + fUSD(t.cU) + '</td><td class="n">' + fUSD(t.rU - t.cU) + sub(margemTxt(t.rU, t.cU)) + '</td>';
   };
+  /* ---------- tabelas com ordem (crescente/decrescente) e seleção de itens, como o filtro do Excel ----------
+     tabelaF(id, cols, rows, {cls, tr, rod}): cols = [{t: título, h: html da célula, v: valor para ordenar, f: rótulo(s) para
+     selecionar, n: número}]. Estado por tabela em S.tf[id] = {s: coluna da ordem, d: 1|-1, f: {coluna: [rótulos marcados]}}.
+     O total (rod) recebe só as linhas visíveis. */
+  var _tf = {}; // a última versão desenhada de cada tabela (colunas e linhas), para o painel de seleção
+  var estTf = function (id) { return S.tf[id] || (S.tf[id] = {s: null, d: 1, f: {}}); };
+  var rotulosTf = function (col, r) { var v = col.f(r); return Array.isArray(v) ? (v.length ? v.map(String) : ['—']) : [v == null || v === '' ? '—' : String(v)]; };
+  var filtrarTf = function (rows, cols, st, menos) {
+    var fs = Object.keys(st.f).map(Number).filter(function (ci) { return ci !== menos && cols[ci] && cols[ci].f; });
+    if (!fs.length) return rows;
+    return rows.filter(function (r) { return fs.every(function (ci) { var sel = st.f[ci]; return rotulosTf(cols[ci], r).some(function (l) { return sel.indexOf(l) >= 0; }); }); });
+  };
+  var vazioTf = function (a) { return a == null || a === '' || (typeof a === 'number' && isNaN(a)); };
+  var cmpTf = function (a, b) {
+    if (typeof a === 'number' && typeof b === 'number') return a - b;
+    return String(a).localeCompare(String(b), 'pt', {numeric: true, sensitivity: 'base'});
+  };
+  var tabelaF = function (id, cols, rows, o) {
+    o = o || {};
+    var st = estTf(id), vis = filtrarTf(rows, cols, st, -1);
+    if (st.s != null && cols[st.s] && cols[st.s].v) {
+      var col = cols[st.s], d = st.d;
+      vis = vis.map(function (r, i) { return {r: r, i: i, v: col.v(r)}; }).sort(function (A, B) {
+        var na = vazioTf(A.v), nb = vazioTf(B.v);
+        if (na || nb) return (na - nb) || A.i - B.i; // vazios sempre no fim
+        return d * cmpTf(A.v, B.v) || A.i - B.i;
+      }).map(function (x) { return x.r; });
+    }
+    _tf[id] = {cols: cols, rows: rows};
+    var nF = Object.keys(st.f).length;
+    var th = cols.map(function (c, i) {
+      if (!c.t) return '<th' + (c.n ? ' class="n"' : '') + '></th>';
+      var ar = st.s === i ? (st.d > 0 ? '▲' : '▼') : '⇅';
+      return '<th class="tf-th' + (c.n ? ' n' : '') + (st.s === i ? ' tf-on' : '') + '"><span class="tf-h">' +
+        (c.v ? '<button type="button" class="tf-s" data-tfsort="' + id + '|' + i + '" title="Ordenar por ' + esc(c.t) + ' (clique de novo para inverter)">' + esc(c.t) + '<i class="tf-ar" aria-hidden="true">' + ar + '</i></button>' : '<span class="tf-t">' + esc(c.t) + '</span>') +
+        (c.f ? '<button type="button" class="tf-b' + (st.f[i] ? ' on' : '') + '" data-tff="' + id + '|' + i + '" title="Escolher os itens de ' + esc(c.t) + '" aria-label="Escolher os itens de ' + esc(c.t) + '">▾</button>' : '') + '</span></th>';
+    }).join('');
+    var corpo = vis.map(function (r) {
+      return '<tr' + (o.tr ? o.tr(r) : '') + '>' + cols.map(function (c) {
+        var cl = (c.n ? 'n' : '') + (c.cls ? ' ' + c.cls(r) : '');
+        return '<td' + (cl.trim() ? ' class="' + cl.trim() + '"' : '') + (c.st ? ' style="' + c.st + '"' : '') + '>' + c.h(r) + '</td>';
+      }).join('') + '</tr>';
+    }).join('');
+    var info = (nF || st.s != null) ? '<div class="tf-info"><span>' + [nF ? 'Mostrando ' + vis.length + ' de ' + rows.length + ' linha(s) (' + Object.keys(st.f).map(function (ci) { return esc(cols[ci].t) + ': ' + st.f[ci].length + ' selecionado(s)'; }).join(', ') + ')' : '', st.s != null ? 'ordenado por ' + esc(cols[st.s].t) + (st.d > 0 ? ' (crescente)' : ' (decrescente)') : ''].filter(Boolean).join(' · ') +
+      '</span><button type="button" class="btn-o tf-clr" data-tfclr="' + id + '">Limpar ordem e seleção</button></div>' : '';
+    return {vis: vis, html: info + '<div class="tw"><table class="' + (o.cls || '') + '"><thead><tr>' + th + '</tr></thead><tbody>' +
+      (corpo || '<tr><td colspan="' + cols.length + '" class="vazio">Nada no filtro.</td></tr>') + '</tbody>' + (o.rod ? '<tfoot>' + o.rod(vis) + '</tfoot>' : '') + '</table></div>'};
+  };
+  // painel de seleção (▾): ordem, busca, (Selecionar tudo), um item por valor com a contagem e "só este"
+  var fecharFiltroTab = function () { var p = $('#tfPop'); if (p) p.remove(); };
+  var abrirFiltroTab = function (id, ci, btn) {
+    var aberto = $('#tfPop');
+    if (aberto && aberto.dataset.alvo === id + '|' + ci) { fecharFiltroTab(); return; }
+    fecharFiltroTab();
+    var def = _tf[id]; if (!def) return;
+    var col = def.cols[ci], st = estTf(id), cont = {}, ord = {};
+    filtrarTf(def.rows, def.cols, st, ci).forEach(function (r) {
+      var ls = rotulosTf(col, r), um = ls.length === 1;
+      ls.forEach(function (l) { cont[l] = (cont[l] || 0) + 1; if (!(l in ord)) ord[l] = um && col.v ? col.v(r) : l; });
+    });
+    var vals = Object.keys(cont).sort(function (a, b) { var na = vazioTf(ord[a]) || a === '—', nb = vazioTf(ord[b]) || b === '—'; return (na - nb) || cmpTf(ord[a], ord[b]) || cmpTf(a, b); });
+    var sel = st.f[ci] || null;
+    var p = document.createElement('div');
+    p.id = 'tfPop'; p.className = 'tf-pop'; p.dataset.alvo = id + '|' + ci; p.setAttribute('role', 'dialog'); p.setAttribute('aria-label', 'Escolher os itens de ' + col.t);
+    p.innerHTML = '<div class="tf-pt">' + esc(col.t) + '</div>' +
+      (col.v ? '<div class="tf-po"><button type="button" class="btn-o" data-tfo="1">↑ Crescente</button><button type="button" class="btn-o" data-tfo="-1">↓ Decrescente</button></div>' : '') +
+      '<input type="search" class="tf-q" placeholder="Buscar…" aria-label="Buscar nos itens">' +
+      '<label class="tf-all"><input type="checkbox"> <span>(Selecionar tudo)</span></label>' +
+      '<div class="tf-list">' + vals.map(function (v, k) {
+        return '<div class="tf-it" data-l="' + esc(v.toLowerCase()) + '"><label><input type="checkbox" data-k="' + k + '"' + (!sel || sel.indexOf(v) >= 0 ? ' checked' : '') + '> <span class="tf-v">' + esc(v) + '</span><em>' + cont[v] + '</em></label><button type="button" class="tf-so" data-so="' + k + '" title="Mostrar só este">só este</button></div>';
+      }).join('') + '</div>' +
+      '<div class="tf-pr"><button type="button" class="btn-o" data-tfa="limpar">Mostrar todos</button><span class="sp"></span><button type="button" class="btn-o" data-tfa="cancelar">Cancelar</button><button type="button" class="btn-r" data-tfa="ok">Aplicar</button></div>';
+    document.body.appendChild(p);
+    var r = btn.getBoundingClientRect(), w = p.offsetWidth, vw = document.documentElement.clientWidth;
+    p.style.left = (window.scrollX + Math.max(8, Math.min(r.right - w, vw - w - 8))) + 'px';
+    p.style.top = (window.scrollY + r.bottom + 4) + 'px';
+    var cbs = Array.prototype.slice.call(p.querySelectorAll('.tf-list input')), all = p.querySelector('.tf-all input'), ok = p.querySelector('[data-tfa="ok"]');
+    var visivel = function (cb) { return cb.closest('.tf-it').style.display !== 'none'; };
+    var sync = function () {
+      var vs = cbs.filter(visivel), n = vs.filter(function (cb) { return cb.checked; }).length;
+      all.checked = vs.length > 0 && n === vs.length; all.indeterminate = n > 0 && n < vs.length;
+      ok.disabled = !vs.some(function (cb) { return cb.checked; });
+    };
+    sync();
+    var aplicar = function (lista) {
+      if (!lista || lista.length === vals.length) delete st.f[ci]; else st.f[ci] = lista;
+      fecharFiltroTab(); render();
+    };
+    p.addEventListener('input', function (e) {
+      if (!e.target.classList.contains('tf-q')) return;
+      var q = e.target.value.trim().toLowerCase();
+      p.querySelectorAll('.tf-it').forEach(function (it) { it.style.display = !q || it.dataset.l.indexOf(q) >= 0 ? '' : 'none'; });
+      sync();
+    });
+    p.addEventListener('change', function (e) {
+      if (e.target === all) cbs.forEach(function (cb) { if (visivel(cb)) cb.checked = all.checked; });
+      sync();
+    });
+    p.addEventListener('click', function (e) {
+      var b = e.target.closest('button'); if (!b) return;
+      if (b.dataset.so != null) aplicar([vals[Number(b.dataset.so)]]);
+      else if (b.dataset.tfo) { st.s = ci; st.d = Number(b.dataset.tfo); fecharFiltroTab(); render(); }
+      else if (b.dataset.tfa === 'ok') aplicar(cbs.filter(function (cb) { return cb.checked && visivel(cb); }).map(function (cb) { return vals[Number(cb.dataset.k)]; }));
+      else if (b.dataset.tfa === 'limpar') aplicar(null);
+      else if (b.dataset.tfa === 'cancelar') fecharFiltroTab();
+    });
+    p.addEventListener('keydown', function (e) { if (e.key === 'Enter' && e.target.classList.contains('tf-q') && !ok.disabled) { e.preventDefault(); ok.click(); } });
+    p.querySelector('.tf-q').focus();
+  };
+  var somaT = function (ts) { var t = {}; ts.forEach(function (x) { Object.keys(x).forEach(function (k) { if (typeof x[k] === 'number') t[k] = (t[k] || 0) + x[k]; }); }); return t; };
   var telas = {
     contratos: function (C, F, A) {
       var mx = Math.max.apply(null, [1].concat(A.porCt.map(function (x) { return x.t.rU + x.t.rB; })));
-      var l = A.porCt.map(function (x) {
-        return '<tr class="clk" data-ct="' + esc(x.c.id) + '"><td><b>' + esc(x.c.nome) + '</b>' + (x.c.numero ? sub(esc(x.c.numero)) : '') + '</td><td>' + esc(x.c.cliente) + '</td><td>' + esc(x.c.regiao) + '</td><td>' + esc(x.c._por || '—') + sub(fDH(x.c._gerado)) + '</td><td class="n">' + x.t.n + sub(x.t.nR + ' real. · ' + x.t.nP + ' prev.' + (x.t.nF ? ' · ' + x.t.nF + ' fora' : '')) + '</td>' + linhaValores(x.t) + '<td style="min-width:110px">' + barra((x.t.rU + x.t.rB) / mx * 100) + '</td><td>' + pctCel(x.pctValor) + '</td></tr>';
-      });
-      var T = A.T;
-      var rod = '<tr><td colspan="4">Total</td><td class="n">' + T.n + '</td>' + linhaValores(T) + '<td></td><td></td></tr>';
-      return '<div class="card"><h2>Por contrato</h2>' + tabela(['Contrato', 'Cliente', 'Região', 'Arquivo de', N('Operações'), N('Receita US$'), N('Receita R$'), N('COGS US$'), N('Margem US$'), '', 'Uso do contrato (valor)'], l, rod, 't-cts') +
-        '<p class="nota">Receita e COGS = realizado (consumo lançado) + previsto (operações ainda sem consumo), × (1 − risco da operação). Operações com risco 100% ficam fora. “Uso do contrato” = valor consumido ÷ valor contratado. Clique no contrato para filtrar.</p></div>';
+      var cols = [
+        {t: 'Contrato', h: function (x) { return '<b>' + esc(x.c.nome) + '</b>' + (x.c.numero ? sub(esc(x.c.numero)) : ''); }, v: function (x) { return x.c.nome || ''; }, f: function (x) { return x.c.nome; }},
+        {t: 'Cliente', h: function (x) { return esc(x.c.cliente); }, v: function (x) { return x.c.cliente || ''; }, f: function (x) { return x.c.cliente; }},
+        {t: 'Região', h: function (x) { return esc(x.c.regiao); }, v: function (x) { return x.c.regiao || ''; }, f: function (x) { return x.c.regiao; }},
+        {t: 'Arquivo de', h: function (x) { return esc(x.c._por || '—') + sub(fDH(x.c._gerado)); }, v: function (x) { return x.c._por || ''; }, f: function (x) { return x.c._por; }},
+        {t: 'Operações', n: 1, h: function (x) { return x.t.n + sub(x.t.nR + ' real. · ' + x.t.nP + ' prev.' + (x.t.nF ? ' · ' + x.t.nF + ' fora' : '')); }, v: function (x) { return x.t.n; }, f: function (x) { return String(x.t.n); }},
+        {t: 'Receita US$', n: 1, h: function (x) { return '<b>' + fUSD(x.t.rU) + '</b>' + sub('real. ' + fUSD(x.t.rRU) + ' · prev. ' + fUSD(x.t.rPU)); }, v: function (x) { return x.t.rU; }, f: function (x) { return fUSD(x.t.rU); }},
+        {t: 'Receita R$', n: 1, h: function (x) { return fBRL(x.t.rB); }, v: function (x) { return x.t.rB; }, f: function (x) { return fBRL(x.t.rB); }},
+        {t: 'COGS US$', n: 1, h: function (x) { return fUSD(x.t.cU); }, v: function (x) { return x.t.cU; }, f: function (x) { return fUSD(x.t.cU); }},
+        {t: 'Margem US$', n: 1, h: function (x) { return fUSD(x.t.rU - x.t.cU) + sub(margemTxt(x.t.rU, x.t.cU)); }, v: function (x) { return x.t.rU - x.t.cU; }, f: function (x) { return fUSD(x.t.rU - x.t.cU); }},
+        {t: '', st: 'min-width:110px', h: function (x) { return barra((x.t.rU + x.t.rB) / mx * 100); }},
+        {t: 'Uso do contrato (valor)', h: function (x) { return pctCel(x.pctValor); }, v: function (x) { return x.pctValor; }, f: function (x) { return x.pctValor == null ? '—' : fN(x.pctValor) + '%'; }}
+      ];
+      var T = tabelaF('cts', cols, A.porCt, {cls: 't-cts', tr: function (x) { return ' class="clk" data-ct="' + esc(x.c.id) + '"'; }, rod: function (vis) {
+        var t = somaT(vis.map(function (x) { return x.t; }));
+        return '<tr><td colspan="4">Total' + (vis.length < A.porCt.length ? ' (' + vis.length + ' de ' + A.porCt.length + ' contratos)' : '') + '</td><td class="n">' + (t.n || 0) + '</td>' + linhaValores(t) + '<td></td><td></td></tr>';
+      }});
+      return '<div class="card"><h2>Por contrato</h2>' + T.html +
+        '<p class="nota">Receita e COGS = realizado (consumo lançado) + previsto (operações ainda sem consumo), × (1 − risco da operação). Operações com risco 100% ficam fora. “Uso do contrato” = valor consumido ÷ valor contratado. Clique no contrato para filtrar a página; clique no título de uma coluna para ordenar e no ▾ para escolher os itens.</p></div>';
     },
     receita: function (C, F, A) {
       return cartoesQuartos(C) + (S.graf ? cartaoGrafico() : '') + cartaoMatriz(F, A);
     },
     ppu: function (C, F, A) {
       var l = A.ppu.filter(function (x) { return !S.soComConsumo || x.cons > 0 || x.aR > 0; });
-      var linhas = l.map(function (x) { return '<tr><td>' + esc(x.c.nome) + '</td><td>' + esc(x.i.ref) + '</td><td>' + esc(x.i.desc || '—') + '</td><td>' + esc(x.i.unit || '') + '</td><td class="n">' + (x.i.contratado == null ? '—' : fN(x.i.contratado)) + '</td><td class="n">' + fN(x.cons) + '</td><td class="n' + (x.saldo != null && x.saldo < 0 ? ' neg' : '') + '">' + (x.saldo == null ? '—' : fN(x.saldo)) + '</td><td style="min-width:110px">' + pctCel(x.pct) + '</td><td class="n">' + fN(x.per) + '</td><td class="n">' + fN(x.aR) + '</td><td class="n">' + fUSD(x.u) + '</td><td class="n">' + fBRL(x.b) + '</td><td class="n">' + (x.i.usd == null ? '—' : 'US$ ' + nf(2, 4)(x.i.usd)) + '<br>' + (x.i.brl == null ? '—' : 'R$ ' + nf(2, 4)(x.i.brl)) + '</td></tr>'; });
-      return '<div class="card"><h2>Itens PPU — contratado, consumido, saldo e receita</h2><label class="chk"><input type="checkbox" data-a="soCons"' + (S.soComConsumo ? ' checked' : '') + '> só itens com consumo ou previsão</label>' +
-        tabela(['Contrato', 'Item', 'Descrição', 'Unid.', N('Contratado'), N('Consumido'), N('Saldo'), '% usado', N('Lançado no período'), N('A realizar'), N('Receita US$'), N('Receita R$'), N('Valor vigente')], linhas, null, 't-ppu') +
+      var num = function (t, g, fmt) { return {t: t, n: 1, h: function (x) { var v = g(x); return v == null ? '—' : fmt(v); }, v: g, f: function (x) { var v = g(x); return v == null ? '—' : fmt(v); }}; };
+      var cols = [
+        {t: 'Contrato', h: function (x) { return esc(x.c.nome); }, v: function (x) { return x.c.nome || ''; }, f: function (x) { return x.c.nome; }},
+        {t: 'Item', h: function (x) { return esc(x.i.ref); }, v: function (x) { return String(x.i.ref || ''); }, f: function (x) { return x.i.ref; }},
+        {t: 'Descrição', h: function (x) { return esc(x.i.desc || '—'); }, v: function (x) { return x.i.desc || ''; }, f: function (x) { return x.i.desc; }},
+        {t: 'Unid.', h: function (x) { return esc(x.i.unit || ''); }, v: function (x) { return x.i.unit || ''; }, f: function (x) { return x.i.unit; }},
+        num('Contratado', function (x) { return x.i.contratado; }, fN),
+        num('Consumido', function (x) { return x.cons; }, fN),
+        Object.assign(num('Saldo', function (x) { return x.saldo; }, fN), {cls: function (x) { return x.saldo != null && x.saldo < 0 ? 'neg' : ''; }}),
+        {t: '% usado', st: 'min-width:110px', h: function (x) { return pctCel(x.pct); }, v: function (x) { return x.pct; }, f: function (x) { return x.pct == null ? '—' : fN(x.pct) + '%'; }},
+        num('Lançado no período', function (x) { return x.per; }, fN),
+        num('A realizar', function (x) { return x.aR; }, fN),
+        num('Receita US$', function (x) { return x.u; }, fUSD),
+        num('Receita R$', function (x) { return x.b; }, fBRL),
+        {t: 'Valor vigente', n: 1, h: function (x) { return (x.i.usd == null ? '—' : 'US$ ' + nf(2, 4)(x.i.usd)) + '<br>' + (x.i.brl == null ? '—' : 'R$ ' + nf(2, 4)(x.i.brl)); }, v: function (x) { return x.i.usd != null ? x.i.usd : x.i.brl; }, f: function (x) { return x.i.usd != null ? 'US$ ' + nf(2, 4)(x.i.usd) : x.i.brl != null ? 'R$ ' + nf(2, 4)(x.i.brl) : '—'; }}
+      ];
+      var T = tabelaF('ppu', cols, l, {cls: 't-ppu', rod: function (vis) {
+        var u = vis.reduce(function (a, x) { return a + (x.u || 0); }, 0), b = vis.reduce(function (a, x) { return a + (x.b || 0); }, 0);
+        return '<tr><td colspan="10">Total (' + vis.length + ' item(ns))</td><td class="n">' + fUSD(u) + '</td><td class="n">' + fBRL(b) + '</td><td></td></tr>';
+      }});
+      return '<div class="card"><h2>Itens PPU — contratado, consumido, saldo e receita</h2><label class="chk"><input type="checkbox" data-a="soCons"' + (S.soComConsumo ? ' checked' : '') + '> só itens com consumo ou previsão</label>' + T.html +
         '<p class="nota">Consumido e saldo consideram todo o consumo lançado no contrato. “A realizar” = previsto nas operações ainda sem consumo. A receita (lançado + a realizar) segue o filtro e o risco das operações.</p></div>';
     },
-    quim: function (C, F, A) { return telaMat('Químicas', A.quim, 't-quim'); },
-    cas: function (C, F, A) { return telaMat('Casing equipment', A.cas, 't-cas'); },
+    quim: function (C, F, A) { return telaMat('Químicas', A.quim, 't-quim', 'quim'); },
+    cas: function (C, F, A) { return telaMat('Casing equipment', A.cas, 't-cas', 'cas'); },
     pes: function (C, F, A) {
-      var tot = A.pes.reduce(function (a, x) { return [a[0] + x.pP, a[1] + x.hP, a[2] + x.pR, a[3] + x.hR, a[4] + x.hA]; }, [0, 0, 0, 0, 0]);
-      return '<div class="card"><h2>Pessoal por função</h2>' + tabela(['Função', N('Planejado (pessoas)'), N('Planejado (homem-dia)'), N('Lançado (pessoas)'), N('Lançado (homem-dia)'), N('A realizar (homem-dia)'), N('Operações lançadas')], A.pes.map(function (x) { return '<tr><td>' + esc(x.funcao) + '</td><td class="n">' + fN(x.pP) + '</td><td class="n">' + fN(x.hP) + '</td><td class="n"><b>' + fN(x.pR) + '</b></td><td class="n"><b>' + fN(x.hR) + '</b></td><td class="n">' + fN(x.hA) + '</td><td class="n">' + x.n + '</td></tr>'; }),
-        '<tr><td>Total</td><td class="n">' + fN(tot[0]) + '</td><td class="n">' + fN(tot[1]) + '</td><td class="n">' + fN(tot[2]) + '</td><td class="n">' + fN(tot[3]) + '</td><td class="n">' + fN(tot[4]) + '</td><td></td></tr>', 't-pes') +
+      var num = function (t, k, negr) { return {t: t, n: 1, h: function (x) { return negr ? '<b>' + fN(x[k]) + '</b>' : fN(x[k]); }, v: function (x) { return x[k]; }, f: function (x) { return fN(x[k]); }}; };
+      var cols = [{t: 'Função', h: function (x) { return esc(x.funcao); }, v: function (x) { return x.funcao || ''; }, f: function (x) { return x.funcao; }},
+        num('Planejado (pessoas)', 'pP'), num('Planejado (homem-dia)', 'hP'), num('Lançado (pessoas)', 'pR', 1), num('Lançado (homem-dia)', 'hR', 1), num('A realizar (homem-dia)', 'hA'),
+        {t: 'Operações lançadas', n: 1, h: function (x) { return String(x.n); }, v: function (x) { return x.n; }, f: function (x) { return String(x.n); }}];
+      var T = tabelaF('pes', cols, A.pes, {cls: 't-pes', rod: function (vis) {
+        var tot = vis.reduce(function (a, x) { return [a[0] + x.pP, a[1] + x.hP, a[2] + x.pR, a[3] + x.hR, a[4] + x.hA]; }, [0, 0, 0, 0, 0]);
+        return '<tr><td>Total</td><td class="n">' + fN(tot[0]) + '</td><td class="n">' + fN(tot[1]) + '</td><td class="n">' + fN(tot[2]) + '</td><td class="n">' + fN(tot[3]) + '</td><td class="n">' + fN(tot[4]) + '</td><td></td></tr>';
+      }});
+      return '<div class="card"><h2>Pessoal por função</h2>' + T.html +
         '<p class="nota">Planejado = pessoal previsto nas operações com data no período (pessoas × duração). Lançado = o que o engenheiro informou no consumo da operação. A realizar = previsto nas operações ainda sem consumo.</p></div>';
     },
     ops: function (C, F, A) {
       var q = String(S.f.busca || '').toLowerCase();
       var l = A.linhas.filter(function (x) { var o = x.o; return !q || [o.sonda, o.poco, o.tipo, o.so, o._ct.nome, o._ct.cliente].join(' ').toLowerCase().indexOf(q) >= 0; })
         .sort(function (a, b) { return String(b.data).localeCompare(String(a.data)); });
-      var linhas = l.map(function (x) {
-        var o = x.o;
-        return '<tr' + (x.f === 0 ? ' class="fora"' : '') + '><td>' + fD(x.data) + '</td><td>' + esc(o._ct.nome) + '</td><td>' + esc(o.sonda || '—') + '</td><td>' + esc(o.poco || '—') + '</td><td>' + esc(o.tipo) + (o.revestimento ? ' ' + esc(o.revestimento) : '') + '</td><td>' + esc(o.so || '—') + '</td><td>' + stTag(o) + '</td><td class="n"><b>' + fUSD(x.rU) + '</b>' + (x.f !== 1 ? sub('bruto ' + fUSD(x.gU)) : '') + '</td><td class="n">' + fBRL(x.rB) + '</td><td class="n">' + fUSD(x.cU) + '</td><td class="n">' + fUSD(x.rU - x.cU) + '</td><td class="n">' + (x.hd ? fN(x.hd) : '—') + '</td></tr>';
-      });
-      return '<div class="card"><h2>Operações (' + l.length + ')</h2><div class="filtros" style="margin-top:0"><div class="f" style="flex:1 1 260px"><label>Buscar</label><input data-f="busca" placeholder="sonda, poço, operação, SO, contrato…" value="' + esc(S.f.busca) + '"></div></div>' +
-        tabela(['Data', 'Contrato', 'Sonda', 'Poço', 'Operação', 'SO', 'Situação', N('Receita US$'), N('Receita R$'), N('COGS US$'), N('Margem US$'), N('Homem-dia')], linhas, null, 't-ops') +
-        '<p class="nota">Data = data do serviço (realizada) ou data planejada (prevista). Valores já com o risco aplicado; “bruto” = antes do risco.</p></div>';
+      var situ = function (x) { var o = x.o; return (Number(o.risco) || 0) >= 100 ? 'fora (risco 100%)' : o.realizado ? 'realizada' : o.status === 'handover' ? 'prevista · handover enviado' : 'prevista'; };
+      var txtc = function (t, g) { return {t: t, h: function (x) { return esc(g(x) || '—'); }, v: function (x) { return g(x) || ''; }, f: g}; };
+      var num = function (t, g, fmt) { return {t: t, n: 1, h: function (x) { return fmt(g(x)); }, v: g, f: function (x) { return fmt(g(x)); }}; };
+      var cols = [
+        {t: 'Data', h: function (x) { return fD(x.data); }, v: function (x) { return String(x.data || ''); }, f: function (x) { return /^\d{4}-\d{2}/.test(String(x.data)) ? fMes(String(x.data).slice(0, 7)) : '—'; }},
+        txtc('Contrato', function (x) { return x.o._ct.nome; }), txtc('Sonda', function (x) { return x.o.sonda; }), txtc('Poço', function (x) { return x.o.poco; }),
+        txtc('Operação', function (x) { return (x.o.tipo || '') + (x.o.revestimento ? ' ' + x.o.revestimento : ''); }), txtc('SO', function (x) { return x.o.so; }),
+        {t: 'Situação', h: function (x) { return stTag(x.o); }, v: situ, f: situ},
+        {t: 'Receita US$', n: 1, h: function (x) { return '<b>' + fUSD(x.rU) + '</b>' + (x.f !== 1 ? sub('bruto ' + fUSD(x.gU)) : ''); }, v: function (x) { return x.rU; }, f: function (x) { return fUSD(x.rU); }},
+        num('Receita R$', function (x) { return x.rB; }, fBRL), num('COGS US$', function (x) { return x.cU; }, fUSD), num('Margem US$', function (x) { return x.rU - x.cU; }, fUSD),
+        {t: 'Homem-dia', n: 1, h: function (x) { return x.hd ? fN(x.hd) : '—'; }, v: function (x) { return x.hd || 0; }, f: function (x) { return x.hd ? fN(x.hd) : '—'; }}
+      ];
+      var T = tabelaF('ops', cols, l, {cls: 't-ops', tr: function (x) { return x.f === 0 ? ' class="fora"' : ''; }, rod: function (vis) {
+        var t = soma(vis);
+        return '<tr><td colspan="7">Total (' + vis.length + ' operação(ões))</td><td class="n">' + fUSD(t.rU) + '</td><td class="n">' + fBRL(t.rB) + '</td><td class="n">' + fUSD(t.cU) + '</td><td class="n">' + fUSD(t.rU - t.cU) + '</td><td class="n">' + fN(t.hdR + t.hdP) + '</td></tr>';
+      }});
+      return '<div class="card"><h2>Operações (' + T.vis.length + ')</h2><div class="filtros" style="margin-top:0"><div class="f" style="flex:1 1 260px"><label>Buscar</label><input data-f="busca" placeholder="sonda, poço, operação, SO, contrato…" value="' + esc(S.f.busca) + '"></div></div>' + T.html +
+        '<p class="nota">Data = data do serviço (realizada) ou data planejada (prevista). Valores já com o risco aplicado; “bruto” = antes do risco. No ▾ da Data, os itens são os meses.</p></div>';
     },
     fontes: function (C, F, A) {
-      var linhas = S.pacotes.map(function (p, i) {
-        var u = C.uso[i];
-        var st = u.usados === u.total ? '<span class="tag t-ok">em uso</span>' : u.usados ? '<span class="tag t-ho">' + u.usados + ' de ' + u.total + ' contrato(s) em uso</span>' : '<span class="tag t-old">substituído por arquivo mais novo</span>';
-        return '<tr><td>' + esc(p.arquivo) + '</td><td>' + esc(p.pac.por || '—') + '</td><td>' + fDH(p.pac.geradoEm) + '</td><td>' + esc((p.pac.contratos || []).map(function (c) { return c.nome; }).join(', ')) + '</td><td class="n">' + (p.pac.operacoes || []).length + '</td><td>' + st + '</td><td><button class="btn-x" title="Tirar este arquivo" data-rm="' + i + '">×</button></td></tr>';
-      });
-      return '<div class="card"><h2>Arquivos carregados</h2>' + tabela(['Arquivo', 'Engenheiro', 'Gerado em', 'Contratos', N('Operações'), 'Situação', ''], linhas, null, 't-fontes') +
+      var rows = S.pacotes.map(function (p, i) { return {p: p, i: i, u: C.uso[i]}; });
+      var situ = function (r) { var u = r.u; return u.usados === u.total ? 'em uso' : u.usados ? u.usados + ' de ' + u.total + ' contrato(s) em uso' : 'substituído por arquivo mais novo'; };
+      var cols = [
+        {t: 'Arquivo', h: function (r) { return esc(r.p.arquivo); }, v: function (r) { return r.p.arquivo || ''; }, f: function (r) { return r.p.arquivo; }},
+        {t: 'Engenheiro', h: function (r) { return esc(r.p.pac.por || '—'); }, v: function (r) { return r.p.pac.por || ''; }, f: function (r) { return r.p.pac.por; }},
+        {t: 'Gerado em', h: function (r) { return fDH(r.p.pac.geradoEm); }, v: function (r) { return String(r.p.pac.geradoEm || ''); }, f: function (r) { return fDH(r.p.pac.geradoEm); }},
+        {t: 'Contratos', h: function (r) { return esc((r.p.pac.contratos || []).map(function (c) { return c.nome; }).join(', ')); }, v: function (r) { return (r.p.pac.contratos || []).map(function (c) { return c.nome; }).join(', '); }, f: function (r) { return (r.p.pac.contratos || []).map(function (c) { return c.nome; }); }},
+        {t: 'Operações', n: 1, h: function (r) { return String((r.p.pac.operacoes || []).length); }, v: function (r) { return (r.p.pac.operacoes || []).length; }, f: function (r) { return String((r.p.pac.operacoes || []).length); }},
+        {t: 'Situação', h: function (r) { var u = r.u; return u.usados === u.total ? '<span class="tag t-ok">em uso</span>' : u.usados ? '<span class="tag t-ho">' + u.usados + ' de ' + u.total + ' contrato(s) em uso</span>' : '<span class="tag t-old">substituído por arquivo mais novo</span>'; }, v: situ, f: situ},
+        {t: '', h: function (r) { return '<button class="btn-x" title="Tirar este arquivo" data-rm="' + r.i + '">×</button>'; }}
+      ];
+      return '<div class="card"><h2>Arquivos carregados</h2>' + tabelaF('fontes', cols, rows, {cls: 't-fontes'}).html +
         '<p class="nota">Quando o mesmo contrato está em mais de um arquivo, vale o gerado por último.</p></div>';
     }
   };
@@ -1529,10 +1722,22 @@ button.kpi{font:inherit;color:inherit;text-align:left;cursor:pointer;align-items
     S.regs = lista; render();
     aviso(novos + ' registro(s) novo(s) · ' + trocados + ' substituído(s) por um mais novo · ' + mantidos + ' já estava(m) aqui');
   };
-  var telaMat = function (tit, lista, cls) {
-    var tU = lista.reduce(function (a, x) { return a + x.cU; }, 0), tB = lista.reduce(function (a, x) { return a + x.cB; }, 0);
-    var linhas = lista.map(function (x) { return '<tr><td>' + esc(x.sap || '—') + '</td><td>' + esc(x.nome || '—') + '</td><td>' + esc(x.unid || '') + '</td><td class="n">' + (x.cu != null ? 'US$ ' + nf(2, 4)(x.cu) : x.cb != null ? 'R$ ' + nf(2, 4)(x.cb) : '—') + '</td><td class="n">' + fN(x.plan) + '</td><td class="n"><b>' + fN(x.real) + '</b></td><td class="n">' + fN(x.aR) + '</td><td class="n"><b>' + fUSD(x.cU) + '</b>' + (x.cB ? sub(fBRL(x.cB)) : '') + '</td><td>' + esc(x.ctsL.join(', ')) + '</td></tr>'; });
-    return '<div class="card"><h2>' + esc(tit) + ' — planejado, lançado, a realizar e COGS</h2>' + tabela(['SAP', 'Produto', 'Unid.', N('COGS unit.'), N('Planejado'), N('Lançado'), N('A realizar'), N('COGS'), 'Contratos'], linhas, '<tr><td colspan="7">Total</td><td class="n">' + fUSD(tU) + (tB ? sub(fBRL(tB)) : '') + '</td><td></td></tr>', cls) +
+  var telaMat = function (tit, lista, cls, id) {
+    var num = function (t, g, fmt, negr) { return {t: t, n: 1, h: function (x) { return negr ? '<b>' + fmt(g(x)) + '</b>' : fmt(g(x)); }, v: g, f: function (x) { return fmt(g(x)); }}; };
+    var cols = [
+      {t: 'SAP', h: function (x) { return esc(x.sap || '—'); }, v: function (x) { return String(x.sap || ''); }, f: function (x) { return x.sap; }},
+      {t: 'Produto', h: function (x) { return esc(x.nome || '—'); }, v: function (x) { return x.nome || ''; }, f: function (x) { return x.nome; }},
+      {t: 'Unid.', h: function (x) { return esc(x.unid || ''); }, v: function (x) { return x.unid || ''; }, f: function (x) { return x.unid; }},
+      {t: 'COGS unit.', n: 1, h: function (x) { return x.cu != null ? 'US$ ' + nf(2, 4)(x.cu) : x.cb != null ? 'R$ ' + nf(2, 4)(x.cb) : '—'; }, v: function (x) { return x.cu != null ? x.cu : x.cb; }, f: function (x) { return x.cu != null ? 'US$ ' + nf(2, 4)(x.cu) : x.cb != null ? 'R$ ' + nf(2, 4)(x.cb) : '—'; }},
+      num('Planejado', function (x) { return x.plan; }, fN), num('Lançado', function (x) { return x.real; }, fN, 1), num('A realizar', function (x) { return x.aR; }, fN),
+      {t: 'COGS', n: 1, h: function (x) { return '<b>' + fUSD(x.cU) + '</b>' + (x.cB ? sub(fBRL(x.cB)) : ''); }, v: function (x) { return x.cU; }, f: function (x) { return fUSD(x.cU); }},
+      {t: 'Contratos', h: function (x) { return esc(x.ctsL.join(', ')); }, v: function (x) { return x.ctsL.join(', '); }, f: function (x) { return x.ctsL; }}
+    ];
+    var T = tabelaF(id, cols, lista, {cls: cls, rod: function (vis) {
+      var tU = vis.reduce(function (a, x) { return a + x.cU; }, 0), tB = vis.reduce(function (a, x) { return a + x.cB; }, 0);
+      return '<tr><td colspan="7">Total' + (vis.length < lista.length ? ' (' + vis.length + ' de ' + lista.length + ')' : '') + '</td><td class="n">' + fUSD(tU) + (tB ? sub(fBRL(tB)) : '') + '</td><td></td></tr>';
+    }});
+    return '<div class="card"><h2>' + esc(tit) + ' — planejado, lançado, a realizar e COGS</h2>' + T.html +
       '<p class="nota">Planejado = previsto nas operações com data no período. Lançado = consumo informado pelo engenheiro. A realizar = previsto nas operações ainda sem consumo. COGS = (lançado + a realizar) × COGS unitário, × (1 − risco).</p></div>';
   };
 
@@ -1572,7 +1777,8 @@ button.kpi{font:inherit;color:inherit;text-align:left;cursor:pointer;align-items
 
   /* ---------- eventos ---------- */
   document.addEventListener('click', function (e) {
-    var t = e.target.closest('[data-a],[data-tab],[data-ct],[data-rm],[data-gmodo],[data-mx],[data-mxmostrar],[data-q],[data-mesb],[data-gmet],[data-cx],[data-cxmostrar],[data-regdel]');
+    var t = e.target.closest('[data-a],[data-tab],[data-ct],[data-rm],[data-gmodo],[data-mx],[data-mxmostrar],[data-q],[data-mesb],[data-gmet],[data-cx],[data-cxmostrar],[data-regdel],[data-tfsort],[data-tff],[data-tfclr]');
+    if ($('#tfPop') && !e.target.closest('#tfPop') && !e.target.closest('[data-tff]')) fecharFiltroTab(); // clique fora fecha o painel de seleção
     if (e.target.id === 'dlg') { fecharDlg(); return; } // clique fora da janela fecha
     if (S.mesPop && !e.target.closest('.mes-f')) { S.mesPop = false; S.mesPasso = 0; if (!t) { render(); return; } } // clique fora fecha o seletor de meses
     if (!t) return;
@@ -1583,6 +1789,9 @@ button.kpi{font:inherit;color:inherit;text-align:left;cursor:pointer;align-items
       render(); return;
     }
     if (t.dataset.q != null) { var q = t.dataset.q; S.f.tri = q && S.f.tri !== q ? q : ''; S.f.mIni = S.f.mFim = 0; S.mesPop = false; render(); return; }
+    if (t.dataset.tfsort) { var ps = t.dataset.tfsort.split('|'), stt = estTf(ps[0]), cio = Number(ps[1]); if (stt.s === cio) stt.d = -stt.d; else { stt.s = cio; stt.d = 1; } render(); return; }
+    if (t.dataset.tff) { var pf = t.dataset.tff.split('|'); abrirFiltroTab(pf[0], Number(pf[1]), t); return; }
+    if (t.dataset.tfclr) { S.tf[t.dataset.tfclr] = {s: null, d: 1, f: {}}; render(); return; }
     if (t.dataset.gmet) { S.gmet = t.dataset.gmet; try { localStorage.setItem('earlger:gmet', S.gmet); } catch (x) {} render(); return; }
     if (t.dataset.cx != null) { var CM = S.cmp; if (CM.abertos[t.dataset.cx]) delete CM.abertos[t.dataset.cx]; else CM.abertos[t.dataset.cx] = 1; render(); return; }
     if (t.dataset.cxmostrar != null) { S.cmp.mostrar = Number(t.dataset.cxmostrar); render(); return; }
@@ -1629,6 +1838,7 @@ button.kpi{font:inherit;color:inherit;text-align:left;cursor:pointer;align-items
     if (t.dataset && t.dataset.f === 'busca') { S.f.busca = t.value; var pos = t.selectionStart; render(); var n = document.querySelector('[data-f="busca"]'); if (n) { n.focus(); try { n.setSelectionRange(pos, pos); } catch (x) {} } }
   });
   document.addEventListener('keydown', function (e) {
+    if ($('#tfPop') && e.key === 'Escape') { fecharFiltroTab(); return; }
     if ($('#dlg')) { if (e.key === 'Escape') fecharDlg(); else if (e.key === 'Enter' && e.target.closest && e.target.closest('.dlg-f')) { e.preventDefault(); salvarRegistro(); } return; }
     if (e.key === 'Escape' && S.mesPop) { S.mesPop = false; S.mesPasso = 0; render(); }
   });

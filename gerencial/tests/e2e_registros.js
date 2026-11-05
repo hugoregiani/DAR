@@ -110,7 +110,7 @@ const carregar = (page, nome, P) => page.setInputFiles('#inArq', [{name: nome, m
   await page.waitForSelector('[data-a="arq"]');
   await carregar(page, 'v1.json', V1);
   await page.waitForSelector('.kpis');
-  conf((await page.textContent('#ver')).includes('g10'), 'versão g10');
+  conf((await page.textContent('#ver')).includes('g11'), 'versão g11');
 
   console.log('Registrar');
   conf(await page.locator('.bar [data-a="regAbrir"]').count() === 1 && (await page.$$eval('.tab', l => l.map(b => b.textContent.trim())))[1] === 'Comparar registros (0)', 'botão "📌 Registrar" na barra do topo e aba "Comparar registros (0)"');

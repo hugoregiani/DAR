@@ -65,6 +65,12 @@ Tudo é **realizado + previsto**, com o risco de cada operação aplicado:
   - **Tabela** no formato da matriz: Cliente › Contrato › Sonda › Poço › Operação nas linhas; quarto › mês nas colunas, com o valor no registro comparado e o **Δ%** sobre a base, o total de cada quarto e o **Total** (base, comparado, Δ US$, Δ%). As operações são ligadas pelo contrato + número da operação, e cada uma diz o que mudou: nova, removida, data, risco, passou a realizada, valor mudou ou sem alteração. **Só o que mudou** esconde o resto; **⬇ Excel da comparação** baixa como está na tela.
   - **Cores:** verde = favorável, vermelho = desfavorável (receita e margem que sobem são favoráveis; COGS que sobe é desfavorável).
   - **Mostrar** (Receita, COGS, Receita e COGS, Margem) vale para os gráficos e para a tabela; os filtros do topo (ano, quarto, mês, cliente, contrato, região, tipo) também.
+- **Ordem e seleção nas tabelas** (g11), nas abas Contratos, Itens PPU, Químicas, Casing equipment, Pessoal, Operações e Arquivos:
+  - **Ordenar:** clique no título da coluna para ordem **crescente (▲)**; clique de novo para **decrescente (▼)**. Valores vazios ficam sempre no fim.
+  - **Selecionar itens (▾):** abre a lista dos valores da coluna, com a contagem de linhas de cada um, busca, "(Selecionar tudo)", **só este** (isola um item) e os botões ↑ Crescente / ↓ Decrescente. Marque um ou vários e clique em **Aplicar** (Enter na busca aplica o que ficou visível). **Mostrar todos** tira a seleção; Cancelar, Esc ou clique fora fecham sem mudar.
+  - A lista de uma coluna mostra só o que sobrou com a seleção das outras colunas; dá para combinar várias colunas. Em "Contratos" (Químicas e Casing) cada contrato é um item; na Data (Operações) os itens são os meses.
+  - Com seleção ou ordem, aparece "Mostrando X de Y linha(s)…" e **Limpar ordem e seleção**. O ▾ da coluna selecionada fica vermelho.
+  - O **total** de cada tabela soma só as linhas que estão aparecendo. A escolha fica ao trocar de aba (até fechar a página). Os filtros do topo e a busca de Operações continuam valendo junto.
 - **Itens PPU:** contratado, consumido, saldo, % usado, a realizar, receita e valor vigente, por contrato e item.
 - **Químicas** e **Casing equipment:** planejado × lançado por SAP, com o COGS, o número de operações e os contratos.
 - **Pessoal:** por função, pessoas e homem-dia planejado × lançado.
@@ -102,6 +108,7 @@ Tudo é **realizado + previsto**, com o risco de cada operação aplicado:
   - dois engenheiros geram arquivos no app de Engenharia, e o Gerencial carrega por arquivos, `.zip` e pasta. Inclui os 5 indicadores em US$, os cards dos quartos, a matriz do ano (cliente › contrato, até as operações e os itens PPU, que somam a receita da operação), o gráfico (por mês, por mês e cliente e por cliente; ocultar/mostrar; tooltip; cores fixas por cliente; clicar no cliente filtra; clicar no mês destaca a coluna) e o filtro de período numa caixa só, com o quarto valendo no lugar dos meses (62 verificações);
   - a visão por ano (`tests/e2e_matriz.js`, 48 verificações) monta arquivos sintéticos (2 engenheiros, 4 clientes, 16 operações de dez/2025 a fev/2027, realizadas e previstas, risco 0/50/100%, itens PPU). Confere os 5 cartões do mesmo tamanho (sem Pessoal), os cards Q1–Q4 e do ano, célula a célula da matriz (mês, quarto e total) contra uma conta feita no próprio teste, cada ano, a caixa de período (início e fim, ordem invertida, um mês só, clique fora, Esc), o quarto sobressaindo ao mês, o clique nos cards, o abrir e fechar até o item PPU, o destaque do mês pelo gráfico, o Excel da tabela e do consolidado e o celular;
   - registros e comparação (`tests/e2e_registros.js`, 54 verificações): registra a versão 1 dos arquivos em 01/10/2026 e a versão 2 em 01/11/2026 (operação nova, removida, data, risco e valor mudados, passou a realizada, margem negativa). Confere contra uma conta feita no próprio teste os cards, os dois gráficos, a linha de total da tabela (mês, quarto e total), o que mudou em cada operação, "só o que mudou", Receita/COGS/Margem na comparação e na aba Receita (por mês, por cliente, por mês e cliente), filtros, Agora, inverter, Excel, sobrescrever na mesma data, remover, exportar/importar, armazenamento cheio, Esc/clique fora e celular;
+  - ordem e seleção nas tabelas (`tests/e2e_tabelas.js`, 42 verificações): 3 contratos com itens PPU, químicas, casing e pessoal; ordena todas as colunas de todas as 7 tabelas nos dois sentidos e confere a ordem; confere "só este", marcar mais um, a lista que depende das outras colunas, duas colunas juntas, buscar + Enter, "Mostrar todos", Aplicar desligado sem nada marcado, Cancelar, Esc, clique fora, o total só das linhas visíveis, os meses da Data, os vários contratos de uma química, a busca e os filtros do topo junto, guardar ao trocar de aba, o clique no contrato que filtra a página e o celular;
   - o teste BP (`../engenharia/teste_bp/e2e_bp.js`) confere o Gerencial contra os totais da planilha do BP, ano a ano (2026 e 2027, que somam a planilha): receita, COGS, margem, operações fora, os cards dos quartos, cada mês da matriz e do gráfico, os itens PPU, a tendência linear e a média móvel, as formas por cliente, o período e o quarto, aba Operações e Excel.
 
   ```bash
@@ -116,4 +123,8 @@ Tudo é **realizado + previsto**, com o risco de cada operação aplicado:
   node tests/e2e_registros.js EARL_Gerencial.html [pasta-das-telas]
   ```
 
-- Versão: `EARL Gerencial g10`.
+  ```bash
+  node tests/e2e_tabelas.js EARL_Gerencial.html [pasta-das-telas]
+  ```
+
+- Versão: `EARL Gerencial g11`.
