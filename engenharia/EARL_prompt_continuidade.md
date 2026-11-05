@@ -398,6 +398,15 @@ Pedido do Hugo: em todas as tabelas das abas Contratos, Itens PPU, Químicas etc
 - IDs: `cts`, `ppu`, `quim`, `cas`, `pes`, `ops`, `fontes`.
 - **Testes:** `e2e_tabelas` 42 (novo), `e2e_registros` 54, `e2e_matriz` 48, `e2e_gerencial` 62, `e2e_bp` 56.
 
+### EARL Gerencial g12 (05/11/2026): comparar vários registros, isolar Receita/COGS/Margem e compartilhar em HTML
+
+Pedido do Hugo: comparar mais de dois meses (registros) ao mesmo tempo; no comparativo, isolar só receita, só COGS ou só margem; exportar um HTML com a mesma interatividade para mandar por e-mail.
+
+- **Vários registros:** `S.cmp = {base, sel: [registros comparados], abertos, mostrar, soMud}` (antes `a`/`b`). `cmpPadrao` (penúltimo × último, ou o único × Agora); `[data-cmp="base"]`, chips `[data-cmpsel]`, `cmpTodos`. Lados: 0 = base, 1..n = comparados (`somaCx(ls, nL)` → `t.s[lado]`); `celulasCx` (meses/quartos: valor + Δ% de cada comparado; total: base + valor/Δ US$/Δ% de cada), `arvoreCx` (operações por contrato+id; `statusOpCx(a, b)` por comparado, "—" quando não existe nos dois), `excelComparacao` (mês: base + valor/Δ% de cada; total: base + valor/Δ US$/Δ%). Gráficos: `desenharEvolucao` (só os registros escolhidos, % sobre a base) e `desenharVarMes(box, d, k)` — um gráfico por medida (`.g-var-box[data-k]`), barra por registro (`PAL_REG`; com um só comparado, a cor da medida).
+- **Isolar:** cards só das medidas de `MEDIDAS[S.gmet]` (ambos → r, c, m) + Operações; o seletor "Mostrar" está no topo da aba, em cada gráfico e na tabela.
+- **Compartilhar:** `montarCompartilhado(levarRegs, soFiltro)` clona o documento, limpa `#app`/avisos/janelas e põe `<script type="application/json" id="earlger-dados">` com `{tipo: 'EARL-Gerencial-Compartilhado', versao, geradoEm, soFiltro, pacotes, registros, estado: {tab, f, gmet, gmodo, tend, graf, cmp}}`. Na abertura, `DADOS_EMB`/`COMPARTILHADO`: dados de dentro do arquivo, `gravar`/`gravarRegs`/`processar`/drop desligados, estado aplicado antes do 1º render, faixa `.sh-faixa`, sem botões de carregar/registrar/remover. Janela `abrirCompartilhar` (levar registros; só os contratos do filtro — também filtra e remapeia os `cts` dos registros; Para/Assunto/Mensagem) e `compartilhar('html'|'zip'|'eml')` (.eml multipart com `X-Unsent: 1`, assunto em `=?UTF-8?B?…?=`, anexo base64 em linhas de 76).
+- **Testes:** `e2e_compartilhar` 27 (novo), `e2e_registros` 66 (3 registros), `e2e_tabelas` 42, `e2e_matriz` 48, `e2e_gerencial` 62, `e2e_bp` 56.
+
 ---
 
 ## 4. Última mudança: v115 (Inventário a bordo: "Movimentar material" em cada contentor e na sacaria, em todas as categorias; Logística: desfazer a divisão da tesoura)

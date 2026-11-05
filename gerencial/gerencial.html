@@ -154,6 +154,20 @@ tr.fora td b{color:var(--ink-3)}
 .t-mx tfoot td{background:var(--soft)}
 .t-mx tfoot td.mx-q{background:#DDEBD3}
 .mx-xls{font-size:12px;padding:5px 10px}
+.cx-com{flex:1 1 320px}
+.cx-chips{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.cx-chip{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--line-2);border-radius:999px;padding:5px 11px;font-size:12.5px;cursor:pointer;background:#fff;white-space:nowrap}
+.cx-chip.on{border-color:var(--ink);background:var(--soft);font-weight:700}
+.cx-chip.eb{opacity:.55;cursor:default}
+.cx-todos{font-size:12px;padding:5px 11px}
+.cx-met{display:flex;align-items:center;gap:6px}
+.g-var-b + .g-var-b{margin-top:10px;border-top:1px solid var(--line);padding-top:8px}
+.g-var-t{font-size:12px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-2);margin:0 0 4px}
+.sh-faixa{background:#EEF4FB;border:1px solid #CFE0F3;color:#1E4E86;border-radius:12px;padding:8px 12px;font-size:12.5px;margin:14px 0 0}
+.dlg-f textarea{border:1px solid var(--line-2);border-radius:10px;padding:8px 10px;font:inherit;font-size:13.5px;letter-spacing:0;text-transform:none;color:var(--ink);resize:vertical}
+.dlg-f label.dlg-chk{flex-direction:row;align-items:center;gap:8px;font-size:13px;font-weight:400;letter-spacing:0;text-transform:none;color:var(--ink)}
+.dlg-f label.dlg-chk input{border:0;padding:0}
+.dlg-r{flex-wrap:wrap}
 .tf-h{display:inline-flex;align-items:center;gap:3px}
 th.n .tf-h{justify-content:flex-end;width:100%}
 .tf-s{border:0;background:transparent;padding:0;margin:0;font:inherit;font-size:inherit;font-weight:inherit;letter-spacing:inherit;text-transform:inherit;color:inherit;cursor:pointer;display:inline-flex;align-items:center;gap:4px;white-space:nowrap}
@@ -286,7 +300,7 @@ button.kpi{font:inherit;color:inherit;text-align:left;cursor:pointer;align-items
    Para cada contrato vale o arquivo mais novo. Tudo fica neste navegador (localStorage, prefixo earlger:). */
 (function () {
   'use strict';
-  var VERSAO = 'EARL Gerencial g11';
+  var VERSAO = 'EARL Gerencial g12';
   var CHAVE = 'earlger:pacotes_v1';
   var $ = function (s) { return document.querySelector(s); };
   var esc = function (v) { return String(v == null ? '' : v).replace(/[&<>"']/g, function (c) { return {'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'}[c]; }); };
@@ -301,11 +315,16 @@ button.kpi{font:inherit;color:inherit;text-align:left;cursor:pointer;align-items
   var hojeTxt = function () { var d = new Date(), p = function (n) { return String(n).padStart(2, '0'); }; return d.getFullYear() + '-' + p(d.getMonth() + 1) + '-' + p(d.getDate()); };
   var r4 = function (v) { return Math.round(v * 10000) / 10000; };
 
-  var S = {pacotes: [], tab: 'receita', f: {ano: '', tri: '', mIni: 0, mFim: 0, cliente: '', contrato: '', regiao: '', tipo: '', busca: ''}, soComConsumo: true, msg: null, graf: true, tend: 'linear', gmodo: 'mes', mx: {abertos: {}, mostrar: 1}, mesPop: false, mesPasso: 0, mxVer: null, gmet: 'ambos', regs: [], cmp: {a: null, b: null, abertos: {}, mostrar: 1, soMud: false}, tf: {}};
+  var S = {pacotes: [], tab: 'receita', f: {ano: '', tri: '', mIni: 0, mFim: 0, cliente: '', contrato: '', regiao: '', tipo: '', busca: ''}, soComConsumo: true, msg: null, graf: true, tend: 'linear', gmodo: 'mes', mx: {abertos: {}, mostrar: 1}, mesPop: false, mesPasso: 0, mxVer: null, gmet: 'ambos', regs: [], cmp: {base: null, sel: [], abertos: {}, mostrar: 1, soMud: false}, tf: {}};
   try { S.pacotes = JSON.parse(localStorage.getItem(CHAVE) || '[]') || []; } catch (e) { S.pacotes = []; }
   try { var t0 = localStorage.getItem('earlger:tab'); if (t0) S.tab = t0 === 'matriz' ? 'receita' : t0; } catch (e) {}
   try { if (localStorage.getItem('earlger:graf') === 'oculto') S.graf = false; var t1 = localStorage.getItem('earlger:tend'); if (t1 === 'linear' || t1 === 'mm3' || t1 === 'nenhuma') S.tend = t1; var t2 = localStorage.getItem('earlger:gmodo'); if (t2 === 'mes' || t2 === 'mescli' || t2 === 'cli') S.gmodo = t2; var t3 = localStorage.getItem('earlger:gmet'); if (t3 === 'rec' || t3 === 'cogs' || t3 === 'ambos' || t3 === 'mg') S.gmet = t3; } catch (e) {}
+  /* versão compartilhada: os dados vêm de dentro do arquivo (#earlger-dados) e nada é gravado no navegador */
+  var DADOS_EMB = (function () { try { var de = document.getElementById('earlger-dados'); return de ? JSON.parse(de.textContent) : null; } catch (e) { return null; } })();
+  var COMPARTILHADO = !!(DADOS_EMB && DADOS_EMB.tipo === 'EARL-Gerencial-Compartilhado' && Array.isArray(DADOS_EMB.pacotes));
+  if (COMPARTILHADO) S.pacotes = DADOS_EMB.pacotes;
   var gravar = function () {
+    if (COMPARTILHADO) return true;
     try { localStorage.setItem(CHAVE, JSON.stringify(S.pacotes)); return true; }
     catch (e) { aviso('O navegador não deixou guardar os arquivos (armazenamento cheio). Eles valem até fechar a página.', true); return false; }
   };
@@ -332,6 +351,7 @@ button.kpi{font:inherit;color:inherit;text-align:left;cursor:pointer;align-items
     return {novos: novos, repetidos: repetidos};
   };
   var processar = async function (files) {
+    if (COMPARTILHADO) return;
     var achados = [], ignorados = [];
     for (var i = 0; i < files.length; i++) {
       var f = files[i], nome = f.webkitRelativePath || f.name || '';
@@ -831,8 +851,9 @@ button.kpi{font:inherit;color:inherit;text-align:left;cursor:pointer;align-items
   var barraTopo = function () {
     var n = S.pacotes.length;
     var ult = S.pacotes.reduce(function (a, p) { return String(p.pac.geradoEm || '') > a ? String(p.pac.geradoEm) : a; }, '');
+    if (COMPARTILHADO) return '<div class="bar"><button class="btn-o" data-a="excel">⬇ Excel consolidado</button><button class="btn-o" data-a="shAbrir" title="Gerar de novo este arquivo para mandar a outras pessoas">📤 Compartilhar (HTML)</button><span class="sp"></span><span class="info">' + n + ' arquivo(s) · mais novo de ' + fDH(ult) + '</span></div>';
     return '<div class="bar"><button class="btn-r" data-a="arq">⬆ Carregar arquivos</button><button class="btn-o" data-a="pasta">📁 Carregar pasta</button>' +
-      (n ? '<button class="btn-o" data-a="excel">⬇ Excel consolidado</button><button class="btn-o b-reg" data-a="regAbrir" title="Guardar uma foto das informações nesta data, para comparar depois">📌 Registrar</button>' : '') + '<span class="sp"></span>' +
+      (n ? '<button class="btn-o" data-a="excel">⬇ Excel consolidado</button><button class="btn-o b-reg" data-a="regAbrir" title="Guardar uma foto das informações nesta data, para comparar depois">📌 Registrar</button><button class="btn-o b-sh" data-a="shAbrir" title="Gerar um arquivo .html com os dados de agora, para mandar por e-mail">📤 Compartilhar (HTML)</button>' : '') + '<span class="sp"></span>' +
       (n ? '<span class="info">' + n + ' arquivo(s) · mais novo de ' + fDH(ult) + '</span><button class="btn-o" data-a="limpar">Limpar</button>' : '') + '</div>';
   };
   var opcoes = function (lista, val, todos) { return '<option value="">' + esc(todos) + '</option>' + lista.map(function (x) { var v = typeof x === 'string' ? x : x.v, t = typeof x === 'string' ? x : x.t; return '<option value="' + esc(v) + '"' + (v === val ? ' selected' : '') + '>' + esc(t) + '</option>'; }).join(''); };
@@ -846,7 +867,7 @@ button.kpi{font:inherit;color:inherit;text-align:left;cursor:pointer;align-items
     var C = consolidar(), anos = anosDe(C);
     if (anos.indexOf(S.f.ano) < 0) S.f.ano = anoPadrao(anos);
     var F = filtrar(C), A = agregar(F), f = S.f, T = A.T;
-    var h = '<h1>Gerencial</h1><p class="sub">' + C.contratos.length + ' contrato(s) de ' + uniq(S.pacotes.map(function (p) { return p.pac.por || '—'; })).length + ' engenheiro(s) · ' + C.ops.length + ' operação(ões) · realizado + previsto, com o risco aplicado</p>' + barraTopo();
+    var h = (COMPARTILHADO ? '<div class="sh-faixa">📤 <b>Versão compartilhada</b> do EARL Gerencial, com os dados de ' + fDH(DADOS_EMB.geradoEm) + (DADOS_EMB.soFiltro ? ' · só ' + esc(DADOS_EMB.soFiltro) : '') + '. Só consulta: filtros, gráficos, tabelas' + (S.regs.length ? ', comparação de registros' : '') + ' e Excel funcionam; os arquivos e os registros não mudam.</div>' : '') + '<h1>Gerencial</h1><p class="sub">' + C.contratos.length + ' contrato(s) de ' + uniq(S.pacotes.map(function (p) { return p.pac.por || '—'; })).length + ' engenheiro(s) · ' + C.ops.length + ' operação(ões) · realizado + previsto, com o risco aplicado</p>' + barraTopo();
     h += '<div class="filtros">' +
       '<div class="f"><label>Ano</label><select data-f="ano">' + anos.map(function (a) { return '<option' + (a === f.ano ? ' selected' : '') + '>' + esc(a) + '</option>'; }).join('') + '</select></div>' +
       '<div class="f"><label>Quarto</label><select data-f="tri">' + opcoes([1, 2, 3, 4].map(function (q) { return {v: String(q), t: 'Q' + q + ' (' + MESES.slice(q * 3 - 3, q * 3).join(', ') + ')'}; }), f.tri, 'Todos') + '</select></div>' +
@@ -869,7 +890,7 @@ button.kpi{font:inherit;color:inherit;text-align:left;cursor:pointer;align-items
     h += telas[S.tab] ? telas[S.tab](C, F, A) : '';
     app.innerHTML = h;
     if (S.tab === 'receita' && S.graf) desenharGrafico(A, C);
-    if (S.tab === 'cmp' && _cmp) { var ge = $('#g-evo'), gv = $('#g-var'); if (ge) desenharEvolucao(ge, _cmp.serie); if (gv) desenharVarMes(gv, _cmp); }
+    if (S.tab === 'cmp' && _cmp) { var ge = $('#g-evo'); if (ge) desenharEvolucao(ge, _cmp.serie); document.querySelectorAll('.g-var-box').forEach(function (el) { desenharVarMes(el, _cmp, el.dataset.k); }); }
     if (S.mxVer) { verMesNaTabela(S.mxVer); S.mxVer = null; }
     var on = app.querySelector('.tab.on'); if (on) { var tb = on.parentNode; tb.scrollLeft = on.offsetLeft - 20; }
   };
@@ -1084,7 +1105,7 @@ button.kpi{font:inherit;color:inherit;text-align:left;cursor:pointer;align-items
         {t: 'Contratos', h: function (r) { return esc((r.p.pac.contratos || []).map(function (c) { return c.nome; }).join(', ')); }, v: function (r) { return (r.p.pac.contratos || []).map(function (c) { return c.nome; }).join(', '); }, f: function (r) { return (r.p.pac.contratos || []).map(function (c) { return c.nome; }); }},
         {t: 'Operações', n: 1, h: function (r) { return String((r.p.pac.operacoes || []).length); }, v: function (r) { return (r.p.pac.operacoes || []).length; }, f: function (r) { return String((r.p.pac.operacoes || []).length); }},
         {t: 'Situação', h: function (r) { var u = r.u; return u.usados === u.total ? '<span class="tag t-ok">em uso</span>' : u.usados ? '<span class="tag t-ho">' + u.usados + ' de ' + u.total + ' contrato(s) em uso</span>' : '<span class="tag t-old">substituído por arquivo mais novo</span>'; }, v: situ, f: situ},
-        {t: '', h: function (r) { return '<button class="btn-x" title="Tirar este arquivo" data-rm="' + r.i + '">×</button>'; }}
+        {t: '', h: function (r) { return COMPARTILHADO ? '' : '<button class="btn-x" title="Tirar este arquivo" data-rm="' + r.i + '">×</button>'; }}
       ];
       return '<div class="card"><h2>Arquivos carregados</h2>' + tabelaF('fontes', cols, rows, {cls: 't-fontes'}).html +
         '<p class="nota">Quando o mesmo contrato está em mais de um arquivo, vale o gerado por último.</p></div>';
@@ -1316,6 +1337,7 @@ button.kpi{font:inherit;color:inherit;text-align:left;cursor:pointer;align-items
   var CHAVE_REG = 'earlger:registros_v1';
   var lerRegs = function () { try { var l = JSON.parse(localStorage.getItem(CHAVE_REG) || '[]'); return Array.isArray(l) ? l.filter(function (r) { return r && /^\d{4}-\d{2}-\d{2}$/.test(r.data) && Array.isArray(r.ops); }) : []; } catch (e) { return []; } };
   var gravarRegs = function (l) {
+    if (COMPARTILHADO) return false;
     l.sort(function (a, b) { return a.data.localeCompare(b.data); });
     try { localStorage.setItem(CHAVE_REG, JSON.stringify(l)); return true; }
     catch (e) { aviso('O navegador não deixou guardar o registro (armazenamento cheio). Exporte os registros (⬇) e remova os mais antigos.', true); return false; }
@@ -1367,14 +1389,21 @@ button.kpi{font:inherit;color:inherit;text-align:left;cursor:pointer;align-items
     return bom ? 'cv-bom' : 'cv-ruim';
   };
   var rotReg = function (k) { return k === 'agora' ? 'Agora' : fD(k); };
+  var rotCurto = function (k) { return k === 'agora' ? 'Agora' : fD(k).slice(0, 6) + k.slice(2, 4); };
   var fotoDe = function (k, agora) { return k === 'agora' ? agora : S.regs.find(function (r) { return r.data === k; }) || null; };
+  var ordemReg = function (a, b) { return a === b ? 0 : a === 'agora' ? 1 : b === 'agora' ? -1 : a.localeCompare(b); };
+  var PAL_REG = ['#2a78d6', '#eb6834', '#1baf7a', '#eda100', '#e87ba4', '#6250d6', '#008300', '#e34948'];
+  /* comparação: uma base e quantos registros quiser (S.cmp.sel). Padrão: penúltimo × último (ou o único × Agora). */
   var cmpPadrao = function () {
     var ds = S.regs.map(function (r) { return r.data; }), M = S.cmp;
     var ok = function (k) { return k === 'agora' || ds.indexOf(k) >= 0; };
-    if (M.a && !ok(M.a)) M.a = null;
-    if (M.b && !ok(M.b)) M.b = null;
-    if (!M.a) M.a = ds.length >= 2 ? ds[ds.length - 2] : ds[0] || null;
-    if (!M.b) M.b = ds.length >= 2 ? ds[ds.length - 1] : 'agora';
+    M.sel = (M.sel || []).filter(ok);
+    if (M.base && !ok(M.base)) M.base = null;
+    if (!M.base) { // padrão: penúltimo × último (ou o único × Agora)
+      M.base = ds.length >= 2 ? ds[ds.length - 2] : ds[0] || null;
+      if (!M.sel.length) M.sel = [ds.length >= 2 ? ds[ds.length - 1] : 'agora'];
+    }
+    M.sel = M.sel.filter(function (k) { return k !== M.base; }).sort(ordemReg);
   };
   /* ---- tabela comparativa (como a matriz): Cliente › Contrato › Sonda › Poço › Operação ---- */
   var NIV_CX = [
@@ -1383,21 +1412,23 @@ button.kpi{font:inherit;color:inherit;text-align:left;cursor:pointer;align-items
     {t: 'Sonda', k: function (x) { return x.sonda || '—'; }},
     {t: 'Poço', k: function (x) { return x.poco || '—'; }}
   ];
-  var somaCx = function (ls) { // ls: [{lado: 'a'|'b', x}]
-    var t = {a: {m: {}, r: 0, c: 0, n: 0}, b: {m: {}, r: 0, c: 0, n: 0}};
+  // ls: [{lado: 0 (base) | 1..n (comparados), x}] → t.s[lado] = {m: {mês: {r, c, n}}, r, c, n}
+  var somaCx = function (ls, nL) {
+    var t = {s: []};
+    for (var l = 0; l < nL; l++) t.s.push({m: {}, r: 0, c: 0, n: 0});
     ls.forEach(function (it) {
-      var s = t[it.lado], x = it.x, m = String(x.data).slice(0, 7), c = s.m[m] || (s.m[m] = {r: 0, c: 0, n: 0});
+      var s = t.s[it.lado], x = it.x, m = String(x.data).slice(0, 7), c = s.m[m] || (s.m[m] = {r: 0, c: 0, n: 0});
       c.r += x.rU; c.c += x.cU; c.n++; s.r += x.rU; s.c += x.cU; s.n++;
     });
     return t;
   };
   var mudouCx = function (t, ms) {
     var meses = {};
-    Object.keys(t.a.m).concat(Object.keys(t.b.m)).forEach(function (m) { meses[m] = 1; });
-    return Object.keys(meses).some(function (m) { return ms.some(function (k) { return Math.abs(vMed(t.a.m[m], k) - vMed(t.b.m[m], k)) > 0.005; }); });
+    t.s.forEach(function (s) { Object.keys(s.m).forEach(function (m) { meses[m] = 1; }); });
+    return Object.keys(meses).some(function (m) { return t.s.slice(1).some(function (s) { return ms.some(function (k) { return Math.abs(vMed(t.s[0].m[m], k) - vMed(s.m[m], k)) > 0.005; }); }); });
   };
-  var statusOpCx = function (par, kA, kB) {
-    var a = par.a, b = par.b;
+  var statusOpCx = function (a, b, kA, kB) {
+    if (!a && !b) return '—'; // não existe na base nem neste registro
     if (!a) return kA[b.k] ? 'mudou de sonda/poço/contrato' : 'nova';
     if (!b) return kB[a.k] ? 'mudou de sonda/poço/contrato' : 'removida';
     var m = [];
@@ -1407,28 +1438,30 @@ button.kpi{font:inherit;color:inherit;text-align:left;cursor:pointer;align-items
     if (Math.abs(a.rU - b.rU) > 0.005 || Math.abs(a.cU - b.cU) > 0.005) m.push('valor mudou');
     return m.length ? m.join(' · ') : 'sem alteração';
   };
-  var arvoreCx = function (itens, abrir, ms, soMud, kA, kB) {
+  var arvoreCx = function (itens, nL, abrir, ms, soMud, K, rotsC) {
     var out = [], nN = NIV_CX.length;
     var rec = function (ls, d, cam, rots) {
       var g = {};
       ls.forEach(function (it) { var k = NIV_CX[d].k(it.x); (g[k] = g[k] || []).push(it); });
-      var gs = Object.keys(g).map(function (k) { var t = somaCx(g[k]); t.k = k; t.ls = g[k]; t.mud = mudouCx(t, ms); return t; });
+      var gs = Object.keys(g).map(function (k) { var t = somaCx(g[k], nL); t.k = k; t.ls = g[k]; t.mud = mudouCx(t, ms); return t; });
       if (soMud) gs = gs.filter(function (t) { return t.mud; });
-      gs.sort(function (a, b) { return (b.b.r - a.b.r) || (b.a.r - a.a.r) || a.k.localeCompare(b.k, 'pt'); });
+      gs.sort(function (a, b) { return (b.s[nL - 1].r - a.s[nL - 1].r) || (b.s[0].r - a.s[0].r) || a.k.localeCompare(b.k, 'pt'); });
       gs.forEach(function (t) {
         var p = cam + '/' + encodeURIComponent(t.k), ab = abrir(d, p), rr = rots.concat([t.k]);
         out.push({d: d, p: p, rot: t.k, rots: rr, t: t, ab: ab, tipo: 'g'});
         if (!ab) return;
         if (d + 1 < nN) { rec(t.ls, d + 1, p, rr); return; }
-        var po = {}; // operações: a versão da base (a) e a comparada (b), pelo contrato + id da operação
-        t.ls.forEach(function (it) { (po[it.x.k] = po[it.x.k] || {})[it.lado] = it.x; });
-        Object.keys(po).map(function (k) { return po[k]; }).sort(function (p1, p2) { return String((p1.b || p1.a).data).localeCompare(String((p2.b || p2.a).data)); }).forEach(function (par) {
-          var lsOp = []; if (par.a) lsOp.push({lado: 'a', x: par.a}); if (par.b) lsOp.push({lado: 'b', x: par.b});
-          var tOp = somaCx(lsOp), st = statusOpCx(par, kA, kB);
-          tOp.mud = mudouCx(tOp, ms) || st !== 'sem alteração';
+        var po = {}; // operações: as versões da base (0) e de cada comparado, pelo contrato + id da operação
+        t.ls.forEach(function (it) { (po[it.x.k] = po[it.x.k] || [])[it.lado] = it.x; });
+        Object.keys(po).map(function (k) { return po[k]; }).sort(function (p1, p2) { var x1 = p1[nL - 1] || p1.filter(Boolean).pop(), x2 = p2[nL - 1] || p2.filter(Boolean).pop(); return String(x1.data).localeCompare(String(x2.data)); }).forEach(function (par) {
+          var lsOp = []; for (var l = 0; l < nL; l++) if (par[l]) lsOp.push({lado: l, x: par[l]});
+          var tOp = somaCx(lsOp, nL), sts = [];
+          for (var j = 1; j < nL; j++) sts.push(statusOpCx(par[0], par[j], K[0], K[j]));
+          tOp.mud = mudouCx(tOp, ms) || sts.some(function (s) { return s !== 'sem alteração'; });
           if (soMud && !tOp.mud) return;
-          var x = par.b || par.a, rot = fD(x.data) + ' · ' + (x.rot || '—');
-          out.push({d: nN, rot: rot, rots: rr.concat([rot]), t: tOp, tipo: 'op', par: par, st: st});
+          var x = par[nL - 1] || par.filter(Boolean).pop(), rot = fD(x.data) + ' · ' + (x.rot || '—');
+          var st = nL === 2 ? sts[0] : sts.map(function (s, j) { return rotsC[j] + ': ' + s; }).join(' · ');
+          out.push({d: nN, rot: rot, rots: rr.concat([rot]), t: tOp, tipo: 'op', st: st, ult: sts[sts.length - 1]});
         });
       });
     };
@@ -1441,106 +1474,121 @@ button.kpi{font:inherit;color:inherit;text-align:left;cursor:pointer;align-items
       '<td class="n cx-p ' + cls + ' ' + (tem ? clsVar(p, k) : '') + '"' + dm + '>' + (tem ? fPct(p) : '') + '</td>';
   };
   var celulasCx = function (t, qs, ms) {
-    var h = '';
+    var h = '', nL = t.s.length;
     qs.forEach(function (qd) {
-      qd.meses.forEach(function (m) { ms.forEach(function (k, j) { h += celCx(t.a.m[m], t.b.m[m], k, 'mx-r', m, j === 0); }); });
-      var qa = quartoMx(t.a, qd), qb = quartoMx(t.b, qd);
-      ms.forEach(function (k, j) { h += celCx(qa, qb, k, 'mx-q', null, j === 0); });
+      qd.meses.forEach(function (m) { ms.forEach(function (k, j) { for (var l = 1; l < nL; l++) h += celCx(t.s[0].m[m], t.s[l].m[m], k, 'mx-r', m, j === 0 && l === 1); }); });
+      var qq = t.s.map(function (s) { return quartoMx(s, qd); });
+      ms.forEach(function (k, j) { for (var l = 1; l < nL; l++) h += celCx(qq[0], qq[l], k, 'mx-q', null, j === 0 && l === 1); });
     });
     ms.forEach(function (k, j) {
-      var tem = t.a.n || t.b.n, a = vMed(t.a, k), b = vMed(t.b, k), p = tem ? pctVar(a, b) : null;
-      h += '<td class="n mx-t' + (j === 0 ? ' mx-ini' : '') + '">' + (tem ? fV(a) : '') + '</td><td class="n mx-t">' + (tem ? fV(b) : '') + '</td>' +
-        '<td class="n mx-t ' + (tem ? clsVar(p, k) : '') + '">' + (tem ? fDelta(b - a) : '') + '</td><td class="n mx-t cx-p ' + (tem ? clsVar(p, k) : '') + '">' + (tem ? fPct(p) : '') + '</td>';
+      var a = vMed(t.s[0], k);
+      h += '<td class="n mx-t' + (j === 0 ? ' mx-ini' : '') + '">' + (t.s.some(function (s) { return s.n; }) ? fV(a) : '') + '</td>';
+      for (var l = 1; l < nL; l++) {
+        var tem = t.s[0].n || t.s[l].n, b = vMed(t.s[l], k), p = tem ? pctVar(a, b) : null;
+        h += '<td class="n mx-t">' + (tem ? fV(b) : '') + '</td><td class="n mx-t ' + (tem ? clsVar(p, k) : '') + '">' + (tem ? fDelta(b - a) : '') + '</td><td class="n mx-t cx-p ' + (tem ? clsVar(p, k) : '') + '">' + (tem ? fPct(p) : '') + '</td>';
+      }
     });
     return h;
   };
   var _cmp = null; // dados da aba de comparação para desenhar os gráficos depois do HTML
   telas.cmp = function (C, F, A) {
     cmpPadrao();
-    var M = S.cmp, met = S.gmet, ms = MEDIDAS[met];
+    var M = S.cmp, met = S.gmet, ms = MEDIDAS[met], ro = COMPARTILHADO;
     var agora = montarFoto(C); agora.data = 'agora';
-    var opc = function (sel) { return S.regs.map(function (r) { return '<option value="' + r.data + '"' + (r.data === sel ? ' selected' : '') + '>' + fD(r.data) + (r.obs ? ' — ' + esc(r.obs) : '') + '</option>'; }).join('') + '<option value="agora"' + (sel === 'agora' ? ' selected' : '') + '>Agora (arquivos carregados)</option>'; };
     var per = periodoTxt(), perTxt = esc((S.f.ano || '') + (per ? ' · ' + per : ''));
-    // lista dos registros (totais do ano/período e filtros escolhidos)
     var linhaLista = function (reg, k) {
-      var t = somaRC(filtraLinhas(linhasReg(reg))), papel = (k === M.a ? '<span class="tag t-pl">base</span> ' : '') + (k === M.b ? '<span class="tag t-ho">comparar</span>' : '');
+      var t = somaRC(filtraLinhas(linhasReg(reg))), papel = k === M.base ? '<span class="tag t-pl">base</span>' : M.sel.indexOf(k) >= 0 ? '<span class="tag t-ho">comparar</span>' : '';
       return '<tr><td><b>' + rotReg(k) + '</b></td><td>' + (k === 'agora' ? '—' : fDH(reg.em)) + '</td><td>' + esc(reg.obs || '') + '</td><td class="n">' + (reg.cts || []).length + '</td><td class="n">' + t.n + '</td><td class="n">' + fUSD(t.r) + '</td><td class="n">' + fUSD(t.c) + '</td><td class="n">' + fUSD(t.r - t.c) + '</td><td>' + papel + '</td><td>' +
-        (k === 'agora' ? '' : '<button class="btn-x" title="Remover o registro de ' + fD(k) + '" data-regdel="' + k + '">🗑</button>') + '</td></tr>';
+        (k === 'agora' || ro ? '' : '<button class="btn-x" title="Remover o registro de ' + fD(k) + '" data-regdel="' + k + '">🗑</button>') + '</td></tr>';
     };
     var lista = S.regs.slice().reverse().map(function (r) { return linhaLista(r, r.data); });
     lista.unshift(linhaLista(agora, 'agora'));
-    var h = '<div class="card"><div class="card-h"><h2>Registros (' + S.regs.length + ')</h2><button class="btn-r cx-btn" data-a="regAbrir">📌 Registrar</button><button class="btn-o cx-btn" data-a="regExport"' + (S.regs.length ? '' : ' disabled') + '>⬇ Exportar registros</button><button class="btn-o cx-btn" data-a="regImport">⬆ Importar registros</button></div>' +
+    var h = '<div class="card"><div class="card-h"><h2>Registros (' + S.regs.length + ')</h2>' + (ro ? '' : '<button class="btn-r cx-btn" data-a="regAbrir">📌 Registrar</button>') + '<button class="btn-o cx-btn" data-a="regExport"' + (S.regs.length ? '' : ' disabled') + '>⬇ Exportar registros</button>' + (ro ? '' : '<button class="btn-o cx-btn" data-a="regImport">⬆ Importar registros</button>') + '</div>' +
       tabela(['Data', 'Registrado em', 'Observação', N('Contratos'), N('Operações ' + (S.f.ano || '')), N('Receita US$'), N('COGS US$'), N('Margem US$'), 'Na comparação', ''], lista, null, 't-regs') +
       '<p class="nota">Cada registro guarda uma foto de todas as operações carregadas naquele dia (todos os anos e clientes), com receita e COGS já com o risco. Um registro por data: registrar de novo na mesma data sobrescreve. Os valores da lista são do ano/período e filtros escolhidos lá em cima.</p></div>';
     if (!S.regs.length) { _cmp = null; return h + '<div class="card"><p class="vazio">Ainda não há registros. Clique em <b>📌 Registrar</b> para guardar a foto de hoje; registre de novo em outras datas e compare aqui o que mudou.</p></div>'; }
-    h += '<div class="card cx-sel"><div class="cx-sel-l"><div class="f"><label>Base</label><select data-cmp="a">' + opc(M.a) + '</select></div><button class="btn-o cx-inv" data-a="cmpInverter" title="Inverter base e comparação">⇄</button>' +
-      '<div class="f"><label>Comparar com</label><select data-cmp="b">' + opc(M.b) + '</select></div>' +
+    var todos = S.regs.map(function (r) { return r.data; }).concat(['agora']);
+    var chips = todos.map(function (k) {
+      var on = M.sel.indexOf(k) >= 0, eb = k === M.base;
+      return '<label class="cx-chip' + (on ? ' on' : '') + (eb ? ' eb' : '') + '"' + (eb ? ' title="É a base"' : '') + '><input type="checkbox" data-cmpsel="' + k + '"' + (on ? ' checked' : '') + (eb ? ' disabled' : '') + '> ' + rotReg(k) + '</label>';
+    }).join('');
+    h += '<div class="card cx-sel"><div class="cx-sel-l"><div class="f"><label>Base</label><select data-cmp="base">' + todos.map(function (k) { var r = fotoDe(k, agora); return '<option value="' + k + '"' + (k === M.base ? ' selected' : '') + '>' + rotReg(k) + (r && r.obs ? ' — ' + esc(r.obs) : '') + '</option>'; }).join('') + '</select></div>' +
+      '<div class="f cx-com"><label>Comparar com (marque quantos quiser)</label><div class="cx-chips">' + chips + '<button type="button" class="btn-o cx-todos" data-a="cmpTodos">Todos</button></div></div>' +
       '<div class="f"><label>Mostrar</label>' + seletorMet() + '</div></div></div>';
-    if (M.a === M.b) { _cmp = null; return h + '<div class="aviso">Escolha dois registros diferentes para comparar.</div>'; }
-    var fa = fotoDe(M.a, agora), fb = fotoDe(M.b, agora);
-    var lsA = filtraLinhas(linhasReg(fa)), lsB = filtraLinhas(linhasReg(fb)), ta = somaRC(lsA), tb = somaRC(lsB);
-    var kA = {}, kB = {}; linhasReg(fa).forEach(function (x) { kA[x.k] = 1; }); linhasReg(fb).forEach(function (x) { kB[x.k] = 1; });
-    var novas = lsB.filter(function (x) { return !kA[x.k]; }).length, removidas = lsA.filter(function (x) { return !kB[x.k]; }).length;
-    var card = function (k, cls) {
-      var a = vMed(ta, k), b = vMed(tb, k), p = pctVar(a, b);
-      return '<div class="kpi cx-k ' + cls + (ms.indexOf(k) >= 0 ? ' cx-sel-on' : '') + '"><span>' + NOME_MED[k] + ' · ' + rotReg(M.b) + '</span><b>' + fUSD(b) + '</b><em>base ' + rotReg(M.a) + ': ' + fUSD(a) + '</em>' +
-        '<em class="cx-d ' + clsVar(p, k) + '">' + (p == null || Math.abs(b - a) < 0.005 ? 'sem alteração' : fDelta(b - a) + ' (' + fPct(p) + ')') + '</em>' + (k === 'm' ? '<em>margem ' + margemTxt(ta.r, ta.c) + ' → ' + margemTxt(tb.r, tb.c) + '</em>' : '') + '</div>';
+    var Cs = M.sel.slice(), nC = Cs.length, nL = nC + 1;
+    if (!nC) { _cmp = null; return h + '<div class="aviso">Marque pelo menos um registro em “Comparar com”.</div>'; }
+    var fotos = [fotoDe(M.base, agora)].concat(Cs.map(function (k) { return fotoDe(k, agora); }));
+    var ls = fotos.map(function (f) { return filtraLinhas(linhasReg(f)); }), tots = ls.map(somaRC);
+    var K = fotos.map(function (f) { var o = {}; linhasReg(f).forEach(function (x) { o[x.k] = 1; }); return o; });
+    var rotsC = Cs.map(rotCurto), nomeComp = nC === 1 ? rotReg(Cs[0]) : Cs.map(rotReg).join(', ');
+    // cards: só as medidas escolhidas em "Mostrar" (Receita e COGS mostra também a margem) + operações
+    var cardMed = function (k) {
+      var a = vMed(tots[0], k), b = vMed(tots[nC], k), p = pctVar(a, b);
+      var linhas = nC === 1 ? '<em class="cx-d ' + clsVar(p, k) + '">' + (p == null || Math.abs(b - a) < 0.005 ? 'sem alteração' : fDelta(b - a) + ' (' + fPct(p) + ')') + '</em>'
+        : Cs.map(function (c, j) { var v = vMed(tots[j + 1], k), q = pctVar(a, v); return '<em class="cx-d ' + clsVar(q, k) + '">' + rotReg(c) + ': ' + fUSD(v) + ' · ' + (q == null || Math.abs(v - a) < 0.005 ? 'sem alteração' : fPct(q)) + '</em>'; }).join('');
+      return '<div class="kpi cx-k k-cx-' + k + '"><span>' + NOME_MED[k] + ' · ' + rotReg(Cs[nC - 1]) + '</span><b>' + fUSD(b) + '</b><em>base ' + rotReg(M.base) + ': ' + fUSD(a) + '</em>' + linhas +
+        (k === 'm' ? '<em>margem ' + margemTxt(tots[0].r, tots[0].c) + ' → ' + margemTxt(tots[nC].r, tots[nC].c) + '</em>' : '') + '</div>';
     };
-    h += '<div class="kpis cx-kpis">' + card('r', 'k-cx-r') + card('c', 'k-cx-c') + card('m', 'k-cx-m') +
-      '<div class="kpi cx-k k-cx-n"><span>Operações · ' + rotReg(M.b) + '</span><b>' + tb.n + '</b><em>base ' + rotReg(M.a) + ': ' + ta.n + '</em><em>' + novas + ' nova(s) · ' + removidas + ' removida(s)</em></div></div>';
+    var cardOps = '<div class="kpi cx-k k-cx-n"><span>Operações · ' + rotReg(Cs[nC - 1]) + '</span><b>' + tots[nC].n + '</b><em>base ' + rotReg(M.base) + ': ' + tots[0].n + '</em>' +
+      Cs.map(function (c, j) { var nv = ls[j + 1].filter(function (x) { return !K[0][x.k]; }).length, rm = ls[0].filter(function (x) { return !K[j + 1][x.k]; }).length; return '<em>' + (nC > 1 ? rotReg(c) + ': ' + tots[j + 1].n + ' · ' : '') + nv + ' nova(s) · ' + rm + ' removida(s)</em>'; }).join('') + '</div>';
+    var medCards = met === 'ambos' ? ['r', 'c', 'm'] : ms;
+    h += '<div class="kpis cx-kpis" style="grid-template-columns:repeat(' + (medCards.length + 1) + ',minmax(0,1fr))">' + medCards.map(cardMed).join('') + cardOps + '</div>';
     // gráficos
-    var serie = S.regs.map(function (r) { return {k: r.data, rot: fD(r.data).slice(0, 6) + r.data.slice(2, 4), obs: r.obs, t: somaRC(filtraLinhas(linhasReg(r)))}; });
-    serie.push({k: 'agora', rot: 'Agora', obs: 'arquivos carregados', t: somaRC(filtraLinhas(linhasReg(agora)))});
-    var meses = lsA.concat(lsB).map(function (x) { return String(x.data).slice(0, 7); }).filter(function (m, i, l) { return /^\d{4}-\d{2}$/.test(m) && l.indexOf(m) === i; }).sort();
-    _cmp = {serie: serie, meses: meses, lsA: lsA, lsB: lsB};
     var nomeM = {rec: 'Receita', cogs: 'COGS', ambos: 'Receita e COGS', mg: 'Margem'}[met];
-    h += '<div class="card g-card"><div class="card-h"><h2>' + nomeM + ' em cada registro — ' + perTxt + '</h2></div><div class="g-leg" id="g-leg-evo"></div><div id="g-evo" class="graf"></div>' +
-      '<p class="nota">Cada coluna é um registro (em ordem de data) e “Agora” são os arquivos carregados. Em cima de cada coluna, a variação sobre o registro anterior. Passe o mouse para ver os valores.</p></div>';
-    h += '<div class="card g-card"><div class="card-h"><h2>Variação % por mês — ' + esc(rotReg(M.a)) + ' → ' + esc(rotReg(M.b)) + '</h2></div><div class="g-leg" id="g-leg-var"></div><div id="g-var" class="graf"></div>' +
-      '<p class="nota">Quanto cada mês mudou do registro base para o comparado (% sobre a base). “novo” = mês sem valor na base. Passe o mouse para ver os valores em US$.</p></div>';
+    var serie = [M.base].concat(Cs).slice().sort(ordemReg).map(function (k) { var f = fotoDe(k, agora), i = k === M.base ? 0 : Cs.indexOf(k) + 1; return {k: k, rot: rotCurto(k), obs: k === 'agora' ? 'arquivos carregados' : f.obs, t: tots[i]}; });
+    var meses = [].concat.apply([], ls).map(function (x) { return String(x.data).slice(0, 7); }).filter(function (m, i, l) { return /^\d{4}-\d{2}$/.test(m) && l.indexOf(m) === i; }).sort();
+    _cmp = {serie: serie, meses: meses, ls: ls, Cs: Cs};
+    var cabMet = function () { return '<div class="cx-met"><span class="dd-l">Mostrar</span>' + seletorMet() + '</div>'; };
+    h += '<div class="card g-card"><div class="card-h"><h2>' + nomeM + ' em cada registro — ' + perTxt + '</h2>' + cabMet() + '</div><div class="g-leg" id="g-leg-evo"></div><div id="g-evo" class="graf"></div>' +
+      '<p class="nota">Uma coluna por registro escolhido, em ordem de data (“Agora” = os arquivos carregados). Em cima de cada coluna, a variação sobre a base (' + esc(rotReg(M.base)) + '). Passe o mouse para ver os valores e a variação sobre o registro anterior.</p></div>';
+    h += '<div class="card g-card"><div class="card-h"><h2>Variação % por mês sobre a base (' + esc(rotReg(M.base)) + ')</h2>' + cabMet() + '</div>' +
+      ms.map(function (k) { return '<div class="g-var-b">' + (ms.length > 1 ? '<h3 class="g-var-t">' + NOME_MED[k] + '</h3>' : '') + '<div class="g-leg" id="g-leg-var-' + k + '"></div><div id="g-var-' + k + '" class="graf g-var-box" data-k="' + k + '"></div></div>'; }).join('') +
+      '<p class="nota">Quanto cada mês mudou de ' + esc(rotReg(M.base)) + ' para ' + esc(nomeComp) + ' (% sobre a base)' + (nC > 1 ? ', uma barra por registro' : '') + '. “novo” (ou ◆, quando a barra é estreita) = mês sem valor na base. Passe o mouse para ver os valores em US$; clique para ver o mês na tabela.</p></div>';
     // tabela
-    var itens = lsA.map(function (x) { return {lado: 'a', x: x}; }).concat(lsB.map(function (x) { return {lado: 'b', x: x}; }));
+    var itens = []; ls.forEach(function (l, lado) { l.forEach(function (x) { itens.push({lado: lado, x: x}); }); });
     var qs = quartosDe(meses);
-    var rows = arvoreCx(itens, function (d, p) {
+    var rows = arvoreCx(itens, nL, function (d, p) {
       if (M.mostrar != null) { if (d < M.mostrar) M.abertos[p] = 1; else delete M.abertos[p]; }
       return !!M.abertos[p];
-    }, ms, M.soMud, kA, kB);
+    }, ms, M.soMud, K, rotsC);
     M.mostrar = null;
-    _cmp.rows = rows; _cmp.qs = qs; _cmp.ms = ms;
+    _cmp.rows = rows; _cmp.qs = qs; _cmp.ms = ms; _cmp.itens = itens; _cmp.nL = nL;
     var pad = function (d) { return ' style="padding-left:' + (8 + d * 18) + 'px"'; };
-    var nm = ms.length;
+    var nm = ms.length, porMes = nm * nC * 2;
     var cab1 = '<tr><th rowspan="3" class="mx-rot">' + NIV_CX.map(function (n) { return n.t; }).join(' › ') + ' › Operação</th>' +
-      qs.map(function (qd) { return '<th class="mx-tri mx-ini" colspan="' + (qd.meses.length + 1) * nm * 2 + '">' + esc(qd.rot) + '</th>'; }).join('') +
-      '<th class="mx-tri mx-t mx-ini" colspan="' + nm * 4 + '">Total</th></tr>';
+      qs.map(function (qd) { return '<th class="mx-tri mx-ini" colspan="' + (qd.meses.length + 1) * porMes + '">' + esc(qd.rot) + '</th>'; }).join('') +
+      '<th class="mx-tri mx-t mx-ini" colspan="' + nm * (1 + 3 * nC) + '">Total</th></tr>';
     var cab2 = '<tr>' + qs.map(function (qd) {
-      return qd.meses.map(function (m) { return '<th class="mx-mes mx-ini" colspan="' + nm * 2 + '" data-mes="' + m + '">' + esc(fMes(m)) + '</th>'; }).join('') + '<th class="mx-mes mx-q mx-ini" colspan="' + nm * 2 + '">Total ' + esc(qd.rot) + '</th>';
-    }).join('') + ms.map(function (k) { return '<th class="mx-mes mx-t mx-ini" colspan="4">' + NOME_MED[k] + '</th>'; }).join('') + '</tr>';
-    var par = function (cls) { return ms.map(function (k, j) { return '<th class="n ' + cls + (j === 0 ? ' mx-ini' : '') + '">' + NOME_MED[k] + '</th><th class="n ' + cls + '">Δ%</th>'; }).join(''); };
+      return qd.meses.map(function (m) { return '<th class="mx-mes mx-ini" colspan="' + porMes + '" data-mes="' + m + '">' + esc(fMes(m)) + '</th>'; }).join('') + '<th class="mx-mes mx-q mx-ini" colspan="' + porMes + '">Total ' + esc(qd.rot) + '</th>';
+    }).join('') + ms.map(function (k) { return '<th class="mx-mes mx-t mx-ini" colspan="' + (1 + 3 * nC) + '">' + NOME_MED[k] + '</th>'; }).join('') + '</tr>';
+    var par = function (cls) {
+      return ms.map(function (k, j) { return Cs.map(function (c, i) { return '<th class="n ' + cls + (j === 0 && i === 0 ? ' mx-ini' : '') + '">' + (nC === 1 ? NOME_MED[k] : (nm > 1 ? NOME_MED[k] + ' ' : '') + rotsC[i]) + '</th><th class="n ' + cls + '">Δ%</th>'; }).join(''); }).join('');
+    };
     var cab3 = '<tr>' + qs.map(function (qd) { return qd.meses.map(function () { return par(''); }).join('') + par('mx-q'); }).join('') +
-      ms.map(function (k, j) { return '<th class="n mx-t' + (j === 0 ? ' mx-ini' : '') + '">Base</th><th class="n mx-t">Comparar</th><th class="n mx-t">Δ US$</th><th class="n mx-t">Δ%</th>'; }).join('') + '</tr>';
+      ms.map(function (k, j) { return '<th class="n mx-t' + (j === 0 ? ' mx-ini' : '') + '">Base</th>' + Cs.map(function (c, i) { return '<th class="n mx-t">' + (nC === 1 ? 'Comparar' : rotsC[i]) + '</th><th class="n mx-t">Δ US$</th><th class="n mx-t">Δ%</th>'; }).join(''); }).join('') + '</tr>';
     var corpo = rows.map(function (r) {
       if (r.tipo === 'op') {
-        var cl = r.st === 'nova' ? ' cx-nova' : r.st === 'removida' ? ' cx-rem' : '';
+        var cl = r.ult === 'nova' ? ' cx-nova' : r.ult === 'removida' ? ' cx-rem' : '';
         return '<tr class="mx-op' + cl + '"><td class="mx-rot"' + pad(r.d) + '><span class="dd-tw"></span>' + esc(r.rot) + sub(esc(r.st)) + '</td>' + celulasCx(r.t, qs, ms) + '</tr>';
       }
       return '<tr class="mx-g mx-n' + r.d + (r.ab ? ' on' : '') + '" data-cx="' + esc(r.p) + '"><td class="mx-rot"' + pad(r.d) + '><span class="dd-tw">' + (r.ab ? '▾' : '▸') + '</span>' + esc(r.rot) +
-        ' <span class="sub2">' + r.t.b.n + ' op.' + (r.t.mud ? ' · mudou' : '') + '</span></td>' + celulasCx(r.t, qs, ms) + '</tr>';
+        ' <span class="sub2">' + r.t.s[nL - 1].n + ' op.' + (r.t.mud ? ' · mudou' : '') + '</span></td>' + celulasCx(r.t, qs, ms) + '</tr>';
     }).join('');
-    var tot = somaCx(itens);
+    var tot = somaCx(itens, nL);
     var tab = qs.length
       ? '<div class="tw mx-wrap"><table class="t-mx t-cx"><thead>' + cab1 + cab2 + cab3 + '</thead><tbody>' + (corpo || '<tr><td class="mx-rot vazio" colspan="2">Nada mudou no filtro.</td></tr>') + '</tbody><tfoot><tr><td class="mx-rot">Total ' + perTxt + '</td>' + celulasCx(tot, qs, ms) + '</tr></tfoot></table></div>'
       : '<p class="vazio">Nada no filtro.</p>';
-    h += '<div class="card mx-card cx-card"><div class="card-h"><h2>' + nomeM + ' por mês — ' + esc(rotReg(M.a)) + ' → ' + esc(rotReg(M.b)) + ' (US$)</h2></div>' +
+    h += '<div class="card mx-card cx-card"><div class="card-h"><h2>' + nomeM + ' por mês — ' + esc(rotReg(M.base)) + ' → ' + esc(nomeComp) + ' (US$)</h2>' + cabMet() + '</div>' +
       '<div class="dd-bar"><span class="dd-l">Mostrar até</span><span class="dd-ate">' + ['Cliente', 'Contrato', 'Sonda', 'Poço', 'Operação'].map(function (t, i) { return '<button class="btn-o" data-cxmostrar="' + i + '">' + t + '</button>'; }).join('') + '</span>' +
       '<label class="chk cx-mud"><input type="checkbox" data-a="soMud"' + (M.soMud ? ' checked' : '') + '> só o que mudou</label>' +
       '<span class="sp"></span><button class="btn-o mx-xls" data-a="cxExcel"' + (qs.length ? '' : ' disabled') + '>⬇ Excel da comparação</button></div>' + tab +
-      '<p class="nota">Nos meses e quartos: o valor no registro comparado (' + esc(rotReg(M.b)) + ') e a variação % sobre a base (' + esc(rotReg(M.a)) + '); passe o mouse no valor para ver a base. No total: base, comparado, diferença em US$ e %. ' +
-      '<span class="cv-bom">Verde</span> = favorável, <span class="cv-ruim">vermelho</span> = desfavorável (COGS que sobe fica vermelho). As operações são ligadas entre os registros pelo contrato e pelo número da operação; “nova”, “removida”, “data”, “risco” e “valor mudou” dizem o que aconteceu com cada uma.</p></div>';
+      '<p class="nota">Nos meses e quartos: o valor em cada registro comparado (' + esc(nomeComp) + ') e a variação % sobre a base (' + esc(rotReg(M.base)) + '); passe o mouse no valor para ver a base. No total: base e, para cada registro, o valor, a diferença em US$ e %. ' +
+      '<span class="cv-bom">Verde</span> = favorável, <span class="cv-ruim">vermelho</span> = desfavorável (COGS que sobe fica vermelho). As operações são ligadas entre os registros pelo contrato e pelo número da operação; “nova”, “removida”, “data”, “risco” e “valor mudou” dizem o que aconteceu com cada uma' + (nC > 1 ? ', em cada registro' : '') + '.</p></div>';
     return h;
   };
-  /* gráfico 1: o valor em cada registro (e Agora), com a variação sobre o anterior */
+  /* gráfico 1: o valor em cada registro escolhido, com a variação sobre a base */
   var desenharEvolucao = function (box, serie) {
-    var met = S.gmet, ms = MEDIDAS[met];
+    var met = S.gmet, ms = MEDIDAS[met], base = S.cmp.base, tb = (serie.find(function (it) { return it.k === base; }) || {}).t;
     legenda(ms.map(function (k) { return k === 'm' ? {cor: COR.mg, rot: 'Margem'} : {cor: COR_MED[k], rot: NOME_MED[k]}; }).concat(met === 'mg' ? [{cor: COR.mgNeg, rot: 'Margem negativa'}] : []), '#g-leg-evo');
     var W = Math.max(300, box.clientWidth), H = 290, mL = 58, mR = 8, mT = 30, mB = 46, pw = W - mL - mR, ph = H - mT - mB;
     var vals = []; serie.forEach(function (it) { ms.forEach(function (k) { vals.push(vMed(it.t, k)); }); });
@@ -1550,27 +1598,26 @@ button.kpi{font:inherit;color:inherit;text-align:left;cursor:pointer;align-items
     var rotulos = band >= (ms.length === 2 ? 100 : 50);
     var s = '<svg class="g-svg" width="' + W + '" height="' + H + '" viewBox="0 0 ' + W + ' ' + H + '" role="img" aria-label="Valor em cada registro, em US$">' + gradeY(E, y, mL, W - mR) + '<text class="g-ty g-un" x="' + (mL - 8) + '" y="11">US$</text>';
     serie.forEach(function (it, i) {
-      var cx = mL + band * i + band / 2, ant = serie[i - 1], barras = '', labels = '';
+      var cx = mL + band * i + band / 2, barras = '', labels = '', eb = it.k === base;
       ms.forEach(function (k, j) {
         var v = vMed(it.t, k), x0 = ms.length === 2 ? (j === 0 ? cx - bw - 1 : cx + 1) : cx - bw / 2;
-        barras += colunaZ(x0, bw, v, y, k === 'm' ? corMg(v) : COR_MED[k]).replace('<path ', '<path data-k="' + k + '" data-v="' + r2(v) + '" ');
         var lx = ms.length === 2 ? (j === 0 ? cx - 3 : cx + 3) : cx, la = ms.length === 2 ? (j === 0 ? ' style="text-anchor:end"' : ' style="text-anchor:start"') : '';
-        if (ant && rotulos) { var p = pctVar(vMed(ant.t, k), v); if (p != null) labels += '<text class="g-pl ' + clsVar(p, k) + '" x="' + lx + '" y="' + (v >= 0 ? y(v) - 5 : y(v) + 13) + '"' + la + '>' + esc(fPct(p)) + '</text>'; }
+        barras += colunaZ(x0, bw, v, y, k === 'm' ? corMg(v) : COR_MED[k]).replace('<path ', '<path data-k="' + k + '" data-v="' + r2(v) + '" ');
+        if (!eb && tb && rotulos) { var p = pctVar(vMed(tb, k), v); if (p != null) labels += '<text class="g-pl ' + clsVar(p, k) + '" x="' + lx + '" y="' + (v >= 0 ? y(v) - 5 : y(v) + 13) + '"' + la + '>' + esc(fPct(p)) + '</text>'; }
       });
-      var papel = it.k === S.cmp.a ? 'base' : it.k === S.cmp.b ? 'comparar' : '';
-      s += '<g class="g-mes g-reg' + (papel ? ' g-papel' : '') + '" tabindex="0" data-i="' + i + '" data-k="' + it.k + '" aria-label="' + esc(rotReg(it.k) + ': receita ' + fUSD(it.t.r) + ', COGS ' + fUSD(it.t.c)) + '">' +
+      s += '<g class="g-mes g-reg' + (eb ? ' g-papel' : '') + '" tabindex="0" data-i="' + i + '" data-k="' + it.k + '" aria-label="' + esc(rotReg(it.k) + ': receita ' + fUSD(it.t.r) + ', COGS ' + fUSD(it.t.c)) + '">' +
         '<rect class="g-bg" x="' + (mL + band * i + 1) + '" y="' + mT + '" width="' + Math.max(1, band - 2) + '" height="' + ph + '" rx="6"/>' + barras + labels +
-        '<text class="g-tx" x="' + cx + '" y="' + (H - 26) + '">' + esc(it.rot) + '</text>' + (papel ? '<text class="g-tx g-papel-t" x="' + cx + '" y="' + (H - 11) + '">' + papel + '</text>' : '') + '</g>';
+        '<text class="g-tx" x="' + cx + '" y="' + (H - 26) + '">' + esc(it.rot) + '</text>' + (eb ? '<text class="g-tx g-papel-t" x="' + cx + '" y="' + (H - 11) + '">base</text>' : '') + '</g>';
     });
     box.innerHTML = s + '</svg>';
     var T = dica(box);
     box.querySelectorAll('.g-reg').forEach(function (el) {
       var i = Number(el.dataset.i), it = serie[i], ant = serie[i - 1];
       T.ligar(el, function () {
-        T.inicio(rotReg(it.k) + (it.obs ? ' — ' + it.obs : ''));
+        T.inicio(rotReg(it.k) + (it.obs ? ' — ' + it.obs : '') + (it.k === base ? ' (base)' : ''));
         ['r', 'c', 'm'].forEach(function (k) {
-          var v = vMed(it.t, k), p = ant ? pctVar(vMed(ant.t, k), v) : null;
-          T.linha(ms.indexOf(k) >= 0 ? (k === 'm' ? corMg(v) : COR_MED[k]) : '', fUSD(v) + (k === 'm' ? ' (' + margemTxt(it.t.r, it.t.c) + ')' : ''), NOME_MED[k].toLowerCase() + (p != null ? ' · ' + fPct(p) + ' sobre ' + rotReg(ant.k) : ''));
+          var v = vMed(it.t, k), pb = it.k !== base && tb ? pctVar(vMed(tb, k), v) : null, pa = ant ? pctVar(vMed(ant.t, k), v) : null;
+          T.linha(ms.indexOf(k) >= 0 ? (k === 'm' ? corMg(v) : COR_MED[k]) : '', fUSD(v) + (k === 'm' ? ' (' + margemTxt(it.t.r, it.t.c) + ')' : ''), NOME_MED[k].toLowerCase() + (pb != null ? ' · ' + fPct(pb) + ' sobre a base' : '') + (pa != null ? ' · ' + fPct(pa) + ' sobre ' + rotReg(ant.k) : ''));
         });
         T.linha('', String(it.t.n), 'operação(ões)');
         var cx = mL + band * i + band / 2, tw = T.el.offsetWidth;
@@ -1578,33 +1625,32 @@ button.kpi{font:inherit;color:inherit;text-align:left;cursor:pointer;align-items
       }, function () {});
     });
   };
-  /* gráfico 2: variação % de cada mês, da base para o comparado */
-  var desenharVarMes = function (box, d) {
-    var met = S.gmet, ms = MEDIDAS[met];
-    legenda(ms.map(function (k) { return {cor: COR_MED[k], rot: 'Variação % ' + (k === 'r' ? 'da receita' : k === 'c' ? 'do COGS' : 'da margem')}; }), '#g-leg-var');
+  /* gráfico 2: variação % de cada mês sobre a base; um gráfico por medida, uma barra por registro comparado */
+  var desenharVarMes = function (box, d, k) {
+    var Cs = d.Cs, nC = Cs.length, cor = function (i) { return nC === 1 ? COR_MED[k] : PAL_REG[i % PAL_REG.length]; };
+    legenda(Cs.map(function (c, i) { return {cor: cor(i), rot: (nC === 1 ? 'Variação % ' + (k === 'r' ? 'da receita' : k === 'c' ? 'do COGS' : 'da margem') + ' · ' : '') + rotReg(c)}; }), '#g-leg-var-' + k);
     var somaMes = function (ls, m) { var t = {r: 0, c: 0, n: 0}; ls.forEach(function (x) { if (String(x.data).slice(0, 7) === m) { t.r += x.rU; t.c += x.cU; t.n++; } }); return t; };
-    var dados = d.meses.map(function (m) { var ta = somaMes(d.lsA, m), tb = somaMes(d.lsB, m); return {k: m, ta: ta, tb: tb, p: ms.map(function (k) { return pctVar(vMed(ta, k), vMed(tb, k)); })}; });
+    var dados = d.meses.map(function (m) { var tt = d.ls.map(function (l) { return somaMes(l, m); }); return {k: m, tt: tt, p: Cs.map(function (c, i) { return pctVar(vMed(tt[0], k), vMed(tt[i + 1], k)); })}; });
     if (!dados.length) { box.innerHTML = '<p class="vazio">Nada no filtro.</p>'; return; }
     var vals = []; dados.forEach(function (t) { t.p.forEach(function (p) { if (p != null && isFinite(p)) vals.push(p); }); });
-    var W = Math.max(300, box.clientWidth), H = 290, mL = 58, mR = 8, mT = 24, mB = 30, pw = W - mL - mR, ph = H - mT - mB;
+    var W = Math.max(300, box.clientWidth), H = 280, mL = 58, mR = 8, mT = 24, mB = 30, pw = W - mL - mR, ph = H - mT - mB;
     var E = escala(vals.concat([5, -5]).concat(vals.map(function (v) { return v * 1.2; }))); // folga para os rótulos
     var y = function (v) { return mT + ph - (v - E.lo) / (E.hi - E.lo) * ph; };
-    var band = pw / dados.length, bw = ms.length === 2 ? Math.max(4, Math.min(26, (band * 0.7 - 2) / 2)) : Math.max(6, Math.min(36, band * 0.5));
-    var rotulos = band >= (ms.length === 2 ? 100 : 50), cada = Math.ceil(46 / band);
-    var s = '<svg class="g-svg" width="' + W + '" height="' + H + '" viewBox="0 0 ' + W + ' ' + H + '" role="img" aria-label="Variação percentual por mês">' + gradeY(E, y, mL, W - mR, function (v) { return (v > 0 ? '+' : v < 0 ? '−' : '') + nf(0, 0)(Math.abs(v)) + '%'; });
+    var band = pw / dados.length, bw = Math.max(3, Math.min(32, (band * 0.72 - (nC - 1) * 2) / nC));
+    var rotulos = band >= nC * 52, cada = Math.ceil(46 / band);
+    var s = '<svg class="g-svg" width="' + W + '" height="' + H + '" viewBox="0 0 ' + W + ' ' + H + '" role="img" aria-label="Variação percentual por mês, ' + NOME_MED[k] + '">' + gradeY(E, y, mL, W - mR, function (v) { return (v > 0 ? '+' : v < 0 ? '−' : '') + nf(0, 0)(Math.abs(v)) + '%'; });
     dados.forEach(function (t, i) {
-      var cx = mL + band * i + band / 2, barras = '';
-      ms.forEach(function (k, j) {
-        var p = t.p[j], x0 = ms.length === 2 ? (j === 0 ? cx - bw - 1 : cx + 1) : cx - bw / 2;
-        var lx = ms.length === 2 ? (j === 0 ? cx - 3 : cx + 3) : cx, la = ms.length === 2 ? (j === 0 ? ' style="text-anchor:end"' : ' style="text-anchor:start"') : '';
-        if (p === Infinity) barras += '<text class="g-pl cv-novo" x="' + lx + '" y="' + (y(0) - 5) + '"' + la + ' data-k="' + k + '" data-p="novo">novo</text>';
-        else if (p != null && Math.abs(p) < 0.05) barras += '<rect x="' + x0 + '" y="' + (y(0) - 1.5) + '" width="' + bw + '" height="3" rx="1.5" fill="' + COR_MED[k] + '" data-k="' + k + '" data-p="0"/>' + (rotulos ? '<text class="g-pl cv-0" x="' + lx + '" y="' + (y(0) - 6) + '"' + la + '>0,0%</text>' : ''); // sem alteração: traço no zero
+      var cx = mL + band * i + band / 2, x00 = cx - (nC * bw + (nC - 1) * 2) / 2, barras = '';
+      t.p.forEach(function (p, j) {
+        var x0 = x00 + j * (bw + 2), lx = x0 + bw / 2, c = cor(j);
+        if (p === Infinity) barras += '<text class="g-pl cv-novo" x="' + lx + '" y="' + (y(0) - 5) + '" data-r="' + Cs[j] + '" data-p="novo"' + (rotulos || nC === 1 ? '>novo' : ' style="fill:' + c + '">◆<title>novo: mês sem valor na base</title>') + '</text>';
+        else if (p != null && Math.abs(p) < 0.05) barras += '<rect x="' + x0 + '" y="' + (y(0) - 1.5) + '" width="' + bw + '" height="3" rx="1.5" fill="' + c + '" data-r="' + Cs[j] + '" data-p="0"/>' + (rotulos ? '<text class="g-pl cv-0" x="' + lx + '" y="' + (y(0) - 6) + '">0,0%</text>' : '');
         else if (p != null) {
-          barras += colunaZ(x0, bw, p, y, COR_MED[k]).replace('<path ', '<path data-k="' + k + '" data-p="' + r2(p) + '" ');
-          if (rotulos) barras += '<text class="g-pl ' + clsVar(p, k) + '" x="' + lx + '" y="' + (p >= 0 ? y(p) - 5 : y(p) + 13) + '"' + la + '>' + esc(fPct(p)) + '</text>';
+          barras += colunaZ(x0, bw, p, y, c).replace('<path ', '<path data-r="' + Cs[j] + '" data-p="' + r2(p) + '" ');
+          if (rotulos) barras += '<text class="g-pl ' + clsVar(p, k) + '" x="' + lx + '" y="' + (p >= 0 ? y(p) - 5 : y(p) + 13) + '">' + esc(fPct(p)) + '</text>';
         }
       });
-      s += '<g class="g-mes g-var" tabindex="0" data-i="' + i + '" aria-label="' + esc(fMes(t.k) + ': ' + ms.map(function (k, j) { return NOME_MED[k] + ' ' + (t.p[j] == null ? 'sem valor' : fPct(t.p[j])); }).join(', ')) + '">' +
+      s += '<g class="g-mes g-var" tabindex="0" data-i="' + i + '" aria-label="' + esc(fMes(t.k) + ': ' + Cs.map(function (c, j) { return rotReg(c) + ' ' + (t.p[j] == null ? 'sem valor' : fPct(t.p[j])); }).join(', ')) + '">' +
         '<rect class="g-bg" x="' + (mL + band * i + 1) + '" y="' + mT + '" width="' + Math.max(1, band - 2) + '" height="' + ph + '" rx="6"/>' + barras +
         (i % cada === 0 ? '<text class="g-tx" x="' + cx + '" y="' + (H - 10) + '">' + esc(MESES[Number(t.k.slice(5, 7)) - 1] + '/' + t.k.slice(2, 4)) + '</text>' : '') + '</g>';
     });
@@ -1613,12 +1659,11 @@ button.kpi{font:inherit;color:inherit;text-align:left;cursor:pointer;align-items
     box.querySelectorAll('.g-var').forEach(function (el) {
       var i = Number(el.dataset.i), t = dados[i];
       T.ligar(el, function () {
-        T.inicio(fMes(t.k));
-        ['r', 'c', 'm'].forEach(function (k) {
-          var a = vMed(t.ta, k), b = vMed(t.tb, k), p = pctVar(a, b);
-          T.linha(ms.indexOf(k) >= 0 ? COR_MED[k] : '', p == null ? '—' : fPct(p), NOME_MED[k].toLowerCase() + ': ' + fUSD(a) + ' → ' + fUSD(b) + ' (' + fDelta(b - a) + ')');
-        });
-        T.linha('', t.ta.n + ' → ' + t.tb.n, 'operação(ões)');
+        T.inicio(fMes(t.k) + ' · ' + NOME_MED[k].toLowerCase());
+        var a = vMed(t.tt[0], k);
+        T.linha('', fUSD(a), 'base ' + rotReg(S.cmp.base));
+        Cs.forEach(function (c, j) { var b = vMed(t.tt[j + 1], k); T.linha(cor(j), t.p[j] == null ? '—' : fPct(t.p[j]), rotReg(c) + ': ' + fUSD(b) + ' (' + fDelta(b - a) + ')'); });
+        T.linha('', t.tt.map(function (x) { return x.n; }).join(' → '), 'operação(ões)');
         var cx = mL + band * i + band / 2, tw = T.el.offsetWidth;
         T.pos(Math.max(0, cx + band / 2 + tw + 8 > W ? cx - band / 2 - tw - 4 : cx + band / 2 + 4), mT);
       }, function () { S.mxVer = t.k; render(); });
@@ -1627,19 +1672,23 @@ button.kpi{font:inherit;color:inherit;text-align:left;cursor:pointer;align-items
   // planilha da comparação: como está na tela (linhas abertas)
   var excelComparacao = function () {
     if (!_cmp || !_cmp.rows) return;
-    var rows = _cmp.rows, qs = _cmp.qs, ms = _cmp.ms, M = S.cmp;
-    var nL = NIV_CX.length + 3; // Nível + Cliente…Poço + Operação + Situação
+    var rows = _cmp.rows, qs = _cmp.qs, ms = _cmp.ms, Cs = _cmp.Cs, nC = Cs.length, M = S.cmp;
+    var nL = NIV_CX.length + 3; // Nível + Cliente…Poço + Operação + O que mudou
     var h1 = ['Nível'].concat(NIV_CX.map(function (n) { return n.t; })).concat(['Operação', 'O que mudou']), h2 = h1.map(function () { return null; }), h3 = h1.map(function () { return null; });
-    var merges = h1.map(function (x, c) { return {s: {r: 0, c: c}, e: {r: 2, c: c}}; }), c0 = nL;
-    var grupo = function (rot) { h1.push(rot); for (var i = 1; i < ms.length * 3; i++) h1.push(null); merges.push({s: {r: 0, c: c0}, e: {r: 0, c: c0 + ms.length * 3 - 1}}); ms.forEach(function (k, j) { h2.push(NOME_MED[k], null, null); h3.push('Base', 'Comparar', 'Δ%'); merges.push({s: {r: 1, c: c0 + j * 3}, e: {r: 1, c: c0 + j * 3 + 2}}); }); c0 += ms.length * 3; };
+    var merges = h1.map(function (x, c) { return {s: {r: 0, c: c}, e: {r: 2, c: c}}; }), c0 = nL, wMes = 1 + 2 * nC, wTot = 1 + 3 * nC;
+    var grupo = function (rot) {
+      h1.push(rot); for (var i = 1; i < ms.length * wMes; i++) h1.push(null); merges.push({s: {r: 0, c: c0}, e: {r: 0, c: c0 + ms.length * wMes - 1}});
+      ms.forEach(function (k, j) { h2.push(NOME_MED[k]); for (var i = 1; i < wMes; i++) h2.push(null); h3.push('Base'); Cs.forEach(function (c) { h3.push(nC === 1 ? 'Comparar' : rotReg(c), 'Δ%'); }); merges.push({s: {r: 1, c: c0 + j * wMes}, e: {r: 1, c: c0 + j * wMes + wMes - 1}}); });
+      c0 += ms.length * wMes;
+    };
     qs.forEach(function (qd) { qd.meses.forEach(function (m) { grupo(fMes(m)); }); grupo('Total ' + qd.rot); });
-    h1.push('Total'); for (var i = 1; i < ms.length * 4; i++) h1.push(null); merges.push({s: {r: 0, c: c0}, e: {r: 0, c: c0 + ms.length * 4 - 1}});
-    ms.forEach(function (k, j) { h2.push(NOME_MED[k], null, null, null); h3.push('Base', 'Comparar', 'Δ US$', 'Δ%'); merges.push({s: {r: 1, c: c0 + j * 4}, e: {r: 1, c: c0 + j * 4 + 3}}); });
+    h1.push('Total'); for (var i = 1; i < ms.length * wTot; i++) h1.push(null); merges.push({s: {r: 0, c: c0}, e: {r: 0, c: c0 + ms.length * wTot - 1}});
+    ms.forEach(function (k, j) { h2.push(NOME_MED[k]); for (var i = 1; i < wTot; i++) h2.push(null); h3.push('Base'); Cs.forEach(function (c) { h3.push(nC === 1 ? 'Comparar' : rotReg(c), 'Δ US$', 'Δ%'); }); merges.push({s: {r: 1, c: c0 + j * wTot}, e: {r: 1, c: c0 + j * wTot + wTot - 1}}); });
     var pNum = function (p) { return p == null ? null : p === Infinity ? 'novo' : r2(p); };
     var vals = function (t) {
-      var v = [], par = function (ta, tb) { var tem = (ta && ta.n) || (tb && tb.n); ms.forEach(function (k) { var a = vMed(ta, k), b = vMed(tb, k); v.push(tem ? r2(a) : null, tem ? r2(b) : null, tem ? pNum(pctVar(a, b)) : null); }); };
-      qs.forEach(function (qd) { qd.meses.forEach(function (m) { par(t.a.m[m], t.b.m[m]); }); par(quartoMx(t.a, qd), quartoMx(t.b, qd)); });
-      ms.forEach(function (k) { var a = vMed(t.a, k), b = vMed(t.b, k); v.push(r2(a), r2(b), r2(b - a), pNum(pctVar(a, b))); });
+      var v = [], grp = function (sx) { var tem = sx.some(function (s) { return s && s.n; }); ms.forEach(function (k) { var a = vMed(sx[0], k); v.push(tem ? r2(a) : null); for (var l = 1; l < sx.length; l++) { var b = vMed(sx[l], k); v.push(tem ? r2(b) : null, tem ? pNum(pctVar(a, b)) : null); } }); };
+      qs.forEach(function (qd) { qd.meses.forEach(function (m) { grp(t.s.map(function (s) { return s.m[m]; })); }); grp(t.s.map(function (s) { return quartoMx(s, qd); })); });
+      ms.forEach(function (k) { var a = vMed(t.s[0], k); v.push(r2(a)); for (var l = 1; l < t.s.length; l++) { var b = vMed(t.s[l], k); v.push(r2(b), r2(b - a), pNum(pctVar(a, b))); } });
       return v;
     };
     var aoa = [h1, h2, h3];
@@ -1647,7 +1696,7 @@ button.kpi{font:inherit;color:inherit;text-align:left;cursor:pointer;align-items
       var rot = r.rots.slice(); while (rot.length < nL - 2) rot.push(null);
       aoa.push([r.tipo === 'op' ? 'Operação' : NIV_CX[r.d].t].concat(rot).concat([r.tipo === 'op' ? r.st : null]).concat(vals(r.t)));
     });
-    aoa.push(['Total'].concat(h1.slice(1, nL).map(function () { return null; })).concat(vals(somaCx(_cmp.lsA.map(function (x) { return {lado: 'a', x: x}; }).concat(_cmp.lsB.map(function (x) { return {lado: 'b', x: x}; }))))));
+    aoa.push(['Total'].concat(h1.slice(1, nL).map(function () { return null; })).concat(vals(somaCx(_cmp.itens, _cmp.nL))));
     var ws = XLSX.utils.aoa_to_sheet(aoa);
     ws['!merges'] = merges;
     ws['!cols'] = [{wch: 10}, {wch: 18}, {wch: 26}, {wch: 14}, {wch: 16}, {wch: 30}, {wch: 26}].concat(h1.slice(nL).map(function () { return {wch: 13}; }));
@@ -1655,7 +1704,86 @@ button.kpi{font:inherit;color:inherit;text-align:left;cursor:pointer;align-items
     var wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, 'Comparação');
     var nome = function (k) { return k === 'agora' ? 'agora' : k; };
-    baixarXlsx(wb, 'EARL_Gerencial_comparacao_' + nome(M.a) + '_x_' + nome(M.b) + '_' + (S.f.ano || '') + '_' + hojeTxt() + '.xlsx');
+    baixarXlsx(wb, ('EARL_Gerencial_comparacao_' + nome(M.base) + '_x_' + Cs.map(nome).join('_')).slice(0, 150) + '_' + (S.f.ano || '') + '_' + hojeTxt() + '.xlsx');
+  };
+  /* ---------- Compartilhar: um .html com o EARL Gerencial e os dados de agora dentro (só consulta) ----------
+     Quem recebe abre com dois cliques, sem internet, com os mesmos filtros, gráficos, tabelas, comparação e Excel.
+     Os dados vão num <script type="application/json" id="earlger-dados">; a página abre na mesma tela e filtros. */
+  var b64utf8 = function (s) { var b = new TextEncoder().encode(s), out = '', CH = 0x8000; for (var i = 0; i < b.length; i += CH) out += String.fromCharCode.apply(null, b.subarray(i, i + CH)); return btoa(out); };
+  var quebra76 = function (s) { return s.replace(/.{76}/g, '$&\r\n'); };
+  var cabMime = function (s) { return /^[\x20-\x7e]*$/.test(s) ? s : '=?UTF-8?B?' + b64utf8(s) + '?='; };
+  var baixarBlob = function (blob, nome) {
+    var a = document.createElement('a');
+    a.href = URL.createObjectURL(blob); a.download = nome;
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(function () { URL.revokeObjectURL(a.href); }, 8000);
+  };
+  var descFiltroCt = function () {
+    var f = S.f, ct = f.contrato ? (consolidar().contratos.find(function (c) { return c.id === f.contrato; }) || {}).nome || f.contrato : '';
+    return [f.cliente && 'cliente ' + f.cliente, ct && 'contrato ' + ct, f.regiao && 'região ' + f.regiao, f.tipo && 'tipo ' + f.tipo].filter(Boolean).join(', ');
+  };
+  var montarCompartilhado = function (levarRegs, soFiltro) {
+    var f = S.f, desc = soFiltro ? descFiltroCt() : '';
+    var ctOk = function (c) { return (!f.cliente || c.cliente === f.cliente) && (!f.contrato || c.id === f.contrato) && (!f.regiao || c.regiao === f.regiao) && (!f.tipo || c.tipo === f.tipo); };
+    var pacs = S.pacotes.map(function (p) {
+      if (!soFiltro) return p;
+      var cts = (p.pac.contratos || []).filter(ctOk), ids = {};
+      cts.forEach(function (c) { ids[c.id] = 1; });
+      return Object.assign({}, p, {pac: Object.assign({}, p.pac, {contratos: cts, operacoes: (p.pac.operacoes || []).filter(function (o) { return ids[o.contratoId]; })})});
+    }).filter(function (p) { return (p.pac.contratos || []).length; });
+    var regs = !levarRegs ? [] : S.regs.map(function (r) {
+      if (!soFiltro) return r;
+      var mapa = {}, cts = [];
+      (r.cts || []).forEach(function (c, i) { if (ctOk({id: c[0], nome: c[1], cliente: c[2], regiao: c[3], tipo: c[4]})) { mapa[i] = cts.length; cts.push(c); } });
+      return Object.assign({}, r, {cts: cts, ops: (r.ops || []).filter(function (o) { return mapa[o[0]] != null; }).map(function (o) { return [mapa[o[0]]].concat(o.slice(1)); })});
+    });
+    var tab = S.tab === 'fontes' || (S.tab === 'cmp' && !regs.length) ? 'receita' : S.tab;
+    var dados = {tipo: 'EARL-Gerencial-Compartilhado', formato: 1, versao: VERSAO, geradoEm: new Date().toISOString(), soFiltro: desc, pacotes: pacs, registros: regs,
+      estado: {tab: tab, f: Object.assign({}, S.f, {busca: ''}), gmet: S.gmet, gmodo: S.gmodo, tend: S.tend, graf: S.graf, cmp: {base: S.cmp.base, sel: S.cmp.sel.slice(), soMud: S.cmp.soMud}}};
+    var clone = document.documentElement.cloneNode(true);
+    ['#msg', '#dlg', '#tfPop', '#earlger-dados'].forEach(function (sel) { var e = clone.querySelector(sel); if (e) e.parentNode.removeChild(e); });
+    var app = clone.querySelector('#app'); if (app) app.innerHTML = '';
+    var ver = clone.querySelector('#ver'); if (ver) ver.textContent = '';
+    var tt = clone.querySelector('title'); if (tt) tt.textContent = 'EARL — Gerencial (compartilhado em ' + fD(hojeTxt()) + ')';
+    var sc = document.createElement('script'); sc.type = 'application/json'; sc.id = 'earlger-dados';
+    sc.textContent = JSON.stringify(dados).replace(/</g, '\\u003c');
+    var body = clone.querySelector('body'); body.insertBefore(sc, body.firstChild);
+    return {html: '<!DOCTYPE html>\n' + clone.outerHTML, nome: 'EARL_Gerencial_' + (desc ? desc.normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^\w]+/g, '_').replace(/^_|_$/g, '').slice(0, 60) + '_' : '') + hojeTxt() + '.html', regs: regs.length, cts: pacs.reduce(function (a, p) { p.pac.contratos.forEach(function (c) { a[c.id] = 1; }); return a; }, {})};
+  };
+  var nCts = function (o) { return Object.keys(o).length;
+  };
+  var abrirCompartilhar = function () {
+    fecharDlg();
+    var f = S.f, temF = !!(f.cliente || f.contrato || f.regiao || f.tipo), desc = descFiltroCt();
+    var msg = 'Olá,\n\nSegue em anexo o EARL Gerencial com a receita e o COGS (realizado + previsto)' + (desc ? ', só ' + desc : '') + '.\n\nPara abrir: salve o arquivo anexo e abra com dois cliques no Chrome ou no Edge (funciona sem internet). Dá para filtrar por ano, quarto, mês, cliente e contrato, ver os gráficos e as tabelas' + (S.regs.length ? ', comparar os registros' : '') + ' e baixar o Excel.\n';
+    var d = document.createElement('div'); d.id = 'dlg'; d.className = 'ovl';
+    d.innerHTML = '<div class="dlg" role="dialog" aria-modal="true" aria-labelledby="dlgT"><h3 id="dlgT">📤 Compartilhar (HTML)</h3>' +
+      '<p class="nota">Gera um arquivo <b>.html</b> com o EARL Gerencial e os dados de agora dentro. Quem receber abre com dois cliques no Chrome ou no Edge, sem instalar nada e sem internet, com os mesmos filtros, gráficos, tabelas' + (S.regs.length ? ', comparação de registros' : '') + ' e Excel — só para consulta. Ele abre na mesma aba e com os mesmos filtros que estão aqui.</p>' +
+      '<div class="dlg-f"><label class="dlg-chk"><input type="checkbox" class="sh-regs"' + (S.regs.length ? ' checked' : ' disabled') + '> Levar os registros (' + S.regs.length + ') para a aba “Comparar registros”</label>' +
+      '<label class="dlg-chk"><input type="checkbox" class="sh-filtro"' + (temF ? '' : ' disabled') + '> Levar só os contratos do filtro atual' + (temF ? ' (' + esc(desc) + ')' : ' (escolha um cliente, contrato, região ou tipo lá em cima)') + '</label>' +
+      '<label>Para (só para o e-mail; opcional)<input type="text" class="sh-para" placeholder="nome@empresa.com; outro@empresa.com"></label>' +
+      '<label>Assunto<input type="text" class="sh-assunto" value="' + esc('EARL Gerencial — receita e COGS' + (desc ? ' — ' + desc : '') + ' — ' + fD(hojeTxt())) + '"></label>' +
+      '<label>Mensagem<textarea class="sh-msg" rows="6">' + esc(msg) + '</textarea></label></div>' +
+      '<div class="dlg-r"><button type="button" class="btn-o" data-a="regCancelar">Cancelar</button><button type="button" class="btn-o" data-a="shHtml">⬇ Baixar HTML</button><button type="button" class="btn-o" data-a="shZip">⬇ Baixar .zip</button><button type="button" class="btn-r" data-a="shEml">✉ Criar e-mail (.eml)</button></div>' +
+      '<p class="nota">O e-mail (.eml) abre no Outlook como rascunho, com o HTML anexo; confira e clique em Enviar. Se o e-mail da empresa bloquear .html, use o .zip.</p></div>';
+    document.body.appendChild(d);
+  };
+  var compartilhar = async function (como) {
+    var d = $('#dlg'); if (!d) return;
+    var levar = d.querySelector('.sh-regs').checked, so = d.querySelector('.sh-filtro').checked;
+    var r = montarCompartilhado(levar, so), mb = nf(1, 1)(new Blob([r.html]).size / 1048576) + ' MB';
+    if (como === 'html') baixarBlob(new Blob([r.html], {type: 'text/html'}), r.nome);
+    else if (como === 'zip') { var z = new JSZip(); z.file(r.nome, r.html); baixarBlob(await z.generateAsync({type: 'blob', compression: 'DEFLATE'}), r.nome.replace(/\.html$/, '.zip')); }
+    else {
+      var B = 'earlger_' + Date.now().toString(36), para = d.querySelector('.sh-para').value.trim(), assunto = d.querySelector('.sh-assunto').value.trim() || 'EARL Gerencial';
+      var eml = ['X-Unsent: 1', 'To: ' + para.replace(/[\r\n]/g, ' '), 'Subject: ' + cabMime(assunto.replace(/[\r\n]/g, ' ')), 'MIME-Version: 1.0', 'Content-Type: multipart/mixed; boundary="' + B + '"', '',
+        '--' + B, 'Content-Type: text/plain; charset=UTF-8', 'Content-Transfer-Encoding: base64', '', quebra76(b64utf8(d.querySelector('.sh-msg').value)),
+        '--' + B, 'Content-Type: text/html; charset=UTF-8; name="' + r.nome + '"', 'Content-Disposition: attachment; filename="' + r.nome + '"', 'Content-Transfer-Encoding: base64', '', quebra76(b64utf8(r.html)),
+        '--' + B + '--', ''].join('\r\n');
+      baixarBlob(new Blob([eml], {type: 'message/rfc822'}), 'EARL_Gerencial_compartilhar_' + hojeTxt() + '.eml');
+    }
+    fecharDlg();
+    aviso((como === 'eml' ? 'E-mail gerado com o ' : como === 'zip' ? '.zip gerado com o ' : 'Gerado: ') + r.nome + ' (' + mb + ', ' + nCts(r.cts) + ' contrato(s)' + (r.regs ? ', ' + r.regs + ' registro(s)' : '') + ')');
   };
   /* ---- janela "Registrar" ---- */
   var fecharDlg = function () { var d = $('#dlg'); if (d) d.remove(); };
@@ -1696,7 +1824,7 @@ button.kpi{font:inherit;color:inherit;text-align:left;cursor:pointer;align-items
     var lista = S.regs.filter(function (r) { return r.data !== dt; });
     if (!gravarRegs(lista)) return;
     S.regs = lista;
-    if (S.cmp.a === dt || S.cmp.b === dt) S.cmp.a = S.cmp.b = null; // a comparação volta ao padrão
+    if (S.cmp.base === dt || S.cmp.sel.indexOf(dt) >= 0) { S.cmp.base = null; S.cmp.sel = []; } // a comparação volta ao padrão
     render(); aviso('Registro de ' + fD(dt) + ' removido.');
   };
   var exportarRegs = function () {
@@ -1817,7 +1945,11 @@ button.kpi{font:inherit;color:inherit;text-align:left;cursor:pointer;align-items
     else if (a === 'regCancelar') fecharDlg();
     else if (a === 'regExport') exportarRegs();
     else if (a === 'regImport') $('#inReg').click();
-    else if (a === 'cmpInverter') { var ta0 = S.cmp.a; S.cmp.a = S.cmp.b; S.cmp.b = ta0; render(); }
+    else if (a === 'cmpTodos') { S.cmp.sel = S.regs.map(function (r) { return r.data; }).concat(['agora']).filter(function (k) { return k !== S.cmp.base; }); render(); }
+    else if (a === 'shAbrir') abrirCompartilhar();
+    else if (a === 'shHtml') compartilhar('html');
+    else if (a === 'shZip') compartilhar('zip');
+    else if (a === 'shEml') compartilhar('eml');
     else if (a === 'cxExcel') excelComparacao();
     else if (a === 'limpar') { if (confirm('Tirar todos os arquivos carregados deste navegador?')) { S.pacotes = []; gravar(); render(); } }
   });
@@ -1828,6 +1960,7 @@ button.kpi{font:inherit;color:inherit;text-align:left;cursor:pointer;align-items
     if (t.dataset && t.dataset.a === 'soCons') { S.soComConsumo = t.checked; render(); return; }
     if (t.dataset && t.dataset.a === 'soMud') { S.cmp.soMud = t.checked; render(); return; }
     if (t.dataset && t.dataset.cmp) { S.cmp[t.dataset.cmp] = t.value; render(); return; }
+    if (t.dataset && t.dataset.cmpsel) { var ks = t.dataset.cmpsel, sl = S.cmp.sel.filter(function (k) { return k !== ks; }); if (t.checked) sl.push(ks); S.cmp.sel = sl; render(); return; }
     if (t.classList && t.classList.contains('reg-data')) { atualizarDlg(); return; }
     if (t.id === 'inReg') { var fr = (t.files || [])[0]; t.value = ''; if (fr) importarRegs(fr); return; }
     if (t.id === 'inArq' || t.id === 'inPasta') { var fs = Array.from(t.files || []); t.value = ''; if (fs.length) processar(fs); }
@@ -1839,19 +1972,28 @@ button.kpi{font:inherit;color:inherit;text-align:left;cursor:pointer;align-items
   });
   document.addEventListener('keydown', function (e) {
     if ($('#tfPop') && e.key === 'Escape') { fecharFiltroTab(); return; }
-    if ($('#dlg')) { if (e.key === 'Escape') fecharDlg(); else if (e.key === 'Enter' && e.target.closest && e.target.closest('.dlg-f')) { e.preventDefault(); salvarRegistro(); } return; }
+    if ($('#dlg')) { if (e.key === 'Escape') fecharDlg(); else if (e.key === 'Enter' && $('#dlg .reg-data') && e.target.closest && e.target.closest('.dlg-f')) { e.preventDefault(); salvarRegistro(); } return; }
     if (e.key === 'Escape' && S.mesPop) { S.mesPop = false; S.mesPasso = 0; render(); }
   });
   document.addEventListener('dragover', function (e) { e.preventDefault(); var d = $('#drop'); if (d) d.classList.add('on'); });
   document.addEventListener('dragleave', function () { var d = $('#drop'); if (d) d.classList.remove('on'); });
   document.addEventListener('drop', async function (e) {
-    e.preventDefault(); var d = $('#drop'); if (d) d.classList.remove('on');
+    e.preventDefault(); if (COMPARTILHADO) return; var d = $('#drop'); if (d) d.classList.remove('on');
     var itens = Array.from((e.dataTransfer && e.dataTransfer.items) || []);
     var acc = [];
     if (itens.length && itens[0].webkitGetAsEntry) { await Promise.all(itens.map(function (it) { var en = it.webkitGetAsEntry(); return en ? lerEntrada(en, acc) : null; })); }
     else acc = Array.from((e.dataTransfer && e.dataTransfer.files) || []);
     if (acc.length) processar(acc);
   });
+  if (COMPARTILHADO) {
+    S.regs = Array.isArray(DADOS_EMB.registros) ? DADOS_EMB.registros : [];
+    var es = DADOS_EMB.estado || {};
+    if (es.f) S.f = Object.assign(S.f, es.f);
+    ['tab', 'gmet', 'gmodo', 'tend'].forEach(function (k) { if (es[k]) S[k] = es[k]; });
+    if (es.graf != null) S.graf = !!es.graf;
+    if (es.cmp) { S.cmp.base = es.cmp.base || null; S.cmp.sel = es.cmp.sel || []; S.cmp.soMud = !!es.cmp.soMud; }
+    document.title = 'EARL — Gerencial (compartilhado)';
+  }
   window.earlGerencial = {consolidar: consolidar, estado: S, processar: processar};
   render();
 })();

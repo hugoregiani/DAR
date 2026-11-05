@@ -1,5 +1,5 @@
-// Teste dos registros e da aba "Comparar registros" do EARL Gerencial (g10), e do seletor
-// Receita | COGS | Receita e COGS | Margem nos gráficos.
+// Teste dos registros e da aba "Comparar registros" do EARL Gerencial (g12: vários registros ao mesmo tempo), do seletor
+// Receita | COGS | Receita e COGS | Margem (gráficos, cards e tabela) e da versão compartilhada (HTML com os dados dentro).
 // Registra o forecast de 01/10/2026 (versão 1 dos arquivos) e o de 01/11/2026 (versão 2, com operação nova, removida,
 // data mudada, risco mudado, valor mudado e operação que passou a realizada) e confere, contra uma conta feita aqui,
 // os cards, os dois gráficos, a tabela (mês, quarto e total) e o Excel; sobrescrever na mesma data, remover,
@@ -51,6 +51,15 @@ const V2 = pac('2026-11-01T10:00:00.000Z', [
   op('o8', 'c1', 'NS-39', 'P2', '2026-08-01', 30000, 6000, {real: {data: '2026-08-03', rec: 30000, cogs: 6000}}), // passou a realizada
   op('o6', 'c1', 'NS-38', 'P1', '2027-01-10', 70000, 7000),
 ]);
+const V3 = pac('2026-12-01T10:00:00.000Z', [
+  op('o1', 'c1', 'NS-38', 'P1', '2026-01-15', 100000, 30000),
+  op('o2', 'c1', 'NS-38', 'P1', '2026-04-15', 50000, 10000),
+  op('o3', 'c1', 'NS-39', 'P2', '2026-05-20', 80000, 20000, {risco: 50}),
+  op('o7', 'c2', 'SS-75', 'P9', '2026-07-01', 30000, 6000), // valor mudou de novo (o4 saiu)
+  op('o8', 'c1', 'NS-39', 'P2', '2026-08-01', 30000, 6000, {real: {data: '2026-08-03', rec: 30000, cogs: 6000}}),
+  op('o9', 'c1', 'NS-38', 'P1', '2026-09-10', 60000, 9000), // nova em set/2026
+  op('o6', 'c1', 'NS-38', 'P1', '2027-01-10', 70000, 7000),
+]);
 // conta de referência: receita/COGS com o risco, mês = data do serviço (realizada) ou data planejada
 const linhas = P => P.operacoes.map(o => {
   const f = o.risco ? Math.max(0, 1 - o.risco / 100) : 1;
@@ -62,7 +71,7 @@ const nf2 = v => v.toLocaleString('pt-BR', {minimumFractionDigits: 2, maximumFra
 const fPct = (a, b) => { if (Math.abs(a) < 0.005 && Math.abs(b) < 0.005) return ''; if (Math.abs(a) < 0.005) return 'novo'; const p = (b - a) / Math.abs(a) * 100, t = Math.abs(p).toLocaleString('pt-BR', {minimumFractionDigits: 1, maximumFractionDigits: 1}); return (t === '0,0' ? '' : p > 0 ? '+' : '−') + t + '%'; };
 const fDelta = v => { const t = nf2(Math.abs(v)); return (t === '0,00' ? '' : v > 0 ? '+' : '−') + t; };
 const vMed = (t, k) => !t ? 0 : k === 'r' ? t.r : k === 'c' ? t.c : t.r - t.c;
-const A26 = ano(linhas(V1), '2026'), B26 = ano(linhas(V2), '2026');
+const A26 = ano(linhas(V1), '2026'), B26 = ano(linhas(V2), '2026'), C26 = ano(linhas(V3), '2026');
 const MESES = ['jan', 'fev', 'mar', 'abr', 'mai', 'jun', 'jul', 'ago', 'set', 'out', 'nov', 'dez'];
 const fMes = m => MESES[Number(m.slice(5, 7)) - 1] + '/' + m.slice(0, 4);
 const mesesDe = (a, b) => [...new Set(a.concat(b).map(x => x.m))].sort();
@@ -76,6 +85,18 @@ const celulasTotal = (lsA, lsB, ms) => {
   ms.forEach(k => { const a = vMed(ta, k), b = vMed(tb, k); out.push(nf2(a), nf2(b), fDelta(b - a), fPct(a, b)); });
   return out;
 };
+
+// linha de total com vários registros: meses e quartos = [valor, Δ%] de cada comparado; total = base + [valor, Δ US$, Δ%] de cada um
+const celulasTotalN = (lsA, lsC, ms) => {
+  const meses = [...new Set(lsA.concat(...lsC).map(x => x.m))].sort(), out = [], qs = [];
+  meses.forEach(m => { const q = m.slice(0, 4) + '-Q' + (Math.floor((Number(m.slice(5, 7)) - 1) / 3) + 1); let u = qs[qs.length - 1]; if (!u || u.k !== q) qs.push(u = {k: q, meses: []}); u.meses.push(m); });
+  const grp = sel => { const ta = tot(lsA.filter(sel)), tc = lsC.map(l => tot(l.filter(sel))); ms.forEach(k => tc.forEach(tb => { const tem = ta.n || tb.n; out.push(tem ? nf2(vMed(tb, k)) : '', tem ? fPct(vMed(ta, k), vMed(tb, k)) : ''); })); };
+  qs.forEach(q => { q.meses.forEach(m => grp(x => x.m === m)); grp(x => q.meses.includes(x.m)); });
+  const ta = tot(lsA);
+  ms.forEach(k => { out.push(nf2(vMed(ta, k))); lsC.forEach(l => { const tb = tot(l), a = vMed(ta, k), b = vMed(tb, k); out.push(nf2(b), fDelta(b - a), fPct(a, b)); }); });
+  return out;
+};
+const pVar = (a, b) => { if (Math.abs(a) < 0.005 && Math.abs(b) < 0.005) return null; if (Math.abs(a) < 0.005) return 'novo'; const p = Math.round((b - a) / Math.abs(a) * 100 * 100) / 100; return Math.abs(p) < 0.05 ? '0' : String(p); };
 
 /* ---------- leitura da tela ---------- */
 const txt = async (page, sel) => (await page.innerText(sel)).replace(/\s+/g, ' ').trim();
@@ -110,7 +131,7 @@ const carregar = (page, nome, P) => page.setInputFiles('#inArq', [{name: nome, m
   await page.waitForSelector('[data-a="arq"]');
   await carregar(page, 'v1.json', V1);
   await page.waitForSelector('.kpis');
-  conf((await page.textContent('#ver')).includes('g11'), 'versão g11');
+  conf((await page.textContent('#ver')).includes('g12'), 'versão g12');
 
   console.log('Registrar');
   conf(await page.locator('.bar [data-a="regAbrir"]').count() === 1 && (await page.$$eval('.tab', l => l.map(b => b.textContent.trim())))[1] === 'Comparar registros (0)', 'botão "📌 Registrar" na barra do topo e aba "Comparar registros (0)"');
@@ -144,7 +165,8 @@ const carregar = (page, nome, P) => page.setInputFiles('#inArq', [{name: nome, m
   console.log('Comparar: base 01/10 → 01/11 (2026)');
   await page.click('.tab[data-tab="cmp"]');
   await page.waitForSelector('.t-cx');
-  conf(await page.inputValue('[data-cmp="a"]') === '2026-10-01' && await page.inputValue('[data-cmp="b"]') === '2026-11-01', 'abre comparando o penúltimo (base) com o último registro');
+  const chipsOn = () => page.$$eval('.cx-chip input:checked', l => l.map(i => i.dataset.cmpsel));
+  conf(await page.inputValue('[data-cmp="base"]') === '2026-10-01' && (await chipsOn()).join() === '2026-11-01' && await page.isDisabled('.cx-chip input[data-cmpsel="2026-10-01"]'), 'abre comparando o penúltimo (base) com o último registro; a base não dá para marcar em "Comparar com"');
   const lista = await page.$$eval('.t-regs tbody tr', l => l.map(r => r.innerText.replace(/\s+/g, ' ').trim()));
   conf(lista.length === 3 && /^Agora /.test(lista[0]) && /^01\/11\/2026 .*forecast de novembro .* comparar/.test(lista[1]) && /^01\/10\/2026 .*base/.test(lista[2]), 'lista: Agora, 01/11 (comparar) e 01/10 (base), com a observação', lista);
   const ta = tot(A26), tb = tot(B26);
@@ -179,28 +201,36 @@ const carregar = (page, nome, P) => page.setInputFiles('#inArq', [{name: nome, m
   await foto(page, 'r1_tabela');
 
   console.log('Gráficos da comparação');
-  const evo = await page.$$eval('#g-evo .g-reg', l => l.map(g => ({k: g.dataset.k, v: [...g.querySelectorAll('path[data-k]')].map(p => p.dataset.k + '=' + p.dataset.v), pl: [...g.querySelectorAll('.g-pl')].map(t => t.textContent), papel: (g.querySelector('.g-papel-t') || {}).textContent || ''})));
-  conf(evo.length === 3 && evo.map(e => e.k).join() === '2026-10-01,2026-11-01,agora' && evo[0].v.join() === 'r=' + ta.r + ',c=' + ta.c && evo[1].v.join() === 'r=' + tb.r + ',c=' + tb.c && evo[0].papel === 'base' && evo[1].papel === 'comparar', 'evolução: uma coluna por registro + Agora, com receita e COGS de cada um; base e comparar marcados', evo);
-  conf(evo[1].pl.join() === [fPct(ta.r, tb.r), fPct(ta.c, tb.c)].join() && evo[2].pl.join() === '0,0%,0,0%', 'em cima de cada coluna, a variação sobre o registro anterior (Agora = 01/11: 0,0%)', evo.map(e => e.pl));
-  const varm = await page.$$eval('#g-var .g-var', l => l.map(g => [...g.querySelectorAll('[data-k]')].map(p => p.dataset.k + '=' + p.dataset.p)));
-  const varEsp = mesesAB.map(m => ['r', 'c'].map(k => { const a = vMed(tot(A26.filter(x => x.m === m)), k), b = vMed(tot(B26.filter(x => x.m === m)), k); if (Math.abs(a) < 0.005 && Math.abs(b) < 0.005) return null; if (Math.abs(a) < 0.005) return k + '=novo'; return k + '=' + Math.round((b - a) / Math.abs(a) * 100 * 100) / 100; }).filter(Boolean));
-  conf(JSON.stringify(varm) === JSON.stringify(varEsp), 'variação % por mês (receita e COGS) = conta', {tela: varm, esp: varEsp});
-  await page.locator('#g-var .g-var').nth(1).hover();
-  conf(/^fev\/2026 .*receita: US\$ 40\.000,00 → US\$ 42\.000,00 \(\+2\.000,00\)/.test(await txt(page, '#g-var .g-tip')), 'tooltip do mês: base → comparado e a diferença', await txt(page, '#g-var .g-tip'));
+  const lerEvo = () => page.$$eval('#g-evo .g-reg', l => l.map(g => ({k: g.dataset.k, v: [...g.querySelectorAll('path[data-k]')].map(p => p.dataset.k + '=' + p.dataset.v), pl: [...g.querySelectorAll('.g-pl')].map(t => t.textContent), papel: (g.querySelector('.g-papel-t') || {}).textContent || ''})));
+  let evo = await lerEvo();
+  conf(evo.length === 2 && evo.map(e => e.k).join() === '2026-10-01,2026-11-01' && evo[0].v.join() === 'r=' + ta.r + ',c=' + ta.c && evo[1].v.join() === 'r=' + tb.r + ',c=' + tb.c && evo[0].papel === 'base', 'evolução: uma coluna por registro escolhido (a base marcada), com receita e COGS', evo);
+  conf(evo[1].pl.join() === [fPct(ta.r, tb.r), fPct(ta.c, tb.c)].join() && !evo[0].pl.length, 'em cima de cada coluna, a variação sobre a base', evo.map(e => e.pl));
+  const lerVar = k => page.$$eval('#g-var-' + k + ' .g-var', l => l.map(g => [...g.querySelectorAll('[data-p]')].map(p => p.dataset.r + '=' + p.dataset.p)));
+  const varEsp = (k, ls) => mesesDe(A26, [].concat(...ls)).map(m => ls.map((l, j) => [l, j]).map(([l, j]) => { const v = pVar(vMed(tot(A26.filter(x => x.m === m)), k), vMed(tot(l.filter(x => x.m === m)), k)); return v == null ? null : regsC[j] + '=' + v; }).filter(Boolean));
+  let regsC = ['2026-11-01'];
+  conf(JSON.stringify(await lerVar('r')) === JSON.stringify(varEsp('r', [B26])) && JSON.stringify(await lerVar('c')) === JSON.stringify(varEsp('c', [B26])), 'variação % por mês: um gráfico da receita e um do COGS, valores = conta', {r: await lerVar('r'), esp: varEsp('r', [B26])});
+  await page.locator('#g-var-r .g-var').nth(1).hover();
+  conf(/^fev\/2026 · receita US\$ 40\.000,00 base 01\/10\/2026 \+5,0% 01\/11\/2026: US\$ 42\.000,00 \(\+2\.000,00\)/.test(await txt(page, '#g-var-r .g-tip')), 'tooltip do mês: base, comparado e a diferença', await txt(page, '#g-var-r .g-tip'));
   await foto(page, 'r2_graficos');
 
   console.log('Mostrar: Receita | COGS | Receita e COGS | Margem');
   conf((await page.$$eval('.cx-sel .g-mets button', l => l.map(b => b.textContent))).join('|') === 'Receita|COGS|Receita e COGS|Margem' && await page.locator('.cx-sel .g-mets button.on[data-gmet="ambos"]').count() === 1, 'seletor com as 4 opções; padrão "Receita e COGS"');
   await page.click('.cx-sel [data-gmet="rec"]');
   T = await lerCx(page);
-  conf(T.h3.slice(0, 2).join() === 'Receita,Δ%' && !T.h3.includes('COGS') && JSON.stringify(T.ft) === JSON.stringify(celulasTotal(A26, B26, ['r'])) && (await page.$$eval('#g-evo path[data-k]', l => [...new Set(l.map(p => p.dataset.k))])).join() === 'r', 'só Receita: tabela e gráficos só com a receita');
+  cs = await cards(page);
+  conf(T.h3.slice(0, 2).join() === 'Receita,Δ%' && !T.h3.includes('COGS') && JSON.stringify(T.ft) === JSON.stringify(celulasTotal(A26, B26, ['r'])) && (await page.$$eval('#g-evo path[data-k]', l => [...new Set(l.map(p => p.dataset.k))])).join() === 'r' && await page.locator('.g-var-box').count() === 1 && cs.map(c => c[0]).join('|') === 'Receita · 01/11/2026|Operações · 01/11/2026', 'só Receita: cards, gráficos e tabela só com a receita', cs.map(c => c[0]));
   await page.click('.cx-sel [data-gmet="cogs"]');
   T = await lerCx(page);
-  conf(!T.h3.includes('Receita') && JSON.stringify(T.ft) === JSON.stringify(celulasTotal(A26, B26, ['c'])), 'só COGS');
+  cs = await cards(page);
+  conf(!T.h3.includes('Receita') && JSON.stringify(T.ft) === JSON.stringify(celulasTotal(A26, B26, ['c'])) && cs.map(c => c[0]).join('|') === 'COGS · 01/11/2026|Operações · 01/11/2026' && await page.locator('#g-var-c').count() === 1 && !(await page.locator('#g-var-r').count()), 'só COGS: card, gráficos e tabela só com o COGS', cs.map(c => c[0]));
   await page.click('.cx-sel [data-gmet="mg"]');
   T = await lerCx(page);
   const iFev = h2esp.indexOf('fev/2026') * 2;
-  conf(T.h3[0] === 'Margem' && JSON.stringify(T.ft) === JSON.stringify(celulasTotal(A26, B26, ['m'])) && T.ft[iFev] === '-1.000,00' && T.ft[iFev + 1] === '+80,0%', 'só Margem: fev/2026 com margem negativa (−5.000 → −1.000 = +80%)', T.ft.slice(iFev, iFev + 2));
+  cs = await cards(page);
+  conf(T.h3[0] === 'Margem' && JSON.stringify(T.ft) === JSON.stringify(celulasTotal(A26, B26, ['m'])) && T.ft[iFev] === '-1.000,00' && T.ft[iFev + 1] === '+80,0%' && cs.map(c => c[0]).join('|') === 'Margem · 01/11/2026|Operações · 01/11/2026', 'só Margem: card, gráficos e tabela; fev/2026 com margem negativa (−5.000 → −1.000 = +80%)', T.ft.slice(iFev, iFev + 2));
+  await page.click('.cx-card [data-gmet="rec"]');
+  conf(await page.locator('.cx-sel [data-gmet="rec"].on').count() === 1 && await page.locator('.g-var-box').count() === 1, 'o "Mostrar" também fica em cada gráfico e na tabela (e vale para a aba toda)');
+  await page.click('.cx-sel [data-gmet="mg"]');
   await page.click('.tab[data-tab="receita"]');
   await page.waitForSelector('#graf .g-svg');
   const legMg = await page.$$eval('#g-leg span', l => l.map(s => s.textContent));
@@ -226,7 +256,7 @@ const carregar = (page, nome, P) => page.setInputFiles('#inArq', [{name: nome, m
   await page.waitForSelector('.kpis');
   conf(await page.locator('.g-card [data-gmet="ambos"].on').count() === 1, 'a escolha fica guardada');
 
-  console.log('Filtros, Agora, inverter');
+  console.log('Filtros, Agora, trocar a base');
   await page.click('.tab[data-tab="cmp"]');
   await page.selectOption('[data-f="ano"]', '2027');
   T = await lerCx(page);
@@ -237,21 +267,17 @@ const carregar = (page, nome, P) => page.setInputFiles('#inArq', [{name: nome, m
   const sA = A26.filter(x => ['o4', 'o5'].includes(x.k)), sB = B26.filter(x => ['o4', 'o7'].includes(x.k));
   conf(cs[0][1] === 'US$ ' + nf2(tot(sB).r) && cs[0][2] === 'base 01/10/2026: US$ ' + nf2(tot(sA).r), 'filtro de cliente (Shell) vale na comparação', cs[0]);
   await page.click('[data-a="limparf"]');
-  await page.selectOption('[data-cmp="b"]', 'agora');
-  await page.selectOption('[data-cmp="a"]', '2026-11-01');
+  await page.selectOption('[data-cmp="base"]', '2026-11-01');
+  conf(/Marque pelo menos um registro/.test(await txt(page, '#app')) && !(await chipsOn()).length, 'a base vira 01/11 (que estava em "Comparar com"): pede para marcar um registro');
+  await page.check('.cx-chip input[data-cmpsel="agora"]');
   cs = await cards(page);
   conf(cs.slice(0, 3).every(c => c[3] === 'sem alteração'), 'base 01/11 × Agora (os mesmos arquivos): sem alteração', cs.map(c => c[3]));
-  await page.selectOption('[data-cmp="a"]', '2026-10-01');
-  await page.selectOption('[data-cmp="b"]', '2026-11-01');
-  await page.click('[data-a="cmpInverter"]');
+  await page.uncheck('.cx-chip input[data-cmpsel="agora"]');
+  await page.check('.cx-chip input[data-cmpsel="2026-10-01"]');
   cs = await cards(page);
-  conf(await page.inputValue('[data-cmp="a"]') === '2026-11-01' && cs[0][1] === 'US$ ' + nf2(ta.r) && cs[0][3] === fDelta(ta.r - tb.r) + ' (' + fPct(tb.r, ta.r) + ')', '⇄ inverte base e comparação', cs[0]);
-  await page.click('[data-a="cmpInverter"]');
-  await page.selectOption('[data-cmp="b"]', '2026-10-01');
-  await page.selectOption('[data-cmp="a"]', '2026-10-01');
-  conf(/Escolha dois registros diferentes/.test(await txt(page, '#app')), 'mesmo registro dos dois lados: avisa');
-  await page.selectOption('[data-cmp="b"]', '2026-11-01');
-
+  conf(cs[0][1] === 'US$ ' + nf2(ta.r) && cs[0][3] === fDelta(ta.r - tb.r) + ' (' + fPct(tb.r, ta.r) + ')', 'base 01/11 × 01/10: a comparação ao contrário', cs[0]);
+  await page.selectOption('[data-cmp="base"]', '2026-10-01');
+  await page.check('.cx-chip input[data-cmpsel="2026-11-01"]');
   console.log('Excel da comparação');
   const [dl] = await Promise.all([page.waitForEvent('download'), page.click('[data-a="cxExcel"]')]);
   const X = await page.evaluate(b => { const w = XLSX.read(b, {type: 'base64', cellNF: true}), ws = w.Sheets[w.SheetNames[0]]; return {abas: w.SheetNames, aoa: XLSX.utils.sheet_to_json(ws, {header: 1, defval: null})}; }, fs.readFileSync(await dl.path()).toString('base64'));
@@ -259,30 +285,69 @@ const carregar = (page, nome, P) => page.setInputFiles('#inArq', [{name: nome, m
   conf(dl.suggestedFilename() === 'EARL_Gerencial_comparacao_2026-10-01_x_2026-11-01_2026_2026-11-05.xlsx' && X.abas[0] === 'Comparação' && X.aoa[0].slice(0, 8).join() === 'Nível,Cliente,Contrato,Sonda,Poço,Operação,O que mudou,jan/2026' && X.aoa[2].slice(7, 10).join() === 'Base,Comparar,Δ%', 'Excel: cabeçalho em 3 linhas (mês › medida › base, comparar, Δ%)', X.aoa.slice(0, 3).map(l => l.slice(0, 10)));
   conf(totX[0] === 'Total' && Math.abs(totX[totX.length - 8] - ta.r) < 0.01 && Math.abs(totX[totX.length - 7] - tb.r) < 0.01 && Math.abs(totX[totX.length - 5] - Math.round((tb.r - ta.r) / ta.r * 10000) / 100) < 0.01, 'Excel: total com base, comparado e Δ%', totX.slice(-8));
 
+  console.log('Vários registros ao mesmo tempo (01/10 base, 01/11 e 01/12)');
+  await carregar(page, 'v3.json', V3);
+  await page.waitForTimeout(300);
+  await registrar(page, '2026-12-01', 'forecast de dezembro');
+  await page.click('.tab[data-tab="cmp"]');
+  await page.selectOption('[data-cmp="base"]', '2026-10-01');
+  await page.check('.cx-chip input[data-cmpsel="2026-11-01"]');
+  await page.check('.cx-chip input[data-cmpsel="2026-12-01"]');
+  conf((await chipsOn()).join() === '2026-11-01,2026-12-01', 'base 01/10, comparando com 01/11 e 01/12 ao mesmo tempo');
+  const tc = tot(C26);
+  cs = await cards(page);
+  conf(cs[0][0] === 'Receita · 01/12/2026' && cs[0][1] === 'US$ ' + nf2(tc.r) && cs[0][2] === 'base 01/10/2026: US$ ' + nf2(ta.r) && cs[0][3] === '01/11/2026: US$ ' + nf2(tb.r) + ' · ' + fPct(ta.r, tb.r) && cs[0][4] === '01/12/2026: US$ ' + nf2(tc.r) + ' · ' + fPct(ta.r, tc.r), 'card Receita: a base e cada registro, com a variação sobre a base', cs[0]);
+  conf(/^01\/11\/2026: 6 · 1 nova\(s\) · 1 removida\(s\)$/.test(cs[3][3]) && /^01\/12\/2026: 6 · 2 nova\(s\) · 2 removida\(s\)$/.test(cs[3][4]), 'card Operações: novas e removidas em cada registro', cs[3]);
+  evo = await lerEvo();
+  conf(evo.map(e => e.k).join() === '2026-10-01,2026-11-01,2026-12-01' && evo[2].v.join() === 'r=' + tc.r + ',c=' + tc.c && evo[2].pl.join() === [fPct(ta.r, tc.r), fPct(ta.c, tc.c)].join(), 'evolução com os 3 registros; 01/12 com a variação sobre a base', evo.map(e => [e.k, e.pl]));
+  regsC = ['2026-11-01', '2026-12-01'];
+  const vr = await lerVar('r');
+  conf(JSON.stringify(vr) === JSON.stringify(varEsp('r', [B26, C26])) && (await page.$$eval('#g-leg-var-r span', l => l.map(s => s.textContent))).join() === '01/11/2026,01/12/2026', 'variação % por mês: uma barra para cada registro (legenda 01/11 e 01/12), valores = conta', vr);
+  T = await lerCx(page);
+  conf(T.h3.slice(0, 8).join() === 'Receita 01/11/26,Δ%,Receita 01/12/26,Δ%,COGS 01/11/26,Δ%,COGS 01/12/26,Δ%' && T.h3.slice(-7).join() === 'Base,01/11/26,Δ US$,Δ%,01/12/26,Δ US$,Δ%', 'tabela: em cada mês o valor e o Δ% de cada registro; no total, a base e cada registro', T.h3);
+  const ftN = celulasTotalN(A26, [B26, C26], ['r', 'c']);
+  conf(JSON.stringify(T.ft) === JSON.stringify(ftN), 'linha de total com os 3 registros = conta (' + ftN.length + ' células)', {tela: T.ft.slice(-14), esp: ftN.slice(-14)});
+  await page.click('[data-cxmostrar="4"]');
+  T = await lerCx(page);
+  const st3 = Object.fromEntries(T.rows.filter(r => r.cls.includes('mx-op')).map(r => [r.rot, r.sub]));
+  conf(st3['05/02/2026 · Squeeze'] === '01/11/26: valor mudou · 01/12/26: removida' && st3['10/09/2026 · Squeeze'] === '01/11/26: — · 01/12/26: nova', 'cada operação diz o que mudou em cada registro', st3);
+  await page.click('[data-cxmostrar="1"]');
+  await page.click('.cx-sel [data-gmet="cogs"]');
+  T = await lerCx(page);
+  conf(JSON.stringify(T.ft) === JSON.stringify(celulasTotalN(A26, [B26, C26], ['c'])) && (await cards(page)).map(c => c[0]).join('|') === 'COGS · 01/12/2026|Operações · 01/12/2026', 'só COGS com os 3 registros');
+  await page.click('.cx-sel [data-gmet="ambos"]');
+  await page.click('[data-a="cmpTodos"]');
+  conf((await chipsOn()).join() === '2026-11-01,2026-12-01,agora' && (await lerEvo()).length === 4, '"Todos" marca todos os registros e o Agora');
+  const [dlN] = await Promise.all([page.waitForEvent('download'), page.click('[data-a="cxExcel"]')]);
+  const XN = await page.evaluate(b => { const w = XLSX.read(b, {type: 'base64'}); return XLSX.utils.sheet_to_json(w.Sheets[w.SheetNames[0]], {header: 1, defval: null}); }, fs.readFileSync(await dlN.path()).toString('base64'));
+  conf(XN[2].slice(7, 14).join() === 'Base,01/11/2026,Δ%,01/12/2026,Δ%,Agora,Δ%' && /_x_2026-11-01_2026-12-01_agora_/.test(dlN.suggestedFilename()), 'Excel com os vários registros (base e, para cada um, valor e Δ%)', XN[2].slice(7, 14));
+  await foto(page, 'r4_varios');
+  await page.uncheck('.cx-chip input[data-cmpsel="agora"]');
+
   console.log('Remover, exportar, importar, armazenamento cheio');
   const [dlj] = await Promise.all([page.waitForEvent('download'), page.click('[data-a="regExport"]')]);
   const exp = JSON.parse(fs.readFileSync(await dlj.path(), 'utf8'));
   const expPath = path.join(TMP, 'registros.json'); fs.writeFileSync(expPath, JSON.stringify(exp));
-  conf(dlj.suggestedFilename() === 'EARL_Gerencial_registros_2026-11-05.json' && exp.tipo === 'EARL-Gerencial-Registros' && exp.registros.length === 2, 'exporta os 2 registros em .json');
+  conf(dlj.suggestedFilename() === 'EARL_Gerencial_registros_2026-11-05.json' && exp.tipo === 'EARL-Gerencial-Registros' && exp.registros.length === 3, 'exporta os 3 registros em .json');
   page.once('dialog', d => d.accept());
   await page.click('[data-regdel="2026-10-01"]');
   regs = await page.evaluate(() => JSON.parse(localStorage.getItem('earlger:registros_v1')));
-  conf(regs.map(r => r.data).join() === '2026-11-01' && await page.inputValue('[data-cmp="a"]') === '2026-11-01' && await page.inputValue('[data-cmp="b"]') === 'agora', 'remove 01/10 (com confirmação); a comparação passa a 01/11 × Agora');
+  conf(regs.map(r => r.data).join() === '2026-11-01,2026-12-01' && await page.inputValue('[data-cmp="base"]') === '2026-11-01' && (await chipsOn()).join() === '2026-12-01', 'remove 01/10 (com confirmação); a comparação volta ao padrão: 01/11 × 01/12');
   page.once('dialog', d => d.dismiss());
   await page.click('[data-regdel="2026-11-01"]');
-  conf((await page.evaluate(() => JSON.parse(localStorage.getItem('earlger:registros_v1')).length)) === 1, 'cancelar a confirmação não remove');
+  conf((await page.evaluate(() => JSON.parse(localStorage.getItem('earlger:registros_v1')).length)) === 2, 'cancelar a confirmação não remove');
   await page.setInputFiles('#inReg', expPath);
   await page.waitForTimeout(300);
   regs = await page.evaluate(() => JSON.parse(localStorage.getItem('earlger:registros_v1')));
-  conf(regs.map(r => r.data).join() === '2026-10-01,2026-11-01' && /1 registro\(s\) novo\(s\) · 0 substituído\(s\) por um mais novo · 1 já estava\(m\) aqui/.test(await txt(page, '#msg')), 'importa o .json: volta o 01/10; o 01/11 já estava', await txt(page, '#msg'));
+  conf(regs.map(r => r.data).join() === '2026-10-01,2026-11-01,2026-12-01' && /1 registro\(s\) novo\(s\) · 0 substituído\(s\) por um mais novo · 2 já estava\(m\) aqui/.test(await txt(page, '#msg')), 'importa o .json: volta o 01/10; os outros já estavam', await txt(page, '#msg'));
   await page.reload();
   await page.waitForSelector('.kpis');
-  conf((await page.$$eval('.tab', l => l.map(b => b.textContent.trim())))[1] === 'Comparar registros (2)', 'os registros continuam depois de reabrir');
+  conf((await page.$$eval('.tab', l => l.map(b => b.textContent.trim())))[1] === 'Comparar registros (3)', 'os registros continuam depois de reabrir');
   await page.evaluate(() => { const S0 = Storage.prototype.setItem; Storage.prototype.setItem = function (k, v) { if (k === 'earlger:registros_v1') throw new DOMException('cheio', 'QuotaExceededError'); return S0.call(this, k, v); }; });
   await page.click('.bar [data-a="regAbrir"]');
   await page.fill('#dlg .reg-data', '2026-11-05');
   await page.click('#dlg .reg-ok');
-  conf(/armazenamento cheio/.test(await txt(page, '#msg')) && await page.locator('#dlg').count() === 1 && (await page.$$eval('.tab', l => l.map(b => b.textContent.trim())))[1] === 'Comparar registros (2)', 'armazenamento cheio: avisa, a janela fica aberta e nada muda', await txt(page, '#msg'));
+  conf(/armazenamento cheio/.test(await txt(page, '#msg')) && await page.locator('#dlg').count() === 1 && (await page.$$eval('.tab', l => l.map(b => b.textContent.trim())))[1] === 'Comparar registros (3)', 'armazenamento cheio: avisa, a janela fica aberta e nada muda', await txt(page, '#msg'));
   await page.keyboard.press('Escape');
 
   console.log('Celular');
