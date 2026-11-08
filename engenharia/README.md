@@ -48,12 +48,28 @@ A Engenharia do EARL separada do resto do sistema, para usar **sem servidor, sem
   - **Atenção:** o valor vale para todas as operações, inclusive as já lançadas; ao mudar um valor, o COGS delas muda junto.
 - **Custos (COGS):** botão na tela de Contratos, para casing equipment e outros materiais. As químicas ficam no banco de Químicos; se o mesmo SAP estiver nos dois, vale o do banco de Químicos. Custo unitário pelo SAP, em US$ e/ou R$. Pode ser digitado ou carregado de planilha (colunas `SAP`, `Produto`, `Unidade`, `COGS US$` e/ou `COGS R$`; uma coluna só "COGS" vale como US$). O consumo da operação e a aba "Consumo e receita" mostram COGS e margem.
 - **⬇ Arquivo do gerencial:** botão na barra (e na aba Consumo e receita). O engenheiro marca os contratos sob a responsabilidade dele e gera um `.json` com os contratos (itens, saldos, valores, reajustes) e as operações (previsto com valores, consumo lançado, receita, COGS e risco). Esse arquivo vai para a pasta do SharePoint do gerencial e é lido pelo **EARL Gerencial** (`../gerencial`).
+- **Inventário das sondas:** aba em cada contrato (e na Visão geral), para lançar o **inventário real dos produtos químicos a bordo** de cada sonda do contrato.
+  - **Sondas do contrato:** as das operações do contrato e as cadastradas com o contrato. Uma sonda de fora entra por **＋ Contagem de outra sonda…**.
+  - **Contagem:** cada uma tem data, responsável e observação, e uma linha por produto (SAP, produto, unidade e quantidade a bordo).
+    - A primeira contagem de uma sonda começa com os produtos previstos nas operações dela.
+    - As seguintes começam com a última contagem e mostram a **contagem anterior** e a **diferença**: é só alterar o que mudou.
+    - Produto sem quantidade fica fora.
+    - Duas contagens da mesma sonda na mesma data: a nova substitui a antiga (o app pergunta antes).
+  - **Planilha:** **⬆ Carregar planilha** aceita uma planilha com as colunas `SAP` e `Quantidade`, a aba **DAR antiga** (uma coluna por sonda; o app usa a coluna da sonda) ou o próprio arquivo de inventário exportado. **⬇ Planilha / modelo** baixa a contagem.
+  - **Na tela:** um cartão por sonda (última contagem, há quantos dias, histórico) e a tabela **Inventário atual** (produtos × sondas, com total e busca, e Excel).
+- **⬇ Exportar planilhas:** botão na barra e na aba Inventário das sondas. O engenheiro marca os contratos e baixa **quatro planilhas Excel separadas**:
+  1. **Inventário das sondas**: a última contagem de cada sonda dos contratos, com uma aba Histórico com todas as contagens.
+  2. **Consumo de produtos químicos**: uma linha por operação e produto, com previsto e, nas operações concluídas, o consumo lançado.
+  3. **Casing equipment**: uma linha por operação e item, previsto e lançado.
+  4. **Pessoal**: uma linha por operação e função, com pessoas, dias e homem-dia previstos e lançados.
+
+  Todas trazem contrato, cliente, sonda, poço, operação, data, situação (Previsto/Concluído), contingência e risco. As operações canceladas não entram. **O Painel de Compras usa as planilhas 1 e 2 no lugar das abas DAR e Compilado Geral da planilha do Forecast**: no quadro "Engenharia" da aba Carregar Dados dele, carregue as planilhas de todos os contratos de uma vez.
 - **Consumo e receita:** aba nova na Engenharia.
   - **Num contrato:** receita em R$ e US$, receita por operação, saldo por item PPU (contratado, consumido, saldo e % usado), receita por mês e a lista das operações que já passaram e estão sem consumo lançado.
   - **Na Visão geral:** receita por contrato.
   - Tem filtro por período do serviço e **⬇ Excel** com as abas Operações, Itens e Lançamentos.
 - **Sondas:** botão na barra, para cadastrar sondas. O cadastro já vem com as 41 sondas offshore; as do Nordeste precisam ser cadastradas.
-- **Exportar dados e Importar dados:** botões na barra, para levar tudo de um computador para outro (veja abaixo).
+- **Exportar dados e Importar dados:** botões na barra, para levar tudo de um computador para outro (veja abaixo). O inventário das sondas vai junto.
 
 - **Espaço do navegador:** no Chrome e no Edge, todos os HTML abertos do disco (EARL completo, simulações, Engenharia, Gerencial e testes) dividem o mesmo espaço, de cerca de 5 milhões de caracteres. Quando ele enche, nenhum desses arquivos consegue salvar.
   - **Aviso:** a página inicial avisa quando o uso passa de 85% ou quando uma gravação é recusada.
@@ -135,6 +151,7 @@ node teste_bp/e2e_bp.js Contrato_BP_Teste_EARL.xlsx EARL_Engenharia_BP_teste.htm
   ```
 
   A pasta `node_modules` precisa de `react@18.2.0`, `react-dom@18.2.0`, `xlsx@0.18.5` e `jspdf@2.5.1`, as mesmas versões que o EARL carrega do cdnjs. Elas vão embutidas no HTML.
+- `eng_inventario.js` tem o inventário das sondas e as exportações separadas (e7): `db.invSondas = [{id, rigId, sonda, ctId, data, por, obs, itens:[{sap, nome, unid, qtd}], criadoEm, atualizadoEm}]`. Cada planilha tem uma aba "Sobre" com o Tipo (`EARL-Eng-Inventario`, `EARL-Eng-Quimicos`, `EARL-Eng-Casing`, `EARL-Eng-Pessoal`), que o Painel de Compras usa para reconhecer o arquivo. As datas são gravadas como datas do Excel. Se mudar as colunas, mude também a leitura no Painel de Compras (`COLUNAS_ENGENHARIA` em `painel_compras_quimicos.html`).
 - `eng_quimicos.js` tem o banco de produtos químicos (e6). A base inicial fica no `quimicos_base.json`, gerado pelo `gerar_quimicos_base.py` a partir da aba Forecast; o patch embute a base e a aplica uma vez no `loadDB` (flag `quimBaseV1`).
 - `eng_app.js` tem o código novo da e1 (e-mail do handover, aba Handovers, sondas e backup); `eng_contratos.js`, o da e2 em diante (contratos, valores, reajustes, consumo, receita, COGS, risco, arquivo do gerencial e o painel da página inicial). `eng.css` tem o visual novo.
 - Cada troca do patch confere que o trecho original existe. Com `CHECAR=1`, o script lista todas as falhas de uma vez.
@@ -143,5 +160,13 @@ node teste_bp/e2e_bp.js Contrato_BP_Teste_EARL.xlsx EARL_Engenharia_BP_teste.htm
   - `node tests/e2e_engenharia.js EARL_Engenharia.html [pasta-das-telas]`: 62 verificações (abertura, handover e e-mail, sondas, exportar e importar substituindo);
   - `node tests/e2e_quimicos.js EARL_Engenharia.html [pasta-das-telas] [planilha do BP]`: 36 verificações (37 com a planilha). Cobre a base, os avisos, baixar a planilha, atualizar juntando e substituindo, a planilha no formato do Forecast, a edição na tela, o histórico, o COGS das operações, exportar e a base aplicada uma vez;
   - `node tests/e2e_espaco.js EARL_Engenharia.html [pasta-das-telas]`: 12 verificações (espaço quase cheio, gravação recusada, apagar simulação antiga, gravação de volta e armazenamento bloqueado);
+  - `node tests/e2e_inventario.js EARL_Engenharia.html [pasta-das-telas]`: 54 verificações. Cobre:
+    - as sondas do contrato;
+    - a primeira contagem, com os produtos previstos, e a seguinte, com a contagem anterior e a diferença;
+    - a mesma data substituindo a contagem antiga, e a validação;
+    - as planilhas no modelo DAR antigo e no do app;
+    - outra sonda, o histórico, excluir e a matriz;
+    - as 4 planilhas exportadas, conferidas célula a célula;
+    - exportar e importar dados, a recarga da página e a tela do celular.
   - `node tests/e2e_contratos.js EARL_Engenharia.html [pasta-das-telas]`: 76 verificações (contratos, planilhas, reajustes, consumo, receita, juntar dados de outro computador, tela pequena 1366×768, COGS e risco, e o painel Receita e COGS com os filtros).
-- Versão: `EARL_VERSION = 'EARL Engenharia e6 (base v115)'`. O teste do fluxo completo com o Gerencial está em `../gerencial/tests/e2e_gerencial.js`.
+- Versão: `EARL_VERSION = 'EARL Engenharia e7 (base v115)'`. O teste do fluxo completo com o Gerencial está em `../gerencial/tests/e2e_gerencial.js`.

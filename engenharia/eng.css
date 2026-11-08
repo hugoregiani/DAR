@@ -194,3 +194,36 @@ td.ec-desc{font-size:12.5px;line-height:1.35}
 .ec-esp-total{display:flex;flex-direction:column;gap:6px;margin:6px 0 10px;font-size:13px}
 .ec-esp-total .ec-barra{height:10px}
 .ec-esp-tab td:first-child{min-width:240px}
+/* e7: inventário das sondas e exportações separadas */
+.ei-modal{width:min(1080px,97vw)}
+.ei-dados{grid-template-columns:repeat(3,minmax(0,1fr))}
+.ei-itens td{padding:3px 6px}
+.ei-itens tr.ei-vazia td{background:#FBFBF7}
+.ei-itens .ei-qtd{width:120px;text-align:right}
+.ei-mais{color:#304220;font-weight:700}
+.ei-menos{color:#B4561E;font-weight:700}
+.ei-msg-erro{background:#FBEFEF;border-color:#EBC6C6;color:#8A1B1B}
+.ei-resumo{font-size:12.5px;color:var(--ink-2)}
+.ei-cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:10px;margin:6px 0 4px}
+.ei-card{background:var(--surface,#fff);border:1px solid var(--line,#E2E5E7);border-left:4px solid #6D8B4A;border-radius:14px;padding:10px 12px;display:flex;flex-direction:column;gap:6px}
+.ei-card.ei-sem{border-left-color:#C9CED2}
+.ei-card.ei-velha{border-left-color:#D08A2E}
+.ei-card-t{display:flex;align-items:baseline;gap:8px;flex-wrap:wrap}
+.ei-card-t b{font-size:15px}
+.ei-card-t span{font-size:12px;color:var(--ink-2)}
+.ei-card-l{font-size:12.5px;color:var(--ink-2);line-height:1.5}
+.ei-dias{white-space:nowrap;margin-left:6px;font-size:11px;font-weight:700;color:#304220;background:#F1F5EC;border-radius:999px;padding:1px 7px}
+.ei-dias-v{color:#6B4E0E;background:#FBF4E4}
+.ei-card-b{display:flex;gap:6px;flex-wrap:wrap}
+.ei-card-b .btn-o,.ei-card-b .btn-r{font-size:11.5px;padding:4px 10px}
+.ei-hist-l{display:flex;flex-direction:column;gap:3px;border-top:1px solid var(--line,#E2E5E7);padding-top:6px}
+.ei-hist-i{display:flex;align-items:center;gap:8px;font-size:12px}
+.ei-hist-i span:first-child{font-weight:700;min-width:78px}
+.ei-hist-i span:nth-child(2){flex:1;color:var(--ink-2)}
+.ei-hist-i .btn-o{font-size:11px;padding:2px 8px}
+.ei-mat-wrap{max-height:62vh;overflow:auto}
+.ei-mat thead th{position:sticky;top:0;z-index:1;background:var(--surface,#fff)}
+.ei-th-data{font-size:10.5px;font-weight:400;color:var(--ink-3)}
+.ei-exp-tipos{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-top:12px}
+@media(max-width:760px){.ei-exp-tipos{grid-template-columns:1fr}.ei-dados{grid-template-columns:1fr}}
+.ei-exp-feito{font-size:11.5px!important;color:#304220!important;font-weight:700;flex:0!important;word-break:break-all}

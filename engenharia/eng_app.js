@@ -729,7 +729,8 @@
     handovers: (d.handovers || []).length,
     sondas: (d.rigs || []).length,
     templates: (d.opTemplates || []).length,
-    quimicos: (d.quimicos || []).length
+    quimicos: (d.quimicos || []).length,
+    inventarios: (d.invSondas || []).length
   });
   var engExportar = () => {
     try {
@@ -815,7 +816,7 @@
     var ra = engResumoDb(db),
       rb = engResumoDb(im.dados),
       rj = engResumoDb(engMesclarDb(db, im.dados));
-    var linhas = [['Contratos', 'contratos'], ['Itens com valor', 'precos'], ['Reajustes', 'reajustes'], ['Operações', 'operacoes'], ['Consumos lançados', 'consumos'], ['Handovers', 'handovers'], ['Sondas', 'sondas'], ['Templates', 'templates'], ['Produtos químicos', 'quimicos']];
+    var linhas = [['Contratos', 'contratos'], ['Itens com valor', 'precos'], ['Reajustes', 'reajustes'], ['Operações', 'operacoes'], ['Consumos lançados', 'consumos'], ['Handovers', 'handovers'], ['Sondas', 'sondas'], ['Templates', 'templates'], ['Produtos químicos', 'quimicos'], ['Contagens de inventário das sondas', 'inventarios']];
     var aplicar = modo => {
       var final = modo === 'juntar' ? engMesclarDb(db, im.dados) : im.dados;
       if (!saveDB(final)) {
@@ -1103,7 +1104,7 @@
   }, "Qu\xEDmicos"), engH("button", {
     className: "btn-o eng-exportar",
     onClick: engExportar,
-    title: "Baixa um arquivo .json com todos os dados (contratos, valores, reajustes, opera\xE7\xF5es, consumos, handovers, sondas, templates e o banco de qu\xEDmicos) para guardar ou levar para outro computador"
+    title: "Baixa um arquivo .json com todos os dados (contratos, valores, reajustes, opera\xE7\xF5es, consumos, handovers, sondas, templates, o banco de qu\xEDmicos e o invent\xE1rio das sondas) para guardar ou levar para outro computador"
   }, "⬇ Exportar dados"), engH("button", {
     className: "btn-o eng-importar",
     onClick: () => engRestRef.current && engRestRef.current.click(),
@@ -1112,7 +1113,11 @@
     className: "btn-o eng-gerencial",
     onClick: abrirEngGer,
     title: "Gera o arquivo dos seus contratos para a pasta do SharePoint do gerencial"
-  }, "\u2B07 Arquivo do gerencial"), engH("input", {
+  }, "\u2B07 Arquivo do gerencial"), engH("button", {
+    className: "btn-o eng-planilhas",
+    onClick: () => abrirEngExp(),
+    title: "Baixa planilhas separadas dos contratos marcados: invent\xE1rio das sondas, consumo de produtos qu\xEDmicos, casing equipment e pessoal (o Painel de Compras usa o invent\xE1rio e o consumo de qu\xEDmicos)"
+  }, "\u2B07 Exportar planilhas"), engH("input", {
     ref: engRestRef,
     type: "file",
     accept: "application/json,.json",

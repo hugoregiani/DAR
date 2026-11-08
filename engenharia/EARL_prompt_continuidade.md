@@ -4,7 +4,7 @@
 
 > **Regra de entrega (pedido do usuário, 05/11/2026):** sempre que houver alteração em qualquer arquivo (EARL, EARL Engenharia, EARL Gerencial, testes), **enviar junto este prompt de continuidade atualizado** — com o que foi feito, o que está pendente e como continuar — e commitá-lo junto com a alteração. Antes de entregar, rodar os testes (os novos e todos os anteriores) e dizer o resultado.
 >
-> **Última atualização:** 05/11/2026 — EARL Gerencial g13 (15 linhas visíveis com rolagem em todas as tabelas; Itens PPU com Preço unitário ao lado do % usado e consumido/período/a realizar/projetado em quantidade e US$). Ver a seção 4-E.
+> **Última atualização:** 08/11/2026 — EARL Engenharia e7: aba **Inventário das sondas** em cada contrato (contagens por data) e **⬇ Exportar planilhas** (inventário, consumo de químicos, casing e pessoal, em arquivos separados). O **Painel de Compras** (outro repositório, `hugoregiani/painel-compras-quimicos`) passou a ler o inventário e o consumo de químicos dessas planilhas no lugar das abas DAR e Compilado Geral do Forecast. Antes, em 05/11/2026: EARL Gerencial g13 (15 linhas visíveis com rolagem; Itens PPU em US$). Ver a seção 4-E.
 
 ---
 
@@ -78,7 +78,7 @@ O CSP está em `globalHeaders`. Ele precisa de `'unsafe-inline'` e `'unsafe-eval
 
 ---
 
-## 4-E. Desmembramento: EARL Engenharia (avulso) e1 a e6, EARL Gerencial g2–g13 e teste BP — pasta `engenharia/` do repositório `hugoregiani/DAR`
+## 4-E. Desmembramento: EARL Engenharia (avulso) e1 a e7, EARL Gerencial g2–g13 e teste BP — pasta `engenharia/` do repositório `hugoregiani/DAR`
 
 Pedido do Hugo (01/11/2026): como o EARL ainda não pode ser usado online, separar a **Engenharia** num HTML próprio, **sem login**, e trocar o envio do handover (que ia para a Coordenação/Logística) por um **e-mail .eml** gerado no app. Parte do `EARL_HAL_CMT_115_SIMULACAO.html` (compilado) pelo `engenharia/patch_engenharia.py`, que insere `engenharia/eng_app.js` (código novo, dentro do `App`, antes de `renderHandover`) e `engenharia/eng.css`. Saída: `engenharia/EARL_Engenharia.html` (~8,4 MB). Versão: `EARL_VERSION = 'EARL Engenharia e1 (base v115)'`.
 
@@ -419,6 +419,64 @@ Pedido do Hugo: nas tabelas das abas Receita, Comparar registros, Contratos, Ite
 - **Itens PPU** (`agregar` → `A.ppu`): por contrato e item, `cons/consU` (realizado de todas as operações concluídas do contrato), `per/perU` (concluídas com data do serviço no período), `aR/aRU` (previsto das não concluídas, todo o contrato, × `fatorOp`), `proj/projU` = cons + aR. US$ pela linha do arquivo (`valorUsd`, preço da data da operação) ou qtd × preço do item (`valUsd`). Colunas: Contrato, Item, Descrição, Unid., Contratado, Consumido, Saldo, % usado, Preço unitário (US$ e R$), Realizado US$, Lançado no período, Seleção US$, A realizar, A realizar US$, Projetado, Projetado US$; total das 4 colunas em US$ das linhas visíveis. Aba "Itens PPU" do Excel consolidado com as mesmas colunas (preço em US$ e R$ separados).
 - **Câmbio:** o Engenharia guarda, por item do contrato, o preço em US$ e em R$ (com os reajustes); não há taxa de câmbio por data. Se o R$ tiver de sair do US$ pela taxa da data da operação, isso é uma mudança no Engenharia (tabela de câmbio por data) — **pendente**, a combinar com o usuário.
 - **Testes:** `e2e_tabelas` 53, `e2e_registros` 66, `e2e_matriz` 48, `e2e_compartilhar` 27, `e2e_gerencial` 62, `e2e_bp` 56; Engenharia: `e2e_engenharia` 62, `e2e_contratos` 76, `e2e_quimicos` 36, `e2e_espaco` 12.
+
+### e7 (08/11/2026): inventário das sondas e planilhas separadas para o Painel de Compras
+
+Pedido do Hugo: "eu uso esse app [Painel de Compras] para a análise de compra de aditivos. eu normalmente importo uma planilha com a aba compilado geral e DAR... como agora estamos utilizando uma versão HTML offline para a engenharia... Crie no app da engenharia uma aba para que seja possível inserir o inventário real de produto químico de cada sonda daquele contrato e... uma exportação dessas informações e das informações de consumo de produtos químicos, casing equipment e pessoal, separadamente. Depois... revise o painel de compras para que eu passe a utilizar as informações extraídas ao invés da importação da planilha no modelo antigo."
+
+O código novo está em `engenharia/eng_inventario.js`, inserido pelo patch depois do `eng_quimicos.js`. A versão é `EARL Engenharia e7 (base v115)`.
+
+- **Dados:** `db.invSondas = [{id, rigId, sonda, ctId, data, por, obs, itens:[{sap, nome, unid, qtd}], criadoEm, atualizadoEm}]`. Cada registro é uma contagem física de uma sonda numa data.
+  - A mais recente de cada sonda é o inventário atual. Vale entre contratos, porque o inventário é da sonda.
+  - Mesma sonda e mesma data: a contagem nova substitui a antiga, depois de confirmação.
+  - O exportar/importar dados leva as contagens (`engResumoDb.inventarios`, linha "Contagens de inventário das sondas"). No "juntar", vale a contagem com o `atualizadoEm` mais novo.
+- **Aba "Inventário das sondas"** (`planView 'inv'`, `renderEngInventario`), no contrato e na Visão geral:
+  - **Sondas do contrato** (`engInvRigsDoCt`): as das operações do contrato (`engGerOps`), as que já têm contagem lançada nele e as cadastradas com o contrato (campo `contract` da sonda, por nome ou número).
+  - A Visão geral junta as sondas de todos os contratos. O filtro "Sonda" da barra vale aqui.
+  - **Tela:** cartões com os KPIs (sondas, com contagem, contagem com mais de 30 dias, produtos a bordo). Um cartão por sonda (última contagem, há N dias, responsável, ＋ Nova contagem, ✎ Editar e Histórico), "＋ Contagem de outra sonda…" e a matriz "Inventário atual" (produtos × sondas, com total, busca e Excel).
+- **Contagem** (`engInvAbrir`/`renderEngInvEd`/`engInvSalvar`):
+  - **Campos:** data, responsável (padrão `hoMail.nome`), contrato e observação. Uma linha por produto: SAP, produto, unidade, contagem anterior, quantidade a bordo e diferença.
+  - **Catálogo** (`engInvCat`): o `chemCatalog` do EARL (o mesmo das operações) mais o banco de Químicos.
+  - **Começo:** a primeira contagem começa com os produtos das operações futuras da sonda (`engInvPrevistos`), sem quantidade. As seguintes começam com a última contagem.
+  - **Ferramentas:** "＋ Produto" (datalist SAP — nome), "⇩ Produtos previstos nas operações", "⬆ Carregar planilha" e "⬇ Planilha / modelo".
+  - **Planilha** (`engInvLerPlanilha`): acha as colunas SAP e de quantidade pelo nome. Aceita a aba DAR antiga (usa a coluna da sonda) e o arquivo de inventário do app (filtra pela coluna Sonda).
+  - **Validação:** data, SAP repetido e quantidade negativa ou inválida. Produto sem quantidade fica fora.
+  - **Registro:** a gravação e a exclusão ficam no log.
+- **⬇ Exportar planilhas** (`abrirEngExp`/`renderEngExp`/`engExpMontar`): botão na barra e na aba.
+  - **Contratos:** o padrão é o contrato aberto, ou a última escolha (`db.expCfg`). "Engenheiro responsável" grava em `hoMail.nome`.
+  - **Arquivos:** 4 botões, um por planilha, mais "⬇ Baixar as 4 planilhas". Cada .xlsx tem a aba de dados e a aba **"Sobre"**, com o Tipo `EARL-Eng-Inventario`/`EARL-Eng-Quimicos`/`EARL-Eng-Casing`/`EARL-Eng-Pessoal`, gerado em, engenheiro, app e contratos.
+  - **Formato:** datas como número de série do Excel com formato dd/mm/aaaa (não dependem do fuso); autofiltro.
+  - **Colunas comuns de operação** (`ENG_EXP_CAB_OP`): Contrato, Cliente, Sonda (`nomePetrobras` ou nome), Nome da sonda, Poço, Operação (`engExpOpTxt`: tipo + revestimento), Data da operação, Duração (dias), Situação (Concluído = com `ppuCons`; senão Previsto), Contingência, Risco (%) (`riscoRec`, 0–100), SO, WBS e ID da operação. As canceladas não entram.
+  - **Inventário:** aba Inventário com a última contagem de cada sonda dos contratos; sonda sem contagem sai com "(sem contagem)". Aba Histórico com todas as contagens.
+  - **Consumo de químicos e Casing:** SAP, Produto/Descrição, Unidade, Qtd. prevista (`chems`/`casingNeeds`), Qtd. realizada (`ppuCons.quim`/`cas`, só nas concluídas) e Data do serviço. Um produto só lançado entra com previsto 0. Operação sem item sai numa linha "(sem produtos químicos)".
+  - **Pessoal:** função, pessoas, dias e homem-dia previstos (pessoas × duração) e lançados (`ppuCons.pes`).
+- **Painel de Compras (repositório `hugoregiani/painel-compras-quimicos`):**
+  - **Quadro "Engenharia"** em Carregar Dados: vários arquivos de uma vez. O Consumo de químicos vira `raw.operacoes` e o Inventário vira `raw.darPorSonda`, nos mesmos formatos do Compilado Geral e do DAR, então o resto do painel não mudou.
+  - **Regras da leitura:**
+    - para cada contrato vale o arquivo mais novo;
+    - para cada sonda, a contagem mais recente;
+    - cada operação ganha um `col` fixo, calculado de Contrato + ID;
+    - as unidades são convertidas pelo Cadastro do painel (por exemplo, cloreto de potássio em "bag" vira KG ×25).
+  - O Forecast antigo continua aceito. A ferramenta local também lê as planilhas.
+  - Os detalhes estão no `CLAUDE.md` e no `PROMPT_CONTINUIDADE.md` daquele repositório. **Se mudar as colunas das planilhas aqui, mude a leitura lá** (`COLUNAS_ENGENHARIA`).
+- **Testes:**
+  - **Engenharia:** `tests/e2e_inventario.js`, 54 verificações:
+    - sondas do contrato;
+    - primeira contagem com os previstos e a segunda com a anterior e a diferença;
+    - validação e mesma data substituindo;
+    - planilha DAR antiga e do app;
+    - outra sonda, histórico, excluir e matriz;
+    - as 4 planilhas conferidas célula a célula;
+    - exportar/importar dados, recarga e celular.
+  - **Regressão:** `e2e_engenharia` 62, `e2e_contratos` 76, `e2e_quimicos` 36, `e2e_espaco` 12, `e2e_bp` 56; Gerencial: `e2e_gerencial` 62, `e2e_matriz` 48, `e2e_registros` 66, `e2e_tabelas` 53, `e2e_compartilhar` 27.
+  - **Painel de Compras:**
+    - `engenharia.js` 36: o mesmo cenário pelo Forecast e pelas planilhas dá números idênticos;
+    - `engenharia_bp.js` com o BP: o consumo exportado do teste BP bate com a aba Forecast da planilha original, nas 27 operações e 201 quantidades (com a conversão de unidade);
+    - os anteriores passam.
+- **Pendências:**
+  - o inventário é lançado à mão ou por planilha; quando o EARL completo estiver online, ele pode vir do DAR da página da sonda (`rigBordo`);
+  - os textos novos não estão em EN/ES;
+  - a conversão de unidade no Painel é feita ao processar. Ao cadastrar um ⇄ novo lá, é preciso reprocessar.
 
 ---
 
