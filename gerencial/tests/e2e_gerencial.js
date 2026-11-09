@@ -216,13 +216,13 @@ async function arquivoGerencial(page, nome, arq) {
   conf(await txt(p, '.k-ops b') === '0' && /Agora clique no mês final/.test(await txt(p, '.mes-pop')), 'clicou em dez: só dezembro (nenhuma operação) e pede o mês final', await txt(p, '.k-ops b'));
   await p.click('[data-mesb="10"]');
   conf(await txt(p, '.k-rec-usd b') === 'US$ 1.540,00' && await txt(p, '.k-ops b') === '3' && /^out – dez\/2026/.test(await txt(p, '.mes-box')) && !(await p.locator('.mes-pop').count()), 'depois em out: período out–dez/2026 (as 3 operações) e a caixa fecha', await txt(p, '.mes-box'));
-  await p.selectOption('[data-f="tri"]', '3');
-  conf(await txt(p, '.k-ops b') === '0' && await p.isDisabled('.mes-box') && /Q3 \(jul – set\) · vale o quarto/.test(await txt(p, '.mes-box')), 'Quarto Q3 vale no lugar dos meses: nenhuma operação; a caixa do mês fica travada', await txt(p, '.mes-box'));
+  await p.click('.q-box'); await p.click('[data-qb="3"]'); await p.click('[data-qb="3"]');
+  conf(await txt(p, '.k-ops b') === '0' && await p.isDisabled('.mes-box') && /vale o quarto/.test(await txt(p, '.mes-box')) && /^Q3 \(jul – set\)/.test(await txt(p, '.q-box')), 'Quarto Q3 vale no lugar dos meses: nenhuma operação; a caixa do mês fica travada', await txt(p, '.q-box'));
   await p.click('.tab[data-tab="receita"]');
   await p.click('.qc[data-q="4"]');
-  conf(await p.inputValue('[data-f="tri"]') === '4' && await txt(p, '.k-ops b') === '3' && await p.locator('.qc.on[data-q="4"]').count() === 1, 'clicar no card Q4 escolhe o Q4');
+  conf(/^Q4 \(out – dez\)/.test(await txt(p, '.q-box')) && await txt(p, '.k-ops b') === '3' && await p.locator('.qc.on[data-q="4"]').count() === 1, 'clicar no card Q4 escolhe o Q4');
   await p.click('.qc[data-q="4"]');
-  conf(await p.inputValue('[data-f="tri"]') === '' && /Ano todo/.test(await txt(p, '.mes-box')), 'clicar de novo volta ao ano todo (os meses foram limpos pelo quarto)');
+  conf(/^Todos/.test(await txt(p, '.q-box')) && /Ano todo/.test(await txt(p, '.mes-box')), 'clicar de novo volta ao ano todo (os meses foram limpos pelo quarto)');
   conf(!(await p.locator('[data-a="limparf"]').count()), 'sem filtro escolhido, o botão “Limpar filtros” some');
   console.log('Excel');
   const xl = await baixar(p, () => p.click('[data-a="excel"]'));

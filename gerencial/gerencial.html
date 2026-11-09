@@ -270,21 +270,36 @@ button.kpi{font:inherit;color:inherit;text-align:left;cursor:pointer;align-items
 .qc i.qc-f{color:var(--red)}
 .qc i.qc-dica{color:var(--ink-3);opacity:0;transition:opacity .12s}
 .qc:hover i.qc-dica,.qc:focus-visible i.qc-dica{opacity:1}
+@media(max-width:760px){.qc i.qc-dica{display:none}}
 .qc.dest i.qc-dica,.qc.dest i.qc-f{color:rgba(255,255,255,.9)}
 .mes-f{position:relative}
-.mes-box{border:1px solid var(--line-2);border-radius:10px;padding:7px 10px;background:#fff;min-width:170px;display:flex;align-items:center;justify-content:space-between;gap:10px;cursor:pointer;text-align:left}
-.mes-box:hover{border-color:var(--ink-3)}
+.q-box,.mes-box{border:1px solid var(--line-2);border-radius:10px;padding:7px 10px;background:#fff;min-width:170px;display:flex;align-items:center;justify-content:space-between;gap:10px;cursor:pointer;text-align:left}
+.q-box:hover,.mes-box:hover{border-color:var(--ink-3)}
 .mes-box:disabled{background:var(--soft);color:var(--ink-2);cursor:not-allowed}
 .mes-ic{color:var(--ink-3);font-size:11px}
-.mes-pop{position:absolute;top:100%;left:0;margin-top:4px;z-index:30;background:#fff;border:1px solid var(--line-2);border-radius:14px;box-shadow:0 8px 24px rgba(0,0,0,.14);padding:10px;width:280px}
-.mes-pop-t{font-size:12px;color:var(--ink-2);margin:0 2px 8px}
-.mes-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:4px}
-.mes-b{border:1px solid var(--line);background:#fff;border-radius:8px;padding:7px 0;font:inherit;font-size:13px;cursor:pointer}
-.mes-b:hover{border-color:var(--ink-3)}
-.mes-b.on{background:#FBEFEF;border-color:#F0C9C9;color:var(--red-dk)}
-.mes-b.ponta{background:var(--red);border-color:var(--red);color:#fff;font-weight:700}
-.mes-pop-r{display:flex;justify-content:space-between;gap:6px;margin-top:10px}
-.mes-pop-r .btn-o{font-size:12px;padding:5px 12px}
+.q-pop,.mes-pop{position:absolute;top:100%;left:0;margin-top:4px;z-index:30;background:#fff;border:1px solid var(--line-2);border-radius:14px;box-shadow:0 8px 24px rgba(0,0,0,.14);padding:10px;width:280px}
+.q-pop-t,.mes-pop-t{font-size:12px;color:var(--ink-2);margin:0 2px 8px}
+.q-grid,.mes-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:4px}
+.q-b,.mes-b{border:1px solid var(--line);background:#fff;border-radius:8px;padding:7px 0;font:inherit;font-size:13px;cursor:pointer}
+.q-b:hover,.mes-b:hover{border-color:var(--ink-3)}
+.q-b.on,.mes-b.on{background:#FBEFEF;border-color:#F0C9C9;color:var(--red-dk)}
+.q-b.ponta,.mes-b.ponta{background:var(--red);border-color:var(--red);color:#fff;font-weight:700}
+.q-pop-r,.mes-pop-r{display:flex;justify-content:space-between;gap:6px;margin-top:10px}
+.q-pop-r .btn-o,.mes-pop-r .btn-o{font-size:12px;padding:5px 12px}
+.q-pop{width:300px}
+.q-f{position:relative}
+.q-b{display:flex;flex-direction:column;align-items:center;gap:1px;padding:6px 0}
+.q-b span{font-size:10.5px;color:var(--ink-3)}
+.q-b.on span,.q-b.ponta span,.q-b.pv span,.q-b.pv-ponta span{color:inherit}
+/* prévia da seleção final ao passar o cursor (depois do primeiro clique) */
+.previa .mes-b.on:not(.pv),.previa .q-b.on:not(.pv){background:#fff;border-color:var(--line);color:inherit;font-weight:400}
+.mes-b.pv,.q-b.pv{background:#FBEFEF;border-color:#F0C9C9;color:var(--red-dk)}
+.mes-b.pv-ponta,.q-b.pv-ponta{background:var(--red);border-color:var(--red);color:#fff;font-weight:700}
+/* modo embutido (seção Receita e margem no EARL Engenharia) */
+html.emb body{background:transparent;min-height:0}
+html.emb .hdr{display:none}
+html.emb .wrap{max-width:none;padding:0 0 6px}
+html.emb .filtros{margin-top:0}
 .t-mx tr.mx-op[data-mx]{cursor:pointer}
 .t-mx tr.mx-op[data-mx]:hover td{background:#FAFBFB}
 .t-mx tr.mx-op.on > td.mx-rot{color:var(--red)}
@@ -293,7 +308,7 @@ button.kpi{font:inherit;color:inherit;text-align:left;cursor:pointer;align-items
 .t-mx tr.mx-it td.mx-rot b{color:var(--ink)}
 .t-mx .mx-hl{background:#FFF4D6!important}
 .t-mx th.mx-hl{background:#FCE7AE!important;color:var(--ink)}
-@media(max-width:760px){.t-mx .mx-rot{min-width:150px;max-width:200px}.qcards{grid-template-columns:1fr 1fr}.qc-ano,.kpis .k-margem{grid-column:1/-1}.mes-box{min-width:0;width:100%}}
+@media(max-width:760px){.t-mx .mx-rot{min-width:150px;max-width:200px}.qcards{grid-template-columns:1fr 1fr}.qc-ano,.kpis .k-margem{grid-column:1/-1}.mes-box,.q-box{min-width:0;width:100%}}
 @media(max-width:1100px){.kpis,.qcards{grid-template-columns:repeat(3,minmax(0,1fr))}.cx-kpis{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:760px){.hdr{gap:10px;padding:0 12px}.hdr img{height:24px}.hdr .ver{display:none}h1{font-size:30px;padding-left:22px}h1:before{left:0;top:-6px}.f select{max-width:100%}.f{flex:1 1 140px}.kpis{grid-template-columns:1fr 1fr}.kpi b{font-size:min(17px,10.5cqi)}.kpi em{font-size:11px}}
 @media print{.bar,.tabs,.filtros{display:none}}
@@ -313,7 +328,7 @@ button.kpi{font:inherit;color:inherit;text-align:left;cursor:pointer;align-items
    Para cada contrato vale o arquivo mais novo. Tudo fica neste navegador (localStorage, prefixo earlger:). */
 (function () {
   'use strict';
-  var VERSAO = 'EARL Gerencial g13';
+  var VERSAO = 'EARL Gerencial g14';
   var CHAVE = 'earlger:pacotes_v1';
   var $ = function (s) { return document.querySelector(s); };
   var esc = function (v) { return String(v == null ? '' : v).replace(/[&<>"']/g, function (c) { return {'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'}[c]; }); };
@@ -328,16 +343,23 @@ button.kpi{font:inherit;color:inherit;text-align:left;cursor:pointer;align-items
   var hojeTxt = function () { var d = new Date(), p = function (n) { return String(n).padStart(2, '0'); }; return d.getFullYear() + '-' + p(d.getMonth() + 1) + '-' + p(d.getDate()); };
   var r4 = function (v) { return Math.round(v * 10000) / 10000; };
 
-  var S = {pacotes: [], tab: 'receita', f: {ano: '', tri: '', mIni: 0, mFim: 0, cliente: '', contrato: '', regiao: '', tipo: '', busca: ''}, soComConsumo: true, msg: null, graf: true, tend: 'linear', gmodo: 'mes', mx: {abertos: {}, mostrar: 1}, mesPop: false, mesPasso: 0, mxVer: null, gmet: 'ambos', regs: [], cmp: {base: null, sel: [], abertos: {}, mostrar: 1, soMud: false}, tf: {}};
+  var S = {pacotes: [], tab: 'receita', f: {ano: '', qIni: 0, qFim: 0, mIni: 0, mFim: 0, cliente: '', contrato: '', regiao: '', tipo: '', busca: ''}, soComConsumo: true, msg: null, graf: true, tend: 'linear', gmodo: 'mes', mx: {abertos: {}, mostrar: 1}, mesPop: false, mesPasso: 0, qPop: false, qPasso: 0, mxVer: null, gmet: 'ambos', regs: [], cmp: {base: null, sel: [], abertos: {}, mostrar: 1, soMud: false}, tf: {}};
   try { S.pacotes = JSON.parse(localStorage.getItem(CHAVE) || '[]') || []; } catch (e) { S.pacotes = []; }
-  try { var t0 = localStorage.getItem('earlger:tab'); if (t0) S.tab = t0 === 'matriz' ? 'receita' : t0; } catch (e) {}
-  try { if (localStorage.getItem('earlger:graf') === 'oculto') S.graf = false; var t1 = localStorage.getItem('earlger:tend'); if (t1 === 'linear' || t1 === 'mm3' || t1 === 'nenhuma') S.tend = t1; var t2 = localStorage.getItem('earlger:gmodo'); if (t2 === 'mes' || t2 === 'mescli' || t2 === 'cli') S.gmodo = t2; var t3 = localStorage.getItem('earlger:gmet'); if (t3 === 'rec' || t3 === 'cogs' || t3 === 'ambos' || t3 === 'mg') S.gmet = t3; } catch (e) {}
+  /* modo embutido: a seção "Receita e margem" dentro da página inicial do EARL Engenharia (iframe). Os dados vêm da
+     Engenharia (window.parent.engGerDados()), nada de arquivos, registros nem abas; as preferências (gráfico etc.) ficam
+     com o prefixo earleng:ger: para não misturar com o Gerencial aberto do disco. */
+  var EMB = (function () { try { var e = document.getElementById('earlger-embutido'); return e ? JSON.parse(e.textContent) || {} : null; } catch (e) { return null; } })();
+  if (EMB) { try { if (!window.XLSX && window.parent && window.parent !== window) window.XLSX = window.parent.XLSX; } catch (e) {} document.documentElement.classList.add('emb'); }
+  var PREF_EMB = (function () { try { return ((window.parent.EARL_ARMAZ || {}).P || 'earleng:') + 'ger:'; } catch (e) { return 'earleng:ger:'; } })(); // o mesmo prefixo do arquivo da Engenharia (earleng: ou earlengbp:)
+  var CHV = function (k) { return (EMB ? PREF_EMB : 'earlger:') + k; };
+  try { var t0 = localStorage.getItem(CHV('tab')); if (t0) S.tab = t0 === 'matriz' ? 'receita' : t0; } catch (e) {}
+  try { if (localStorage.getItem(CHV('graf')) === 'oculto') S.graf = false; var t1 = localStorage.getItem(CHV('tend')); if (t1 === 'linear' || t1 === 'mm3' || t1 === 'nenhuma') S.tend = t1; var t2 = localStorage.getItem(CHV('gmodo')); if (t2 === 'mes' || t2 === 'mescli' || t2 === 'cli') S.gmodo = t2; var t3 = localStorage.getItem(CHV('gmet')); if (t3 === 'rec' || t3 === 'cogs' || t3 === 'ambos' || t3 === 'mg') S.gmet = t3; } catch (e) {}
   /* versão compartilhada: os dados vêm de dentro do arquivo (#earlger-dados) e nada é gravado no navegador */
   var DADOS_EMB = (function () { try { var de = document.getElementById('earlger-dados'); return de ? JSON.parse(de.textContent) : null; } catch (e) { return null; } })();
   var COMPARTILHADO = !!(DADOS_EMB && DADOS_EMB.tipo === 'EARL-Gerencial-Compartilhado' && Array.isArray(DADOS_EMB.pacotes));
   if (COMPARTILHADO) S.pacotes = DADOS_EMB.pacotes;
   var gravar = function () {
-    if (COMPARTILHADO) return true;
+    if (COMPARTILHADO || EMB) return true;
     try { localStorage.setItem(CHAVE, JSON.stringify(S.pacotes)); return true; }
     catch (e) { aviso('O navegador não deixou guardar os arquivos (armazenamento cheio). Eles valem até fechar a página.', true); return false; }
   };
@@ -440,7 +462,7 @@ button.kpi{font:inherit;color:inherit;text-align:left;cursor:pointer;align-items
     var f = S.f, m = String(d || '').slice(0, 7), mo = Number(m.slice(5, 7));
     if (f.ano && m.slice(0, 4) !== f.ano) return false;
     if (soAno) return true;
-    if (f.tri) return triDe(m) === Number(f.tri);
+    if (f.qIni) { var q = triDe(m); return q >= f.qIni && q <= f.qFim; }
     return !f.mIni || (mo >= f.mIni && mo <= f.mFim);
   };
   var triDe = function (m) { return Math.floor((Number(String(m).slice(5, 7)) - 1) / 3) + 1; };
@@ -855,7 +877,8 @@ button.kpi{font:inherit;color:inherit;text-align:left;cursor:pointer;align-items
     return m;
   };
   var tRedim = null;
-  window.addEventListener('resize', function () { clearTimeout(tRedim); tRedim = setTimeout(function () { if ((S.tab === 'receita' && S.graf && $('#graf')) || S.tab === 'cmp') render(); else ajustarTw15(); }, 150); });
+  var largAnt = window.innerWidth;
+  window.addEventListener('resize', function () { if (window.innerWidth === largAnt) return; largAnt = window.innerWidth; clearTimeout(tRedim); tRedim = setTimeout(function () { if ((S.tab === 'receita' && S.graf && $('#graf')) || S.tab === 'cmp') render(); else ajustarTw15(); }, 150); });
   var margemTxt = function (r, c) { return r ? fN((r - c) / r * 100) + '%' : '—'; };
 
   var telaVazia = function () {
@@ -880,21 +903,22 @@ button.kpi{font:inherit;color:inherit;text-align:left;cursor:pointer;align-items
     fecharFiltroTab();
     $('#ver').textContent = VERSAO;
     var app = $('#app');
-    if (!S.pacotes.length) { app.innerHTML = telaVazia(); return; }
+    if (!S.pacotes.length) { app.innerHTML = EMB ? '<p class="vazio emb-vazio">Nenhum contrato com operações. Lance as operações nos contratos para ver a receita, o COGS e a margem aqui.</p>' : telaVazia(); ajustarAltura(); return; }
     var C = consolidar(), anos = anosDe(C);
     if (anos.indexOf(S.f.ano) < 0) S.f.ano = anoPadrao(anos);
     var F = filtrar(C), A = agregar(F), f = S.f, T = A.T;
-    var h = (COMPARTILHADO ? '<div class="sh-faixa">📤 <b>Versão compartilhada</b> do EARL Gerencial, com os dados de ' + fDH(DADOS_EMB.geradoEm) + (DADOS_EMB.soFiltro ? ' · só ' + esc(DADOS_EMB.soFiltro) : '') + '. Só consulta: filtros, gráficos, tabelas' + (S.regs.length ? ', comparação de registros' : '') + ' e Excel funcionam; os arquivos e os registros não mudam.</div>' : '') + '<h1>Gerencial</h1><p class="sub">' + C.contratos.length + ' contrato(s) de ' + uniq(S.pacotes.map(function (p) { return p.pac.por || '—'; })).length + ' engenheiro(s) · ' + C.ops.length + ' operação(ões) · realizado + previsto, com o risco aplicado</p>' + barraTopo();
+    var h = EMB ? '' : ((COMPARTILHADO ? '<div class="sh-faixa">📤 <b>Versão compartilhada</b> do EARL Gerencial, com os dados de ' + fDH(DADOS_EMB.geradoEm) + (DADOS_EMB.soFiltro ? ' · só ' + esc(DADOS_EMB.soFiltro) : '') + '. Só consulta: filtros, gráficos, tabelas' + (S.regs.length ? ', comparação de registros' : '') + ' e Excel funcionam; os arquivos e os registros não mudam.</div>' : '') + '<h1>Gerencial</h1><p class="sub">' + C.contratos.length + ' contrato(s) de ' + uniq(S.pacotes.map(function (p) { return p.pac.por || '—'; })).length + ' engenheiro(s) · ' + C.ops.length + ' operação(ões) · realizado + previsto, com o risco aplicado</p>' + barraTopo());
     h += '<div class="filtros">' +
       '<div class="f"><label>Ano</label><select data-f="ano">' + anos.map(function (a) { return '<option' + (a === f.ano ? ' selected' : '') + '>' + esc(a) + '</option>'; }).join('') + '</select></div>' +
-      '<div class="f"><label>Quarto</label><select data-f="tri">' + opcoes([1, 2, 3, 4].map(function (q) { return {v: String(q), t: 'Q' + q + ' (' + MESES.slice(q * 3 - 3, q * 3).join(', ') + ')'}; }), f.tri, 'Todos') + '</select></div>' +
-      '<div class="f mes-f"><label>Mês (início e fim)</label><button type="button" class="mes-box" data-a="mesAbrir"' + (f.tri ? ' disabled title="Com um quarto escolhido, vale o quarto. Escolha “Todos” em Quarto para escolher os meses."' : ' title="Clique no mês inicial e depois no final"') + '>' +
-        esc(f.tri ? periodoTxt() + ' · vale o quarto' : f.mIni ? periodoTxt() + '/' + f.ano : 'Ano todo') + '<span class="mes-ic">▾</span></button>' + (S.mesPop && !f.tri ? popMes() : '') + '</div>' +
+      '<div class="f q-f"><label>Quarto (início e fim)</label><button type="button" class="q-box" data-a="qAbrir" title="Clique no quarto inicial e depois no final (um quarto só: clique duas vezes no mesmo)">' +
+        esc(f.qIni ? periodoTxt() : 'Todos') + '<span class="mes-ic">▾</span></button>' + (S.qPop ? popQuarto() : '') + '</div>' +
+      '<div class="f mes-f"><label>Mês (início e fim)</label><button type="button" class="mes-box" data-a="mesAbrir"' + (f.qIni ? ' disabled title="Com quarto escolhido, vale o quarto. Escolha “Todos” no quarto para escolher os meses."' : ' title="Clique no mês inicial e depois no final"') + '>' +
+        esc(f.qIni ? 'vale o quarto' : f.mIni ? periodoTxt() + '/' + f.ano : 'Ano todo') + '<span class="mes-ic">▾</span></button>' + (S.mesPop && !f.qIni ? popMes() : '') + '</div>' +
       '<div class="f"><label>Cliente</label><select data-f="cliente">' + opcoes(uniq(C.contratos.map(function (c) { return c.cliente; })), f.cliente, 'Todos') + '</select></div>' +
       '<div class="f"><label>Contrato</label><select data-f="contrato">' + opcoes(C.contratos.map(function (c) { return {v: c.id, t: c.nome}; }), f.contrato, 'Todos') + '</select></div>' +
       '<div class="f"><label>Região</label><select data-f="regiao">' + opcoes(uniq(C.contratos.map(function (c) { return c.regiao; })), f.regiao, 'Todas') + '</select></div>' +
       '<div class="f"><label>Tipo de contrato</label><select data-f="tipo">' + opcoes(uniq(C.contratos.map(function (c) { return c.tipo; })), f.tipo, 'Todos') + '</select></div>' +
-      ((f.tri || f.mIni || f.cliente || f.contrato || f.regiao || f.tipo) ? '<button class="btn-o" data-a="limparf">Limpar filtros</button>' : '') + '</div>';
+      ((f.qIni || f.mIni || f.cliente || f.contrato || f.regiao || f.tipo) ? '<button class="btn-o" data-a="limparf">Limpar filtros</button>' : '') + '</div>';
     var nC = T.n - T.nF, nCR = T.nR - T.nFR, nCP = T.nP - T.nFP;
     h += '<div class="kpis">' +
       '<div class="kpi dest k-rec-usd"><span>Receita em US$</span><b>' + fUSD(T.rU) + '</b><em>realizado ' + fUSD(T.rRU) + ' · previsto ' + fUSD(T.rPU) + '</em></div>' +
@@ -903,7 +927,8 @@ button.kpi{font:inherit;color:inherit;text-align:left;cursor:pointer;align-items
       '<div class="kpi k-rec-op"><span>Receita / operação (US$)</span><b>' + (nC ? fUSD(T.rU / nC) : '—') + '</b><em>realizado ' + (nCR ? fUSD(T.rRU / nCR) : '—') + ' · previsto ' + (nCP ? fUSD(T.rPU / nCP) : '—') + (T.nF ? ' · sem as ' + T.nF + ' fora' : '') + '</em></div>' +
       '<div class="kpi k-margem"><span>Margem em US$</span><b>' + fUSD(T.rU - T.cU) + '</b><em>' + margemTxt(T.rU, T.cU) + ' da receita</em></div></div>';
     var tabs = [['receita', 'Receita e margem'], ['cmp', 'Comparar registros (' + S.regs.length + ')'], ['contratos', 'Contratos'], ['ppu', 'Itens PPU'], ['quim', 'Químicas'], ['cas', 'Casing equipment'], ['pes', 'Pessoal'], ['ops', 'Operações'], ['fontes', 'Arquivos (' + S.pacotes.length + ')']];
-    h += '<div class="tabs">' + tabs.map(function (t) { return '<button class="tab' + (S.tab === t[0] ? ' on' : '') + '" data-tab="' + t[0] + '">' + esc(t[1]) + '</button>'; }).join('') + '</div>';
+    if (EMB) S.tab = 'receita';
+    else h += '<div class="tabs">' + tabs.map(function (t) { return '<button class="tab' + (S.tab === t[0] ? ' on' : '') + '" data-tab="' + t[0] + '">' + esc(t[1]) + '</button>'; }).join('') + '</div>';
     h += telas[S.tab] ? telas[S.tab](C, F, A) : '';
     app.innerHTML = h;
     if (S.tab === 'receita' && S.graf) desenharGrafico(A, C);
@@ -911,6 +936,12 @@ button.kpi{font:inherit;color:inherit;text-align:left;cursor:pointer;align-items
     if (S.mxVer) { verMesNaTabela(S.mxVer); S.mxVer = null; }
     var on = app.querySelector('.tab.on'); if (on) { var tb = on.parentNode; tb.scrollLeft = on.offsetLeft - 20; }
     ajustarTw15();
+    ajustarAltura();
+  };
+  // modo embutido: a altura do quadro (iframe) acompanha o conteúdo
+  var ajustarAltura = function () {
+    if (!EMB) return;
+    try { var fe = window.frameElement, hh = Math.ceil(document.body.getBoundingClientRect().height); if (fe && Math.abs(fe.offsetHeight - hh) > 1) fe.style.height = hh + 'px'; } catch (e) {}
   };
   /* tabelas: só 15 linhas visíveis; o resto rola dentro do quadro (cabeçalho e total fixos) */
   var LINHAS_VISIVEIS = 15;
@@ -1241,7 +1272,7 @@ button.kpi{font:inherit;color:inherit;text-align:left;cursor:pointer;align-items
   };
   var periodoTxt = function () {
     var f = S.f;
-    if (f.tri) { var q = Number(f.tri); return 'Q' + q + ' (' + MESES[q * 3 - 3] + ' – ' + MESES[q * 3 - 1] + ')'; }
+    if (f.qIni) return (f.qIni === f.qFim ? 'Q' + f.qIni : 'Q' + f.qIni + ' – Q' + f.qFim) + ' (' + MESES[f.qIni * 3 - 3] + ' – ' + MESES[f.qFim * 3 - 1] + ')';
     if (f.mIni) return f.mIni === f.mFim ? MESES[f.mIni - 1] : MESES[f.mIni - 1] + ' – ' + MESES[f.mFim - 1];
     return '';
   };
@@ -1250,10 +1281,11 @@ button.kpi{font:inherit;color:inherit;text-align:left;cursor:pointer;align-items
     var F0 = filtrar(C, true), ls = F0.ops.map(function (o) { return valorOp(o, F0); }).filter(Boolean), g = {1: [], 2: [], 3: [], 4: []};
     ls.forEach(function (x) { var q = triDe(String(x.data).slice(0, 7)); if (g[q]) g[q].push(x); });
     var card = function (q, t, rot, per, cls) {
-      var on = q ? S.f.tri === String(q) : !S.f.tri && !S.f.mIni;
-      // card = filtro: o quarto filtra a página toda (clique de novo, ou no total, volta ao ano todo)
-      var dica = q ? (on ? '<i class="qc-f">filtrando ✕</i>' : '<i class="qc-dica">clique para filtrar</i>') : (on ? '' : '<i class="qc-dica">ver o ano todo</i>');
-      return '<button type="button" class="kpi qc ' + cls + (on ? ' on' : '') + '" data-q="' + (q || '') + '" aria-pressed="' + on + '" title="' + (q ? (on ? 'Filtrando o Q' + q + ': clique para voltar ao ano todo' : 'Clique para filtrar o Q' + q) : 'Clique para ver o ano todo') + '">' +
+      var f = S.f, on = q ? f.qIni && q >= f.qIni && q <= f.qFim : !f.qIni && !f.mIni;
+      // card = filtro: o quarto filtra a página toda (clique de novo, ou no total, volta ao ano todo); Shift+clique soma
+      // os quartos entre o já escolhido e o clicado (Q1 + Shift+Q3 = Q1 – Q3)
+      var dica = q ? (on ? '<i class="qc-f">filtrando ✕</i>' : '<i class="qc-dica">' + (f.qIni ? 'clique · Shift+clique soma' : 'clique para filtrar') + '</i>') : (on ? '' : '<i class="qc-dica">ver o ano todo</i>');
+      return '<button type="button" class="kpi qc ' + cls + (on ? ' on' : '') + '" data-q="' + (q || '') + '" aria-pressed="' + !!on + '" title="' + (q ? (on ? 'Filtrando: clique para voltar ao ano todo' : 'Clique para filtrar o Q' + q + (f.qIni ? '; Shift+clique para somar os quartos até o Q' + q : '')) : 'Clique para ver o ano todo') + '">' +
         '<span class="qc-l"><span>' + esc(rot) + ' <i>' + esc(per) + '</i></span>' + dica + '</span><b>' + fUSD(t.rU) + '</b><em>COGS ' + fUSD(t.cU) + '</em></button>';
     };
     return '<div class="qcards">' + [1, 2, 3, 4].map(function (q) { return card(q, soma(g[q]), 'Q' + q, MESES[q * 3 - 3] + '–' + MESES[q * 3 - 1], 'qc-q'); }).join('') +
@@ -1303,9 +1335,25 @@ button.kpi{font:inherit;color:inherit;text-align:left;cursor:pointer;align-items
   // seletor de período: uma caixa só; clique no mês inicial e depois no final (dentro do ano escolhido)
   var popMes = function () {
     var f = S.f;
-    return '<div class="mes-pop" role="dialog" aria-label="Escolher o período"><div class="mes-pop-t">' + (S.mesPasso ? 'Agora clique no mês final' : 'Clique no mês inicial e depois no final') + ' · ' + esc(f.ano) + '</div><div class="mes-grid">' +
+    return '<div class="mes-pop" role="dialog" aria-label="Escolher o período"><div class="mes-pop-t">' + (S.mesPasso ? 'Agora clique no mês final' : 'Clique no mês inicial e depois no final') + ' · ' + esc(f.ano) + '</div><div class="mes-grid" data-ini="' + (S.mesPasso ? f.mIni : '') + '">' +
       MESES.map(function (m, i) { var n = i + 1, dentro = f.mIni && n >= f.mIni && n <= f.mFim; return '<button type="button" class="mes-b' + (dentro ? ' on' : '') + (dentro && (n === f.mIni || n === f.mFim) ? ' ponta' : '') + '" data-mesb="' + n + '">' + m + '</button>'; }).join('') +
       '</div><div class="mes-pop-r"><button type="button" class="btn-o" data-a="mesTodos">Ano todo</button><button type="button" class="btn-o" data-a="mesFechar">Fechar</button></div></div>';
+  };
+  // seletor de quartos: clique no quarto inicial e depois no final (o mesmo duas vezes = um quarto só)
+  var popQuarto = function () {
+    var f = S.f;
+    return '<div class="q-pop" role="dialog" aria-label="Escolher os quartos"><div class="q-pop-t">' + (S.qPasso ? 'Agora clique no quarto final' : 'Clique no quarto inicial e depois no final') + ' · ' + esc(f.ano) + '</div><div class="q-grid" data-ini="' + (S.qPasso ? f.qIni : '') + '">' +
+      [1, 2, 3, 4].map(function (n) { var dentro = f.qIni && n >= f.qIni && n <= f.qFim; return '<button type="button" class="q-b' + (dentro ? ' on' : '') + (dentro && (n === f.qIni || n === f.qFim) ? ' ponta' : '') + '" data-qb="' + n + '"><b>Q' + n + '</b><span>' + MESES[n * 3 - 3] + '–' + MESES[n * 3 - 1] + '</span></button>'; }).join('') +
+      '</div><div class="q-pop-r"><button type="button" class="btn-o" data-a="qTodos">Todos (ano todo)</button><button type="button" class="btn-o" data-a="qFechar">Fechar</button></div></div>';
+  };
+  // prévia do intervalo: com o primeiro mês (ou quarto) escolhido, passar o cursor nos outros mostra a seleção final
+  var previa = function (grid, ate) {
+    var ini = Number(grid.dataset.ini), a = Math.min(ini, ate), b = Math.max(ini, ate);
+    grid.classList.add('previa');
+    grid.querySelectorAll('[data-mesb],[data-qb]').forEach(function (bt) {
+      var n = Number(bt.dataset.mesb || bt.dataset.qb), dentro = ate && n >= a && n <= b;
+      bt.classList.toggle('pv', !!dentro); bt.classList.toggle('pv-ponta', !!ate && (n === a || n === b));
+    });
   };
   // clique num mês do gráfico: destaca o mês na tabela e rola até ele
   var verMesNaTabela = function (m) {
@@ -1943,10 +1991,11 @@ button.kpi{font:inherit;color:inherit;text-align:left;cursor:pointer;align-items
 
   /* ---------- eventos ---------- */
   document.addEventListener('click', function (e) {
-    var t = e.target.closest('[data-a],[data-tab],[data-ct],[data-rm],[data-gmodo],[data-mx],[data-mxmostrar],[data-q],[data-mesb],[data-gmet],[data-cx],[data-cxmostrar],[data-regdel],[data-tfsort],[data-tff],[data-tfclr]');
+    var t = e.target.closest('[data-a],[data-tab],[data-ct],[data-rm],[data-gmodo],[data-mx],[data-mxmostrar],[data-q],[data-mesb],[data-qb],[data-gmet],[data-cx],[data-cxmostrar],[data-regdel],[data-tfsort],[data-tff],[data-tfclr]');
     if ($('#tfPop') && !e.target.closest('#tfPop') && !e.target.closest('[data-tff]')) fecharFiltroTab(); // clique fora fecha o painel de seleção
     if (e.target.id === 'dlg') { fecharDlg(); return; } // clique fora da janela fecha
     if (S.mesPop && !e.target.closest('.mes-f')) { S.mesPop = false; S.mesPasso = 0; if (!t) { render(); return; } } // clique fora fecha o seletor de meses
+    if (S.qPop && !e.target.closest('.q-f')) { S.qPop = false; S.qPasso = 0; if (!t) { render(); return; } } // e o de quartos
     if (!t) return;
     if (t.dataset.mesb != null) {
       var nm = Number(t.dataset.mesb);
@@ -1954,27 +2003,43 @@ button.kpi{font:inherit;color:inherit;text-align:left;cursor:pointer;align-items
       else { if (nm < S.f.mIni) { S.f.mFim = S.f.mIni; S.f.mIni = nm; } else S.f.mFim = nm; S.mesPasso = 0; S.mesPop = false; }
       render(); return;
     }
-    if (t.dataset.q != null) { var q = t.dataset.q; S.f.tri = q && S.f.tri !== q ? q : ''; S.f.mIni = S.f.mFim = 0; S.mesPop = false; render(); return; }
+    if (t.dataset.qb != null) {
+      var nq = Number(t.dataset.qb);
+      if (!S.qPasso) { S.f.qIni = S.f.qFim = nq; S.qPasso = 1; }
+      else { if (nq < S.f.qIni) { S.f.qFim = S.f.qIni; S.f.qIni = nq; } else S.f.qFim = nq; S.qPasso = 0; S.qPop = false; }
+      S.f.mIni = S.f.mFim = 0; render(); return; // o quarto vale no lugar dos meses
+    }
+    if (t.dataset.q != null) {
+      var q = Number(t.dataset.q) || 0, f0 = S.f;
+      if (!q) { f0.qIni = f0.qFim = 0; }
+      else if (e.shiftKey && f0.qIni) { f0.qIni = Math.min(f0.qIni, q); f0.qFim = Math.max(f0.qFim, q); }
+      else if (f0.qIni === q && f0.qFim === q) { f0.qIni = f0.qFim = 0; }
+      else { f0.qIni = f0.qFim = q; }
+      f0.mIni = f0.mFim = 0; S.mesPop = S.qPop = false; render(); return;
+    }
     if (t.dataset.tfsort) { var ps = t.dataset.tfsort.split('|'), stt = estTf(ps[0]), cio = Number(ps[1]); if (stt.s === cio) stt.d = -stt.d; else { stt.s = cio; stt.d = 1; } render(); return; }
     if (t.dataset.tff) { var pf = t.dataset.tff.split('|'); abrirFiltroTab(pf[0], Number(pf[1]), t); return; }
     if (t.dataset.tfclr) { S.tf[t.dataset.tfclr] = {s: null, d: 1, f: {}}; render(); return; }
-    if (t.dataset.gmet) { S.gmet = t.dataset.gmet; try { localStorage.setItem('earlger:gmet', S.gmet); } catch (x) {} render(); return; }
+    if (t.dataset.gmet) { S.gmet = t.dataset.gmet; try { localStorage.setItem(CHV('gmet'), S.gmet); } catch (x) {} render(); return; }
     if (t.dataset.cx != null) { var CM = S.cmp; if (CM.abertos[t.dataset.cx]) delete CM.abertos[t.dataset.cx]; else CM.abertos[t.dataset.cx] = 1; render(); return; }
     if (t.dataset.cxmostrar != null) { S.cmp.mostrar = Number(t.dataset.cxmostrar); render(); return; }
     if (t.dataset.regdel) { removerRegistro(t.dataset.regdel); return; }
-    if (t.dataset.gmodo) { S.gmodo = t.dataset.gmodo; try { localStorage.setItem('earlger:gmodo', S.gmodo); } catch (x) {} render(); return; }
+    if (t.dataset.gmodo) { S.gmodo = t.dataset.gmodo; try { localStorage.setItem(CHV('gmodo'), S.gmodo); } catch (x) {} render(); return; }
     if (t.dataset.mx != null) { var M = S.mx; if (M.abertos[t.dataset.mx]) delete M.abertos[t.dataset.mx]; else M.abertos[t.dataset.mx] = 1; render(); return; }
     if (t.dataset.mxmostrar != null) { S.mx.mostrar = Number(t.dataset.mxmostrar); render(); return; }
-    if (t.dataset.tab) { S.tab = t.dataset.tab; try { localStorage.setItem('earlger:tab', S.tab); } catch (x) {} render(); return; }
+    if (t.dataset.tab) { S.tab = t.dataset.tab; try { localStorage.setItem(CHV('tab'), S.tab); } catch (x) {} render(); return; }
     if (t.dataset.ct) { S.f.contrato = S.f.contrato === t.dataset.ct ? '' : t.dataset.ct; render(); return; }
     if (t.dataset.rm != null) { S.pacotes.splice(Number(t.dataset.rm), 1); gravar(); render(); aviso('Arquivo tirado'); return; }
     var a = t.dataset.a;
     if (a === 'arq') $('#inArq').click();
     else if (a === 'pasta') $('#inPasta').click();
     else if (a === 'excel') excel();
-    else if (a === 'grafOcultar' || a === 'grafMostrar') { S.graf = a === 'grafMostrar'; try { localStorage.setItem('earlger:graf', S.graf ? 'visivel' : 'oculto'); } catch (x) {} render(); }
-    else if (a === 'limparf') { S.f = {ano: S.f.ano, tri: '', mIni: 0, mFim: 0, cliente: '', contrato: '', regiao: '', tipo: '', busca: ''}; render(); } // o ano fica
-    else if (a === 'mesAbrir') { S.mesPop = !S.mesPop; S.mesPasso = 0; render(); }
+    else if (a === 'grafOcultar' || a === 'grafMostrar') { S.graf = a === 'grafMostrar'; try { localStorage.setItem(CHV('graf'), S.graf ? 'visivel' : 'oculto'); } catch (x) {} render(); }
+    else if (a === 'limparf') { S.f = {ano: S.f.ano, qIni: 0, qFim: 0, mIni: 0, mFim: 0, cliente: '', contrato: '', regiao: '', tipo: '', busca: ''}; render(); } // o ano fica
+    else if (a === 'mesAbrir') { S.mesPop = !S.mesPop; S.mesPasso = 0; S.qPop = false; render(); }
+    else if (a === 'qAbrir') { S.qPop = !S.qPop; S.qPasso = 0; S.mesPop = false; render(); }
+    else if (a === 'qTodos') { S.f.qIni = S.f.qFim = 0; S.qPop = false; S.qPasso = 0; render(); }
+    else if (a === 'qFechar') { S.qPop = false; S.qPasso = 0; render(); }
     else if (a === 'mesTodos') { S.f.mIni = S.f.mFim = 0; S.mesPop = false; S.mesPasso = 0; render(); }
     else if (a === 'mesFechar') { S.mesPop = false; S.mesPasso = 0; render(); }
     else if (a === 'mxExcel') excelMatriz();
@@ -1993,8 +2058,8 @@ button.kpi{font:inherit;color:inherit;text-align:left;cursor:pointer;align-items
   });
   document.addEventListener('change', function (e) {
     var t = e.target;
-    if (t.dataset && t.dataset.f) { S.f[t.dataset.f] = t.value; if (t.dataset.f === 'tri' && t.value) { S.f.mIni = S.f.mFim = 0; } S.mesPop = false; render(); return; } // o quarto vale no lugar dos meses
-    if (t.dataset && t.dataset.tend != null) { S.tend = t.value; try { localStorage.setItem('earlger:tend', S.tend); } catch (x) {} render(); return; }
+    if (t.dataset && t.dataset.f) { S.f[t.dataset.f] = t.value; S.mesPop = S.qPop = false; render(); return; }
+    if (t.dataset && t.dataset.tend != null) { S.tend = t.value; try { localStorage.setItem(CHV('tend'), S.tend); } catch (x) {} render(); return; }
     if (t.dataset && t.dataset.a === 'soCons') { S.soComConsumo = t.checked; render(); return; }
     if (t.dataset && t.dataset.a === 'soMud') { S.cmp.soMud = t.checked; render(); return; }
     if (t.dataset && t.dataset.cmp) { S.cmp[t.dataset.cmp] = t.value; render(); return; }
@@ -2011,12 +2076,23 @@ button.kpi{font:inherit;color:inherit;text-align:left;cursor:pointer;align-items
   document.addEventListener('keydown', function (e) {
     if ($('#tfPop') && e.key === 'Escape') { fecharFiltroTab(); return; }
     if ($('#dlg')) { if (e.key === 'Escape') fecharDlg(); else if (e.key === 'Enter' && $('#dlg .reg-data') && e.target.closest && e.target.closest('.dlg-f')) { e.preventDefault(); salvarRegistro(); } return; }
-    if (e.key === 'Escape' && S.mesPop) { S.mesPop = false; S.mesPasso = 0; render(); }
+    if (e.key === 'Escape' && (S.mesPop || S.qPop)) { S.mesPop = S.qPop = false; S.mesPasso = S.qPasso = 0; render(); }
+  });
+  // prévia da seleção final ao passar o cursor (meses e quartos), depois do primeiro clique
+  document.addEventListener('mouseover', function (e) {
+    var g = e.target.closest && e.target.closest('.mes-grid[data-ini],.q-grid[data-ini]');
+    if (!g || !g.dataset.ini) return;
+    var b = e.target.closest('[data-mesb],[data-qb]');
+    previa(g, b ? Number(b.dataset.mesb || b.dataset.qb) : 0);
+  });
+  document.addEventListener('mouseout', function (e) {
+    var g = e.target.closest && e.target.closest('.mes-grid[data-ini],.q-grid[data-ini]');
+    if (g && g.dataset.ini && !(e.relatedTarget && g.contains(e.relatedTarget))) previa(g, 0);
   });
   document.addEventListener('dragover', function (e) { e.preventDefault(); var d = $('#drop'); if (d) d.classList.add('on'); });
   document.addEventListener('dragleave', function () { var d = $('#drop'); if (d) d.classList.remove('on'); });
   document.addEventListener('drop', async function (e) {
-    e.preventDefault(); if (COMPARTILHADO) return; var d = $('#drop'); if (d) d.classList.remove('on');
+    e.preventDefault(); if (COMPARTILHADO || EMB) return; var d = $('#drop'); if (d) d.classList.remove('on');
     var itens = Array.from((e.dataTransfer && e.dataTransfer.items) || []);
     var acc = [];
     if (itens.length && itens[0].webkitGetAsEntry) { await Promise.all(itens.map(function (it) { var en = it.webkitGetAsEntry(); return en ? lerEntrada(en, acc) : null; })); }
@@ -2026,11 +2102,21 @@ button.kpi{font:inherit;color:inherit;text-align:left;cursor:pointer;align-items
   if (COMPARTILHADO) {
     S.regs = Array.isArray(DADOS_EMB.registros) ? DADOS_EMB.registros : [];
     var es = DADOS_EMB.estado || {};
-    if (es.f) S.f = Object.assign(S.f, es.f);
+    if (es.f) { S.f = Object.assign(S.f, es.f); if (es.f.tri && !es.f.qIni) S.f.qIni = S.f.qFim = Number(es.f.tri) || 0; delete S.f.tri; }
     ['tab', 'gmet', 'gmodo', 'tend'].forEach(function (k) { if (es[k]) S[k] = es[k]; });
     if (es.graf != null) S.graf = !!es.graf;
     if (es.cmp) { S.cmp.base = es.cmp.base || null; S.cmp.sel = es.cmp.sel || []; S.cmp.soMud = !!es.cmp.soMud; }
     document.title = 'EARL — Gerencial (compartilhado)';
+  }
+  if (EMB) {
+    var carregarEmb = function () {
+      var d = null;
+      try { d = window.parent && window.parent.engGerDados ? window.parent.engGerDados() : null; } catch (e) { d = null; }
+      S.pacotes = d && d.pacote && (d.pacote.contratos || []).length ? [{arquivo: 'EARL Engenharia', carregadoEm: d.pacote.geradoEm, pac: d.pacote}] : [];
+    };
+    S.tab = 'receita'; S.regs = []; carregarEmb();
+    window.earlGerAtualizar = function () { carregarEmb(); render(); };
+    if (window.ResizeObserver) new ResizeObserver(ajustarAltura).observe(document.body);
   }
   window.earlGerencial = {consolidar: consolidar, estado: S, processar: processar};
   render();

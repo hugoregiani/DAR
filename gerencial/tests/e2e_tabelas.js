@@ -90,7 +90,7 @@ const ABAS = [['contratos', 't-cts'], ['ppu', 't-ppu'], ['quim', 't-quim'], ['ca
   await page.setInputFiles('#inArq', [{name: 'eng_ana.json', mimeType: 'application/json', buffer: Buffer.from(JSON.stringify(pacA))}, {name: 'eng_bruno.json', mimeType: 'application/json', buffer: Buffer.from(JSON.stringify(pacB))}]);
   await page.waitForSelector('.kpis');
   await page.evaluate(() => { const m = document.getElementById('msg'); if (m) m.remove(); });
-  conf((await page.textContent('#ver')).includes('g13'), 'versão g13');
+  conf((await page.textContent('#ver')).includes('g14'), 'versão g14');
 
   console.log('Ordem crescente e decrescente em todas as colunas');
   for (const [aba, cls] of ABAS) {
@@ -192,9 +192,9 @@ const ABAS = [['contratos', 't-cts'], ['ppu', 't-ppu'], ['quim', 't-quim'], ['ca
   const precoAlfa = await page.$$eval('.t-ppu tbody tr', l => { const tr = l.find(r => r.children[0].textContent === 'Contrato Alfa' && r.children[1].textContent === '1.1'); return tr ? tr.children[8].innerText.replace(/\s+/g, ' ').trim() : null; });
   conf(precoAlfa === 'US$ 280,00 R$ 1.512,00', 'preço unitário em US$ e em R$ (Contrato Alfa, item 1.1)', precoAlfa);
   await confPpu(0, 'ano 2026: consumido (só concluídas), lançado no período, a realizar (× risco) e projetado — quantidade e US$ — e os totais batem com a conta');
-  await page.selectOption('[data-f="tri"]', '1');
+  await page.click('.q-box'); await page.click('[data-qb="1"]'); await page.click('[data-qb="1"]');
   await confPpu(1, 'só Q1: o lançado no período muda; consumido, a realizar e projetado são do contrato todo');
-  await page.selectOption('[data-f="tri"]', '');
+  await page.click('.q-box'); await page.click('[data-a="qTodos"]');
   const xlP = await (async () => { const [dl] = await Promise.all([page.waitForEvent('download'), page.click('[data-a="excel"]')]); return page.evaluate(b => { const w = XLSX.read(b, {type: 'base64'}); return XLSX.utils.sheet_to_json(w.Sheets['Itens PPU'], {header: 1})[0]; }, fs.readFileSync(await dl.path()).toString('base64')); })();
   conf(xlP.join('|') === 'Contrato|Item|Descrição|Unid.|Contratado|Consumido|Saldo|% usado|Preço unitário US$|Preço unitário R$|Realizado US$|Lançado no período|Seleção US$|A realizar|A realizar US$|Projetado|Projetado US$', 'Excel consolidado: aba "Itens PPU" com as mesmas colunas', xlP);
 

@@ -87,7 +87,7 @@ assert i > 0
 s = s[:i] + css + s[i:]
 
 # ---------------------------------------------------------------- app (código compilado)
-rep("var EARL_VERSION = 'EARL v115';", "var EARL_VERSION = 'EARL Engenharia e7 (base v115)';")
+rep("var EARL_VERSION = 'EARL v115';", "var EARL_VERSION = 'EARL Engenharia e8 (base v115)';")
 rep("var HO_ST = {\n  pendente: {", "var HO_ST = {\n  email: {\n    label: 'Enviado por e-mail',\n    c: '#304220',\n    bg: '#F1F5EC',\n    brd: '#D9E4CC'\n  },\n  pendente: {")
 # quem gera o e-mail assina os registros (sem login)
 rep("  var currentUser = () => authUser && authUser.email || sbUser || '';",
@@ -288,13 +288,32 @@ rep("""      if (!saveDB(next)) setTimeout(() => setSyncErr('⚠ O navegador rec
 
 # e5: painel "Receita e COGS" na página inicial da Engenharia
 rep("engContratos.length + ' contrato(s) vigente(s)')), engAlerta(planJobs), React.createElement(\"div\", {", "engContratos.length + ' contrato(s) vigente(s)')), engAlerta(planJobs), renderEngEspacoAviso(), renderEngPainel(), React.createElement(\"div\", {")
+# e8: card do contrato com o botão ⋯ (Arquivar / Apagar)
+rep('''      }, b))), React.createElement("span", {
+        className: "eng2-go",
+        "aria-hidden": "true"
+      }, "\\u2192"));
+    })), !engContratos.length && React.createElement("div", {''', '''      }, b))), engCtMenu(ct), React.createElement("span", {
+        className: "eng2-go",
+        "aria-hidden": "true"
+      }, "\\u2192"));
+    })), !engContratos.length && React.createElement("div", {''')
 
 # e6: banco de produtos químicos. A base (quimicos_base.json, tabela Químicos da aba Forecast) entra uma vez
 # em cada computador, no loadDB, quando o banco ainda não tem produtos químicos (flag quimBaseV1).
 import json as _json
 _base = _json.load(open(os.path.join(AQUI, 'quimicos_base.json'), encoding='utf-8'))
 _lit = _json.dumps(_base, ensure_ascii=False).replace('</', '<\\/')
-rep("var loadDB = () => {\n", """/* EARL Engenharia (avulso) e6: banco inicial de produtos químicos */
+_ger = open(os.path.join(AQUI, '..', 'gerencial', 'gerencial.html'), encoding='utf-8').read()
+for _m, _v in [('/*__LIB_XLSX__*/', ''), ('/*__LIB_JSZIP__*/', ''), ('__LOGO_HAL__', 'data:,'), ('__LOGO_EARL__', 'data:,')]:
+    assert _ger.count(_m) == 1, _m
+    _ger = _ger.replace(_m, _v)
+assert _ger.count('<body>\n') == 1
+_ger = _ger.replace('<body>\n', '<body>\n<script type="application/json" id="earlger-embutido">{"app":"engenharia"}</script>\n')
+_gerLit = _json.dumps(_ger, ensure_ascii=False).replace('</', '<\\/').replace('<!--', '<\\!--')
+rep("var loadDB = () => {\n", """/* EARL Engenharia e8: a seção "Receita e margem" do EARL Gerencial (gerencial/gerencial.html), no modo embutido */
+var ENG_GER_HTML = """ + _gerLit + """;
+/* EARL Engenharia (avulso) e6: banco inicial de produtos químicos */
 var ENG_QUIM_BASE = %s;
 var engQuimMig = d => {
   try {
@@ -321,6 +340,13 @@ var engQuimMig = d => {
         }];
       }
       d.quimBaseV1 = new Date().toISOString();
+    }
+  } catch (e) {}
+  /* e8: contrato apagado pelo card não volta pela migração da semente (que recria pelo número) */
+  try {
+    if (d && Array.isArray(d.ctApagados) && d.ctApagados.length) {
+      var ap = new Set(d.ctApagados.map(x => x && x.id));
+      d.contratos = (d.contratos || []).filter(c => !ap.has(c.id));
     }
   } catch (e) {}
   return d;

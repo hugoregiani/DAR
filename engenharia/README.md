@@ -22,7 +22,19 @@ A Engenharia do EARL separada do resto do sistema, para usar **sem servidor, sem
   4. **Pessoal:** pessoas e dias por função, que dão o homem-dia.
 
   Cada parte começa com o previsto da operação, e **⇩ Copiar previsto** preenche tudo de uma vez. O app avisa quando um item PPU passa do saldo ou não tem valor cadastrado.
-- **Página inicial: Receita e COGS.** Logo abaixo do título, um painel com os cartões **Receita (US$), COGS, Operações, Receita / operação (US$) e Margem**. A receita por operação não conta as operações com risco 100%. O painel tem com filtros por **ano, mês, contrato, cliente e situação** (realizado + previsto, só realizado ou só previsto). Tem a tabela **por mês** e a **por contrato**; clicar no contrato abre a aba "Consumo e receita" dele. **Recolher** esconde o painel.
+- **Página inicial: Receita e margem** (e8). Logo abaixo do título fica a mesma seção "Receita e margem" do **EARL Gerencial**, com os dados desta Engenharia (todos os contratos não arquivados):
+  - **Filtros iguais aos do Gerencial:** ano, **quarto (início e fim)**, mês (início e fim), cliente, contrato, região e tipo de contrato.
+    - Para vários quartos, clique no quarto inicial e depois no final, como nos meses.
+    - Depois do primeiro clique, passar o cursor sobre os outros quartos ou meses mostra a prévia do período.
+  - **Cartões:** Receita, COGS, Operações, Receita / operação e Margem, em US$.
+  - **Cartões dos quartos:** Q1 a Q4 e o total do ano. São filtros: clique para um quarto; Shift+clique soma os quartos.
+  - **Gráfico:** por mês, por mês e cliente ou por cliente, com Receita, COGS, Receita e COGS ou Margem, e a tendência.
+  - **Matriz:** cliente › contrato › sonda › poço › operação › item PPU, nos meses e quartos, com "⬇ Excel desta tabela".
+  - **Regra:** a do Gerencial. Realizado é a operação com consumo lançado; previsto, o planejado. Tudo × (1 − risco).
+  - **Recolher** esconde a seção, e a escolha fica guardada. A seção se atualiza sozinha quando os dados mudam.
+- **Card do contrato: arquivar ou apagar** (e8). O botão **⋯** no canto do card abre:
+  - **Arquivar:** o card sai da página inicial e o contrato sai da receita. Operações, consumos e valores continuam guardados. Para voltar: Contratos → "Mostrar arquivados" → abrir → Desarquivar → Salvar contrato.
+  - **Apagar…:** apaga o contrato com os itens, valores e reajustes. Se ele tiver operações, apaga também as operações, os consumos e os handovers delas, e antes pede para digitar **APAGAR**. Não dá para desfazer, a não ser por um "⬇ Exportar dados" de antes. Um contrato apagado não volta quando o arquivo é aberto de novo, mesmo os que vêm do cadastro do EARL.
   - **Realizado:** operação com consumo lançado, pelo valor do contrato na data do serviço.
   - **Previsto:** operação ainda sem consumo, pelos itens PPU previstos × valor do contrato na data da operação. O COGS vem das químicas e do casing previstos.
 - **Risco da receita / COGS (%):** campo na janela da operação (seção 2). A receita e o COGS da operação contam × (1 − risco). Com **0%** contam inteiros; com **100%** a operação continua mapeada (Gantt, lista, handover), mas **fica fora da receita e do COGS**. A Lista mostra a etiqueta "risco N%". Esse campo é diferente do "Risco de acontecer" da contingência.
@@ -140,7 +152,7 @@ node teste_bp/e2e_bp.js Contrato_BP_Teste_EARL.xlsx EARL_Engenharia_BP_teste.htm
   - só o contrato BP fica ativo; os outros contratos do EARL vão para "arquivados";
   - os dados guardados no navegador só valem se forem desta mesma versão do teste (marca `testeBP`);
   - sem espaço no navegador, ou com o armazenamento bloqueado, o teste abre com os dados da planilha mesmo assim, e a etiqueta avisa que as alterações não ficam salvas.
-- **Verificação:** o `e2e_bp.js` (56 verificações) confere, operação por operação, a receita, a receita final, o COGS, o COGS final, o risco, a situação e o homem-dia contra os totais da própria planilha. Confere também o painel da página inicial (com a receita por operação), a aba do contrato, uma alteração salva, o navegador sem espaço, dados de versão anterior, o armazenamento bloqueado, o arquivo do gerencial e o EARL Gerencial com esse arquivo, ano a ano (2026 e 2027 somam a planilha), incluindo os cards dos quartos, cada mês da matriz e do gráfico, os itens PPU, a tendência, o período, o quarto e o Excel. Na pasta de saída fica o arquivo do gerencial do BP.
+- **Verificação:** o `e2e_bp.js` (57 verificações) confere, operação por operação, a receita, a receita final, o COGS, o COGS final, o risco, a situação e o homem-dia contra os totais da própria planilha. Confere também a seção Receita e margem da página inicial (2026 e 2027 somam a planilha, receita por operação, realizado e previsto, meses e quartos), a aba do contrato, uma alteração salva, o navegador sem espaço, dados de versão anterior, o armazenamento bloqueado, o arquivo do gerencial e o EARL Gerencial com esse arquivo, ano a ano (2026 e 2027 somam a planilha), incluindo os cards dos quartos, cada mês da matriz e do gráfico, os itens PPU, a tendência, o período, o quarto e o Excel. Na pasta de saída fica o arquivo do gerencial do BP.
 
 ## Para quem mexe no código
 
@@ -168,5 +180,12 @@ node teste_bp/e2e_bp.js Contrato_BP_Teste_EARL.xlsx EARL_Engenharia_BP_teste.htm
     - outra sonda, o histórico, excluir e a matriz;
     - as 4 planilhas exportadas, conferidas célula a célula;
     - exportar e importar dados, a recarga da página e a tela do celular.
-  - `node tests/e2e_contratos.js EARL_Engenharia.html [pasta-das-telas]`: 76 verificações (contratos, planilhas, reajustes, consumo, receita, juntar dados de outro computador, tela pequena 1366×768, COGS e risco, e o painel Receita e COGS com os filtros).
-- Versão: `EARL_VERSION = 'EARL Engenharia e7 (base v115)'`. O teste do fluxo completo com o Gerencial está em `../gerencial/tests/e2e_gerencial.js`.
+  - `node tests/e2e_contratos.js EARL_Engenharia.html [pasta-das-telas]`: 75 verificações (contratos, planilhas, reajustes, consumo, receita, juntar dados de outro computador, tela pequena 1366×768, COGS e risco, e a seção Receita e margem com os mesmos números, filtros, quartos e recolher);
+  - `node tests/e2e_painel.js EARL_Engenharia.html [pasta-das-telas]`: 23 verificações (e8). Cobre:
+    - a seção Receita e margem do Gerencial: valores por ano, cartões dos quartos, gráfico, matriz, altura do quadro, vários quartos com prévia, Shift+clique e o Excel baixado de dentro;
+    - arquivar pelo card: some da página inicial, a seção atualiza na hora e o contrato aparece nos arquivados;
+    - apagar sem operações;
+    - apagar com operações: só com APAGAR, levando as operações e o handover;
+    - os contratos apagados não voltam ao reabrir.
+- **A seção Receita e margem é o `../gerencial/gerencial.html`**, embutido pelo patch (`ENG_GER_HTML`, num iframe, no modo embutido do Gerencial). Mudou o Gerencial? Gere de novo o `EARL_Engenharia.html`.
+- Versão: `EARL_VERSION = 'EARL Engenharia e8 (base v115)'`. O teste do fluxo completo com o Gerencial está em `../gerencial/tests/e2e_gerencial.js`.

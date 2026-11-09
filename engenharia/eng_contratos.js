@@ -2457,252 +2457,171 @@
     }, "Salvar COGS")));
   };
 
-  /* ---------------- painel "Receita e COGS" (página inicial da Engenharia) ----------------
-     Mesma regra do Gerencial: operação realizada (consumo lançado, pela data do serviço) ou prevista
-     (itens PPU previstos × valor do contrato na data; químicas e casing previstos × COGS), × (1 − risco). */
-  var [engPn, setEngPn] = useState(() => ({
-    ano: String(new Date().getFullYear()),
-    mes: '',
-    ct: '',
-    cli: '',
-    sit: 'todos',
-    aberto: true
-  }));
-  var engValorOp = (j, cIdx) => {
-    if (!j || j.status === PJ_STATUS.CANC) return null;
-    var ct = ctDoJob(j);
-    if (!ct) return null;
-    var f = engFator(j);
-    var c = j.ppuCons;
-    if (c) {
-      var v = engOpValor(j) || {
-        vB: 0,
-        vU: 0
-      };
-      var cg = engCogsSoma(cIdx, (c.quim || []).concat(c.cas || []));
-      return {
-        j,
-        ct,
-        tipo: 'real',
-        data: c.data || j.date,
-        f,
-        rU: v.vU * f,
-        rB: v.vB * f,
-        cU: cg.u * f,
-        cB: cg.b * f
-      };
+  /* ---------------- painel "Receita e margem" (página inicial da Engenharia) — e8 ----------------
+     É a seção "Receita e margem" do EARL Gerencial (gerencial/gerencial.html), a mesma, num quadro (iframe) com os
+     dados desta Engenharia: filtros (ano, quartos de início e fim, meses, cliente, contrato, região e tipo), cartões,
+     cartões dos quartos, gráfico e a matriz. O patch embute o gerencial.html em ENG_GER_HTML; dentro do quadro ele
+     roda no "modo embutido" e pede os dados a window.engGerDados() — o mesmo pacote do "Arquivo do gerencial", com
+     todos os contratos não arquivados. A cada alteração no banco, o quadro é avisado (earlGerAtualizar). */
+  var engGerFrameRef = useRef(null);
+  var [engGerAberto, setEngGerAberto] = useState(() => {
+    try {
+      return localStorage.getItem('eng_painel_ger_v1') !== 'fechado';
+    } catch (e) {
+      return true;
     }
-    var u = 0,
-      b = 0;
-    (j.ppuNeeds || []).forEach(n => {
-      if (!n || !n.ref) return;
-      var q = engNum(n.qty) || 0;
-      var p = ctPreco(ct, n.ref, j.date);
-      if (p.usd != null) u += q * p.usd;
-      if (p.brl != null) b += q * p.brl;
-    });
-    var cg2 = engCogsSoma(cIdx, (j.chems || []).concat(j.casingNeeds || []));
-    return {
-      j,
-      ct,
-      tipo: 'prev',
-      data: j.date,
-      f,
-      rU: u * f,
-      rB: b * f,
-      cU: cg2.u * f,
-      cB: cg2.b * f
-    };
-  };
-  var engSomaV = arr => arr.reduce((t, x) => {
-    t.n++;
-    t.rU += x.rU;
-    t.rB += x.rB;
-    t.cU += x.cU;
-    t.cB += x.cB;
-    if (x.tipo === 'real') {
-      t.nR++;
-      t.rRU += x.rU;
-      t.rRB += x.rB;
-    } else {
-      t.nP++;
-      t.rPU += x.rU;
-      t.rPB += x.rB;
-    }
-    if (x.f === 0) {
-      t.nF++;
-      if (x.tipo === 'real') t.nFR++;else t.nFP++;
-    }
-    return t;
-  }, {
-    n: 0,
-    nR: 0,
-    nP: 0,
-    nF: 0,
-    nFR: 0,
-    nFP: 0,
-    rU: 0,
-    rB: 0,
-    cU: 0,
-    cB: 0,
-    rRU: 0,
-    rRB: 0,
-    rPU: 0,
-    rPB: 0
   });
-  var renderEngPainel = () => {
-    var p = engPn;
-    var set = patch => setEngPn(x => ({
-      ...x,
-      ...patch
-    }));
-    var cIdx = engCogsIdx();
-    var ctIds = {};
-    engContratos.forEach(c => {
-      ctIds[c.id] = 1;
+  window.engGerDados = () => ({
+    pacote: engPacoteGerencial(engContratos.map(c => c.id), (db.hoMail || {}).nome || '')
+  });
+  useEffect(() => {
+    try {
+      var w = engGerFrameRef.current && engGerFrameRef.current.contentWindow;
+      if (w && w.earlGerAtualizar) w.earlGerAtualizar();
+    } catch (e) {}
+  }, [db, engContratos]);
+  var renderEngPainel = () => engH("div", {
+    className: "ec-painel ec-ger-painel"
+  }, engH("div", {
+    className: "ec-painel-h"
+  }, engH("b", null, "Receita e margem"), engH("span", {
+    className: "ec-ger-sub"
+  }, "realizado + previsto, com o risco de cada operação · " + engContratos.length + " contrato(s)"), engH("span", {
+    style: {
+      flex: 1
+    }
+  }), engH("button", {
+    className: "btn-o ec-painel-tg",
+    onClick: () => {
+      var v = !engGerAberto;
+      setEngGerAberto(v);
+      try {
+        localStorage.setItem('eng_painel_ger_v1', v ? 'aberto' : 'fechado');
+      } catch (e) {}
+    }
+  }, engGerAberto ? 'Recolher' : 'Mostrar')), engGerAberto && engH("iframe", {
+    ref: engGerFrameRef,
+    className: "ec-ger-frame",
+    title: "Receita e margem",
+    srcDoc: ENG_GER_HTML
+  }));
+  /* ---------------- e8: arquivar ou apagar pelo card do contrato (página inicial) ----------------
+     Botão "⋯" no card: Arquivar (o card sai da página inicial e o contrato da receita; volta pelo Contratos →
+     "Mostrar arquivados") e Apagar (apaga o contrato e as operações dele, com consumos e handovers; com operações,
+     pede para digitar APAGAR). O id vai para db.ctApagados para a migração da semente não recriar o contrato. */
+  var [engCtMenuAb, setEngCtMenuAb] = useState('');
+  useEffect(() => {
+    if (!engCtMenuAb) return;
+    var f = () => setEngCtMenuAb('');
+    document.addEventListener('click', f);
+    return () => document.removeEventListener('click', f);
+  }, [engCtMenuAb]);
+  var engCtArquivar = ct => {
+    setEngCtMenuAb('');
+    askConfirm({
+      title: 'Arquivar o contrato',
+      okLabel: 'Arquivar',
+      msg: engH("span", null, "Arquivar ", engH("b", null, ct.name), "? O card sai da página inicial e o contrato sai da receita e margem. As operações, os consumos e os valores continuam guardados."),
+      hint: 'Para voltar: Contratos → “Mostrar arquivados” → abra o contrato → Desarquivar → Salvar contrato.',
+      onOk: () => {
+        updateDB(d => ({
+          ...d,
+          contratos: (d.contratos || []).map(c => c.id === ct.id ? {
+            ...c,
+            archived: true,
+            atualizadoEm: new Date().toISOString()
+          } : c)
+        }), {
+          kind: 'Contrato',
+          action: 'Arquivamento',
+          name: ct.name || '—',
+          user: currentUser() || '—',
+          detail: 'pelo card da página inicial'
+        });
+        setOkMsg('Contrato arquivado ✓ — ' + ct.name);
+        setTimeout(() => setOkMsg(''), 5000);
+      }
     });
-    var todas = (db.plannedJobs || []).map(j => engValorOp(j, cIdx)).filter(x => x && ctIds[x.ct.id]);
-    var anos = [...new Set(todas.map(x => String(x.data || '').slice(0, 4)).filter(a => /^\d{4}$/.test(a)))].sort();
-    if (p.ano && !anos.includes(p.ano)) anos.push(p.ano);
-    anos.sort();
-    var cts = engContratos.filter(c => todas.some(x => x.ct.id === c.id));
-    var clis = [...new Set(cts.map(c => c.clientName).filter(Boolean))].sort((a, b) => a.localeCompare(b, 'pt'));
-    var ls = todas.filter(x => (!p.ano || String(x.data).slice(0, 4) === p.ano) && (!p.mes || String(x.data).slice(5, 7) === p.mes) && (!p.ct || x.ct.id === p.ct) && (!p.cli || x.ct.clientName === p.cli) && (p.sit === 'todos' || x.tipo === p.sit));
-    var T = engSomaV(ls);
-    var g = {};
-    ls.forEach(x => {
-      var k = String(x.data).slice(0, 7);
-      (g[k] = g[k] || []).push(x);
-    });
-    var meses = Object.keys(g).sort().map(k => ({
-      k,
-      t: engSomaV(g[k])
-    }));
-    var gc = {};
-    ls.forEach(x => {
-      (gc[x.ct.id] = gc[x.ct.id] || {
-        ct: x.ct,
-        l: []
-      }).l.push(x);
-    });
-    var porCt = Object.values(gc).map(o => ({
-      ct: o.ct,
-      t: engSomaV(o.l)
-    })).sort((a, b) => b.t.rU + b.t.rB - (a.t.rU + a.t.rB));
-    var emU = T.rU || !T.rB;
-    var vb = t => emU ? t.rU : t.rB;
-    var mx = Math.max(1, ...meses.map(m => vb(m.t)));
-    var margem = (r, c) => r ? fmtNum((r - c) / r * 100) + '%' : '—';
-    var sel = (cls, val, campo, ops, todos) => engH("select", {
-      className: 'sel ' + cls,
-      value: val,
-      onChange: e => set({
-        [campo]: e.target.value
-      })
-    }, engH("option", {
-      value: ""
-    }, todos), ops.map(o => engH("option", {
-      key: o[0],
-      value: o[0]
-    }, o[1])));
-    var MES = ['jan', 'fev', 'mar', 'abr', 'mai', 'jun', 'jul', 'ago', 'set', 'out', 'nov', 'dez'];
-    var filtrado = p.mes || p.ct || p.cli || p.sit !== 'todos' || p.ano !== String(new Date().getFullYear());
-    var linhaT = (k, rot, t, onClick) => engH("tr", {
-      key: k,
-      className: onClick ? 'ec-row' : undefined,
-      onClick
-    }, engH("td", null, rot), engH("td", {
-      className: "ec-num"
-    }, t.n, engH("span", {
-      className: "ec-pn-sub"
-    }, t.nR + ' real. · ' + t.nP + ' prev.' + (t.nF ? ' · ' + t.nF + ' fora' : ''))), engH("td", {
-      className: "ec-num"
-    }, engH("b", null, fmtUSD(t.rU))), engH("td", {
-      className: "ec-num"
-    }, fmtBRL(t.rB)), engH("td", {
-      className: "ec-num"
-    }, fmtUSD(t.cU), t.cB ? engH("span", {
-      className: "ec-pn-sub"
-    }, fmtBRL(t.cB)) : null), engH("td", {
-      className: "ec-num"
-    }, fmtUSD(t.rU - t.cU), engH("span", {
-      className: "ec-pn-sub"
-    }, margem(t.rU, t.cU))));
-    var cab = ['', 'Operações', 'Receita US$', 'Receita R$', 'COGS', 'Margem US$'];
-    return engH("div", {
-      className: "ec-painel"
-    }, engH("div", {
-      className: "ec-painel-h"
-    }, engH("div", null, engH("h2", null, "Receita e COGS"), engH("span", null, "Realizado (consumo lan\xE7ado) + previsto (opera\xE7\xF5es ainda sem consumo), com o risco de cada opera\xE7\xE3o aplicado.")), engH("button", {
-      className: "btn-o ec-painel-tg",
-      onClick: () => set({
-        aberto: !p.aberto
-      })
-    }, p.aberto ? 'Recolher' : 'Mostrar')), p.aberto && engH(React.Fragment, null, engH("div", {
-      className: "ec-bar ec-pn-filtros"
-    }, sel('ec-pn-ano', p.ano, 'ano', anos.map(a => [a, a]), 'Todos os anos'), sel('ec-pn-mes', p.mes, 'mes', MES.map((m, i) => [String(i + 1).padStart(2, '0'), m]), 'Todos os meses'), sel('ec-pn-ct', p.ct, 'ct', cts.map(c => [c.id, c.name]), 'Todos os contratos'), sel('ec-pn-cli', p.cli, 'cli', clis.map(c => [c, c]), 'Todos os clientes'), engH("select", {
-      className: "sel ec-pn-sit",
-      value: p.sit,
-      onChange: e => set({
-        sit: e.target.value
-      })
-    }, engH("option", {
-      value: "todos"
-    }, "Realizado + previsto"), engH("option", {
-      value: "real"
-    }, "S\xF3 realizado"), engH("option", {
-      value: "prev"
-    }, "S\xF3 previsto")), filtrado && engH("button", {
-      className: "btn-o",
-      onClick: () => set({
-        ano: String(new Date().getFullYear()),
-        mes: '',
-        ct: '',
-        cli: '',
-        sit: 'todos'
-      })
-    }, "Limpar")), engH("div", {
-      className: "ec-kpis"
-    }, engKpi('Receita em US$', fmtUSD(T.rU), 'realizado ' + fmtUSD(T.rRU) + ' · previsto ' + fmtUSD(T.rPU), 'ec-pn-rec-usd'), engKpi('COGS', fmtUSD(T.cU) + (T.cB ? ' · ' + fmtBRL(T.cB) : ''), 'químicas e casing', 'ec-pn-cogs'), engKpi('Operações', String(T.n), T.nR + ' realizada(s) · ' + T.nP + ' prevista(s)' + (T.nF ? ' · ' + T.nF + ' fora (risco 100%)' : ''), 'ec-pn-ops'), engKpi('Receita / operação (US$)', T.n - T.nF ? fmtUSD(T.rU / (T.n - T.nF)) : '—', 'realizado ' + (T.nR - T.nFR ? fmtUSD(T.rRU / (T.nR - T.nFR)) : '—') + ' · previsto ' + (T.nP - T.nFP ? fmtUSD(T.rPU / (T.nP - T.nFP)) : '—') + (T.nF ? ' · sem as ' + T.nF + ' fora' : ''), 'ec-pn-rec-op'), engKpi('Margem em US$', fmtUSD(T.rU - T.cU), margem(T.rU, T.cU) + ' da receita' + (T.rB || T.cB ? ' · ' + fmtBRL(T.rB - T.cB) : ''), 'ec-pn-margem')), engH("div", {
-      className: "ec-pn-grid"
-    }, engH("div", null, engH("div", {
-      className: "hm-sec"
-    }, "Por m\xEAs"), engH("div", {
-      className: "tbl-scroll"
-    }, engH("table", {
-      className: "db-table ec-pn-mes-tab"
-    }, engH("thead", null, engH("tr", null, ['Mês', ...cab.slice(1), ''].map((h, k) => engH("th", {
-      key: k
-    }, h)))), engH("tbody", null, meses.map(m => {
-      var tr = linhaT(m.k, engMesTxt(m.k), m.t);
-      return engH("tr", {
-        key: m.k
-      }, ...tr.props.children, engH("td", {
-        style: {
-          minWidth: 90
-        }
-      }, engBarra(vb(m.t) / mx * 100)));
-    }), !meses.length && engH("tr", null, engH("td", {
-      colSpan: 7,
-      className: "ec-vazio"
-    }, "Nenhuma opera\xE7\xE3o no filtro.")))))), engH("div", null, engH("div", {
-      className: "hm-sec"
-    }, "Por contrato"), engH("div", {
-      className: "tbl-scroll"
-    }, engH("table", {
-      className: "db-table ec-pn-ct-tab"
-    }, engH("thead", null, engH("tr", null, ['Contrato', ...cab.slice(1)].map((h, k) => engH("th", {
-      key: k
-    }, h)))), engH("tbody", null, porCt.map(o => linhaT(o.ct.id, engH("b", null, o.ct.name), o.t, () => {
-      setPlanCt(o.ct.id);
-      setPlanView('rec');
-    })), !porCt.length && engH("tr", null, engH("td", {
-      colSpan: 6,
-      className: "ec-vazio"
-    }, "Nenhuma opera\xE7\xE3o no filtro."))), porCt.length > 1 && engH("tfoot", null, linhaT('tot', engH("b", null, "Total"), T)))))), engH("div", {
-      className: "ec-pn-nota"
-    }, "Clique no contrato para abrir “Consumo e receita”. Risco 100% = opera\xE7\xE3o mapeada, mas fora da receita e do COGS. O COGS vem do banco de Qu\xEDmicos e de Contratos \u2192 Custos (COGS).")));
   };
+  var engCtApagar = ct => {
+    setEngCtMenuAb('');
+    var ops = (db.plannedJobs || []).filter(j => pjDoContrato(j, ct));
+    var nCons = ops.filter(j => j.ppuCons).length,
+      nHo = ops.filter(j => j.handoverId).length;
+    askConfirm({
+      title: 'Apagar o contrato',
+      okLabel: ops.length ? 'Apagar contrato e operações' : 'Apagar contrato',
+      danger: true,
+      msg: engH("span", null, "Apagar ", engH("b", null, ct.name), ops.length ? engH(React.Fragment, null, " e as ", engH("b", null, ops.length + " operação(ões)"), " dele" + (nCons ? ' (' + nCons + ' com consumo lançado' + (nHo ? ', ' + nHo + ' com handover' : '') + ')' : nHo ? ' (' + nHo + ' com handover)' : '') + "? Itens PPU, valores, reajustes e consumos também são apagados.") : "? Ele não tem operações."),
+      hint: 'Não dá para desfazer (só pelo “⬇ Exportar dados” de antes). Para só tirar o card da página inicial, use Arquivar.' + (ops.length ? ' Para confirmar, digite APAGAR.' : ''),
+      input: ops.length ? {
+        placeholder: 'digite APAGAR',
+        required: true
+      } : undefined,
+      onOk: val => {
+        if (ops.length && String(val || '').trim().toUpperCase() !== 'APAGAR') {
+          setSyncErr('O contrato não foi apagado: para confirmar, digite APAGAR.');
+          return;
+        }
+        var ids = new Set(ops.map(j => j.id));
+        updateDB(d => ({
+          ...d,
+          contratos: (d.contratos || []).filter(c => c.id !== ct.id),
+          plannedJobs: (d.plannedJobs || []).filter(j => !ids.has(j.id)),
+          handovers: (d.handovers || []).filter(h => !((h.opIds || []).length && h.opIds.every(id => ids.has(id)))),
+          ctApagados: [...(Array.isArray(d.ctApagados) ? d.ctApagados : []).filter(x => x && x.id !== ct.id), {
+            id: ct.id,
+            numero: ct.numero || '',
+            nome: ct.name || '',
+            em: new Date().toISOString(),
+            operacoes: ids.size
+          }],
+          gerCfg: d.gerCfg ? {
+            ...d.gerCfg,
+            contratos: (d.gerCfg.contratos || []).filter(id => id !== ct.id)
+          } : d.gerCfg,
+          expCfg: d.expCfg ? {
+            ...d.expCfg,
+            contratos: (d.expCfg.contratos || []).filter(id => id !== ct.id)
+          } : d.expCfg
+        }), {
+          kind: 'Contrato',
+          action: 'Exclusão',
+          name: ct.name || '—',
+          user: currentUser() || '—',
+          detail: ids.size + ' operação(ões) apagada(s) junto · pelo card da página inicial'
+        });
+        if (planCt === ct.id) setPlanCt('');
+        setOkMsg('Contrato apagado — ' + ct.name + (ids.size ? ' e ' + ids.size + ' operação(ões)' : ''));
+        setTimeout(() => setOkMsg(''), 6000);
+      }
+    });
+  };
+  var engCtMenu = ct => engH("div", {
+    className: 'eng2-menu' + (engCtMenuAb === ct.id ? ' on' : ''),
+    onClick: e => e.stopPropagation(),
+    onKeyDown: e => e.stopPropagation()
+  }, engH("button", {
+    type: "button",
+    className: "eng2-menu-b",
+    title: "Arquivar ou apagar este contrato",
+    "aria-label": 'Arquivar ou apagar o contrato ' + ct.name,
+    "aria-expanded": engCtMenuAb === ct.id,
+    onClick: () => setEngCtMenuAb(x => x === ct.id ? '' : ct.id)
+  }, "\u22EF"), engCtMenuAb === ct.id && engH("div", {
+    className: "eng2-menu-pop",
+    role: "menu"
+  }, engH("button", {
+    type: "button",
+    role: "menuitem",
+    className: "eng2-menu-arq",
+    onClick: () => engCtArquivar(ct)
+  }, "\uD83D\uDDC4 Arquivar"), engH("button", {
+    type: "button",
+    role: "menuitem",
+    className: "eng2-menu-apagar",
+    onClick: () => engCtApagar(ct)
+  }, "\uD83D\uDDD1 Apagar\u2026")));
   /* ---------------- arquivo para o gerencial ----------------
      Pacote com os contratos escolhidos pelo engenheiro e as operações deles, já calculado (valores na data do
      serviço), para a pasta do SharePoint. O EARL Gerencial junta os arquivos de todos os engenheiros e, para

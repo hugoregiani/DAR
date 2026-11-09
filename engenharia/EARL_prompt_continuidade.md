@@ -4,7 +4,11 @@
 
 > **Regra de entrega (pedido do usuário, 05/11/2026):** sempre que houver alteração em qualquer arquivo (EARL, EARL Engenharia, EARL Gerencial, testes), **enviar junto este prompt de continuidade atualizado** — com o que foi feito, o que está pendente e como continuar — e commitá-lo junto com a alteração. Antes de entregar, rodar os testes (os novos e todos os anteriores) e dizer o resultado.
 >
-> **Última atualização:** 08/11/2026 — EARL Engenharia e7: aba **Inventário das sondas** em cada contrato (contagens por data) e **⬇ Exportar planilhas** (inventário, consumo de químicos, casing e pessoal, em arquivos separados). O **Painel de Compras** (outro repositório, `hugoregiani/painel-compras-quimicos`) passou a ler o inventário e o consumo de químicos dessas planilhas no lugar das abas DAR e Compilado Geral do Forecast. Antes, em 05/11/2026: EARL Gerencial g13 (15 linhas visíveis com rolagem; Itens PPU em US$). Ver a seção 4-E.
+> **Última atualização:** 09/11/2026 — EARL Engenharia e8 + EARL Gerencial g14:
+> - **Engenharia:** a página inicial ganhou a seção "Receita e margem" do Gerencial, embutida, com os cartões dos quartos, o gráfico, a matriz e os filtros do Gerencial. O card do contrato ganhou o botão "⋯", com Arquivar e Apagar.
+> - **Gerencial:** quarto de início e fim (vários quartos), prévia da seleção ao passar o cursor nos meses e quartos, e Shift+clique nos cards dos quartos.
+>
+> Antes, em 08/11/2026: e7, inventário das sondas e planilhas separadas para o Painel de Compras. Ver a seção 4-E.
 
 ---
 
@@ -78,7 +82,7 @@ O CSP está em `globalHeaders`. Ele precisa de `'unsafe-inline'` e `'unsafe-eval
 
 ---
 
-## 4-E. Desmembramento: EARL Engenharia (avulso) e1 a e7, EARL Gerencial g2–g13 e teste BP — pasta `engenharia/` do repositório `hugoregiani/DAR`
+## 4-E. Desmembramento: EARL Engenharia (avulso) e1 a e8, EARL Gerencial g2–g14 e teste BP — pasta `engenharia/` do repositório `hugoregiani/DAR`
 
 Pedido do Hugo (01/11/2026): como o EARL ainda não pode ser usado online, separar a **Engenharia** num HTML próprio, **sem login**, e trocar o envio do handover (que ia para a Coordenação/Logística) por um **e-mail .eml** gerado no app. Parte do `EARL_HAL_CMT_115_SIMULACAO.html` (compilado) pelo `engenharia/patch_engenharia.py`, que insere `engenharia/eng_app.js` (código novo, dentro do `App`, antes de `renderHandover`) e `engenharia/eng.css`. Saída: `engenharia/EARL_Engenharia.html` (~8,4 MB). Versão: `EARL_VERSION = 'EARL Engenharia e1 (base v115)'`.
 
@@ -477,6 +481,44 @@ O código novo está em `engenharia/eng_inventario.js`, inserido pelo patch depo
   - o inventário é lançado à mão ou por planilha; quando o EARL completo estiver online, ele pode vir do DAR da página da sonda (`rigBordo`);
   - os textos novos não estão em EN/ES;
   - a conversão de unidade no Painel é feita ao processar. Ao cadastrar um ⇄ novo lá, é preciso reprocessar.
+
+### EARL Gerencial g14 + EARL Engenharia e8 (09/11/2026): Receita e margem na Engenharia, vários quartos, prévia da seleção e arquivar/apagar contrato
+
+Pedido do Hugo: "Inclua no app da engenharia a opção de apagar e/ou arquivar o card de um contrato. Substitua a seção de receita e cogs do app da engenharia pela seção receita e margem do app gerencial, transporte tudo, os cards dos quartos, o gráfico e a tabela. Puxe também os filtros iguais ao do gerencial e permita que eu selecione mais de um quarto, como está a seleção de meses do gerencial, apenas faça uma correção, ao selecionar o primeiro mês ou quarto, ao caminhar com o cursor sobre os demais meses sobreie a prévia da seleção final. Faça essa alteração no app gerencial também."
+
+- **Gerencial g14** (`gerencial/gerencial.html`):
+  - **Quarto (início e fim):** `S.f.qIni`/`S.f.qFim` no lugar de `S.f.tri`. A caixa `.q-box` abre `popQuarto()`, com os botões `[data-qb]`: um clique no quarto inicial e outro no final (`S.qPop`/`S.qPasso`, como os meses). `periodoOk` aceita o intervalo de quartos, e o quarto continua valendo no lugar dos meses.
+  - **Cards dos quartos:** clique escolhe um quarto (clique de novo tira); Shift+clique soma do já escolhido até o clicado.
+  - **Arquivo compartilhado antigo:** com `tri`, vira `qIni`/`qFim`.
+  - **Prévia:** depois do primeiro clique, a grade (`.mes-grid`/`.q-grid`) ganha `data-ini`. O `mouseover` chama `previa()`, que marca `.pv`/`.pv-ponta` do inicial até o mês ou quarto sob o cursor, e o `mouseout` limpa.
+  - **Modo embutido (`EMB`):** liga quando há `<script id="earlger-embutido">`.
+    - O xlsx vem de `window.parent`; os dados vêm de `window.parent.engGerDados()`, e `window.earlGerAtualizar()` recarrega.
+    - Sem cabeçalho, título, barra de arquivos, abas, registros e arrastar arquivos.
+    - As preferências usam o prefixo do arquivo da Engenharia + `ger:` (`CHV`/`PREF_EMB`).
+    - `ajustarAltura()` ajusta o iframe à altura do conteúdo (ResizeObserver). O resize só redesenha quando muda a largura.
+  - **Celular:** a dica "clique…" dos cards some.
+  - `VERSAO` g14.
+- **Engenharia e8:**
+  - **Seção Receita e margem** (`renderEngPainel` novo em `eng_contratos.js`): `<iframe srcDoc={ENG_GER_HTML}>`.
+    - O `patch_engenharia.py` embute o `gerencial.html` sem as bibliotecas, com logos `data:,` e o marcador `earlger-embutido`, escapando `</` e `<!--`.
+    - `window.engGerDados()` devolve `engPacoteGerencial` de todos os `engContratos` (não arquivados).
+    - Um `useEffect([db, engContratos])` chama `earlGerAtualizar`.
+    - "Recolher"/"Mostrar" fica guardado em `eng_painel_ger_v1`.
+    - O painel antigo (`engPn`, `engValorOp`, `engSomaV`, filtro "situação" e as tabelas por mês e por contrato) saiu.
+  - **Card do contrato** (`engCtMenu`/`engCtArquivar`/`engCtApagar`, injetado no card pelo patch): botão "⋯", com fecha-ao-clicar-fora.
+    - **Arquivar:** `archived:true`, depois de confirmação.
+    - **Apagar:** tira o contrato, as operações dele (`pjDoContrato`) e os handovers só delas (`opIds`), e limpa `gerCfg`/`expCfg`. Com operações, exige digitar APAGAR (`askConfirm` com `input`).
+    - **Não voltar ao reabrir:** o id vai para `db.ctApagados`, e `engQuimMig` (depois do `migrateDB`) tira esses ids. Sem isso, a semente recriaria o contrato pelo número.
+  - **Versão:** `EARL Engenharia e8 (base v115)`.
+- **Testes:**
+  - **Gerencial:** `e2e_matriz` 59 (vários quartos, prévia nos quartos e meses, Shift+clique), `e2e_gerencial` 62, `e2e_registros` 66, `e2e_tabelas` 53, `e2e_compartilhar` 27.
+  - **Engenharia:** `e2e_painel` 23 (novo), `e2e_contratos` 75 (a seção nova com os números de antes), `e2e_engenharia` 62, `e2e_quimicos` 36, `e2e_espaco` 12, `e2e_inventario` 54.
+  - **BP:** `e2e_bp` 57. A seção Receita e margem dá 2026 + 2027 = Σ RECEITA FINAL e COGS FINAL, com realizado/previsto e meses; os cenários sem espaço e com armazenamento bloqueado também passam.
+- **Diferenças para o painel antigo:**
+  - um ano por vez, como no Gerencial; o total de todos os anos é a soma;
+  - sem o filtro "situação": realizado e previsto aparecem nos cartões;
+  - clicar no contrato não abre mais a aba "Consumo e receita" (o card do contrato faz isso).
+- **Pendências:** desarquivar ainda é pelo Contratos ("Mostrar arquivados" → abrir → Desarquivar → Salvar).
 
 ---
 

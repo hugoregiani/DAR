@@ -61,7 +61,7 @@ const foto0 = page => page.evaluate(() => ({
   await registrar(p, '2026-11-01', 'forecast de novembro');
   await p.click('.tab[data-tab="cmp"]');
   await p.click('.cx-sel [data-gmet="cogs"]');
-  await p.selectOption('[data-f="tri"]', '1');
+  await p.click('.q-box'); await p.click('[data-qb="1"]'); await p.click('[data-qb="1"]');
   const orig = await foto0(p);
   conf(orig.tab === 'cmp' && orig.met === 'cogs' && orig.ft.length > 0, 'tela de partida: aba Comparar registros, só COGS, Q1/2026', orig);
   conf(await p.locator('.bar [data-a="shAbrir"]').count() === 1, 'botão "📤 Compartilhar (HTML)" na barra do topo');
@@ -81,13 +81,13 @@ const foto0 = page => page.evaluate(() => ({
   await q.waitForSelector('.kpis', {timeout: 60000});
   const sh = await foto0(q);
   conf(/Versão compartilhada do EARL Gerencial, com os dados de 05\/11\/2026/.test(await txt(q, '.sh-faixa')) && (await q.title()) === 'EARL — Gerencial (compartilhado)', 'abre sozinho, com a faixa "Versão compartilhada" e a data dos dados');
-  conf(sh.tab === 'cmp' && sh.met === 'cogs' && sh.base === orig.base && JSON.stringify(sh.chips) === JSON.stringify(orig.chips) && await q.inputValue('[data-f="tri"]') === '1', 'abre na mesma aba, com "só COGS", Q1 e a mesma comparação', sh);
+  conf(sh.tab === 'cmp' && sh.met === 'cogs' && sh.base === orig.base && JSON.stringify(sh.chips) === JSON.stringify(orig.chips) && /^Q1 \(jan – mar\)/.test(await q.textContent('.q-box')), 'abre na mesma aba, com "só COGS", Q1 e a mesma comparação', sh);
   conf(JSON.stringify(sh.kpi) === JSON.stringify(orig.kpi) && JSON.stringify(sh.ft) === JSON.stringify(orig.ft), 'os mesmos números (indicadores e tabela de comparação)', {o: orig.kpi, s: sh.kpi});
   conf((await q.$$eval('.tab', l => l.map(b => b.textContent.trim())))[1] === 'Comparar registros (2)' && await q.locator('#g-evo .g-reg').count() === 2 && await q.locator('.g-var-box svg').count() === 1, 'os registros vieram junto; os gráficos da comparação estão lá');
   conf(!(await q.locator('[data-a="arq"], [data-a="pasta"], [data-a="limpar"], [data-a="regAbrir"], [data-a="regImport"], [data-regdel]').count()) && await q.locator('.bar [data-a="excel"]').count() === 1, 'só consulta: sem Carregar, Limpar, Registrar, Importar e 🗑; o Excel continua');
   await foto(q, 's2_compartilhado');
   await q.click('.cx-sel [data-gmet="ambos"]');
-  await q.selectOption('[data-f="tri"]', '');
+  await q.click('.q-box'); await q.click('[data-a="qTodos"]');
   conf(await q.locator('.t-cx thead tr').nth(2).locator('th:has-text("COGS")').count() > 0 && (await q.$$eval('.t-cx thead tr:nth-child(2) th', l => l.length)) > 4, 'dá para trocar o "Mostrar" e os filtros');
   await q.click('.tab[data-tab="receita"]');
   await q.waitForSelector('#graf .g-svg');

@@ -113,35 +113,39 @@ const usd = v => 'US$ ' + v.toLocaleString('pt-BR', {minimumFractionDigits: 2, m
   const fora = go.filter(o => o.risco >= 100);
   conf(fora.length === 2 && fora.every(o => o.previsto.receita.usd > 0), 'risco 100%: 2 operações mapeadas (com valor bruto), fora da receita e do COGS', fora.map(o => o.id + ' bruto ' + o.previsto.receita.usd));
 
-  console.log('Página inicial: painel Receita e COGS');
-  await p.selectOption('.ec-pn-ano', '');
-  const pn = async () => ({usd: valor(await txt(p, '.ec-pn-rec-usd b')), cogs: valor(await txt(p, '.ec-pn-cogs b')), ops: await txt(p, '.ec-pn-ops b'), sub: await txt(p, '.ec-pn-ops em')});
-  let v = await pn();
-  conf(perto(v.usd, T.rec) && perto(v.usd, PL.rec, 0.05) && perto(v.cogs, T.cogs) && v.ops === '27' && v.sub === '9 realizada(s) · 18 prevista(s) · 2 fora (risco 100%)', 'todos os anos: ' + usd(PL.rec) + ' de receita, COGS ' + usd(PL.cogs) + ', 27 operações (2 fora)', v);
+  console.log('Página inicial: seção Receita e margem (a do Gerencial, embutida)');
+  const gerF = async pg => { await pg.waitForSelector('.ec-ger-frame', {timeout: 60000}); const h = await pg.$('.ec-ger-frame'); const f = await h.contentFrame(); await f.waitForSelector('.kpis', {timeout: 30000}); return f; };
+  const pnF = async f => ({usd: valor(await f.textContent('.k-rec-usd b')), cogs: valor(await f.textContent('.k-cogs b')), ops: (await f.textContent('.k-ops b')).trim(), sub: (await f.textContent('.k-ops em')).trim(), rsub: (await f.textContent('.k-rec-usd em')).trim()});
+  let fg = await gerF(p);
+  let v = await pnF(fg);
+  conf(perto(v.usd, T.ano['2026']) && v.ops === '16' && v.sub === '9 realizada(s) · 7 prevista(s) · 2 fora (risco 100%)', '2026 (o ano padrão): ' + usd(T.ano['2026']) + ', 16 operações (2 fora)', v);
   await foto(p, 'bp2_painel');
-  const nConta = pl.filter(o => o.risco < 1).length;
-  const cards = await p.$$eval('.ec-painel .ec-kpi span', l => l.map(s => s.textContent));
-  conf(cards.join('|') === 'Receita em US$|COGS|Operações|Receita / operação (US$)|Margem em US$', 'cartões: Receita, COGS, Operações, Receita/operação, Margem', cards);
-  conf(perto(valor(await txt(p, '.ec-pn-rec-op b')), PL.rec / nConta), 'receita por operação: ' + usd(PL.rec / nConta) + ' (Σ RECEITA FINAL ÷ ' + nConta + ' operações, sem as 2 com risco 100%)', await txt(p, '.ec-pn-rec-op b'));
-  await p.selectOption('.ec-pn-ano', '2026');
-  v = await pn();
-  conf(perto(v.usd, T.ano['2026']), 'filtro 2026: ' + usd(T.ano['2026']), v.usd);
-  await p.selectOption('.ec-pn-ano', '2027');
-  v = await pn();
-  conf(perto(v.usd, T.ano['2027']), 'filtro 2027: ' + usd(T.ano['2027']), v.usd);
-  await p.selectOption('.ec-pn-ano', '');
-  await p.selectOption('.ec-pn-sit', 'real');
-  v = await pn();
-  conf(perto(v.usd, T.recR) && v.ops === '9', 'só realizado: ' + usd(T.recR) + ' em 9 operações', v);
-  await p.selectOption('.ec-pn-sit', 'prev');
-  v = await pn();
-  conf(perto(v.usd, T.recP) && v.ops === '18', 'só previsto: ' + usd(T.recP) + ' em 18 operações', v);
-  await p.selectOption('.ec-pn-sit', 'todos');
-  const meses = await p.locator('.ec-pn-mes-tab tbody tr').count();
-  conf(meses === 9, 'por mês: ago/2026 a mai/2027 (9 meses com operação)', meses);
+  const cards = await fg.$$eval('.kpis .kpi > span', l => l.map(s => s.textContent));
+  conf(cards.join('|') === 'Receita em US$|COGS em US$|Operações|Receita / operação (US$)|Margem em US$', 'cartões: Receita, COGS, Operações, Receita/operação, Margem', cards);
+  const nConta26 = pl.filter(o => o.risco < 1 && o.data.startsWith('2026')).length;
+  conf(perto(valor(await fg.textContent('.k-rec-op b')), T.ano['2026'] / nConta26), 'receita por operação 2026: ' + usd(T.ano['2026'] / nConta26) + ' (÷ ' + nConta26 + ', sem as com risco 100%)', await fg.textContent('.k-rec-op b'));
+  const recPrev = s => { const m = s.match(/realizado US\$ ([\d.,]+) · previsto US\$ ([\d.,]+)/); return m ? [valor(m[1]), valor(m[2])] : [NaN, NaN]; };
+  const [r26, p26] = recPrev(v.rsub);
+  const mes26 = await fg.$$eval('.t-mx th.mx-mes:not(.mx-q)', l => l.length);
+  await fg.selectOption('[data-f="ano"]', '2027');
+  const v27 = await pnF(fg);
+  const [r27, p27] = recPrev(v27.rsub);
+  const mes27 = await fg.$$eval('.t-mx th.mx-mes:not(.mx-q)', l => l.length);
+  conf(perto(v27.usd, T.ano['2027']) && v27.ops === '11', '2027: ' + usd(T.ano['2027']) + ' em 11 operações', v27);
+  conf(perto(v.usd + v27.usd, PL.rec, 0.05) && perto(v.cogs + v27.cogs, PL.cogs, 0.05), '2026 + 2027 = Σ RECEITA FINAL (' + usd(PL.rec) + ') e Σ COGS FINAL (' + usd(PL.cogs) + ') da planilha', {rec: v.usd + v27.usd, cogs: v.cogs + v27.cogs});
+  conf(perto(r26 + r27, T.recR) && perto(p26 + p27, T.recP), 'realizado ' + usd(T.recR) + ' e previsto ' + usd(T.recP) + ' (somando os dois anos)', [r26 + r27, p26 + p27]);
+  conf(mes26 + mes27 === 9, 'matriz: ago/2026 a mai/2027 (9 meses com operação)', [mes26, mes27]);
+  await fg.selectOption('[data-f="ano"]', '2026');
+  await fg.click('.qc[data-q="4"]');
+  const q4e = pl.filter(o => o.data >= '2026-10' && o.data < '2027-01');
+  conf(perto(valor(await fg.textContent('.k-rec-usd b')), soma(q4e, 'receitaFinal')), 'card Q4/2026: ' + usd(soma(q4e, 'receitaFinal')), await fg.textContent('.k-rec-usd b'));
+  await fg.click('.qc[data-q="3"]', {modifiers: ['Shift']});
+  conf(perto(valor(await fg.textContent('.k-rec-usd b')), T.ano['2026']) && /Q3 – Q4/.test(await fg.textContent('.q-box')), 'Shift+clique no Q3: Q3–Q4 = 2026 inteiro (as operações começam em agosto)', await fg.textContent('.q-box'));
+  await fg.click('.qc[data-q=""]');
 
   console.log('Contrato BP: lista, consumo e receita');
-  await p.click('.ec-pn-ct-tab tbody tr:has-text("BP")');
+  await p.click('.eng2-card:has-text("BP — Macaé")');
+  await p.click('.db-tab:has-text("Consumo e receita")');
   await p.waitForSelector('.ec-kpi-usd');
   await foto(p, 'bp3_receita_contrato');
   conf(perto(valor(await txt(p, '.ec-kpi-usd b')), T.recR), 'aba Consumo e receita do BP: ' + usd(T.recR) + ' realizados', await txt(p, '.ec-kpi-usd b'));
@@ -195,23 +199,23 @@ const usd = v => 'US$ ' + v.toLocaleString('pt-BR', {minimumFractionDigits: 2, m
     if (preparar) { await pg.goto('file://' + BRANCO); await pg.evaluate(preparar); }
     await pg.goto('file://' + path.resolve(BP));
     await pg.waitForSelector('.eng-tools', {timeout: 60000});
-    await pg.selectOption('.ec-pn-ano', '');
-    const r = {ops: await txt(pg, '.ec-pn-ops b'), usd: valor(await txt(pg, '.ec-pn-rec-usd b')), tag: await txt(pg, '.earl-bp-tag'), aviso: await pg.locator('.ec-esp-aviso').count() ? await txt(pg, '.ec-esp-aviso') : '', cts: await pg.locator('.eng2-card').count(), er};
+    const fq = await gerF(pg);
+    const r = {ops: (await fq.textContent('.k-ops b')).trim(), usd: valor(await fq.textContent('.k-rec-usd b')), tag: await txt(pg, '.earl-bp-tag'), aviso: await pg.locator('.ec-esp-aviso').count() ? await txt(pg, '.ec-esp-aviso') : '', cts: await pg.locator('.eng2-card').count(), er};
     return {b, pg, r};
   };
   // 1) espaço do file:// cheio (EARL completo e simulações abertos do disco): o caso relatado
   let c1 = await cenario(() => { localStorage.setItem('earlsim113:hal_cmt_db_v1', 'x'.repeat(2600000)); localStorage.setItem('earlsim115:hal_cmt_db_v1', 'x'.repeat(2550000)); });
   await foto(c1.pg, 'bp8_sem_espaco');
-  conf(c1.r.ops === '27' && perto(c1.r.usd, PL.rec, 0.05) && /não está salvando/.test(c1.r.tag) && /espaço do navegador/.test(c1.r.aviso) && !c1.r.er.length, 'sem espaço no navegador: abre com as 27 operações e a receita da planilha, e avisa que não salva', c1.r);
+  conf(c1.r.ops === '16' && perto(c1.r.usd, T.ano['2026']) && /não está salvando/.test(c1.r.tag) && /espaço do navegador/.test(c1.r.aviso) && !c1.r.er.length, 'sem espaço no navegador: abre com os dados da planilha (2026: 16 operações e a receita), e avisa que não salva', c1.r);
   await c1.b.close();
   // 2) dados guardados de uma versão anterior do teste (ou do EARL vazio): usa os da planilha
   c1 = await cenario(() => { localStorage.setItem('earlengbp:hal_cmt_db_v1', JSON.stringify({people: [{id: 'p1', name: 'X'}], rigs: [], contratos: [], plannedJobs: []})); });
   const marca = await c1.pg.evaluate(() => JSON.parse(localStorage.getItem('hal_cmt_db_v1')).testeBP === window.EARL_BP_ID);
-  conf(c1.r.ops === '27' && marca && /dados da planilha/.test(c1.r.tag) && !c1.r.aviso && !c1.r.er.length, 'dados de uma versão anterior no navegador: troca pelos da planilha', c1.r);
+  conf(c1.r.ops === '16' && marca && /dados da planilha/.test(c1.r.tag) && !c1.r.aviso && !c1.r.er.length, 'dados de uma versão anterior no navegador: troca pelos da planilha', c1.r);
   await c1.b.close();
   // 3) armazenamento bloqueado (arquivo aberto numa pré-visualização)
   c1 = await cenario(null, () => { Object.defineProperty(window, 'localStorage', {configurable: true, get() { throw new DOMException('The document is sandboxed and lacks the allow-same-origin flag.', 'SecurityError'); }}); });
-  conf(c1.r.ops === '27' && /não consegue guardar dados/.test(c1.r.aviso) && /não está salvando/.test(c1.r.tag) && !c1.r.er.length, 'armazenamento bloqueado: abre com os dados e avisa', c1.r);
+  conf(c1.r.ops === '16' && /não consegue guardar dados/.test(c1.r.aviso) && /não está salvando/.test(c1.r.tag) && !c1.r.er.length, 'armazenamento bloqueado: abre com os dados e avisa', c1.r);
   await c1.b.close();
   fs.unlinkSync(BRANCO);
 
@@ -274,7 +278,7 @@ const usd = v => 'US$ ' + v.toLocaleString('pt-BR', {minimumFractionDigits: 2, m
   await p.click('[data-mesb="10"]');
   const sel = pl.filter(o => o.data >= '2026-09' && o.data < '2026-11');
   conf(perto(valor(await txt(p, '.k-rec-usd b')), soma(sel, 'receitaFinal')) && await txt(p, '.k-ops b') === String(sel.length) && /set – out\/2026/.test(await txt(p, '.mes-box')), 'período set–out/2026: ' + usd(soma(sel, 'receitaFinal')) + ' em ' + sel.length + ' operações', await txt(p, '.k-rec-usd b'));
-  await p.selectOption('[data-f="tri"]', '4');
+  await p.click('.q-box'); await p.click('[data-qb="4"]'); await p.click('[data-qb="4"]');
   const q4 = pl.filter(o => o.data >= '2026-10' && o.data < '2027-01');
   conf(perto(valor(await txt(p, '.k-rec-usd b')), soma(q4, 'receitaFinal')) && await txt(p, '.k-ops b') === String(q4.length), 'Q4/2026 vale no lugar dos meses: ' + usd(soma(q4, 'receitaFinal')) + ' em ' + q4.length + ' operações', await txt(p, '.k-rec-usd b'));
   await p.click('[data-a="limparf"]');
