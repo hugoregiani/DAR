@@ -4,9 +4,11 @@
 
 > **Regra de entrega (pedido do usuário, 05/11/2026):** sempre que houver alteração em qualquer arquivo (EARL, EARL Engenharia, EARL Gerencial, testes), **enviar junto este prompt de continuidade atualizado** — com o que foi feito, o que está pendente e como continuar — e commitá-lo junto com a alteração. Antes de entregar, rodar os testes (os novos e todos os anteriores) e dizer o resultado.
 >
-> **Última atualização:** 09/11/2026 — EARL Engenharia e9 + EARL Gerencial g15: na seção "Receita e margem" da Engenharia, a linha dos quartos ficou só com Q1 a Q4. Saiu o card "Total do ano", que repetia o cartão vermelho "Receita em US$". No Gerencial ele continua.
+> **Última atualização:** 09/11/2026 — **Contratos reais pré-carregados** (pasta `engenharia/contratos_reais/`): um `EARL_Engenharia_<NOME>.html` por planilha de contrato (PA, DC, CE, BW, BDII, Shell), com contratos, sondas, químicos/casing e operações da planilha, e receita/COGS de cada operação iguais aos da planilha. O app (e9) e o Gerencial (g15) não mudaram. Ver a seção "Contratos reais" em 4-E.
 >
-> Antes, no mesmo dia — EARL Engenharia e8 + EARL Gerencial g14:
+> Antes, no mesmo dia — EARL Engenharia e9 + EARL Gerencial g15: na seção "Receita e margem" da Engenharia, a linha dos quartos ficou só com Q1 a Q4. Saiu o card "Total do ano", que repetia o cartão vermelho "Receita em US$". No Gerencial ele continua.
+>
+> E antes — EARL Engenharia e8 + EARL Gerencial g14:
 > - **Engenharia:** a página inicial ganhou a seção "Receita e margem" do Gerencial, embutida, com os cartões dos quartos, o gráfico, a matriz e os filtros do Gerencial. O card do contrato ganhou o botão "⋯", com Arquivar e Apagar.
 > - **Gerencial:** quarto de início e fim (vários quartos), prévia da seleção ao passar o cursor nos meses e quartos, e Shift+clique nos cards dos quartos.
 >
@@ -535,6 +537,34 @@ Pedido do Hugo: "Eu vi que tem 2 valores de total receita na engenharia em verme
   - Gerencial: `e2e_gerencial` 62, `e2e_matriz` 59, `e2e_registros` 66, `e2e_tabelas` 53, `e2e_compartilhar` 27.
 
 ---
+
+### Contratos reais pré-carregados (09/11/2026): um EARL Engenharia por planilha — pasta `engenharia/contratos_reais/`
+
+Pedido do Hugo: "Preciso que recrie um HTML para cada arquivo em anexo, como já fiz o teste da BP. Preciso que os arquivos HTML venham carregados com as informações para que eu compartilhe com outros usuários. … na aba forecast vc encontrará todas as informações das operações, consumos etc e na aba banco de dados contrato as informações do contrato. Cada arquivo contempla um contrato apenas, com exceção dos arquivos CE e DC … crie os contratos separadamente mas mantenha um arquivo HTML somente para cada um desses arquivos."
+
+- **Arquivos (só scripts no repositório; as planilhas e os HTML têm dados reais e ficam fora):**
+  - `leitor_planilhas.js`: lê as abas "Forecast" e "Banco de dados contratos" (no Node com o pacote xlsx ou dentro do app com o XLSX dele) e devolve o modelo: contratos (itens, preço inicial e reajustes), operações, químicos, casing e avisos;
+  - `gerar_html.js <planilha> <NOME> <EARL_Engenharia.html> <saída.html> [relatório.json]`: abre o app no Chromium, monta o banco, grava, reabre, confere cada operação pelo pacote do Gerencial (`window.engGerDados`) e embute o banco no HTML (prefixo `earleng<nome>:`, etiqueta azul "<NOME> · dados da planilha … · Reiniciar", marca `earlPlanilhaId`, `EARL_VERSION` + " · <NOME>"; mesma ideia do `montar_bp.py`);
+  - `e2e_contratos_reais.js <pasta das planilhas> <pasta dos HTML> [NOMES] [--telas pasta]`: 16 verificações por arquivo (96 nos 6);
+  - `README.md` com as regras.
+- **Dois formatos de planilha:**
+  - **por colunas** (PA, BW, BDII, Shell — como o BP): rótulos na coluna F, uma operação por coluna; Banco com a linha "Data:" e blocos de 6 colunas por ano (Ano 1, Ano 2, RENECOM…); preço do bloco = Receita CMT (US$), ou US$ × Rev. Share (BW não tem CMT);
+  - **por linhas** (CE, DC): uma linha por item cobrado, vários contratos (coluna "Contrato"); Banco com preço inicial (US$, Receita CMT ou R$ ÷ câmbio 5,0181 inferido das linhas) e "Data reajuste / Índice / Valor reajustado" (índice acumulado sobre o preço inicial). A RECEITA FINAL da linha = (Receita Manual, se houver, senão quantidade × preço) × (1 − risco); o COGS = COGS Manual × (1 − risco). As linhas viram operações agrupando contrato + sonda + poço + data + situação + risco + SO (DC: 436 linhas → 218 operações; CE: 32 → 15).
+- **Contratos:** só os que têm operação no Forecast (Tenaris DS só no Banco do CE e Baker DS só no Banco da DC ficam de fora, com aviso). Contrato que já existe no EARL é reaproveitado pelo número ou pelo nome (P&A; Carolina, Deepwater Aquila, DS-04, ODN-I, Takatsugu J, Tidal Action) e **mantém o número do EARL**: o `migrateDB` recria os contratos de `CONTRATOS_SEED` pelo número, e com o número da planilha (5900.0127108.24.2) o P&A aparecia duplicado. Os outros contratos do EARL ficam arquivados. Tipo: por colunas = serviço; por linhas = venda direta (" DS"), spot ("SPOT"), drilling contractor ou serviço, pelo tipo de receita. Sem cliente (Mero 4) = "Sem cliente".
+- **Preços:** o preço inicial e cada ano/reajuste do Banco viram os reajustes do contrato no EARL (com a data e "Ano N (planilha X)"). Item só no Forecast entra com o preço do Forecast (aviso). Sem arredondar os preços (arredondar para 4 casas dava diferença de US$ 0,08 em operações grandes do BDII).
+- **Receita e COGS iguais aos da planilha — ajustes:** o app calcula quantidade × preço do contrato na data. Quando a planilha difere (câmbio do mês já faturado no PA e no BDII de jan a set/2026; itens não cobrados; créditos de NPT; valores manuais; reajuste previsto no BDII a partir de mai/2027; COGS informado das vendas do CE; COGS realizado diferente no BDII), a diferença entra na operação: receita pelos itens PPU `AJ+` (US$ 1) e `AJ−` (US$ −1) com a quantidade = valor; COGS por `AJ-QUIM±` (químicos) e `AJ-CE±` (casing) em Custos (COGS), US$ ±1. Concluída: só no consumo lançado; prevista: no planejado. O Painel de Compras ignora os `AJ-` (SAP não numérico). Com risco 100% a planilha zera tudo; aí fica o calculado, sem ajuste.
+- **Sondas:** pelo nome/código, sem zero à esquerda (DS-04 = DS-4/NS-54), por "contém" (KG2 = Dhirubhai Deepwater KG2) ou pelo nome do contrato (West Carina_24 → West Carina, que ganha o NS-48). Criadas: NS-51 e NS-57 (PA), V247 (BW). Sem sonda: vendas do CE, Câmbio/COPQ, Mero 4, Perenco, Tenaris DS e a "Frente" do PA (12). "Commander NS-40" (Drill Quip) → NS-40.
+- **Tipo de operação** (`tipoOperacao`): LWO, HWO, PWC, Abandono, Squeeze, Top-job, Disponibilidade (inclusive "Disponbilidade" e "PARCIAL_…"), Cimentação primária + revestimento (primeiro tamanho da lista do EARL na descrição: "Rev 11 7/8 x 10 3/4" → 10 3/4"); o resto → Outros com a descrição (20 letras). Vendas do CE: "Venda direta"/"Serviços".
+- **Resultado** (receita e COGS = planilha em todas as operações):
+  - PA: 1 contrato (P&A), 105 operações (83 concluídas), US$ 7.646.930,14 / COGS 328.640,15, 71 com ajuste de receita;
+  - DC: 23 contratos, 218 operações, US$ 28.248.137,63 / COGS 0;
+  - CE: 5 contratos, 15 operações (2025 e 2026), US$ 959.688,51 / COGS 434.571,41;
+  - BW: 1 contrato (Maromba), 18 operações (2026–2028), US$ 1.578.360,62 / COGS 437.335,88;
+  - BDII: 1 contrato (BD II), 148 operações (68 concluídas), US$ 14.951.595,10 / COGS 2.975.329,80;
+  - Shell: 1 contrato (BJSA), 12 operações (2027), US$ 79.401.083,86 / COGS 159.392,61.
+- **Testes:** `e2e_contratos_reais` 96 de 96 (por arquivo: título, etiqueta, marca, contratos ativos, preços, operações, sondas, prefixo, Receita e margem ano a ano = planilha, arquivo do gerencial = planilha, todos os contratos em todas as abas + consumo lançado, as 4 exportações, alteração salva e "Reiniciar", nenhum erro). Testes anteriores, todos passando: Engenharia `e2e_engenharia` 62, `e2e_contratos` 75, `e2e_quimicos` 36, `e2e_espaco` 12, `e2e_inventario` 54, `e2e_painel` 23; BP `e2e_bp` 58; Gerencial `e2e_gerencial` 62, `e2e_matriz` 59, `e2e_registros` 66, `e2e_tabelas` 53, `e2e_compartilhar` 27.
+- **Como continuar:** planilha nova ou atualizada → `node contratos_reais/gerar_html.js <planilha> <NOME> EARL_Engenharia.html EARL_Engenharia_<NOME>.html rel.json` (o relatório lista avisos, sondas criadas e a conferência de cada operação; o script sai com erro se alguma operação não bater) e `node contratos_reais/e2e_contratos_reais.js <pasta planilhas> <pasta HTML> <NOME>`. Mudou o `EARL_Engenharia.html` (nova versão e/g)? Gere de novo os 6 arquivos para o usuário.
+- **Pendências:** o "Previsão de Embarque/Desembarque" do time de embarque não é lido (a duração vem do tipo da operação, como no BP); os ajustes `AJ` aparecem como itens do contrato/COGS (é o jeito de bater com a planilha sem mudar o app); se a planilha mudar de layout, ajustar o `leitor_planilhas.js`.
 
 ## 4. Última mudança: v115 (Inventário a bordo: "Movimentar material" em cada contentor e na sacaria, em todas as categorias; Logística: desfazer a divisão da tesoura)
 

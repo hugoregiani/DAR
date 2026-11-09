@@ -154,6 +154,24 @@ node teste_bp/e2e_bp.js Contrato_BP_Teste_EARL.xlsx EARL_Engenharia_BP_teste.htm
   - sem espaço no navegador, ou com o armazenamento bloqueado, o teste abre com os dados da planilha mesmo assim, e a etiqueta avisa que as alterações não ficam salvas.
 - **Verificação:** o `e2e_bp.js` (58 verificações) confere, operação por operação, a receita, a receita final, o COGS, o COGS final, o risco, a situação e o homem-dia contra os totais da própria planilha. Confere também a seção Receita e margem da página inicial (2026 e 2027 somam a planilha, receita por operação, realizado e previsto, meses e quartos), a aba do contrato, uma alteração salva, o navegador sem espaço, dados de versão anterior, o armazenamento bloqueado, o arquivo do gerencial e o EARL Gerencial com esse arquivo, ano a ano (2026 e 2027 somam a planilha), incluindo os cards dos quartos, cada mês da matriz e do gráfico, os itens PPU, a tendência, o período, o quarto e o Excel. Na pasta de saída fica o arquivo do gerencial do BP.
 
+## Contratos reais pré-carregados (pasta `contratos_reais/`)
+
+Um `EARL_Engenharia_<NOME>.html` por planilha de contrato (PA, DC, CE, BW, BDII, Shell), já com os contratos, as
+sondas, os químicos/casing com COGS e as operações (previstas e concluídas) das abas **Forecast** e **Banco de dados
+contratos**, para compartilhar com outros usuários. Lê os dois formatos de planilha: por colunas (como o BP) e por
+linhas (CE e DC, vários contratos no mesmo arquivo). A receita e o COGS de cada operação ficam iguais à RECEITA FINAL e
+ao COGS FINAL da planilha (a diferença para quantidade × preço do contrato, como o câmbio do mês já faturado, entra
+como ajuste `AJ+`/`AJ−`). As planilhas e os HTML gerados não ficam no repositório. Detalhes e regras em
+[`contratos_reais/README.md`](contratos_reais/README.md).
+
+```bash
+node contratos_reais/gerar_html.js PA.xlsx PA EARL_Engenharia.html EARL_Engenharia_PA.html rel_PA.json
+```
+
+```bash
+node contratos_reais/e2e_contratos_reais.js <pasta das planilhas> <pasta dos HTML>
+```
+
 ## Para quem mexe no código
 
 - `EARL_Engenharia.html` é gerado pelo `patch_engenharia.py` a partir do `EARL_HAL_CMT_115_SIMULACAO.html`, que já vem com o app compilado:
