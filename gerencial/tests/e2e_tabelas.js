@@ -90,7 +90,7 @@ const ABAS = [['contratos', 't-cts'], ['ppu', 't-ppu'], ['quim', 't-quim'], ['ca
   await page.setInputFiles('#inArq', [{name: 'eng_ana.json', mimeType: 'application/json', buffer: Buffer.from(JSON.stringify(pacA))}, {name: 'eng_bruno.json', mimeType: 'application/json', buffer: Buffer.from(JSON.stringify(pacB))}]);
   await page.waitForSelector('.kpis');
   await page.evaluate(() => { const m = document.getElementById('msg'); if (m) m.remove(); });
-  conf((await page.textContent('#ver')).includes('g14'), 'versão g14');
+  conf((await page.textContent('#ver')).includes('g15'), 'versão g15');
 
   console.log('Ordem crescente e decrescente em todas as colunas');
   for (const [aba, cls] of ABAS) {

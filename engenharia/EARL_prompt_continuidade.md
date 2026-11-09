@@ -4,7 +4,9 @@
 
 > **Regra de entrega (pedido do usuário, 05/11/2026):** sempre que houver alteração em qualquer arquivo (EARL, EARL Engenharia, EARL Gerencial, testes), **enviar junto este prompt de continuidade atualizado** — com o que foi feito, o que está pendente e como continuar — e commitá-lo junto com a alteração. Antes de entregar, rodar os testes (os novos e todos os anteriores) e dizer o resultado.
 >
-> **Última atualização:** 09/11/2026 — EARL Engenharia e8 + EARL Gerencial g14:
+> **Última atualização:** 09/11/2026 — EARL Engenharia e9 + EARL Gerencial g15: na seção "Receita e margem" da Engenharia, a linha dos quartos ficou só com Q1 a Q4. Saiu o card "Total do ano", que repetia o cartão vermelho "Receita em US$". No Gerencial ele continua.
+>
+> Antes, no mesmo dia — EARL Engenharia e8 + EARL Gerencial g14:
 > - **Engenharia:** a página inicial ganhou a seção "Receita e margem" do Gerencial, embutida, com os cartões dos quartos, o gráfico, a matriz e os filtros do Gerencial. O card do contrato ganhou o botão "⋯", com Arquivar e Apagar.
 > - **Gerencial:** quarto de início e fim (vários quartos), prévia da seleção ao passar o cursor nos meses e quartos, e Shift+clique nos cards dos quartos.
 >
@@ -82,7 +84,7 @@ O CSP está em `globalHeaders`. Ele precisa de `'unsafe-inline'` e `'unsafe-eval
 
 ---
 
-## 4-E. Desmembramento: EARL Engenharia (avulso) e1 a e8, EARL Gerencial g2–g14 e teste BP — pasta `engenharia/` do repositório `hugoregiani/DAR`
+## 4-E. Desmembramento: EARL Engenharia (avulso) e1 a e9, EARL Gerencial g2–g15 e teste BP — pasta `engenharia/` do repositório `hugoregiani/DAR`
 
 Pedido do Hugo (01/11/2026): como o EARL ainda não pode ser usado online, separar a **Engenharia** num HTML próprio, **sem login**, e trocar o envio do handover (que ia para a Coordenação/Logística) por um **e-mail .eml** gerado no app. Parte do `EARL_HAL_CMT_115_SIMULACAO.html` (compilado) pelo `engenharia/patch_engenharia.py`, que insere `engenharia/eng_app.js` (código novo, dentro do `App`, antes de `renderHandover`) e `engenharia/eng.css`. Saída: `engenharia/EARL_Engenharia.html` (~8,4 MB). Versão: `EARL_VERSION = 'EARL Engenharia e1 (base v115)'`.
 
@@ -519,6 +521,18 @@ Pedido do Hugo: "Inclua no app da engenharia a opção de apagar e/ou arquivar o
   - sem o filtro "situação": realizado e previsto aparecem nos cartões;
   - clicar no contrato não abre mais a aba "Consumo e receita" (o card do contrato faz isso).
 - **Pendências:** desarquivar ainda é pelo Contratos ("Mostrar arquivados" → abrir → Desarquivar → Salvar).
+
+### EARL Engenharia e9 + EARL Gerencial g15 (09/11/2026): sem o card "Total do ano" na Engenharia
+
+Pedido do Hugo: "Eu vi que tem 2 valores de total receita na engenharia em vermelho, se for informação duplicada pode excluir a da linha de baixo mantendo somente os cards dos quartos".
+
+- **Gerencial g15:** no modo embutido (`EMB`), `cartoesQuartos` não desenha o card do total do ano (`data-q=""`). `html.emb .qcards` tem 4 colunas (2 no celular). Fora do modo embutido, nada muda: o Gerencial mantém o card.
+- **Engenharia e9:** só a versão e a seção embutida nova.
+- **Como voltar ao ano todo na Engenharia:** clique de novo no quarto escolhido, use "Todos (ano todo)" na caixa do quarto ou "Limpar filtros". Com o ano todo, o cartão vermelho "Receita em US$" é o total do ano.
+- **Testes:**
+  - Engenharia: `e2e_painel` 23, `e2e_contratos` 75 (4 cartões, sem o do ano), `e2e_engenharia` 62, `e2e_quimicos` 36, `e2e_espaco` 12, `e2e_inventario` 54;
+  - BP: `e2e_bp` 58;
+  - Gerencial: `e2e_gerencial` 62, `e2e_matriz` 59, `e2e_registros` 66, `e2e_tabelas` 53, `e2e_compartilhar` 27.
 
 ---
 

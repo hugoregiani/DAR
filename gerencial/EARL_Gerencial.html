@@ -300,6 +300,8 @@ html.emb body{background:transparent;min-height:0}
 html.emb .hdr{display:none}
 html.emb .wrap{max-width:none;padding:0 0 6px}
 html.emb .filtros{margin-top:0}
+html.emb .qcards{grid-template-columns:repeat(4,minmax(0,1fr))}
+@media(max-width:760px){html.emb .qcards{grid-template-columns:1fr 1fr}}
 .t-mx tr.mx-op[data-mx]{cursor:pointer}
 .t-mx tr.mx-op[data-mx]:hover td{background:#FAFBFB}
 .t-mx tr.mx-op.on > td.mx-rot{color:var(--red)}
@@ -364,7 +366,7 @@ https://github.com/nodeca/pako/blob/main/LICENSE
    Para cada contrato vale o arquivo mais novo. Tudo fica neste navegador (localStorage, prefixo earlger:). */
 (function () {
   'use strict';
-  var VERSAO = 'EARL Gerencial g14';
+  var VERSAO = 'EARL Gerencial g15';
   var CHAVE = 'earlger:pacotes_v1';
   var $ = function (s) { return document.querySelector(s); };
   var esc = function (v) { return String(v == null ? '' : v).replace(/[&<>"']/g, function (c) { return {'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'}[c]; }); };
@@ -1325,7 +1327,8 @@ https://github.com/nodeca/pako/blob/main/LICENSE
         '<span class="qc-l"><span>' + esc(rot) + ' <i>' + esc(per) + '</i></span>' + dica + '</span><b>' + fUSD(t.rU) + '</b><em>COGS ' + fUSD(t.cU) + '</em></button>';
     };
     return '<div class="qcards">' + [1, 2, 3, 4].map(function (q) { return card(q, soma(g[q]), 'Q' + q, MESES[q * 3 - 3] + '–' + MESES[q * 3 - 1], 'qc-q'); }).join('') +
-      card(0, soma(ls), 'Total ' + (S.f.ano || ''), 'jan–dez', 'dest qc-ano') + '</div>';
+      // no EARL Engenharia (modo embutido) o card do total do ano sai: com o ano todo, ele repetia o cartão "Receita em US$"
+      (EMB ? '' : card(0, soma(ls), 'Total ' + (S.f.ano || ''), 'jan–dez', 'dest qc-ano')) + '</div>';
   };
   var cartaoMatriz = function (F, A) {
     var M = S.mx, qs = colunasMx(A);

@@ -141,7 +141,8 @@ const usd = v => 'US$ ' + v.toLocaleString('pt-BR', {minimumFractionDigits: 2, m
   conf(perto(valor(await fg.textContent('.k-rec-usd b')), soma(q4e, 'receitaFinal')), 'card Q4/2026: ' + usd(soma(q4e, 'receitaFinal')), await fg.textContent('.k-rec-usd b'));
   await fg.click('.qc[data-q="3"]', {modifiers: ['Shift']});
   conf(perto(valor(await fg.textContent('.k-rec-usd b')), T.ano['2026']) && /Q3 – Q4/.test(await fg.textContent('.q-box')), 'Shift+clique no Q3: Q3–Q4 = 2026 inteiro (as operações começam em agosto)', await fg.textContent('.q-box'));
-  await fg.click('.qc[data-q=""]');
+  conf(await fg.locator('.qc').count() === 4 && !(await fg.locator('.qc-ano').count()), 'seção na Engenharia: só os 4 cartões dos quartos (sem o "Total do ano")');
+  await fg.click('.q-box'); await fg.click('[data-a="qTodos"]');
 
   console.log('Contrato BP: lista, consumo e receita');
   await p.click('.eng2-card:has-text("BP — Macaé")');

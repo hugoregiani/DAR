@@ -47,7 +47,7 @@ const db = page => page.evaluate(() => JSON.parse(localStorage.getItem('hal_cmt_
   let fg = await gf();
   const k = async c => (await fg.textContent('.' + c + ' b')).trim();
   conf(await k('k-rec-usd') === 'US$ 3.500,00' && await k('k-ops') === '2' && /realizado US\$ 0,00 · previsto US\$ 3.500,00/.test(await fg.textContent('.k-rec-usd em')), '2026: P&A US$ 2.000 + Takatsugu US$ 1.500 (previstos)', await k('k-rec-usd'));
-  conf(await fg.locator('.qc').count() === 5 && (await fg.textContent('.qc[data-q="4"] b')).trim() === 'US$ 3.500,00' && await fg.locator('#graf .g-svg').count() === 1 && await fg.locator('.t-mx').count() === 1, 'cartões dos quartos, gráfico e matriz');
+  conf(await fg.locator('.qc').count() === 4 && !(await fg.locator('.qc[data-q=""]').count()) && (await fg.textContent('.qc[data-q="4"] b')).trim() === 'US$ 3.500,00' && (await fg.textContent('.k-rec-usd b')).trim() === 'US$ 3.500,00' && await fg.locator('#graf .g-svg').count() === 1 && await fg.locator('.t-mx').count() === 1, 'só os 4 cartões dos quartos (o total do ano é o cartão Receita de cima), gráfico e matriz');
   const alt = await fg.evaluate(() => [Math.ceil(document.body.getBoundingClientRect().height), window.innerHeight]);
   conf(Math.abs(alt[0] - alt[1]) <= 2, 'o quadro tem a altura do conteúdo (sem rolagem dentro dele)', alt);
   await fg.selectOption('[data-f="ano"]', '2027');

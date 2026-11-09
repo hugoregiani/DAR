@@ -140,4 +140,5 @@ Tudo é **realizado + previsto**, com o risco de cada operação aplicado:
   ```
 
 - **Modo embutido** (g14): o EARL Engenharia mostra a aba "Receita e margem" deste app na página inicial dele. O `patch_engenharia.py` embute o `gerencial.html` (sem as bibliotecas; o xlsx vem da página da Engenharia) num quadro (iframe) com `<script id="earlger-embutido">`. Nesse modo: sem cabeçalho, título, barra de arquivos, abas e registros; os dados vêm de `window.parent.engGerDados()` (o pacote do "Arquivo do gerencial" com todos os contratos não arquivados) e `window.earlGerAtualizar()` recarrega quando a Engenharia muda; as preferências do gráfico ficam com o prefixo do arquivo da Engenharia + `ger:`; a altura do quadro acompanha o conteúdo. **Mudou o `gerencial.html`? Gere de novo os dois arquivos** (`EARL_Gerencial.html` e `EARL_Engenharia.html`).
-- Versão: `EARL Gerencial g14`.
+- **Total do ano no modo embutido** (g15, pedido do Hugo): na Engenharia, a linha dos quartos tem só Q1 a Q4. O card "Total do ano" sai porque, com o ano todo, repetia o cartão vermelho "Receita em US$" logo acima. O total do ano é esse cartão, com os quartos em "Todos". Aqui no Gerencial o card continua.
+- Versão: `EARL Gerencial g15`.

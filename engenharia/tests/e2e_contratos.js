@@ -347,13 +347,13 @@ const kpi = (page, cls) => txt(page, '.' + cls + ' b');
   const pn = () => fg.evaluate(() => {
     const t = s => ((document.querySelector(s) || {}).textContent || '').trim();
     return {usd: t('.k-rec-usd b'), usdSub: t('.k-rec-usd em'), op: t('.k-rec-op b'), opSub: t('.k-rec-op em'), cards: [...document.querySelectorAll('.kpis .kpi > span')].map(s => s.textContent), cogs: t('.k-cogs b'), mg: t('.k-margem b'), mgSub: t('.k-margem em'), ops: t('.k-ops b'),
-      filtros: [...document.querySelectorAll('.filtros label')].map(l => l.textContent), q4: t('.qc[data-q="4"] b'), ano: t('.qc[data-q=""] b'), meses: [...document.querySelectorAll('.t-mx th.mx-mes:not(.mx-q)')].map(th => th.textContent), mx: !!document.querySelector('.t-mx'), abas: document.querySelectorAll('.tabs').length, arqs: document.querySelectorAll('[data-a="arq"]').length};
+      filtros: [...document.querySelectorAll('.filtros label')].map(l => l.textContent), q4: t('.qc[data-q="4"] b'), nq: document.querySelectorAll('.qc').length, ano: document.querySelectorAll('.qc[data-q=""]').length, meses: [...document.querySelectorAll('.t-mx th.mx-mes:not(.mx-q)')].map(th => th.textContent), mx: !!document.querySelector('.t-mx'), abas: document.querySelectorAll('.tabs').length, arqs: document.querySelectorAll('[data-a="arq"]').length};
   });
   let v = await pn();
   conf(v.usd === 'US$ 1.087,50' && v.usdSub === 'realizado US$ 807,50 · previsto US$ 280,00' && v.cogs === 'US$ 25,00' && v.mg === 'US$ 1.062,50' && v.ops === '2', 'receita realizada (com risco 50%) + prevista, COGS e margem — os números de antes', v);
   conf(v.cards.join('|') === 'Receita em US$|COGS em US$|Operações|Receita / operação (US$)|Margem em US$' && v.op === 'US$ 543,75', 'cartões do Gerencial (Receita, COGS, Operações, Receita/operação, Margem); receita por operação US$ 1.087,50 ÷ 2', v);
   conf(v.filtros.join('|') === 'Ano|Quarto (início e fim)|Mês (início e fim)|Cliente|Contrato|Região|Tipo de contrato' && v.abas === 0 && v.arqs === 0, 'filtros iguais aos do Gerencial; sem as abas e sem carregar arquivos', v.filtros);
-  conf(v.q4 === 'US$ 1.087,50' && v.ano === 'US$ 1.087,50' && v.mx && v.meses.join() === 'nov/2026' && await fg.locator('#graf .g-svg').count() === 1, 'cartões dos quartos (Q4 = total 2026), gráfico e a matriz (nov/2026)', v);
+  conf(v.q4 === 'US$ 1.087,50' && v.nq === 4 && v.ano === 0 && v.mx && v.meses.join() === 'nov/2026' && await fg.locator('#graf .g-svg').count() === 1, 'só os 4 cartões dos quartos (sem o "Total do ano", que repetia a receita de cima), gráfico e a matriz (nov/2026)', v);
   await foto(page, 'c7_painel');
   await fg.click('.mes-box'); await fg.click('[data-mesb="10"]'); await fg.click('[data-mesb="10"]');
   v = await pn();
