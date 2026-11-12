@@ -600,7 +600,10 @@ Pedido do Hugo (12/11/2026, com a imagem dos indicadores de Pessoal do EARL): "o
 - **Gerencial g17** (`gerencial.html`, bloco "g16/g17" no fim do `<style>`): `.kpi` com borda `1px solid #E1E5E8` (em volta toda, também em cima), degradê branco → #F0F2F3 e sombras `0 1px 2px` + `0 6px 14px` + `0 18px 34px -12px` (macias, sem apagar a borda de cima); `.kpi.dest` com borda #B8121E. No modo embutido, `.kpis`/`.qcards` com 2px de folga para a sombra não ser cortada.
 - **Engenharia e11** (`eng.css`): `.ec-kpi` com o mesmo estilo; `.ec-ger-painel` (seção "Receita e margem" da página inicial) com fundo cinza claro (#F3F5F6 → #ECEFF0), como o do Gerencial.
 - `EARL_Gerencial.html`, `EARL_Engenharia.html`, o teste BP e os 6 contratos reais gerados de novo. Testes de versão (`e2e_matriz`, `e2e_registros`, `e2e_tabelas`) agora esperam g17.
-- **Testes:** ver o resultado da entrega no fim desta seção.
+- **Testes (todos passando):**
+  - Engenharia: `e2e_engenharia` 62, `e2e_contratos` 75, `e2e_quimicos` 36, `e2e_espaco` 12, `e2e_inventario` 54, `e2e_painel` 23, `e2e_e10` 37 (+2: borda de cima do card no Gerencial embutido e em "Consumo e receita"); BP `e2e_bp` 58; contratos reais `e2e_contratos_reais` 116 (os 6 arquivos);
+  - Gerencial: `e2e_gerencial` 62, `e2e_matriz` 59, `e2e_registros` 66, `e2e_tabelas` 53, `e2e_compartilhar` 27.
+- **Pendências:** as mesmas do e10 (textos novos sem EN/ES; câmbio só digitado; ajuste da "Frente" do PA).
 
 ## 4. Última mudança: v115 (Inventário a bordo: "Movimentar material" em cada contentor e na sacaria, em todas as categorias; Logística: desfazer a divisão da tesoura)
 
