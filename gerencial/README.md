@@ -90,10 +90,11 @@ Tudo é **realizado + previsto**, com o risco de cada operação aplicado:
 - **Receita realizada:** a quantidade lançada × o valor do item vigente na **data do serviço**, com os reajustes. O app de Engenharia calcula e grava no arquivo; o Gerencial soma. Se um reajuste mudar valores já lançados, o engenheiro gera um arquivo novo.
 - **Receita prevista:** os itens PPU previstos × o valor do contrato na data da operação, só para as operações ainda sem consumo.
 - **COGS:** quantidade (lançada, ou prevista se ainda não houver consumo) × COGS unitário do SAP. Na Engenharia, as químicas vêm do banco de **Químicos** e o casing de Contratos → Custos (COGS).
-- **Risco da operação (0–100%):** receita e COGS contam × (1 − risco). Com 100%, a operação aparece, mas fica fora da receita e do COGS.
+- **Risco da operação (0–100%):** é o risco de **não acontecer** (na operação em contingência, o mesmo valor). Receita e COGS contam × (1 − risco). Com 100%, a operação aparece, mas fica fora da receita e do COGS.
+- **Risco da linha (g16):** linha prevista em contingência (item PPU, química, casing) traz o seu risco de não acontecer (campo `risco` da linha no arquivo da Engenharia e10) e conta × (1 − risco da linha), além do risco da operação: no total previsto da operação (que já vem com ele no arquivo), em "a realizar" dos Itens PPU, nas Químicas/Casing e nos itens PPU da matriz. O Excel ganha a coluna "Risco da linha %" (Lançamentos) e "Contingência" (Operações).
 - **Saldo do item:** contratado (com aditivos) − tudo o que foi lançado no contrato (sem filtro de data).
 - **Homem-dia:** pessoas × dias, informado no consumo da operação. No previsto, é pessoas × duração da operação.
-- **Moedas:** R$ e US$ são valores do contrato, sem conversão entre eles.
+- **Moedas:** o valor em US$ de cada linha vem do arquivo da Engenharia. Desde a e10, item de contrato com valor em R$ entra em US$ pela **cotação do mês** (tabela "Câmbio" da Engenharia: R$ por US$ 1,00 em cada mês; mês sem cotação usa a do último mês informado antes). O arquivo traz a tabela (`cambio`) e, em cada linha convertida, a cotação usada (`cambio`).
 
 ## Para quem mexe no código
 
@@ -141,4 +142,5 @@ Tudo é **realizado + previsto**, com o risco de cada operação aplicado:
 
 - **Modo embutido** (g14): o EARL Engenharia mostra a aba "Receita e margem" deste app na página inicial dele. O `patch_engenharia.py` embute o `gerencial.html` (sem as bibliotecas; o xlsx vem da página da Engenharia) num quadro (iframe) com `<script id="earlger-embutido">`. Nesse modo: sem cabeçalho, título, barra de arquivos, abas e registros; os dados vêm de `window.parent.engGerDados()` (o pacote do "Arquivo do gerencial" com todos os contratos não arquivados) e `window.earlGerAtualizar()` recarrega quando a Engenharia muda; as preferências do gráfico ficam com o prefixo do arquivo da Engenharia + `ger:`; a altura do quadro acompanha o conteúdo. **Mudou o `gerencial.html`? Gere de novo os dois arquivos** (`EARL_Gerencial.html` e `EARL_Engenharia.html`).
 - **Total do ano no modo embutido** (g15, pedido do Hugo): na Engenharia, a linha dos quartos tem só Q1 a Q4. O card "Total do ano" sai porque, com o ano todo, repetia o cartão vermelho "Receita em US$" logo acima. O total do ano é esse cartão, com os quartos em "Todos". Aqui no Gerencial o card continua.
-- Versão: `EARL Gerencial g15`.
+- **Cards com profundidade** (g16, pedido do Hugo, modelo dos indicadores de Pessoal do EARL): cartões claros com relevo (degradê branco → cinza claro, borda clara, sombras em camadas, cantos de 22px), número grande em cima com o "US$" pequeno (`bUSD`) e o nome embaixo; o cartão "Receita em US$" em vermelho com brilho; os cards dos quartos sobem um pouco ao passar o cursor. Vale aqui e na seção embutida da Engenharia.
+- Versão: `EARL Gerencial g16`.

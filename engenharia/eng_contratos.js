@@ -82,12 +82,16 @@
     var vB = 0,
       vU = 0,
       semB = 0,
-      semU = 0;
+      semU = 0,
+      conv = false;
     c.linhas.forEach(l => {
       var q = engNum(l.qty) || 0;
       var p = ct ? ctPreco(ct, l.ref, data) : {};
       if (p.brl != null) vB += q * p.brl;else semB++;
-      if (p.usd != null) vU += q * p.usd;else semU++;
+      /* e10: US$ = parte em US$ + parte em R$ pelo câmbio do mês do serviço */
+      var u = engUsdLinha(q, p, data);
+      if (u != null) vU += u;else semU++;
+      if (p.brl != null && u != null && engCambioDe(data)) conv = true;
     });
     return {
       ct,
@@ -96,7 +100,8 @@
       vB,
       vU,
       semB,
-      semU
+      semU,
+      cambio: conv ? engCambioDe(data) : null
     };
   };
   /* ---- e5: risco da receita/COGS (riscoRec, 0–100% na operação) e COGS unitário por SAP (db.cogsItens) ---- */
@@ -141,14 +146,46 @@
   };
   var engRiscoTag = j => {
     var rr = Number(j && j.riscoRec) || 0;
-    if (rr <= 0) return null;
+    if (rr <= 0 || j.contingencia) return null; // em contingência, o selo "Contingência · risco N%" já mostra
     return engH("span", {
       className: "ec-tag ec-tag-risco",
       title: rr >= 100 ? 'Operação mapeada, mas fora da receita e do COGS' : 'Receita e COGS contam ' + (100 - rr) + '%'
     }, 'risco ' + fmtNum(rr) + '%');
   };
+  /* e10: contingência = risco de NÃO acontecer. Na operação em contingência é o mesmo valor do "Risco da receita /
+     COGS" (riscoRec): 0% = a operação entra inteira na receita, no COGS e nas químicas; 100% = fica mapeada, mas fora.
+     O campo antigo "risco" (chance de acontecer, usado no forecast de químicas do EARL) passa a ser 100 − riscoRec. */
+  var engRiscoNum = v => Math.max(0, Math.min(100, Number(v) || 0));
+  /* risco de não acontecer de uma linha em contingência (itens PPU, químicas, casing…): a linha guarda a chance de
+     acontecer (campo "chance", como no EARL); a tela mostra e edita o risco = 100 − chance. Sem chance = risco 0%. */
+  var engRiscoItem = n => n && n.cont ? n.chance == null || n.chance === '' ? 0 : engRiscoNum(100 - Number(n.chance)) : 0;
+  var engContRisco = (d, set) => {
+    var rr = engRiscoNum(d.riscoRec);
+    return engH("div", {
+      className: "ec-cont-risco"
+    }, engH("div", {
+      className: "eng-risco"
+    }, engH("span", null, "Risco de n\xE3o acontecer"), engH("input", {
+      type: "range",
+      min: "0",
+      max: "100",
+      step: "5",
+      value: rr,
+      onChange: e => set('riscoRec', Number(e.target.value))
+    }), engH("input", {
+      className: "qty-input ec-cont-risco-in",
+      type: "number",
+      min: "0",
+      max: "100",
+      value: d.riscoRec == null || d.riscoRec === '' ? '' : d.riscoRec,
+      placeholder: "0",
+      onChange: e => set('riscoRec', e.target.value === '' ? '' : engRiscoNum(e.target.value))
+    }), engH("b", null, "%")), engH("div", {
+      className: "eng-help"
+    }, rr >= 100 ? 'Risco 100%: a opera\xE7\xE3o fica mapeada (no Gantt e na lista), mas fora da receita, do COGS e das qu\xEDmicas.' : rr > 0 ? 'Entra com ' + (100 - rr) + '% na receita, no COGS e nas qu\xEDmicas (\xD7 ' + fmtNum((100 - rr) / 100) + ').' : '0% = entra inteira na receita, no COGS e nas qu\xEDmicas. 100% = fica mapeada, mas fora da contagem.'));
+  };
   var engRiscoCampo = (d, set) => {
-    if (!d || d.__tpl) return null;
+    if (!d || d.__tpl || d.contingencia) return null;
     var rr = Number(d.riscoRec) || 0;
     return engH("div", {
       className: "fld ec-risco-fld"
@@ -1567,7 +1604,7 @@
       }), {
         kind: 'Consumo',
         action: reg ? pj.ppuCons ? 'Alteração' : 'Inclusão' : 'Exclusão',
-        name: (rig.name || '—') + ' — ' + (pj.well || tipoTxt(pj) || ''),
+        name: (rigFmt(rig) || '—') + ' — ' + (pj.well || tipoTxt(pj) || ''),
         user: currentUser() || '—',
         detail: reg ? resumo(reg) : ''
       });
@@ -1692,7 +1729,7 @@
       onClick: fechar
     }, "\xD7")), engH("div", {
       className: "ec-cons-id"
-    }, [rig.name, pj.date ? 'planejada para ' + fmtD(pj.date) : '', ct ? ct.name + (ct.numero && ct.numero !== ct.name ? ' · ' + ct.numero : '') : '', pj.salesOrder ? 'SO ' + pj.salesOrder : ''].filter(Boolean).join(' · ')), !ct ? engH("div", {
+    }, [rigFmt(rig), pj.date ? 'planejada para ' + fmtD(pj.date) : '', ct ? ct.name + (ct.numero && ct.numero !== ct.name ? ' · ' + ct.numero : '') : '', pj.salesOrder ? 'SO ' + pj.salesOrder : ''].filter(Boolean).join(' · ')), !ct ? engH("div", {
       className: "ec-aviso"
     }, "Esta opera\xE7\xE3o n\xE3o est\xE1 ligada a um contrato — abra a opera\xE7\xE3o e escolha o contrato.") : engH(React.Fragment, null, engH("div", {
       className: "ec-bar"
@@ -1906,6 +1943,7 @@
         var q = engNum(l.qty) || 0;
         if (!q) return;
         var p = ctPreco(ct, l.ref, data);
+        var u = engUsdLinha(q, p, data); // e10: com a parte em R$ pelo câmbio do mês
         var x = {
           j,
           ct,
@@ -1917,7 +1955,8 @@
           pB: p.brl,
           pU: p.usd,
           vB: p.brl != null ? q * p.brl * f : null,
-          vU: p.usd != null ? q * p.usd * f : null,
+          vU: u != null ? u * f : null,
+          conv: p.brl != null && u != null && !!engCambioDe(data),
           fator: f
         };
         lanc.push(x);
@@ -1970,7 +2009,8 @@
       tU: lanc.reduce((a, x) => a + (x.vU || 0), 0),
       cU: po.reduce((a, o) => a + o.cU, 0),
       cB: po.reduce((a, o) => a + o.cB, 0),
-      semPreco: lanc.filter(x => x.pB == null && x.pU == null).length
+      semPreco: lanc.filter(x => x.pB == null && x.pU == null).length,
+      conv: lanc.some(x => x.conv)
     };
   };
   var engMesTxt = k => {
@@ -1980,7 +2020,7 @@
   var engRecExcel = (titulo, calcs, comItens) => {
     var ops = calcs.flatMap(c => c.porOp);
     var lanc = calcs.flatMap(c => c.lanc);
-    var rigNm = j => ((db.rigs || []).find(r => r.id === j.rigId) || {}).name || '';
+    var rigNm = j => rigFmt((db.rigs || []).find(r => r.id === j.rigId));
     var abas = [['Operações', [['Data do serviço', 'Contrato', 'Sonda', 'Poço', 'Operação', 'SO', 'Itens', 'Risco %', 'Receita R$', 'Receita US$', 'COGS R$', 'COGS US$', 'Margem US$'], ...ops.map(o => [fmtD(o.data), o.ct.name, rigNm(o.j), o.j.well || '', tipoTxt(o.j) || o.j.tipoOp || '', o.j.salesOrder || '', o.n, o.risco, engR4(o.vB), engR4(o.vU), engR4(o.cB), engR4(o.cU), engR4(o.vU - o.cU)])], [14, 28, 16, 16, 26, 12, 8, 8, 16, 16, 14, 14, 14]]];
     if (comItens) calcs.forEach(c => abas.push(['Itens' + (calcs.length > 1 ? ' ' + c.ct.name : ''), [['Item', 'Descrição', 'Unid.', 'Contratado', 'Consumido (total)', 'Saldo', '% usado', 'Valor vigente R$', 'Valor vigente US$', 'Consumido no período', 'Receita R$', 'Receita US$'], ...c.porItem.map(x => [x.i.ref, x.i.desc || '', x.i.unit || '', x.contr, x.c, x.saldo, x.pct != null ? engR4(x.pct) : null, x.p.brl, x.p.usd, x.qP, engR4(x.vB), engR4(x.vU)])], [10, 60, 8, 12, 14, 12, 9, 14, 14, 14, 14, 14]]));
     abas.push(['Lançamentos', [['Data do serviço', 'Contrato', 'Sonda', 'Poço', 'Operação', 'SO', 'Item', 'Descrição', 'Unid.', 'Quantidade', 'Valor R$', 'Valor US$', 'Total R$', 'Total US$'], ...lanc.map(x => [fmtD(x.data), x.ct.name, rigNm(x.j), x.j.well || '', tipoTxt(x.j) || x.j.tipoOp || '', x.j.salesOrder || '', x.ref, x.desc || '', x.unit || '', x.q, x.pB, x.pU, x.vB != null ? engR4(x.vB) : null, x.vU != null ? engR4(x.vU) : null])], [14, 28, 16, 16, 26, 12, 10, 50, 8, 12, 12, 12, 14, 14]]);
@@ -2001,7 +2041,7 @@
   var renderEngReceita = () => {
     var ops = planFiltered.filter(j => j.status !== PJ_STATUS.CANC);
     var hoje = todayStr();
-    var rigNm = j => ((db.rigs || []).find(r => r.id === j.rigId) || {}).name || '—';
+    var rigNm = j => rigFmt((db.rigs || []).find(r => r.id === j.rigId)) || '—';
     var cts = ctSel ? [ctSel] : engContratos;
     var calcs = cts.map(ct => engCalcCt(ct, ops.filter(j => {
       var c = ctDoJob(j);
@@ -2060,7 +2100,7 @@
     }, "⬇ Excel"));
     var kpis = engH("div", {
       className: "ec-kpis"
-    }, engKpi('Receita em R$', fmtBRL(tB), 'consumo lançado no período', 'ec-kpi-brl'), engKpi('Receita em US$', fmtUSD(tU), 'consumo lançado no período', 'ec-kpi-usd'), engKpi('COGS', fmtUSD(cU) + (cB ? ' · ' + fmtBRL(cB) : ''), 'químicas e casing lançados', 'ec-kpi-cogs'), engKpi('Margem em US$', fmtUSD(tU - cU), tU ? fmtNum((tU - cU) / tU * 100) + '% da receita' : 'receita − COGS', 'ec-kpi-margem'), engKpi('Operações com consumo', String(opsCons.length), semCons.length ? semCons.length + ' realizada(s) sem consumo' : 'nenhuma pendente'), semPreco ? engKpi('Lançamentos sem valor', String(semPreco), 'item sem valor no contrato', 'ec-kpi-alerta') : null);
+    }, engKpi('Receita em R$', fmtBRL(tB), 'consumo lançado no período', 'ec-kpi-brl'), engKpi('Receita em US$', fmtUSD(tU), calcs.some(c => c.conv) ? 'consumo lançado no período · R$ pelo câmbio do mês' : 'consumo lançado no período', 'ec-kpi-usd'), engKpi('COGS', fmtUSD(cU) + (cB ? ' · ' + fmtBRL(cB) : ''), 'químicas e casing lançados', 'ec-kpi-cogs'), engKpi('Margem em US$', fmtUSD(tU - cU), tU ? fmtNum((tU - cU) / tU * 100) + '% da receita' : 'receita − COGS', 'ec-kpi-margem'), engKpi('Operações com consumo', String(opsCons.length), semCons.length ? semCons.length + ' realizada(s) sem consumo' : 'nenhuma pendente'), semPreco ? engKpi('Lançamentos sem valor', String(semPreco), 'item sem valor no contrato', 'ec-kpi-alerta') : null);
     var tabOps = engH(React.Fragment, null, engH("div", {
       className: "hm-sec ec-sec"
     }, 'Receita por operação (' + opsCons.length + ')'), engH("div", {
@@ -2636,9 +2676,10 @@
     var hoje = todayStr();
     var cts = (db.contratos || []).filter(c => ids.includes(c.id));
     var cIdx = engCogsIdx();
-    var mat = l => (l || []).map(m => {
+    /* e10: linha prevista em contingência leva o seu risco de não acontecer (0–100): conta × (1 − risco) */
+    var mat = (l, prev) => (l || []).map(m => {
       var c = engCogsDe(cIdx, m);
-      return {
+      var o = {
         sap: m.sap || '',
         nome: m.name || m.sap || '',
         unid: m.unit || '',
@@ -2646,10 +2687,13 @@
         cogsUsd: c ? engNum(c.usd) : null,
         cogsBrl: c ? engNum(c.brl) : null
       };
+      if (prev && engRiscoItem(m) > 0) o.risco = engRiscoItem(m);
+      return o;
     }).filter(m => m.qtd > 0);
+    var fLin = m => m && m.risco > 0 ? Math.max(0, 1 - Math.min(100, m.risco) / 100) : 1;
     var somaCogs = l => ({
-      usd: engR4(l.reduce((a, m) => a + (m.cogsUsd != null ? m.qtd * m.cogsUsd : 0), 0)),
-      brl: engR4(l.reduce((a, m) => a + (m.cogsBrl != null ? m.qtd * m.cogsBrl : 0), 0)),
+      usd: engR4(l.reduce((a, m) => a + (m.cogsUsd != null ? m.qtd * m.cogsUsd * fLin(m) : 0), 0)),
+      brl: engR4(l.reduce((a, m) => a + (m.cogsBrl != null ? m.qtd * m.cogsBrl * fLin(m) : 0), 0)),
       semCogs: l.filter(m => m.cogsUsd == null && m.cogsBrl == null).length
     });
     var contratos = cts.map(ct => ({
@@ -2688,10 +2732,14 @@
       var c = j.ppuCons;
       var data = c ? c.data || j.date : '';
       var dur = Number(j.durationDays) || 1;
+      /* e10: valor em US$ da linha = parte em US$ + parte em R$ pelo câmbio do mês (cambio = a cotação usada) */
+      var cbDe = (p, dt) => p.brl != null ? engCambioDe(dt) : null;
       var ppu = c ? (c.linhas || []).map(l => {
         var q = engNum(l.qty) || 0;
         var p = ctPreco(ct, l.ref, data);
-        return {
+        var u = engUsdLinha(q, p, data),
+          cb = cbDe(p, data);
+        var o = {
           ref: l.ref,
           desc: l.desc || '',
           unit: l.unit || '',
@@ -2699,17 +2747,21 @@
           brl: p.brl,
           usd: p.usd,
           valorBrl: p.brl != null ? engR4(q * p.brl) : null,
-          valorUsd: p.usd != null ? engR4(q * p.usd) : null
+          valorUsd: u != null ? engR4(u) : null
         };
+        if (cb) o.cambio = cb.valor;
+        return o;
       }) : [];
-      var pq = mat(j.chems),
-        pc = mat(j.casingNeeds),
+      var pq = mat(j.chems, true),
+        pc = mat(j.casingNeeds, true),
         rq = c ? mat(c.quim) : [],
         rc = c ? mat(c.cas) : [];
       var ppuP = (j.ppuNeeds || []).filter(n => n && n.ref).map(n => {
         var q = engNum(n.qty) || 0;
         var p = ctPreco(ct, n.ref, j.date);
-        return {
+        var u = engUsdLinha(q, p, j.date),
+          cb = cbDe(p, j.date);
+        var o = {
           ref: n.ref,
           desc: n.desc || '',
           unit: n.unit || '',
@@ -2717,14 +2769,17 @@
           brl: p.brl,
           usd: p.usd,
           valorBrl: p.brl != null ? engR4(q * p.brl) : null,
-          valorUsd: p.usd != null ? engR4(q * p.usd) : null
+          valorUsd: u != null ? engR4(u) : null
         };
+        if (cb) o.cambio = cb.valor;
+        if (engRiscoItem(n) > 0) o.risco = engRiscoItem(n);
+        return o;
       });
       operacoes.push({
         id: j.id,
         contratoId: ct.id,
         risco: Math.max(0, Math.min(100, Number(j.riscoRec) || 0)),
-        sonda: rig.name || '',
+        sonda: rigFmt(rig) || '',
         base: rig.base || '',
         ambiente: rig.id ? rigAmbiente(rig) : '',
         regiao: REGIAO_LABEL[j.loc] || REGIAO_LABEL[ctrRegioes(ct)[0]] || '',
@@ -2748,8 +2803,8 @@
         previsto: {
           ppu: ppuP,
           receita: {
-            brl: engR4(ppuP.reduce((a, x) => a + (x.valorBrl || 0), 0)),
-            usd: engR4(ppuP.reduce((a, x) => a + (x.valorUsd || 0), 0)),
+            brl: engR4(ppuP.reduce((a, x) => a + (x.valorBrl || 0) * fLin(x), 0)),
+            usd: engR4(ppuP.reduce((a, x) => a + (x.valorUsd || 0) * fLin(x), 0)),
             semValor: ppuP.filter(x => x.brl == null && x.usd == null && x.qtd).length
           },
           cogs: somaCogs(pq.concat(pc)),
@@ -2791,6 +2846,11 @@
     return {
       tipo: 'EARL-Gerencial',
       formato: 2,
+      cambio: engCambioLista().map(c => ({
+        ano: c.ano,
+        mes: c.mes,
+        valor: c.valor
+      })),
       app: EARL_VERSION,
       geradoEm: new Date().toISOString(),
       por: nome || (db.hoMail || {}).nome || '',

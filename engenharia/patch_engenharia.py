@@ -87,7 +87,7 @@ assert i > 0
 s = s[:i] + css + s[i:]
 
 # ---------------------------------------------------------------- app (código compilado)
-rep("var EARL_VERSION = 'EARL v115';", "var EARL_VERSION = 'EARL Engenharia e9 (base v115)';")
+rep("var EARL_VERSION = 'EARL v115';", "var EARL_VERSION = 'EARL Engenharia e10 (base v115)';")
 rep("var HO_ST = {\n  pendente: {", "var HO_ST = {\n  email: {\n    label: 'Enviado por e-mail',\n    c: '#304220',\n    bg: '#F1F5EC',\n    brd: '#D9E4CC'\n  },\n  pendente: {")
 # quem gera o e-mail assina os registros (sem login)
 rep("  var currentUser = () => authUser && authUser.email || sbUser || '';",
@@ -279,6 +279,157 @@ rep('''        onClick: () => duplicatePlanned(j)
 # e5: risco da receita/COGS na operação (seção 2 do formulário) e etiqueta na Lista
 rep("aparece em roxo no Gantt.')))), React.createElement(\"div\", {", "aparece em roxo no Gantt.')), engRiscoCampo(d, set))), React.createElement(\"div\", {")
 
+# e10: contingência = risco de NÃO acontecer (o mesmo valor do "Risco da receita / COGS", riscoRec): 0% = entra
+# inteira na receita, no COGS e nas químicas; 100% = fica mapeada, mas fora. O campo antigo "risco" (chance de
+# acontecer, usado no forecast de químicas do EARL) vira 100 − riscoRec ao salvar (e na migração do loadDB).
+rep("""        setPlanDraft(x => ({
+          ...x,
+          contingencia: v,
+          ...(v ? {
+            risco: x.risco === '' || x.risco == null ? 50 : x.risco
+          } : {})
+        }));""", """        setPlanDraft(x => ({
+          ...x,
+          contingencia: v
+        }));""")
+rep("""d.contingencia ? React.createElement("div", {
+      className: "eng-risco"
+    }, React.createElement("span", null, "Risco de acontecer"), React.createElement("input", {
+      type: "range",
+      min: "0",
+      max: "100",
+      step: "5",
+      value: Number(d.risco) || 0,
+      onChange: e => set('risco', e.target.value)
+    }), React.createElement("input", {
+      className: "qty-input",
+      type: "number",
+      min: "0",
+      max: "100",
+      value: d.risco == null ? '' : d.risco,
+      onChange: e => set('risco', e.target.value)
+    }), React.createElement("b", null, "%")) : React.createElement("div", {""", """d.contingencia ? engContRisco(d, set) : React.createElement("div", {""")
+rep("      risco: draft.contingencia ? Math.max(0, Math.min(100, Math.round(Number(draft.risco) || 0))) : null,",
+    "      risco: draft.contingencia ? 100 - Math.max(0, Math.min(100, Math.round(Number(draft.riscoRec) || 0))) : null,")
+rep("var TPL_FIELDS = ['tipoOp', 'casing', 'durationDays', 'anchor', 'contingencia', 'risco', 'notes',",
+    "var TPL_FIELDS = ['tipoOp', 'casing', 'durationDays', 'anchor', 'contingencia', 'risco', 'riscoRec', 'notes',")
+# o que aparece no Gantt, na lista e nas escolhas de operação: o risco de não acontecer
+rep("j.contingencia ? ` · risco ${j.risco || 0}%` : ''", "j.contingencia ? ` · risco ${j.riscoRec || 0}%` : ''", 2)
+rep("(j.contingencia ? ` · ${j.risco || 0}%` : '')", "(j.contingencia ? ` · risco ${j.riscoRec || 0}%` : '')", 2)
+rep("'Contingência · ' + (j.risco || 0) + '%'", "'Contingência · risco ' + (j.riscoRec || 0) + '%'", 3)
+rep("(j.contingencia ? ' (' + (j.risco || 0) + '%)' : '')", "(j.contingencia ? ' (risco ' + (j.riscoRec || 0) + '%)' : '')", 2)
+# linhas em contingência (itens PPU, químicas, casing, pessoal, equipamentos): a linha continua guardando a chance de
+# acontecer (como no EARL); a tela mostra e edita o risco de não acontecer = 100 − chance. Marcar = risco 0%.
+rep('"Conting\\xEAncia \\xB7 chance"', '"Conting\\xEAncia \\xB7 risco"')
+rep("""    onChange: e => onCont(x.key, e.target.checked ? {
+      cont: true,
+      chance: x.chance == null || x.chance === '' ? 50 : x.chance
+    } : {""", """    onChange: e => onCont(x.key, e.target.checked ? {
+      cont: true,
+      chance: x.chance == null || x.chance === '' ? 100 : x.chance
+    } : {""")
+rep("""    title: "Chance de esta linha acontecer",
+    value: x.chance == null ? '' : x.chance,
+    onChange: e => onCont(x.key, {
+      chance: e.target.value
+    })""", """    title: "Risco de esta linha n\\xE3o acontecer: 0% = conta inteira; 100% = fica mapeada, mas fora da receita, do COGS e das qu\\xEDmicas",
+    value: x.chance == null || x.chance === '' ? '' : Math.max(0, Math.min(100, 100 - Number(x.chance))),
+    onChange: e => onCont(x.key, {
+      chance: e.target.value === '' ? '' : 100 - Math.max(0, Math.min(100, Number(e.target.value) || 0))
+    })""")
+rep('title: "Marque se esta linha pode ou n\\xE3o acontecer"', 'title: "Marque se esta linha pode ou n\\xE3o acontecer e informe o risco de n\\xE3o acontecer"')
+
+# e10: saldo da sonda no handover (coluna "Saldo na sonda" do e-mail e "A bordo" da janela): a última contagem do
+# Inventário das sondas (aba do contrato); sem contagem, o DAR do EARL (quando a sonda tiver).
+rep("""  var saldoABordo = useCallback(rigId => {
+    var rig = (db.rigs || []).find(r => r.id === rigId);
+    if (!rig) return null;""", """  var saldoABordo = useCallback(rigId => {
+    var rig = (db.rigs || []).find(r => r.id === rigId);
+    if (!rig) return null;
+    var cInv = (Array.isArray(db.invSondas) ? db.invSondas : []).filter(c => c.rigId === rig.id).sort((a, b) => String(b.data || '').localeCompare(String(a.data || '')) || String(b.atualizadoEm || '').localeCompare(String(a.atualizadoEm || '')))[0];
+    if (cInv) {
+      var oi = {
+        bySap: {},
+        byNome: {},
+        fonte: 'Inventário das sondas, contagem de ' + fmtD(cInv.data) + (cInv.por ? ' (' + cInv.por + ')' : ''),
+        data: cInv.data
+      };
+      (cInv.itens || []).forEach(i => {
+        var v = parseFloat(String(i.qtd == null ? '' : i.qtd).replace(',', '.')) || 0;
+        if (i.sap) oi.bySap[String(i.sap)] = (oi.bySap[String(i.sap)] || 0) + v;
+        var kn = normNome(i.nome);
+        if (kn) oi.byNome[kn] = (oi.byNome[kn] || 0) + v;
+      });
+      return oi;
+    }""")
+rep("  }, [db.rigs, db.darItems, db.macaeDar]);", "  }, [db.rigs, db.darItems, db.macaeDar, db.invSondas]);")
+
+# e10: Lista com o horizonte "Todas" (todas as operações do contrato, passadas e futuras, por data)
+rep("""    var lim = dAdd(hoje, planListDays);
+    var list = planFiltered.filter(j => j.status !== PJ_STATUS.CANC && j.date >= dAdd(hoje, -3) && j.date <= lim);""", """    var listaTodas = planListDays === 'todas';
+    var lim = listaTodas ? '' : dAdd(hoje, planListDays);
+    var list = planFiltered.filter(j => j.status !== PJ_STATUS.CANC && (listaTodas || j.date >= dAdd(hoje, -3) && j.date <= lim));
+    if (listaTodas) list = list.slice().sort((a, b) => String(a.date || '').localeCompare(String(b.date || '')));""")
+rep("""      onClick: () => setPlanListDays(n)
+    }, n, " dias")), React.createElement("span", {""", """      onClick: () => setPlanListDays(n)
+    }, n, " dias")), React.createElement("button", {
+      key: "todas",
+      className: (planListDays === 'todas' ? 'btn-r' : 'btn-o') + ' eng-lista-todas',
+      style: {
+        fontSize: 11
+      },
+      title: "Todas as opera\\xE7\\xF5es, passadas e futuras, por data",
+      onClick: () => setPlanListDays('todas')
+    }, "Todas"), React.createElement("span", {""")
+
+# e10: sondas identificadas como "NOME PETROBRAS - NOME DA SONDA" (só o nome quando não há nome Petrobras). O mapa
+# rigById (Gantt, calendário, lista, logs) já entrega o nome nesse formato; os seletores e o handover usam rigFmt.
+rep("""  var rigById = useMemo(() => {
+    var m = {};
+    (db.rigs || []).forEach(r => m[r.id] = r);
+    return m;
+  }, [db.rigs]);""", """  var rigById = useMemo(() => {
+    var m = {};
+    (db.rigs || []).forEach(r => m[r.id] = {
+      ...r,
+      name: rigFmt(r) || r.name
+    });
+    return m;
+  }, [db.rigs]);""")
+rep("""    }, "Sonda (todas)"), (db.rigs || []).filter(r => r.active !== false).map(r => React.createElement("option", {
+      key: r.id,
+      value: r.id
+    }, r.name))), React.createElement("select", {""", """    }, "Sonda (todas)"), (db.rigs || []).filter(r => r.active !== false).map(r => React.createElement("option", {
+      key: r.id,
+      value: r.id
+    }, rigFmt(r)))), React.createElement("select", {""")
+rep("""    }, rigsCli.map(r => React.createElement("option", {
+      key: r.id,
+      value: r.id
+    }, r.name))), rigsCli.length > 0 ? React.createElement("optgroup", {
+      label: "Outras sondas"
+    }, rigsOutros.map(r => React.createElement("option", {
+      key: r.id,
+      value: r.id
+    }, r.name))) : rigsOutros.map(r => React.createElement("option", {
+      key: r.id,
+      value: r.id
+    }, r.name)))), React.createElement("div", {""", """    }, rigsCli.map(r => React.createElement("option", {
+      key: r.id,
+      value: r.id
+    }, rigFmt(r)))), rigsCli.length > 0 ? React.createElement("optgroup", {
+      label: "Outras sondas"
+    }, rigsOutros.map(r => React.createElement("option", {
+      key: r.id,
+      value: r.id
+    }, rigFmt(r)))) : rigsOutros.map(r => React.createElement("option", {
+      key: r.id,
+      value: r.id
+    }, rigFmt(r))))), React.createElement("div", {""")
+rep("}, 'Handover — ' + (c.rig.name || '—'))), hd.status && hoBadge(hd.status)", "}, 'Handover — ' + (rigFmt(c.rig) || '—'))), hd.status && hoBadge(hd.status)")
+rep("operação(ões) da sonda ' + (c.rig.name || '—') + ' para a Coordenação aprovar", "operação(ões) da sonda ' + (rigFmt(c.rig) || '—') + ' para a Coordenação aprovar")
+rep('}, React.createElement("b", null, p.rig.name), React.createElement("span", null, p.ops.length ?', '}, React.createElement("b", null, rigFmt(p.rig)), React.createElement("span", null, p.ops.length ?')
+
 # e6: gravação recusada pelo navegador: mensagem certa para a Engenharia e aviso na página inicial
 rep("""      if (!saveDB(next)) setTimeout(() => setSyncErr('⚠ O navegador recusou a gravação — o armazenamento local está cheio ' + 'e esta alteração NÃO foi salva neste aparelho. Costuma ser anexo de nota fiscal grande demais: ' + 'apague anexos antigos em Granéis & HCl (ou exporte o banco) e repita a operação.'), 0);""",
     """      if (!saveDB(next)) setTimeout(() => {
@@ -312,6 +463,13 @@ assert _ger.count('<body>\n') == 1
 _ger = _ger.replace('<body>\n', '<body>\n<script type="application/json" id="earlger-embutido">{"app":"engenharia"}</script>\n')
 _gerLit = _json.dumps(_ger, ensure_ascii=False).replace('</', '<\\/').replace('<!--', '<\\!--')
 rep("var loadDB = () => {\n", """/* EARL Engenharia e8: a seção "Receita e margem" do EARL Gerencial (gerencial/gerencial.html), no modo embutido */
+/* e10: nome da sonda para mostrar: "NOME PETROBRAS - NOME DA SONDA" (só o nome quando não há nome Petrobras) */
+var rigFmt = r => {
+  if (!r) return '';
+  var np = String(r.nomePetrobras || '').trim(),
+    nm = String(r.name || '').trim();
+  return np && nm && normNome(np) !== normNome(nm) ? np + ' - ' + nm : nm || np;
+};
 var ENG_GER_HTML = """ + _gerLit + """;
 /* EARL Engenharia (avulso) e6: banco inicial de produtos químicos */
 var ENG_QUIM_BASE = %s;
@@ -342,6 +500,21 @@ var engQuimMig = d => {
       d.quimBaseV1 = new Date().toISOString();
     }
   } catch (e) {}
+  /* e10: operação em contingência: o risco de não acontecer é o riscoRec; a chance de acontecer (campo risco, usado no
+     forecast de químicas) passa a ser 100 − riscoRec. Modelos de operação em contingência sem riscoRec ficam com 0%%. */
+  try {
+    var rnum = v => Math.max(0, Math.min(100, Math.round(Number(v) || 0)));
+    (d && d.plannedJobs || []).forEach(j => {
+      if (j && j.contingencia) j.risco = 100 - rnum(j.riscoRec);
+    });
+    (d && d.opTemplates || []).forEach(t => {
+      var f = t && t.fields;
+      if (f && f.contingencia) {
+        if (f.riscoRec == null || f.riscoRec === '') f.riscoRec = 0;
+        f.risco = 100 - rnum(f.riscoRec);
+      }
+    });
+  } catch (e) {}
   /* e8: contrato apagado pelo card não volta pela migração da semente (que recria pelo número) */
   try {
     if (d && Array.isArray(d.ctApagados) && d.ctApagados.length) {
@@ -357,9 +530,9 @@ rep("      if (d.people && d.people.length > 0) return migrateDB(d);", "      if
 rep("  return migrateDB(JSON.parse(JSON.stringify(SEED_DB)));", "  return engQuimMig(migrateDB(JSON.parse(JSON.stringify(SEED_DB))));")
 
 # Código novo (antes de renderHandover) e janelas novas na árvore
-novo = open(os.path.join(AQUI, 'eng_app.js'), encoding='utf-8').read() + '\n' + open(os.path.join(AQUI, 'eng_contratos.js'), encoding='utf-8').read() + '\n' + open(os.path.join(AQUI, 'eng_quimicos.js'), encoding='utf-8').read() + '\n' + open(os.path.join(AQUI, 'eng_inventario.js'), encoding='utf-8').read()
+novo = open(os.path.join(AQUI, 'eng_app.js'), encoding='utf-8').read() + '\n' + open(os.path.join(AQUI, 'eng_contratos.js'), encoding='utf-8').read() + '\n' + open(os.path.join(AQUI, 'eng_quimicos.js'), encoding='utf-8').read() + '\n' + open(os.path.join(AQUI, 'eng_inventario.js'), encoding='utf-8').read() + '\n' + open(os.path.join(AQUI, 'eng_cambio.js'), encoding='utf-8').read()
 rep("  var renderHandover = () => {\n", novo.rstrip('\n') + "\n  var renderHandover = () => {\n")
-rep("renderRigForm(), renderConfirmBox(),", "renderEngSondas(), renderEngContratos(), renderEngQuim(), renderEngEspaco(), renderEngCons(), renderEngImpDados(), renderEngGer(), renderEngInvEd(), renderEngExp(), renderRigForm(), renderConfirmBox(),")
+rep("renderRigForm(), renderConfirmBox(),", "renderEngSondas(), renderEngContratos(), renderEngQuim(), renderEngEspaco(), renderEngCons(), renderEngImpDados(), renderEngGer(), renderEngInvEd(), renderEngExp(), renderEngCambio(), renderRigForm(), renderConfirmBox(),")
 # sonda salva com data de alteração (para o "juntar" da importação ficar com a mais recente)
 rep("      regiao: regiaoDaBase(rigDraft.base) || rigDraft.regiao || 'nne',", "      regiao: regiaoDaBase(rigDraft.base) || rigDraft.regiao || 'nne',\n      updatedAt: new Date().toISOString(),")
 

@@ -15,6 +15,9 @@
    - por linhas: preço inicial (US$, receita CMT ou R$ ÷ câmbio) e reajustes "Data reajuste / Índice / Valor
      reajustado" (índice acumulado sobre o preço inicial).
 
+   Valores em R$: o item guarda a parte em R$ e a parte em US$ (receita CMT = rev. share × (R$ ÷ câmbio + US$)); a
+   receita em US$ usa o câmbio do mês (tabela "Câmbio" do EARL Engenharia, e10). A tabela vem da própria planilha: em
+   cada mês, a cotação que ela usou (a mais frequente entre as operações/linhas do mês).
    Receita e COGS: o app calcula quantidade × preço do contrato na data. Quando o valor da planilha
    (RECEITA FINAL / COGS FINAL, antes do risco) for diferente — câmbio do mês já faturado, item não cobrado,
    crédito de NPT, valor manual —, a diferença vai para a operação como "ajuste" (ajRec, ajQuim, ajCE), para
@@ -44,18 +47,45 @@
     return '';
   }
 
-  // preço vigente numa data: a última entrada com "desde" ≤ data (antes da primeira, vale a primeira)
+  // preço vigente numa data ({usd, brl}): a última entrada com "desde" ≤ data (antes da primeira, vale a primeira)
   function precoNaData(agenda, data) {
-    if (!agenda || !agenda.length) return 0;
-    var p = agenda[0].usd;
-    agenda.forEach(function (a) { if (!a.desde || !data || a.desde <= data) p = a.usd; });
-    return p;
+    if (!agenda || !agenda.length) return {usd: null, brl: null};
+    var p = agenda[0];
+    agenda.forEach(function (a) { if (!a.desde || !data || a.desde <= data) p = a; });
+    return {usd: p.usd, brl: p.brl == null ? null : p.brl};
   }
+  var okN = function (v) { return v != null && isFinite(v); };
   function limparAgenda(ag) {
-    ag = ag.filter(function (a) { return a.usd != null && isFinite(a.usd); }).sort(function (a, b) { return String(a.desde).localeCompare(String(b.desde)); });
+    ag = ag.filter(function (a) { return okN(a.usd) || okN(a.brl); }).map(function (a) { return {desde: a.desde, usd: okN(a.usd) ? a.usd : null, brl: okN(a.brl) ? a.brl : null, nome: a.nome}; })
+      .sort(function (a, b) { return String(a.desde).localeCompare(String(b.desde)); });
     var o = [];
-    ag.forEach(function (a) { if (!o.length || Math.abs(o[o.length - 1].usd - a.usd) > 1e-9) o.push(a); });
+    var igual = function (x, y) { return x == null && y == null || x != null && y != null && Math.abs(x - y) <= 1e-9; };
+    ag.forEach(function (a) { var u = o[o.length - 1]; if (!u || !igual(u.usd, a.usd) || !igual(u.brl, a.brl)) o.push(a); });
     return o;
+  }
+  /* câmbio do mês (a mesma regra do app): o do mês; senão o do último mês antes; senão o do primeiro depois */
+  function cambioDe(lista, data) {
+    var d = String(data || '');
+    if (!lista.length || !/^\d{4}-\d{2}/.test(d)) return null;
+    var k = Number(d.slice(0, 4)) * 12 + Number(d.slice(5, 7)) - 1, ex = null, ant = null, dep = null;
+    lista.forEach(function (c) { var kc = c.ano * 12 + c.mes - 1; if (kc === k) ex = c; else if (kc < k) ant = c; else if (!dep) dep = c; });
+    var c = ex || ant || dep;
+    return c ? c.valor : null;
+  }
+  /* tabela do câmbio a partir das cotações que a planilha usou: em cada mês, a mais frequente */
+  function montarCambio(cands) {
+    var porMes = {};
+    cands.forEach(function (x) {
+      if (!(x.fx > 2 && x.fx < 12) || !/^\d{4}-\d{2}/.test(x.data)) return;
+      var m = x.data.slice(0, 7), k = (Math.round(x.fx * 1e6) / 1e6).toFixed(6);
+      var g = porMes[m] = porMes[m] || {};
+      g[k] = (g[k] || 0) + 1;
+    });
+    return Object.keys(porMes).sort().map(function (m) {
+      var g = porMes[m];
+      var k = Object.keys(g).sort(function (a, b) { return g[b] - g[a] || Number(a) - Number(b); })[0];
+      return {ano: Number(m.slice(0, 4)), mes: Number(m.slice(5, 7)), valor: Number(k)};
+    });
   }
 
   function aba(XLSX, wb, re) {
@@ -93,14 +123,22 @@
     for (var b = 6; b < cab.length; b += 6) {
       if (!/indice/.test(semAcento(cab[b]))) break;
       var nomeB = (txt(cab[b + 5]).match(/(ano\s*\d+|renecom)/i) || txt(cab[b]).match(/(ano\s*\d+|renecom)/i) || [])[1] || ('bloco ' + (blocos.length + 1));
-      blocos.push({c: b, desde: dataISO(XLSX, linhaData[b]), nome: nomeB.replace(/\s+/g, ' ').replace(/^ano/i, 'Ano').replace(/^renecom/i, 'RENECOM')});
+      // a planilha aplica o preço de cada ano desde o 1º dia do mês do aniversário (PA: Ano 4 em 10/10/2026, usado em
+      // operações de 01/10; BD II: Ano 3 em 27/05/2026, usado desde 01/05): o reajuste entra no dia 1º do mês
+      var dB = dataISO(XLSX, linhaData[b]);
+      blocos.push({c: b, desde: dB ? dB.slice(0, 8) + '01' : '', dataBanco: dB, nome: nomeB.replace(/\s+/g, ' ').replace(/^ano/i, 'Ano').replace(/^renecom/i, 'RENECOM')});
     }
+    /* partes do preço no bloco: R$ e US$ × rev. share (a receita CMT da planilha = share × (R$ ÷ câmbio + US$));
+       sem R$ nem US$, a receita CMT (ou a receita total × share) em US$ */
     var precoBloco = function (r, bl) {
       var c = bl.c, share = ehNum(r[c + 4]) ? num(r[c + 4]) : 1;
-      if (ehNum(r[c + 5])) return num(r[c + 5]);
-      if (ehNum(r[c + 3])) return num(r[c + 3]) * share;
-      if (ehNum(r[c + 2])) return num(r[c + 2]) * share;
-      return null;
+      var rs = ehNum(r[c + 1]) && num(r[c + 1]) !== 0 ? num(r[c + 1]) * share : null;
+      var us = ehNum(r[c + 2]) ? num(r[c + 2]) * share : null;
+      var cmt = ehNum(r[c + 5]) ? num(r[c + 5]) : null;
+      if (rs != null || us != null) return {brl: rs, usd: us, cmt: cmt};
+      if (cmt != null) return {usd: cmt, brl: null, cmt: cmt};
+      if (ehNum(r[c + 3])) return {usd: num(r[c + 3]) * share, brl: null, cmt: null};
+      return {usd: null, brl: null, cmt: null};
     };
     var cts = {};
     B.slice(iCab + 1).forEach(function (r) {
@@ -110,8 +148,8 @@
       if (!ct.numero && txt(r[2]) && /\d{4,}/.test(txt(r[2])) && !/^w\d/i.test(txt(r[2]))) ct.numero = txt(r[2]);
       var ref = txt(r[3]);
       if (ct.porRef[ref]) { M.avisos.push(nome + ': item ' + ref + ' repetido no Banco (fica o primeiro)'); return; }
-      var ag = blocos.filter(function (bl) { return bl.desde; }).map(function (bl) { return {desde: bl.desde, usd: precoBloco(r, bl), nome: bl.nome}; });
-      var it = {ref: ref, refPl: ref, desc: txt(r[4]), unit: txt(r[5]), agenda: limparAgenda(ag), po: /^w\d/i.test(txt(r[2])) ? txt(r[2]) : ''};
+      var ag = blocos.filter(function (bl) { return bl.desde; }).map(function (bl) { var p = precoBloco(r, bl); return {desde: bl.desde, usd: p.usd, brl: p.brl, cmt: p.cmt, nome: bl.nome}; });
+      var it = {ref: ref, refPl: ref, desc: txt(r[4]), unit: txt(r[5]), agenda: limparAgenda(ag), cmts: ag.map(function (a) { return a.cmt; }).filter(okN), po: /^w\d/i.test(txt(r[2])) ? txt(r[2]) : ''};
       ct.itens.push(it); ct.porRef[ref] = it;
     });
     var nomes = Object.keys(cts);
@@ -128,13 +166,14 @@
       var it = ct.porRef[ref];
       var pf = ehNum(r[5]) ? num(r[5]) : null;
       if (!it) {
-        it = {ref: ref, refPl: ref, desc: txt(r[2]), unit: txt(r[4]), agenda: pf != null ? [{desde: ct.inicio, usd: pf}] : []};
+        it = {ref: ref, refPl: ref, desc: txt(r[2]), unit: txt(r[4]), agenda: pf != null ? [{desde: ct.inicio, usd: pf, brl: null}] : [], cmts: []};
         ct.itens.push(it); ct.porRef[ref] = it;
         if (cols.some(function (c) { return num(r[c]) > 0; })) M.avisos.push(ctNome + ': item ' + ref + ' só está no Forecast (preço do Forecast: ' + pf + ')');
         return;
       }
-      if (!it.agenda.length && pf != null) { it.agenda = [{desde: ct.inicio, usd: pf}]; M.avisos.push(ctNome + ': item ' + ref + ' sem preço no Banco (usado o do Forecast)'); }
-      if (pf != null && it.agenda.length && !it.agenda.some(function (a) { return Math.abs(a.usd - pf) < 0.005; })) it.difForecast = pf;
+      if (!it.agenda.length && pf != null) { it.agenda = [{desde: ct.inicio, usd: pf, brl: null}]; it.cmts = [pf]; M.avisos.push(ctNome + ': item ' + ref + ' sem preço no Banco (usado o do Forecast)'); }
+      var refs = it.cmts.length ? it.cmts : it.agenda.map(function (a) { return a.usd; }).filter(okN);
+      if (pf != null && refs.length && !refs.some(function (v) { return Math.abs(v - pf) < 0.005; })) it.difForecast = pf;
     });
     var difF = ct.itens.filter(function (i) { return i.difForecast != null; });
     if (difF.length) M.avisos.push(ctNome + ': ' + difF.length + ' item(ns) com preço do Forecast diferente de todos os anos do Banco (ex.: ' + difF.slice(0, 3).map(function (i) { return i.ref + ' ' + r4(i.difForecast); }).join(', ') + ')');
@@ -160,12 +199,13 @@
       var cas = casRows.filter(function (r) { return num(r[c]) > 0; }).map(mat);
       var time = {};
       funcRows.forEach(function (r) { var f = txt(r[c]); if (f) time[f] = (time[f] || 0) + 1; });
-      var calcR = ppu.reduce(function (a, l) { return a + l.qty * precoNaData((ct.porRef[l.ref] || {}).agenda, data); }, 0);
+      var U = 0, Bs = 0;
+      ppu.forEach(function (l) { var p = precoNaData((ct.porRef[l.ref] || {}).agenda, data); U += l.qty * (p.usd || 0); Bs += l.qty * (p.brl || 0); });
       var calcQ = quim.reduce(function (a, m) { return a + m.qty * (custo[m.sap] || 0); }, 0);
       var calcC = cas.reduce(function (a, m) { return a + m.qty * (custo[m.sap] || 0); }, 0);
       var rf = num(g('rf', c)), cf = num(g('cf', c)), tq = num(g('tq', c)), tce = num(g('tce', c));
       // valores antes do risco: com risco 100% a planilha zera tudo; aí fica o calculado (sem ajuste)
-      var alvoR = risco < 1 ? rf / (1 - risco) : calcR;
+      var alvoR = risco < 1 ? rf / (1 - risco) : null;
       var alvoC = risco < 1 ? cf / (1 - risco) : calcQ + calcC;
       var alvoQ = risco < 1 ? (L.tq >= 0 ? tq / (1 - risco) : calcQ) : calcQ;
       if (alvoQ > alvoC + 0.005) alvoQ = alvoC; // COGS de químicos não pode passar do COGS total
@@ -176,9 +216,18 @@
         concluida: /^conclu/.test(semAcento(g('status', c))), risco: risco, contingencia: /^sim/.test(semAcento(g('cont', c))),
         data: data, so: txt(g('so', c)).replace(/^-$/, ''), wbs: txt(g('wbs', c)).replace(/^-$/, ''), resp: txt(g('resp', c)),
         ppu: ppu, quim: quim, cas: cas, time: time,
-        ajRec: r4(alvoR - calcR), ajQuim: r4(alvoQ - calcQ), ajCE: r4(alvoC - alvoQ - calcC),
+        _U: U, _B: Bs, _alvo: alvoR,
+        ajQuim: r4(alvoQ - calcQ), ajCE: r4(alvoC - alvoQ - calcC),
         rf: rf, cf: cf, linhas: []
       });
+    });
+    // câmbio: em cada operação com parte em R$, a cotação que a planilha usou = R$ ÷ (receita − US$)
+    M.cambio = montarCambio(M.operacoes.filter(function (o) { return o._B > 0 && o._alvo != null && o._alvo - o._U > 0; }).map(function (o) { return {data: o.data, fx: o._B / (o._alvo - o._U)}; }));
+    M.operacoes.forEach(function (o) {
+      var fx = o._B > 0 ? cambioDe(M.cambio, o.data) : null;
+      var calc = o._U + (fx ? o._B / fx : 0);
+      o.ajRec = o._alvo == null ? 0 : r4(o._alvo - calc);
+      delete o._U; delete o._B; delete o._alvo;
     });
   }
 
@@ -211,15 +260,15 @@
       if (!r || !txt(r[J.contrato]) || !txt(r[J.item])) return;
       (banco[txt(r[J.contrato])] = banco[txt(r[J.contrato])] || []).push(r);
     });
-    // câmbio dos itens só em R$: o que a planilha usou (R$ × índice ÷ preço da linha)
-    var fxs = {};
+    // preço inicial em partes: R$ e US$ (× rev. share); sem os dois, a receita CMT (ou a receita total × share) em US$
     var precoBase = function (r) {
       var share = ehNum(r[J.share]) && num(r[J.share]) > 0 ? num(r[J.share]) : 1;
-      if (J.cmt >= 0 && ehNum(r[J.cmt]) && num(r[J.cmt]) !== 0) return {usd: num(r[J.cmt])};
-      if (J.total >= 0 && ehNum(r[J.total]) && num(r[J.total]) !== 0) return {usd: num(r[J.total]) * share};
-      if (ehNum(r[J.usd])) return {usd: num(r[J.usd]) * share};
-      if (ehNum(r[J.brl])) return {brl: num(r[J.brl]) * share};
-      return {usd: null};
+      var rs = J.brl >= 0 && ehNum(r[J.brl]) && num(r[J.brl]) !== 0 ? num(r[J.brl]) * share : null;
+      var us = J.usd >= 0 && ehNum(r[J.usd]) ? num(r[J.usd]) * share : null;
+      if (rs != null || us != null) return {brl: rs, usd: us};
+      if (J.cmt >= 0 && ehNum(r[J.cmt]) && num(r[J.cmt]) !== 0) return {usd: num(r[J.cmt]), brl: null};
+      if (J.total >= 0 && ehNum(r[J.total]) && num(r[J.total]) !== 0) return {usd: num(r[J.total]) * share, brl: null};
+      return {usd: null, brl: null};
     };
     var cts = {}, ordem = [];
     var achaCt = function (nome, cliente) {
@@ -251,32 +300,18 @@
       var d = semAcento(desc);
       return l.find(function (i) { return semAcento(i.desc) === d; }) || l.find(function (i) { return d && (semAcento(i.desc).indexOf(d) === 0 || d.indexOf(semAcento(i.desc)) === 0); }) || l[0];
     };
-    // 1ª passada: contratos, câmbio dos itens em R$
-    linhas.forEach(function (r) {
-      var ct = achaCt(txt(r[I.contrato]), txt(r[I.cliente]));
-      var it = acharItem(ct, txt(r[I.item]), txt(r[I.desc]));
-      var p = num(r[I.preco]), d = dataISO(XLSX, r[I.data]);
-      if (it && it.base.brl != null && p > 0) {
-        var idx = 1;
-        it.reajs.forEach(function (x) { if (x.desde <= d) idx = x.idx; });
-        var fx = Math.round(it.base.brl * idx / p * 10000) / 10000;
-        fxs[fx] = (fxs[fx] || 0) + 1;
-      }
-    });
-    var fx = Number(Object.keys(fxs).sort(function (a, b) { return fxs[b] - fxs[a]; })[0]) || 5.0181;
-    M.cambio = fx;
-    // agendas de preço dos itens
-    ordem.forEach(function (n) {
-      var ct = cts[n];
-      ct.itens.forEach(function (it) {
-        var base = it.base.usd != null ? it.base.usd : it.base.brl != null ? it.base.brl / fx : null;
-        it.agenda = limparAgenda([{desde: '', usd: base}].concat(it.reajs.map(function (x) {
-          var v = x.valor != null && x.valor !== 0 ? (it.base.usd != null ? x.valor : x.valor / fx) : base != null ? base * x.idx : null;
-          return {desde: x.desde, usd: v, nome: x.nome + ' (índice ' + x.idx + ')'};
-        })));
-        if (it.base.brl != null && it.base.usd == null) it.obsPreco = 'R$ ' + it.base.brl + ' ÷ câmbio ' + fx;
-      });
-    });
+    // 1ª passada: contratos e agendas de preço (índice acumulado sobre o preço inicial; a parte em US$ de item só em
+    // US$ usa o "valor reajustado" da planilha quando houver)
+    linhas.forEach(function (r) { achaCt(txt(r[I.contrato]), txt(r[I.cliente])); });
+    var agendaDe = function (it) {
+      var b = it.base;
+      return limparAgenda([{desde: '', usd: b.usd, brl: b.brl}].concat(it.reajs.map(function (x) {
+        var us = b.usd != null ? (b.brl == null && x.valor != null && x.valor !== 0 ? x.valor : b.usd * x.idx) : null;
+        return {desde: x.desde, usd: us, brl: b.brl != null ? b.brl * x.idx : null, nome: x.nome + ' (índice ' + x.idx + ')'};
+      })));
+    };
+    ordem.forEach(function (n) { cts[n].itens.forEach(function (it) { it.agenda = agendaDe(it); }); });
+    var cands = [];
 
     // 2ª passada: operações (linhas da mesma operação: contrato, sonda, poço, data, status, risco e SO)
     var ops = {}, ordemOps = [];
@@ -294,7 +329,7 @@
         op = ops[k] = {contrato: ct.nome, cliente: ct.cliente, sonda: sonda, poco: poco, campo: I.campo >= 0 ? txt(r[I.campo]).replace(/^-$/, '') : '', descs: [], fase: '', tipoPl: '',
           tipoReceita: I.tipoRec >= 0 ? txt(r[I.tipoRec]) : '', status: st, concluida: /^conclu/.test(semAcento(st)), risco: risco,
           contingencia: I.cont >= 0 && /^sim/.test(semAcento(r[I.cont])), data: data, so: so, wbs: I.wbs >= 0 ? txt(r[I.wbs]) : '',
-          resp: txt(r[I.resp]), ppuQ: {}, valor: 0, calc: 0, cogs: 0, cogsQ: 0, rf: 0, cf: 0, linhas: [], quim: [], cas: [], time: {}};
+          resp: txt(r[I.resp]), ppuQ: {}, valor: 0, U: 0, B: 0, cogs: 0, cogsQ: 0, rf: 0, cf: 0, linhas: [], quim: [], cas: [], time: {}};
         ordemOps.push(k);
       }
       var q = num(r[I.qtd]), p = num(r[I.preco]);
@@ -308,7 +343,7 @@
       if (!(q > 0) && !V) return; // linha sem quantidade e sem valor: não entra
       var it = refPl ? acharItem(ct, refPl, desc) : null;
       if (!it && refPl && q > 0 && p > 0) {
-        it = {ref: refPl, refPl: refPl, desc: desc || refPl, unit: txt(r[I.uom]), agenda: [{desde: '', usd: p}], reajs: [], base: {usd: p}};
+        it = {ref: refPl, refPl: refPl, desc: desc || refPl, unit: txt(r[I.uom]), agenda: [{desde: '', usd: p, brl: null}], reajs: [], base: {usd: p, brl: null}};
         ct.itens.push(it); (ct.porRef[refPl] = ct.porRef[refPl] || []).push(it);
         M.avisos.push(ct.nome + ': item ' + refPl + ' só está no Forecast (preço da linha: ' + r4(p) + ')');
       }
@@ -319,7 +354,11 @@
       op.linhas.push({linha: iH + 2 + i, item: refPl, qtd: q, preco: p, valor: V, manual: temRM});
       if (it && q > 0 && V > 0) {
         op.ppuQ[it.ref] = (op.ppuQ[it.ref] || 0) + q;
-        op.calc += q * precoNaData(it.agenda, data);
+        var pr = precoNaData(it.agenda, data);
+        op.U += q * (pr.usd || 0);
+        op.B += q * (pr.brl || 0);
+        // linha só em R$: a cotação que a planilha usou = R$ ÷ valor da linha
+        if (pr.brl > 0 && !(pr.usd > 0)) cands.push({data: data, fx: q * pr.brl / V});
       }
     });
     ordem.forEach(function (n) {
@@ -331,6 +370,7 @@
       M.contratos.push(ct);
     });
     Object.keys(banco).forEach(function (n) { if (!cts[n]) M.avisos.push('contrato "' + n + '" só está no Banco (sem operações no Forecast): não incluído'); });
+    M.cambio = montarCambio(cands);
     ordemOps.forEach(function (k, j) {
       var o = ops[k];
       o.n = j + 1;
@@ -339,7 +379,9 @@
       o.notas = o.descs.join(' · ');
       delete o.temDescOp;
       o.ppu = Object.keys(o.ppuQ).map(function (ref) { return {ref: ref, qty: r4(o.ppuQ[ref])}; });
-      o.ajRec = r4(o.valor - o.calc);
+      var fx = o.B > 0 ? cambioDe(M.cambio, o.data) : null;
+      o.ajRec = r4(o.valor - (o.U + (fx ? o.B / fx : 0)));
+      delete o.U; delete o.B;
       o.ajQuim = r4(o.cogsQ);
       o.ajCE = r4(o.cogs - o.cogsQ);
       o.rf = r4(o.rf); o.cf = r4(o.cf);
@@ -354,7 +396,7 @@
     var B = aba(XLSX, wb, /^banco de dados contrat/);
     if (!F) throw new Error('aba "Forecast" não encontrada');
     if (!B) throw new Error('aba "Banco de dados contratos" não encontrada');
-    var M = {arquivo: arquivo || '', layout: '', contratos: [], operacoes: [], quimicos: [], casing: [], avisos: []};
+    var M = {arquivo: arquivo || '', layout: '', contratos: [], operacoes: [], quimicos: [], casing: [], cambio: [], avisos: []};
     var porColunas = F.slice(0, 12).some(function (r) { return semAcento(r && r[5]) === 'status'; });
     M.layout = porColunas ? 'colunas' : 'linhas';
     if (porColunas) lerColunas(XLSX, F, B, M); else lerLinhas(XLSX, F, B, M);
@@ -362,13 +404,14 @@
     M.contratos.forEach(function (ct) {
       ct.itens.forEach(function (it) {
         it.usd = it.agenda.length ? it.agenda[0].usd : null;
+        it.brl = it.agenda.length ? it.agenda[0].brl : null;
         it.agenda.forEach(function (a) { if (a.desde && (!ct.inicio || a.desde < ct.inicio)) ct.inicio = a.desde; });
       });
       var datas = {};
       ct.itens.forEach(function (it) {
         it.agenda.slice(1).forEach(function (a) {
           var r = datas[a.desde] = datas[a.desde] || {desde: a.desde, nome: {}, precos: {}};
-          r.precos[it.ref] = a.usd;
+          r.precos[it.ref] = {usd: a.usd, brl: a.brl};
           if (a.nome) r.nome[a.nome.replace(/ \(índice.*$/, '')] = 1;
         });
       });
@@ -405,7 +448,7 @@
     return outro(desc);
   }
 
-  var api = {lerPlanilhaContratos: lerPlanilhaContratos, tipoOperacao: tipoOperacao, precoNaData: precoNaData, slug: slug, semAcento: semAcento};
+  var api = {lerPlanilhaContratos: lerPlanilhaContratos, tipoOperacao: tipoOperacao, precoNaData: precoNaData, cambioDe: cambioDe, slug: slug, semAcento: semAcento};
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
   else raiz.EARL_LEITOR_CONTRATOS = api;
 })(typeof window !== 'undefined' ? window : this);

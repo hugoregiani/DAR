@@ -8,7 +8,11 @@
   var hoEmailValido = e => /^[^\s@<>,;"']+@[^\s@<>,;"']+\.[^\s@<>,;"']+$/.test(String(e || '').trim());
   var hoRegiaoLbl = loc => loc === 'macae' ? 'Sudeste' : 'Nordeste';
   var hoNum = v => v == null || v === '' ? '—' : fmtNum(v);
-  var hoContTxt = (cont, ch) => cont ? 'Contingência' + (ch != null && ch !== '' ? ' · ' + ch + '%' : '') : '';
+  /* e10: a linha guarda a chance de acontecer (como no EARL); o e-mail mostra o risco de não acontecer = 100 − chance */
+  var hoContTxt = (cont, ch) => cont ? 'Contingência' + (ch != null && ch !== '' ? ' · risco ' + fmtNum(Math.max(0, Math.min(100, 100 - Number(ch)))) + '%' : '') : '';
+  /* operação em contingência: registros novos guardam riscoNao (risco de não acontecer = risco da receita/COGS);
+     os antigos, só a chance (campo risco) */
+  var hoOpCont = (o, curto) => !o.contingencia ? 'Não' : o.riscoNao != null ? 'Sim · risco ' + (curto ? '' : 'de não acontecer ') + fmtNum(o.riscoNao) + '%' : 'Sim · chance ' + (o.risco || 0) + '%';
 
   /* Monta o registro do handover (o mesmo formato do EARL, com status 'email' e uma foto
      dos dados da operação, para o e-mail poder ser gerado de novo igual). Não grava nada. */
@@ -34,6 +38,7 @@
       vidaReq: vidaExigido(j.tipoOp),
       contingencia: !!j.contingencia,
       risco: j.contingencia ? Number(j.risco) || 0 : null,
+      riscoNao: j.contingencia ? Math.max(0, Math.min(100, Number(j.riscoRec) || 0)) : null,
       notes: String(j.notes || '').trim(),
       ppu: (j.ppuNeeds || []).filter(n => n && (n.ref || n.desc)).map(n => ({
         ref: n.ref || '',
@@ -96,7 +101,7 @@
       contratoNumero: ct && ct.numero && ct.numero !== ct.name ? ct.numero : '',
       clienteName: p0.clienteName || ct && ct.clientName || c.cliente || '',
       rigId: rig.id || '',
-      sonda: rig.name || '',
+      sonda: rigFmt(rig) || '', // e10: NOME PETROBRAS - NOME DA SONDA
       base: rig.base || '',
       offshore: !!c.offshore,
       salesOrder: so,
@@ -157,11 +162,13 @@
     var KV_V = 'padding:4px 0;font-size:12.5px;color:#2A2F30;font-weight:600;vertical-align:top;border-bottom:1px solid #F0F1F2;';
     var kv = rows => '<table cellspacing="0" cellpadding="0" style="border-collapse:collapse;margin:2px 0 14px;font-family:Segoe UI,Arial,sans-serif">' + rows.filter(r => r[1] != null && r[1] !== '').map(r => `<tr><td style="${KV_K}">${hEsc(r[0])}</td><td style="${KV_V}">${hEsc(r[1])}</td></tr>`).join('') + '</table>';
     var vidaDe = o => o.vida || (o.vidaReq ? '—' : 'N/A');
-    var ident = [['Cliente', rec.clienteName], ['Contrato', [rec.contratoLabel, rec.contratoNumero].filter(Boolean).join(' · ')], ['Sonda', [rec.sonda || '—', rec.offshore ? 'offshore' : 'onshore', rec.base].filter(Boolean).join(' · ')], ['Poço', o0.well || '—'], ['Operação', nomeOp(o0) || '—'], ['Data prevista', o0.date ? fmtD(o0.date) : '—'], ['Duração prevista', o0.dur ? o0.dur + (o0.dur === 1 ? ' dia' : ' dias') : ''], ['Sales Order (SO)', rec.salesOrder || '—'], ['WBS', rec.wbs || ''], ['Nº VIDA', vidaDe(o0)], ['Contingência', o0.contingencia ? 'Sim · chance ' + (o0.risco || 0) + '%' : 'Não'], ['Versão do handover', String(rec.versao || 1)], ['Engenheiro responsável', rec.engenheiro || ''], ['Gerado em', fmtDH(quando)]];
-    var temBordo = l => (l || []).some(q => q.aBordo != null);
+    var ident = [['Cliente', rec.clienteName], ['Contrato', [rec.contratoLabel, rec.contratoNumero].filter(Boolean).join(' · ')], ['Sonda', [rec.sonda || '—', rec.offshore ? 'offshore' : 'onshore', rec.base].filter(Boolean).join(' · ')], ['Poço', o0.well || '—'], ['Operação', nomeOp(o0) || '—'], ['Data prevista', o0.date ? fmtD(o0.date) : '—'], ['Duração prevista', o0.dur ? o0.dur + (o0.dur === 1 ? ' dia' : ' dias') : ''], ['Sales Order (SO)', rec.salesOrder || '—'], ['WBS', rec.wbs || ''], ['Nº VIDA', vidaDe(o0)], ['Contingência', hoOpCont(o0)], ['Versão do handover', String(rec.versao || 1)], ['Engenheiro responsável', rec.engenheiro || ''], ['Gerado em', fmtDH(quando)]];
+    /* e10: as químicas sempre com a coluna "Saldo na sonda" (última contagem do Inventário das sondas, ou o DAR);
+       o casing só quando houver saldo */
+    var temBordo = (l, comLotes) => comLotes || (l || []).some(q => q.aBordo != null);
     var linhasMat = (l, comLotes) => (l || []).map(q => {
       var r = [q.sap || '—', q.produto || '—', q.uom || '', hoNum(q.previsto), hoNum(q.backup) + '%', hoNum(q.necessidade)];
-      if (temBordo(l)) r.push(hoNum(q.aBordo));
+      if (temBordo(l, comLotes)) r.push(hoNum(q.aBordo));
       r.push(hoNum(q.solicitado));
       r.push(q.embalagem ? q.embalagem.tipo + ' ' + fmtNum(q.embalagem.cap) + ' ' + (q.embalagem.uom || '') + (q.embalagem.n ? ' · ' + fmtNum(q.embalagem.n) + ' emb.' : '') : '—');
       if (comLotes) r.push((q.lotes || []).length ? q.lotes.map(x => (x.lote || 's/ lote') + ': ' + fmtNum(x.qty)).join(' · ') : '—');
@@ -170,7 +177,7 @@
     });
     var headMat = (l, comLotes) => {
       var h = ['SAP', 'Produto', 'Unid.', 'Previsto', 'Backup', 'Necessidade'];
-      if (temBordo(l)) h.push('A bordo');
+      if (temBordo(l, comLotes)) h.push('Saldo na sonda');
       h.push('Solicitado', 'Embalagem');
       if (comLotes) h.push('Lotes');
       h.push('Observação');
@@ -205,11 +212,11 @@
     var sec = t => add(mailH2(++nSec + '. ' + t));
     if (varias) {
       sec('Operações incluídas (' + ops.length + ')');
-      add(mailTable(['Poço', 'Operação', 'Data', 'Duração', 'Nº VIDA', 'Contingência'], ops.map(o => [o.well || '—', nomeOp(o) || '—', o.date ? fmtD(o.date) : '—', o.dur ? o.dur + ' d' : '—', vidaDe(o), o.contingencia ? 'Sim · ' + (o.risco || 0) + '%' : 'Não'])));
+      add(mailTable(['Poço', 'Operação', 'Data', 'Duração', 'Nº VIDA', 'Contingência'], ops.map(o => [o.well || '—', nomeOp(o) || '—', o.date ? fmtD(o.date) : '—', o.dur ? o.dur + ' d' : '—', vidaDe(o), hoOpCont(o, true)])));
     }
     sec('Químicas (' + quim.length + ')');
     add(quim.length ? mailTable(headMat(quim, true), linhasMat(quim, true)) : mailP('<span style="color:#8E979D">Nenhuma química prevista.</span>'));
-    if (quim.length) add(mailP('<span style="font-size:11.5px;color:#6B7280">Backup padrão: ' + hEsc(fmtNum(rec.buQuim)) + '% no volume firme; linhas em contingência sem backup, salvo ajuste.</span>'));
+    if (quim.length) add(mailP('<span style="font-size:11.5px;color:#6B7280">Backup padrão: ' + hEsc(fmtNum(rec.buQuim)) + '% no volume firme; linhas em contingência sem backup, salvo ajuste. Saldo na sonda: ' + hEsc(rec.aBordoFonte || 'sem contagem de inventário desta sonda (—)') + '.</span>'));
     sec('Casing equipment (' + cas.length + ')');
     add(cas.length ? mailTable(headMat(cas, false), linhasMat(cas, false)) : mailP('<span style="color:#8E979D">Nenhum item de casing previsto.</span>'));
     sec('Equipamentos (' + eqp.length + ')');
@@ -245,7 +252,7 @@
     var n2 = 1;
     var tt = t => ++n2 + '. ' + t.toUpperCase();
     if (varias) tl(tt('Operações incluídas'), ops.map(o => [o.well || '—', nomeOp(o), o.date ? fmtD(o.date) : '', 'VIDA ' + vidaDe(o)].filter(Boolean).join(' · ')));
-    var txtMat = (q, comLotes) => [matNm(q.sap, q.produto), 'solicitado ' + hoNum(q.solicitado) + ' ' + (q.uom || ''), 'previsto ' + hoNum(q.previsto), 'backup ' + hoNum(q.backup) + '%', q.aBordo != null ? 'a bordo ' + hoNum(q.aBordo) : '', comLotes && (q.lotes || []).length ? 'lotes ' + q.lotes.map(x => (x.lote || 's/ lote') + ': ' + fmtNum(x.qty)).join(', ') : '', hoContTxt(q.cont, q.chance), q.justificativa ? 'abaixo da diferença: ' + q.justificativa : ''].filter(Boolean).join(' · ');
+    var txtMat = (q, comLotes) => [matNm(q.sap, q.produto), 'solicitado ' + hoNum(q.solicitado) + ' ' + (q.uom || ''), 'previsto ' + hoNum(q.previsto), 'backup ' + hoNum(q.backup) + '%', q.aBordo != null ? 'saldo na sonda ' + hoNum(q.aBordo) : comLotes ? 'saldo na sonda —' : '', comLotes && (q.lotes || []).length ? 'lotes ' + q.lotes.map(x => (x.lote || 's/ lote') + ': ' + fmtNum(x.qty)).join(', ') : '', hoContTxt(q.cont, q.chance), q.justificativa ? 'abaixo da diferença: ' + q.justificativa : ''].filter(Boolean).join(' · ');
     tl(tt('Químicas'), quim.map(q => txtMat(q, true)));
     tl(tt('Casing equipment'), cas.map(q => txtMat(q, false)));
     tl(tt('Equipamentos'), eqp.map(e => [e.label, 'solicitado ' + hoNum(e.solicitado), 'previsto ' + hoNum(e.previsto), hoContTxt(e.cont, e.chance)].filter(Boolean).join(' · ')));
@@ -1102,6 +1109,10 @@
     onClick: abrirEngQuim,
     title: "Banco de produtos qu\xEDmicos: SAP, descri\xE7\xE3o, unidade e valor em US$ (COGS), atualizado por planilha"
   }, "Qu\xEDmicos"), engH("button", {
+    className: "btn-o eng-cambio",
+    onClick: abrirEngCambio,
+    title: "C\xE2mbio do d\xF3lar por m\xEAs (R$ por US$ 1,00): converte em US$ os valores em R$ dos contratos, com a cota\xE7\xE3o do m\xEAs"
+  }, "\uD83D\uDCB1 C\xE2mbio"), engH("button", {
     className: "btn-o eng-exportar",
     onClick: engExportar,
     title: "Baixa um arquivo .json com todos os dados (contratos, valores, reajustes, opera\xE7\xF5es, consumos, handovers, sondas, templates, o banco de qu\xEDmicos e o invent\xE1rio das sondas) para guardar ou levar para outro computador"

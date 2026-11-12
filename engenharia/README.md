@@ -88,6 +88,16 @@ A Engenharia do EARL separada do resto do sistema, para usar **sem servidor, sem
   - **Liberar espaço:** **Ver e liberar espaço** mostra quanto cada arquivo ocupa e deixa apagar só dados de simulação e de teste. Os dados da Engenharia, do Gerencial e do EARL completo não se apagam por ali.
   - **Armazenamento bloqueado:** se o arquivo foi aberto dentro de uma pré-visualização (e-mail, Teams, visualizador), o navegador bloqueia o armazenamento. O app abre mesmo assim e avisa que nada fica salvo.
 
+### e10 (12/11/2026)
+
+- **Contingência = risco de não acontecer.** Na operação em contingência, o campo virou **"Risco de não acontecer"** (0% = entra inteira na receita, no COGS e nas químicas; 100% = fica mapeada, mas fora da contagem). É o mesmo valor do "Risco da receita / COGS" (que some do formulário quando a operação está em contingência). Nas linhas (itens PPU, químicas, casing, pessoal, equipamentos), a coluna virou **"Contingência · risco"** com a mesma regra; a linha conta × (1 − risco da linha) na receita e no COGS previstos. Por dentro, o app continua guardando a chance de acontecer (`risco` da operação = 100 − riscoRec; `chance` da linha = 100 − risco), usada no forecast de químicas do EARL. Ao abrir, as operações em contingência antigas ficam com o risco que estava em "Risco da receita / COGS".
+- **Câmbio do dólar por mês** (botão **💱 Câmbio** na barra): ano, mês e quanto vale US$ 1,00 em R$. Itens de contrato com valor em R$ entram em US$ pela cotação do mês do serviço (concluída) ou da data prevista (prevista): US$ da linha = qtd × valor US$ + qtd × valor R$ ÷ câmbio. Mês sem cotação: vale a do último mês informado antes. Vale para todos os contratos (Receita e margem, Consumo e receita e o arquivo do gerencial).
+- **Handover:** o e-mail traz a coluna **"Saldo na sonda"** nas químicas (última contagem do Inventário das sondas; sem contagem, o DAR do EARL, quando houver), com a data da contagem. O mesmo saldo aparece em "A bordo" na janela do handover e desconta da sugestão do "Solicitado".
+- **Lista:** horizonte **"Todas"** (todas as operações do contrato, passadas e futuras, por data).
+- **Sondas:** sempre como **"NOME PETROBRAS - NOME DA SONDA"** (ex.: NS-60 - Deepwater Aquila); sem nome Petrobras, só o nome. Vale no Gantt, calendário, lista, seletores, handover (assunto e corpo), consumo, inventário e Receita e margem. As planilhas exportadas continuam com "Sonda" (código) e "Nome da sonda" separados.
+- **Exportações:** "Consumo de produtos químicos", "Casing equipment" e "Pessoal" ganharam **Contingência (linha)** e **Risco da linha (%)**; a operação já tinha Contingência e Risco (%). O Painel de Compras aplica o risco da linha.
+- **Cards** da aba "Consumo e receita" com profundidade, como os do Gerencial g16.
+
 ## O que não tem
 
 Não tem login, escolha de região, Coordenação, Logística, Pessoal, Equipamentos, Operações, Sondas (a página da sonda), Análises, Ajustes nem sincronização com SharePoint. A simulação também ficou de fora: o arquivo começa só com o cadastro do EARL (contratos, sondas offshore, químicas, casing, pessoas e equipamentos), sem as operações fictícias.
@@ -143,7 +153,7 @@ node teste_bp/e2e_bp.js Contrato_BP_Teste_EARL.xlsx EARL_Engenharia_BP_teste.htm
 - **COGS:** os 60 químicos no banco de Químicos (iguais à base do app) e os 102 casing em Custos (COGS).
 - **27 operações**, uma por coluna do Forecast:
   - **Tipo:** revestimento → Cimentação primária com o tamanho; P&A → Abandono; LCP → Tampão de combate à perda; o resto → Outros, com a descrição da planilha.
-  - **Datas:** fixas, sem acompanhar a operação anterior da sonda.
+  - **Datas:** vinculadas à operação anterior da sonda (e10, pedido do Hugo).
   - **Itens:** PPU, químicas e pessoal (time de embarque × duração).
   - **Risco da planilha** vira o "Risco da receita / COGS".
   - **Concluído** = consumo lançado igual ao previsto, com a data da operação; **Previsto** = só o planejado.

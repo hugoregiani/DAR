@@ -73,13 +73,16 @@ function totaisPlanilha(b64) {
     conf(await p.title() === 'EARL — Engenharia (' + NOME + ')', 'título “EARL — Engenharia (' + NOME + ')”', await p.title());
     const tag = (await p.innerText('.earl-pl-tag')).replace(/\s+/g, ' ');
     conf(tag.indexOf(NOME) === 0 && tag.indexOf('dados da planilha ' + path.basename(XLS)) > 0, 'etiqueta no canto: ' + NOME + ' · dados da planilha ' + path.basename(XLS), tag);
-    const db = await p.evaluate(() => { const d = JSON.parse(localStorage.getItem('hal_cmt_db_v1')); return {marca: d.earlPlanilhaId === window.EARL_PL_ID, ativos: d.contratos.filter(c => !c.archived).map(c => ({id: c.id, nome: c.name, itens: c.items.length, semPreco: c.items.filter(i => typeof i.usd !== 'number').length})), ops: d.plannedJobs.length, cons: d.plannedJobs.filter(j => j.ppuCons).length, semRig: d.plannedJobs.filter(j => !j.rigId).length, rigs: [...new Set(d.plannedJobs.map(j => j.rigId).filter(Boolean))].filter(id => !d.rigs.some(r => r.id === id)).length}; });
+    const db = await p.evaluate(() => { const d = JSON.parse(localStorage.getItem('hal_cmt_db_v1')); return {marca: d.earlPlanilhaId === window.EARL_PL_ID, ativos: d.contratos.filter(c => !c.archived).map(c => ({id: c.id, nome: c.name, itens: c.items.length, semPreco: c.items.filter(i => typeof i.usd !== 'number' && typeof i.brl !== 'number').length})), ops: d.plannedJobs.length, cons: d.plannedJobs.filter(j => j.ppuCons).length, semRig: d.plannedJobs.filter(j => !j.rigId).length, cadeia: d.plannedJobs.every(j => j.anchor === 'chain'), contOk: d.plannedJobs.filter(j => j.contingencia).every(j => j.risco === 100 - (Number(j.riscoRec) || 0)), nCont: d.plannedJobs.filter(j => j.contingencia).length, cambio: (d.cambio || []).length, comBrl: d.contratos.filter(c => !c.archived && c.items.some(i => typeof i.brl === 'number')).length, rigs: [...new Set(d.plannedJobs.map(j => j.rigId).filter(Boolean))].filter(id => !d.rigs.some(r => r.id === id)).length}; });
     conf(db.marca, 'abre com os dados da planilha (marca desta versão)');
     conf(db.ativos.length === PL.contratos.length && new RegExp(PL.contratos.length + ' contrato\\(s\\) vigente').test(await p.innerText('body')), PL.contratos.length + ' contrato(s) ativo(s), os mesmos do Forecast (os outros do EARL ficam arquivados)', db.ativos.map(c => c.nome));
-    conf(db.ativos.every(c => c.itens > 0 || /cambial|copq/i.test(c.nome)) && db.ativos.every(c => !c.semPreco), 'itens PPU com preço em US$ em todos os contratos', db.ativos.filter(c => c.semPreco || !c.itens));
+    conf(db.ativos.every(c => c.itens > 0 || /cambial|copq/i.test(c.nome)) && db.ativos.every(c => !c.semPreco), 'itens PPU com preço (US$ ou R$) em todos os contratos', db.ativos.filter(c => c.semPreco || !c.itens));
     if (PL.ops) conf(db.ops === PL.ops && db.cons === PL.concl, PL.ops + ' operações, ' + PL.concl + ' com consumo lançado (as concluídas)', [db.ops, db.cons]);
     else conf(db.ops > 0 && db.ops <= PL.linhas, db.ops + ' operações (as ' + PL.linhas + ' linhas agrupadas por contrato, sonda, poço, data, situação, risco e SO)', [db.ops, PL.linhas]);
     conf(db.rigs === 0, 'toda sonda usada nas operações existe no cadastro' + (db.semRig ? ' (' + db.semRig + ' operação(ões) sem sonda: vendas, câmbio/COPQ, frente de trabalho)' : ''), db);
+    conf(db.cadeia, 'todas as operações com a data vinculada à operação anterior');
+    if (db.nCont) conf(db.contOk, db.nCont + ' operação(ões) em contingência: risco de não acontecer = o da planilha (chance = 100 − risco)', db);
+    conf(!db.comBrl === !db.cambio, db.comBrl ? db.comBrl + ' contrato(s) com valores em R$ e o câmbio de ' + db.cambio + ' mês(es) da planilha' : 'sem valores em R$ (sem câmbio)', [db.comBrl, db.cambio]);
     const pref = 'earleng' + NOME.toLowerCase().replace(/[^a-z0-9]/g, '') + ':';
     conf(await p.evaluate(pf => [...Array(localStorage.length).keys()].map(i => localStorage.key(i)).every(k => k.startsWith(pf)), pref), 'armazenamento separado (prefixo ' + pref + ')');
     if (SHOTS) await p.screenshot({path: path.join(SHOTS, NOME + '_1_inicio.png')});
@@ -118,6 +121,7 @@ function totaisPlanilha(b64) {
     /* ---- todos os contratos, todas as abas ---- */
     const nomesCt = db.ativos.map(c => c.nome);
     let abas = 0, consumos = 0;
+    const listaErr = [];
     const errAntes = E.errs.length;
     for (const nm of nomesCt) {
       await p.locator('.eng2-card').filter({hasText: nm}).first().click();
@@ -128,10 +132,15 @@ function totaisPlanilha(b64) {
       const b = p.locator('.ec-ops button:has-text("Σ Consumo")').first();
       if (await b.count()) { await b.click(); await p.waitForSelector('.ec-cons-modal'); consumos++; await p.click('.ec-cons-modal .modal-close'); }
       await p.click('.db-tab:has-text("Lista")');
+      await p.click('.eng-lista-todas');
       await p.waitForTimeout(150);
+      const nLista = await p.locator('table.db-table tbody tr').count();
+      const nOpsCt = await p.evaluate(nm => { const d = JSON.parse(localStorage.getItem('hal_cmt_db_v1')); const ct = d.contratos.find(c => !c.archived && c.name === nm); return d.plannedJobs.filter(j => j.contratoId === ct.id).length; }, nm);
+      if (nLista !== nOpsCt) listaErr.push(nm + ': ' + nLista + '≠' + nOpsCt);
       await p.click('.nav-back-btn');
       await p.waitForSelector('.eng2-card');
     }
+    conf(!listaErr.length, 'Lista › “Todas”: todas as operações de cada contrato', listaErr);
     conf(E.errs.length === errAntes, 'os ' + nomesCt.length + ' contrato(s) abrem em todas as abas (' + abas + ' abas) e o consumo lançado abre (' + consumos + ')', E.errs.slice(errAntes, errAntes + 3));
 
     /* ---- exportações (inventário, químicos, casing, pessoal) ---- */

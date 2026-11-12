@@ -62,7 +62,7 @@ function montarBanco({b64, arquivo, nome}) {
     usados.add(id);
     // contrato que já existe no EARL: os campos dos itens que a planilha não traz (PO do item, saldo contratado) ficam
     const doEarl = ex ? Object.fromEntries((ex.items || []).map(i => [String(i.ref), i])) : {};
-    const itens = c.itens.map(i => ({...(doEarl[i.ref] || {}), ref: i.ref, desc: i.desc + (i.po ? ' · ' + i.po : ''), unit: i.unit, base: 'Macaé', brl: null, usd: i.usd}));
+    const itens = c.itens.map(i => ({...(doEarl[i.ref] || {}), ref: i.ref, desc: i.desc + (i.po ? ' · ' + i.po : ''), unit: i.unit, base: 'Macaé', brl: i.brl != null ? i.brl : null, usd: i.usd != null ? i.usd : null}));
     const precisa = s => ops.some(o => s === '+' ? o.ajRec > 0.005 : o.ajRec < -0.005);
     ['+', '-'].forEach(s => { if (precisa(s)) itens.push({...AJ.rec[s], base: 'Macaé', brl: null}); });
     const reg = {
@@ -71,7 +71,7 @@ function montarBanco({b64, arquivo, nome}) {
       numeroPlanilha: c.numero || '',
       kind: ex ? ex.kind || kindDe(c) : kindDe(c), bases: ['Macaé'], regiao: 'macae', version: 1, archived: false,
       items: itens, aditivos: [], inicio: c.inicio || '',
-      reajustes: c.reajustes.map((r, k) => ({id: 'rj_' + slugArq + '_' + L.slug(c.nome) + '_' + k, desde: r.desde, obs: r.obs + ' (planilha ' + arquivo + ')', em: agora, por: resp, precos: Object.fromEntries(Object.entries(r.precos).map(([ref, usd]) => [ref, {brl: null, usd}]))})),
+      reajustes: c.reajustes.map((r, k) => ({id: 'rj_' + slugArq + '_' + L.slug(c.nome) + '_' + k, desde: r.desde, obs: r.obs + ' (planilha ' + arquivo + ')', em: agora, por: resp, precos: Object.fromEntries(Object.entries(r.precos).map(([ref, p]) => [ref, {brl: p.brl != null ? p.brl : null, usd: p.usd != null ? p.usd : null}]))})),
       atualizadoEm: agora, origem: 'planilha ' + arquivo
     };
     if (ex) { Object.assign(ex, reg); reaproveitados.push(c.nome + ' → ' + ex.name); } else d.contratos.push(reg);
@@ -155,8 +155,8 @@ function montarBanco({b64, arquivo, nome}) {
       loc: 'macae', clienteName: ct.clientName, contratoLabel: ct.numero || ct.name, contratoId: ct.id,
       rigId: rigDe(o.sonda, ct, o.desc + ' ' + (o.notas || '')),
       well: o.poco, tipoOp: tp.tipoOp, tipoOutro: tp.tipoOutro || '', casing: tp.casing || '',
-      date, baselineDate: date, durationDays: dur, salesOrder: o.so, wbs: o.wbs, vida: '', anchor: 'fixed',
-      contingencia: !!o.contingencia, risco: o.contingencia ? 0 : null, riscoRec: Math.round(o.risco * 100), templateId: '',
+      date, baselineDate: date, durationDays: dur, salesOrder: o.so, wbs: o.wbs, vida: '', anchor: 'chain', // e10: a data acompanha a operação anterior da sonda (pedido do usuário)
+      contingencia: !!o.contingencia, risco: o.contingencia ? 100 - Math.round(o.risco * 100) : null, riscoRec: Math.round(o.risco * 100), templateId: '', // e10: risco = chance de acontecer = 100 − risco de não acontecer
       notes: ['Planilha ' + arquivo + ' (' + local + '): ' + (o.notas || o.desc || '—'), o.fase ? 'fase ' + o.fase : '', o.campo ? 'campo ' + o.campo : '', o.tipoReceita ? o.tipoReceita : '', o.resp ? 'responsável ' + o.resp : '', o.status].filter(Boolean).join(' · '),
       // previstas: o ajuste vai no planejado; concluídas: só no consumo lançado (o planejado fica pelo contrato)
       equipNeeds: [],
@@ -181,6 +181,8 @@ function montarBanco({b64, arquivo, nome}) {
   d.plannedJobs = ops;
   d.hoMail = {...(d.hoMail || {}), nome: resp};
   d.gerCfg = {...(d.gerCfg || {}), contratos: [...meus]};
+  // e10: câmbio do dólar por mês, com a cotação que a planilha usou em cada mês (itens com valor em R$)
+  d.cambio = (M.cambio || []).map(c => ({ano: c.ano, mes: c.mes, valor: c.valor, em: agora, por: 'planilha ' + arquivo}));
   saveDB(d);
   const alvo = Object.fromEntries(M.operacoes.map((o, k) => [ops[k].id, {rf: o.rf, cf: o.cf, risco: o.risco, contrato: o.contrato, data: o.data, desc: o.desc, concluida: o.concluida}]));
   return {

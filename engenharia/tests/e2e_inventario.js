@@ -65,12 +65,12 @@ const arqX = (nome, b64) => ({name: nome, mimeType: 'application/vnd.openxmlform
   await page.waitForSelector('.ei-tab');
   const cards = await page.$$eval('.ei-card .ei-card-t b', x => x.map(e => e.textContent));
   // 7 sondas cadastradas com o contrato "P&A" + a NS-38, que só tem operação do contrato
-  conf(cards.length === 8 && cards.includes('NS-38') && cards.includes('NS-32') && cards.includes('SS-75'), 'sondas do contrato: as das operações e as cadastradas com o contrato (8)', cards);
+  conf(cards.length === 8 && cards.includes('NS-38 - Takatsugu J') && cards.includes('NS-32 - Norbe VIII') && cards.includes('SS-75 - Noble Courage'), 'sondas do contrato: as das operações e as cadastradas com o contrato (8), como “NOME PETROBRAS - NOME DA SONDA”', cards);
   conf(/SONDAS 8/.test(await txt(page, '.ei-kpi-sondas')) && /0 8 sem contagem/.test(await txt(page, '.ei-kpi-cont')), 'cartões: 8 sondas, nenhuma contada', await txt(page, '.ec-kpis'));
   await foto(page, 'i1_aba');
 
   console.log('Primeira contagem da NS-32');
-  const card = nome => page.locator('.ei-card').filter({has: page.locator('.ei-card-t b', {hasText: new RegExp('^' + nome + '$')})});
+  const card = nome => page.locator('.ei-card').filter({has: page.locator('.ei-card-t b', {hasText: new RegExp('^' + nome + '( - .*)?$')})});
   await card('NS-32').locator('.ei-nova').click();
   await page.waitForSelector('.ei-modal');
   const prev = await page.$$eval('.ei-itens tbody tr', trs => trs.map(t => t.querySelector('.ei-sap') && t.querySelector('.ei-sap').value));
@@ -92,7 +92,7 @@ const arqX = (nome, b64) => ({name: nome, mimeType: 'application/vnd.openxmlform
   let db = await page.evaluate(() => JSON.parse(localStorage.getItem('hal_cmt_db_v1')).invSondas);
   conf(db.length === 1 && db[0].sonda === 'NS-32' && db[0].data === '2026-11-02' && db[0].ctId === 'ct_5900_0127108_24' && db[0].por === 'Ana' && db[0].obs === 'fim da operação', 'contagem gravada com sonda, data, contrato, responsável e observação', db);
   conf(JSON.stringify(db[0].itens.map(i => [i.sap, i.qtd, i.unid])) === JSON.stringify([['100003837', 45.5, 'gal'], ['100003760', 8, 'gal'], ['210795', 12, 'bag']]), 'itens com a quantidade em número ("45,5" = 45,5)', db[0].itens);
-  const c32 = await txt(page, '.ei-card:has(.ei-card-t b:text-is("NS-32"))');
+  const c32 = await txt(page, '.ei-card:has(.ei-card-t b:text-matches("^NS-32( - |$)"))');
   conf(/Última contagem: 02\/11\/2026/.test(c32) && /há 6 dia\(s\)/.test(c32) && /3 produto\(s\) · Ana/.test(c32), 'cartão da NS-32: data, dias, produtos e responsável', c32);
 
   console.log('Segunda contagem (começa com a anterior) e diferença');
@@ -146,7 +146,7 @@ const arqX = (nome, b64) => ({name: nome, mimeType: 'application/vnd.openxmlform
   await page.waitForSelector('.ei-modal', {state: 'detached'});
 
   console.log('Contagem de outra sonda (fora do contrato) e planilha no formato do app');
-  await page.selectOption('.ei-outra', {label: 'NS-60 · Deepwater Aquila'});
+  await page.selectOption('.ei-outra', {label: 'NS-60 - Deepwater Aquila'});
   await page.waitForSelector('.ei-modal');
   const invApp = await xlsxDe(page, [['Inventário', [['Sonda', 'Nome da sonda', 'Contrato', 'Cliente', 'Data da contagem', 'Responsável', 'SAP', 'Produto', 'Unidade', 'Quantidade a bordo'], ['NS-38', 'Takatsugu J', '', '', '', '', '100003837', 'MUSOL E', 'gal', 999], ['NS-60', 'Deepwater Aquila', '', '', '', '', '100003837', 'MUSOL E', 'gal', 33], ['NS-60', 'Deepwater Aquila', '', '', '', '', '100003760', 'Halad-413 L', 'gal', 7]]]]);
   const [fc2] = await Promise.all([page.waitForEvent('filechooser'), page.click('.ei-carregar')]);
@@ -157,11 +157,11 @@ const arqX = (nome, b64) => ({name: nome, mimeType: 'application/vnd.openxmlform
   await page.click('.ei-salvar');
   await page.waitForSelector('.ei-modal', {state: 'detached'});
   const cards2 = await page.$$eval('.ei-card .ei-card-t b', x => x.map(e => e.textContent));
-  conf(cards2.length === 9 && cards2.includes('NS-60'), 'NS-60 passa a aparecer no contrato (contagem lançada nele)', cards2);
+  conf(cards2.length === 9 && cards2.includes('NS-60 - Deepwater Aquila'), 'NS-60 passa a aparecer no contrato (contagem lançada nele)', cards2);
 
   console.log('Matriz do inventário atual');
   const cab = await page.$$eval('.ei-mat thead th', x => x.map(e => e.textContent));
-  conf(cab.join('|') === 'SAP|Produto|Unid.|NS-3207/11/2026|NS-3808/11/2026|NS-6008/11/2026|Total', 'colunas: sondas com contagem (com a data) e total', cab);
+  conf(cab.join('|') === 'SAP|Produto|Unid.|NS-32 - Norbe VIII07/11/2026|NS-38 - Takatsugu J08/11/2026|NS-60 - Deepwater Aquila08/11/2026|Total', 'colunas: sondas com contagem (com a data) e total', cab);
   const musol = await page.$$eval('.ei-mat tbody tr', trs => trs.map(t => [...t.children].map(c => c.textContent)).find(l => l[0] === '100003837'));
   conf(JSON.stringify(musol) === JSON.stringify(['100003837', 'MUSOL E', 'gal', '28', '70', '33', '131']), 'MUSOL E: 28 (última da NS-32) + 70 + 33 = 131', musol);
   await page.fill('.ei-busca', 'halad');
@@ -171,7 +171,7 @@ const arqX = (nome, b64) => ({name: nome, mimeType: 'application/vnd.openxmlform
 
   console.log('Histórico e excluir');
   await card('NS-32').locator('.ei-hist').click();
-  conf(/07\/11\/2026 2 prod\. · Ana Abrir 02\/11\/2026 3 prod\. · Ana Abrir/.test(await txt(page, '.ei-card:has(.ei-card-t b:text-is("NS-32")) .ei-hist-l')), 'histórico da NS-32 com as 2 contagens, a mais nova primeiro');
+  conf(/07\/11\/2026 2 prod\. · Ana Abrir 02\/11\/2026 3 prod\. · Ana Abrir/.test(await txt(page, '.ei-card:has(.ei-card-t b:text-matches("^NS-32( - |$)")) .ei-hist-l')), 'histórico da NS-32 com as 2 contagens, a mais nova primeiro');
   await card('NS-60').locator('.ei-editar').click();
   await page.waitForSelector('.ei-modal');
   await page.click('.ei-excluir');
@@ -208,7 +208,7 @@ const arqX = (nome, b64) => ({name: nome, mimeType: 'application/vnd.openxmlform
 
   const Q = await lerXlsx(page, qui.buf);
   const q = Q['Consumo de químicos'];
-  conf(q[0].join('|') === 'Contrato|Cliente|Sonda|Nome da sonda|Poço|Operação|Data da operação|Duração (dias)|Situação|Contingência|Risco (%)|SO|WBS|ID da operação|SAP|Produto|Unidade|Qtd. prevista|Qtd. realizada|Data do serviço', 'consumo de químicos: colunas', q[0]);
+  conf(q[0].join('|') === 'Contrato|Cliente|Sonda|Nome da sonda|Poço|Operação|Data da operação|Duração (dias)|Situação|Contingência|Risco (%)|SO|WBS|ID da operação|SAP|Produto|Unidade|Qtd. prevista|Qtd. realizada|Data do serviço|Contingência (linha)|Risco da linha (%)', 'consumo de químicos: colunas (e10: com a contingência e o risco da linha)', q[0]);
   const lin = id => q.filter(l => l[13] === id);
   conf(!lin('opX').length, 'operação cancelada não entra');
   const a = lin('opA');
@@ -226,7 +226,7 @@ const arqX = (nome, b64) => ({name: nome, mimeType: 'application/vnd.openxmlform
   conf(cc[0][15] === 'Descrição' && cc.filter(l => l[13] === 'opA').map(l => l[14] + '=' + l[17]).join() === '103101982=2' && cc.filter(l => l[15] === '(sem casing equipment)').length === 3, 'casing: opA com 2 ASSY BAF; as outras 3 operações sem casing', cc.slice(1).map(l => l[13] + ' ' + l[14] + ' ' + l[17]));
   const P = await lerXlsx(page, pes.buf);
   const pp = P.Pessoal;
-  conf(pp[0].slice(14).join('|') === 'Função|Pessoas previstas|Dias previstos|Homem-dia previsto|Pessoas realizadas|Dias realizados|Homem-dia realizado|Data do serviço', 'pessoal: colunas', pp[0]);
+  conf(pp[0].slice(14).join('|') === 'Função|Pessoas previstas|Dias previstos|Homem-dia previsto|Pessoas realizadas|Dias realizados|Homem-dia realizado|Data do serviço|Contingência (linha)|Risco da linha (%)', 'pessoal: colunas (e10: com a contingência e o risco da linha)', pp[0]);
   conf(JSON.stringify(pp.filter(l => l[13] === 'opA').map(l => l.slice(14, 18))) === JSON.stringify([['Tamponeiro', 2, 4, 8], ['Supervisor', 1, 4, 4]]), 'pessoal opA: homem-dia = pessoas × duração (2×4, 1×4)');
   conf(JSON.stringify(pp.filter(l => l[13] === 'opC').map(l => l.slice(14, 21))) === JSON.stringify([['Tamponeiro', 2, 4, 8, 2, 3, 6]]), 'pessoal opC: previsto e lançado (2 × 3 dias = 6)');
   conf(Object.fromEntries(P.Sobre.map(l => [l[0], l[1]])).Tipo === 'EARL-Eng-Pessoal' && Object.fromEntries(C.Sobre.map(l => [l[0], l[1]])).Tipo === 'EARL-Eng-Casing', 'Sobre de casing e pessoal');
@@ -248,7 +248,7 @@ const arqX = (nome, b64) => ({name: nome, mimeType: 'application/vnd.openxmlform
   await page.click('.db-tab:has-text("Inventário das sondas")');
   await page.waitForSelector('.ei-tab');
   conf(/3 produto\(s\)/.test(await txt(page, '.hm-sec')) || (await page.$$eval('.ei-mat tbody tr', x => x.length)) === 3, 'depois de recarregar: Visão geral mostra o inventário (persistido)');
-  conf((await page.$$eval('.ei-card .ei-card-t b', x => x.map(e => e.textContent))).includes('NS-38'), 'Visão geral: sondas de todos os contratos');
+  conf((await page.$$eval('.ei-card .ei-card-t b', x => x.map(e => e.textContent))).includes('NS-38 - Takatsugu J'), 'Visão geral: sondas de todos os contratos');
   await page.evaluate(() => { const d = JSON.parse(localStorage.getItem('hal_cmt_db_v1')); d.invSondas = []; localStorage.setItem('hal_cmt_db_v1', JSON.stringify(d)); });
   await page.reload();
   await page.waitForSelector('.eng2-card, .eng2-ctbar', {timeout: 60000});

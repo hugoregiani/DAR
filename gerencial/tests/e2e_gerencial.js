@@ -36,7 +36,7 @@ async function novaOp(page, ctCard, poco, data, monta) {
   if (!(await page.locator('.eng2-ctbar').count())) await page.click('.eng2-card:has-text("' + ctCard + '")');
   await page.click('button:has-text("+ Nova operação")');
   await page.waitForSelector('.eng-modal');
-  await fld(page, 'Sonda').locator('select').selectOption({label: 'Norbe VIII'});
+  await fld(page, 'Sonda').locator('select').selectOption({label: 'NS-32 - Norbe VIII'});
   await fld(page, 'Poço').locator('input').fill(poco);
   await fld(page, 'Data prevista').locator('input').fill(data);
   await fld(page, 'Tipo de operação').locator('select').selectOption({label: 'Squeeze'});
@@ -170,7 +170,7 @@ async function arquivoGerencial(page, nome, arq) {
   conf(mx.length === 3 && /^mx-g mx-n0 \| ▾Petrobras 3 op\. 1\.540,00 0,00 1\.540,00 0,00 1\.540,00 0,00 1\.540,00$/.test(mx[0]) && /^mx-g mx-n1 \| ▸Contrato Teste Macaé 2 op\. 1\.440,00 0,00 /.test(mx[1]) && /^mx-g mx-n1 \| ▸PBR Land 1 op\. 100,00 0,00 /.test(mx[2]) && !mx.some(l => /R\$/.test(l)), 'cliente aberto nos contratos: Petrobras US$ 1.540 = Contrato Teste Macaé 1.440 + PBR Land 100 (só US$)', mx);
   await p.click('[data-mxmostrar="4"]');
   mx = await mxLinhas();
-  conf(mx.filter(l => l.startsWith('mx-op')).length === 3 && mx.filter(l => l.startsWith('mx-op')).every(l => /^mx-op \| ▸\d{2}\/11\/2026 · /.test(l)) && /mx-g mx-n2 \| ▾Norbe VIII/.test(mx.join('\n')), '“Mostrar até: Operação” mostra as 3 operações (por data), debaixo de sonda e poço', mx);
+  conf(mx.filter(l => l.startsWith('mx-op')).length === 3 && mx.filter(l => l.startsWith('mx-op')).every(l => /^mx-op \| ▸\d{2}\/11\/2026 · /.test(l)) && /mx-g mx-n2 \| ▾NS-32 - Norbe VIII/.test(mx.join('\n')), '“Mostrar até: Operação” mostra as 3 operações (por data), debaixo de sonda e poço', mx);
   await p.click('[data-mxmostrar="5"]');
   const its = await p.$$eval('.t-mx tbody tr', l => l.filter(r => /mx-op|mx-it/.test(r.className)).map(r => [r.className.split(' ')[0], r.cells[0].innerText.replace(/\s+/g, ' ').trim(), ([...r.cells].slice(1).map(c => c.textContent.trim()).filter(Boolean)[0] || '')]));
   const vNum = s => Number(String(s).replace(/[^\d,]/g, '').replace(',', '.')) || 0;

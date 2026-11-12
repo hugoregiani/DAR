@@ -15,11 +15,7 @@
   var [engExp, setEngExp] = useState(null);
   var engInvRef = useRef(null);
   var engRigCod = r => String(r && (r.nomePetrobras || r.name) || '').trim();
-  var engRigTxt = r => {
-    var c = engRigCod(r),
-      n = String(r && r.name || '').trim();
-    return c && n && c !== n ? c + ' · ' + n : c || n || '—';
-  };
+  var engRigTxt = r => rigFmt(r) || '—'; // e10: NOME PETROBRAS - NOME DA SONDA
   var engInvTodas = () => Array.isArray(db.invSondas) ? db.invSondas : [];
   var engInvOrd = (a, b) => String(b.data || '').localeCompare(String(a.data || '')) || String(b.atualizadoEm || '').localeCompare(String(a.atualizadoEm || ''));
   var engInvDaSonda = rigId => engInvTodas().filter(c => c.rigId === rigId).sort(engInvOrd);
@@ -765,7 +761,7 @@
         className: 'ei-card' + (!c ? ' ei-sem' : dias > 30 ? ' ei-velha' : '')
       }, engH("div", {
         className: "ei-card-t"
-      }, engH("b", null, engRigCod(r)), r.name && r.name !== engRigCod(r) && engH("span", null, r.name)), c ? engH("div", {
+      }, engH("b", null, engRigTxt(r))), c ? engH("div", {
         className: "ei-card-l"
       }, 'Última contagem: ', engH("b", null, fmtD(c.data)), dias != null && engH("span", {
         className: dias > 30 ? 'ei-dias ei-dias-v' : 'ei-dias'
@@ -835,7 +831,7 @@
       key: x.r.id,
       className: "ec-num",
       title: 'Contagem de ' + fmtD(x.c.data)
-    }, engRigCod(x.r), engH("br", null), engH("span", {
+    }, engRigTxt(x.r), engH("br", null), engH("span", {
       className: "ei-th-data"
     }, fmtD(x.c.data)))), engH("th", {
       className: "ec-num"
@@ -925,11 +921,14 @@
     });
   };
   var engExpSobre = (t, cts, nome, extra) => [['Arquivo', 'EARL Engenharia — ' + t.titulo], ['Tipo', t.tipo], ['Formato', 1], ['Gerado em', new Date().toISOString()], ['Engenheiro', nome || ''], ['App', EARL_VERSION], ['Contratos', cts.map(c => c.name).join(' | ')], ...(extra || [])];
-  var engExpMat = l => (l || []).map(m => ({
+  /* prev = linhas previstas: levam a contingência e o risco de não acontecer de cada linha (e10) */
+  var engExpMat = (l, prev) => (l || []).map(m => ({
     sap: String(m.sap || '').trim(),
     nome: m.name || m.nome || m.sap || '',
     unid: m.unit || m.unid || '',
-    qtd: engNum(m.qty != null ? m.qty : m.qtd) || 0
+    qtd: engNum(m.qty != null ? m.qty : m.qtd) || 0,
+    cont: !!(prev && m.cont),
+    risco: prev ? engRiscoItem(m) : 0
   })).filter(m => m.qtd > 0 && (m.sap || m.nome));
   var engExpOps = ids => {
     var out = [];
@@ -955,7 +954,8 @@
   };
   /* previsto × lançado por chave (SAP ou nome), na ordem do previsto */
   var engExpPares = (prev, real) => {
-    var k = m => m.sap || 'n:' + normNome(m.nome);
+    // a mesma química em linhas com riscos diferentes (firme e contingência) fica em linhas separadas
+    var k = m => (m.sap || 'n:' + normNome(m.nome)) + '|' + (m.cont ? 'c' + m.risco : '');
     var m = new Map();
     prev.forEach(p => {
       var x = m.get(k(p)) || {
@@ -1018,18 +1018,18 @@
     var lin = [];
     var cab, larg;
     if (k === 'quim' || k === 'cas') {
-      cab = [...ENG_EXP_CAB_OP, 'SAP', k === 'quim' ? 'Produto' : 'Descrição', 'Unidade', 'Qtd. prevista', 'Qtd. realizada', 'Data do serviço'];
+      cab = [...ENG_EXP_CAB_OP, 'SAP', k === 'quim' ? 'Produto' : 'Descrição', 'Unidade', 'Qtd. prevista', 'Qtd. realizada', 'Data do serviço', 'Contingência (linha)', 'Risco da linha (%)'];
       ops.forEach(o => {
         var c = o.j.ppuCons;
-        var prev = engExpMat(k === 'quim' ? o.j.chems : o.j.casingNeeds);
+        var prev = engExpMat(k === 'quim' ? o.j.chems : o.j.casingNeeds, true);
         var real = c ? engExpMat(k === 'quim' ? c.quim : c.cas) : [];
         var pares = engExpPares(prev, real);
-        if (!pares.length) lin.push([...engExpColsOp(o), '', k === 'quim' ? '(sem produtos químicos)' : '(sem casing equipment)', '', '', '', c ? engSerie(c.data || o.j.date) : '']);
-        pares.forEach(x => lin.push([...engExpColsOp(o), x.p.sap, x.p.nome, x.p.unid, x.qp, c ? x.qr : '', c ? engSerie(c.data || o.j.date) : '']));
+        if (!pares.length) lin.push([...engExpColsOp(o), '', k === 'quim' ? '(sem produtos químicos)' : '(sem casing equipment)', '', '', '', c ? engSerie(c.data || o.j.date) : '', '', '']);
+        pares.forEach(x => lin.push([...engExpColsOp(o), x.p.sap, x.p.nome, x.p.unid, x.qp, c ? x.qr : '', c ? engSerie(c.data || o.j.date) : '', x.p.cont ? 'Sim' : 'Não', x.p.cont ? x.p.risco : 0]));
       });
-      larg = [24, 14, 10, 20, 16, 30, 12, 9, 11, 11, 9, 12, 14, 16, 12, 38, 9, 12, 12, 12];
+      larg = [24, 14, 10, 20, 16, 30, 12, 9, 11, 11, 9, 12, 14, 16, 12, 38, 9, 12, 12, 12, 12, 12];
     } else {
-      cab = [...ENG_EXP_CAB_OP, 'Função', 'Pessoas previstas', 'Dias previstos', 'Homem-dia previsto', 'Pessoas realizadas', 'Dias realizados', 'Homem-dia realizado', 'Data do serviço'];
+      cab = [...ENG_EXP_CAB_OP, 'Função', 'Pessoas previstas', 'Dias previstos', 'Homem-dia previsto', 'Pessoas realizadas', 'Dias realizados', 'Homem-dia realizado', 'Data do serviço', 'Contingência (linha)', 'Risco da linha (%)'];
       ops.forEach(o => {
         var c = o.j.ppuCons;
         var dur = Number(o.j.durationDays) || 1;
@@ -1040,9 +1040,15 @@
             pp: 0,
             pr: 0,
             dr: 0,
-            hr: 0
+            hr: 0,
+            cont: false,
+            risco: 0
           };
           x.pp += engNum(n.qty) || 0;
+          if (n.cont) {
+            x.cont = true;
+            x.risco = Math.max(x.risco, engRiscoItem(n));
+          }
           m.set(n.funcao, x);
         });
         (c && c.pes || []).filter(p => p && p.funcao).forEach(p => {
@@ -1058,14 +1064,14 @@
           x.hr += Number(p.hd) || 0;
           m.set(p.funcao, x);
         });
-        if (!m.size) lin.push([...engExpColsOp(o), '(sem pessoal)', '', '', '', '', '', '', c ? engSerie(c.data || o.j.date) : '']);
-        m.forEach(x => lin.push([...engExpColsOp(o), x.f, x.pp, x.pp ? dur : '', x.pp * dur, c ? x.pr : '', c ? x.dr : '', c ? x.hr : '', c ? engSerie(c.data || o.j.date) : '']));
+        if (!m.size) lin.push([...engExpColsOp(o), '(sem pessoal)', '', '', '', '', '', '', c ? engSerie(c.data || o.j.date) : '', '', '']);
+        m.forEach(x => lin.push([...engExpColsOp(o), x.f, x.pp, x.pp ? dur : '', x.pp * dur, c ? x.pr : '', c ? x.dr : '', c ? x.hr : '', c ? engSerie(c.data || o.j.date) : '', x.cont ? 'Sim' : 'Não', x.cont ? x.risco : 0]));
       });
-      larg = [24, 14, 10, 20, 16, 30, 12, 9, 11, 11, 9, 12, 14, 16, 34, 10, 10, 12, 10, 10, 12, 12];
+      larg = [24, 14, 10, 20, 16, 30, 12, 9, 11, 11, 9, 12, 14, 16, 34, 10, 10, 12, 10, 10, 12, 12, 12, 12];
     }
     var nOps = new Set(ops.map(o => o.j.id)).size;
     return {
-      file: engExpArquivo(nomeArq, [[t.titulo.replace('Consumo de produtos químicos', 'Consumo de químicos'), [cab, ...lin], larg, [6, nCab + (k === 'pes' ? 7 : 5)]], ['Sobre', engExpSobre(t, cts, nome, [['Operações', nOps], ['Linhas', lin.length], ['Como ler', 'Uma linha por operação' + (k === 'pes' ? ' e função' : ' e item') + '. Situação: Concluído = operação com consumo lançado (Qtd. realizada); Previsto = só o planejado. Risco (%): chance de a operação não acontecer (a receita e o COGS contam × (1 − risco)). Operações canceladas não entram.']]), [16, 90]]]),
+      file: engExpArquivo(nomeArq, [[t.titulo.replace('Consumo de produtos químicos', 'Consumo de químicos'), [cab, ...lin], larg, [6, nCab + (k === 'pes' ? 7 : 5)]], ['Sobre', engExpSobre(t, cts, nome, [['Operações', nOps], ['Linhas', lin.length], ['Como ler', 'Uma linha por operação' + (k === 'pes' ? ' e função' : ' e item') + '. Situação: Concluído = operação com consumo lançado (Qtd. realizada); Previsto = só o planejado. Risco (%): risco de a operação não acontecer (a receita, o COGS e as quantidades previstas contam × (1 − risco)). Contingência (linha) e Risco da linha (%): a linha em contingência conta × (1 − risco da linha), além do risco da operação (a Qtd. prevista é a quantidade planejada, sem o risco). Operações canceladas não entram.']]), [16, 90]]]),
       n: nOps,
       txt: nOps + ' operação(ões), ' + lin.length + ' linha(s)'
     };

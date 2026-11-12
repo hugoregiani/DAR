@@ -184,9 +184,9 @@ if (!XLSX_ARQ || !HTML || !SAIDA) {
         salesOrder: so,
         wbs: txt(g('WBS')),
         vida: '',
-        anchor: 'fixed',
+        anchor: 'chain', // e10: a data acompanha a operação anterior da sonda
         contingencia: /^sim/i.test(txt(g('Contingência'))),
-        risco: /^sim/i.test(txt(g('Contingência'))) ? 0 : null,
+        risco: /^sim/i.test(txt(g('Contingência'))) ? 100 - riscoRec : null, // e10: chance = 100 − risco de não acontecer
         riscoRec,
         templateId: '',
         notes: 'Planilha BP: ' + desc + (fase ? ' · fase ' + fase : '') + ' · campo ' + txt(g('Campo')),

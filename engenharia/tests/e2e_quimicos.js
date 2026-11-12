@@ -68,7 +68,7 @@ const valorDe = (page, sap) => linha(page, sap).locator('input.ec-q-usd').inputV
   await page.click('.eng2-card:has-text("BP — Macaé")');
   await page.click('button:has-text("+ Nova operação")');
   await page.waitForSelector('.eng-modal');
-  await fld(page, 'Sonda').locator('select').selectOption({label: 'Norbe VIII'});
+  await fld(page, 'Sonda').locator('select').selectOption({label: 'NS-32 - Norbe VIII'});
   await fld(page, 'Poço').locator('input').fill('7-QUIM-1-RJS');
   await fld(page, 'Data prevista').locator('input').fill('2026-11-05');
   await fld(page, 'Tipo de operação').locator('select').selectOption({label: 'Squeeze'});

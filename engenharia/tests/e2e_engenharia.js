@@ -67,7 +67,7 @@ const fld = (page, rot) => page.locator('.eng-modal .fld').filter({has: page.loc
   await page.click('.eng2-card:has-text("P&A — Macaé")');
   await page.click('button:has-text("+ Nova operação")');
   await page.waitForSelector('.eng-modal');
-  await fld(page, 'Sonda').locator('select').selectOption({label: 'Norbe VIII'});
+  await fld(page, 'Sonda').locator('select').selectOption({label: 'NS-32 - Norbe VIII'});
   await fld(page, 'Poço').locator('input').fill('7-MRL-99-RJS');
   await fld(page, 'Data prevista').locator('input').fill('2026-11-10');
   await fld(page, 'Tipo de operação').locator('select').selectOption({label: 'Cimentação primária'});
@@ -99,7 +99,7 @@ const fld = (page, rot) => page.locator('.eng-modal .fld').filter({has: page.loc
   console.log('E-mail');
   await page.waitForSelector('.hm-modal');
   const ass = await page.innerText('.hm-assunto');
-  conf(ass === 'HANDOVER - NORBE VIII - CIMENTAÇÃO PRIMÁRIA 9 5/8" (7-MRL-99-RJS) - SO 460123456 - VIDA H123456', 'assunto padronizado (sonda, operação, SO, VIDA)', ass);
+  conf(ass === 'HANDOVER - NS-32 - NORBE VIII - CIMENTAÇÃO PRIMÁRIA 9 5/8" (7-MRL-99-RJS) - SO 460123456 - VIDA H123456', 'assunto padronizado (sonda, operação, SO, VIDA)', ass);
   conf(await page.locator('.hm-gerar').isDisabled(), 'sem destinatário não gera');
   await page.fill('.hm-novo', 'logistica.macae@');
   conf(await page.locator('.hm-add button', {hasText: '＋ Para'}).isDisabled(), 'e-mail incompleto não entra');
@@ -116,7 +116,7 @@ const fld = (page, rot) => page.locator('.eng-modal .fld').filter({has: page.loc
   await foto(page, '05_email');
   const e1 = await baixar(page, () => page.click('.hm-gerar'));
   const m1 = lerEml(e1.txt);
-  conf(e1.nome.endsWith('.eml') && e1.nome === 'HANDOVER - NORBE VIII - CIMENTACAO PRIMARIA 9 5-8 (7-MRL-99-RJS) - SO 460123456 - VIDA H123456.eml', 'arquivo .eml com o nome do assunto (sem acentos)', e1.nome);
+  conf(e1.nome.endsWith('.eml') && e1.nome === 'HANDOVER - NS-32 - NORBE VIII - CIMENTACAO PRIMARIA 9 5-8 (7-MRL-99-RJS) - SO 460123456 - VIDA H123456.eml', 'arquivo .eml com o nome do assunto (sem acentos)', e1.nome);
   conf(m1.h['x-unsent'] === '1', 'X-Unsent: 1 (abre no Outlook como mensagem a enviar)');
   conf(m1.assunto === ass, 'assunto do .eml = assunto mostrado', m1.assunto);
   conf(/logistica\.macae@halliburton\.com/.test(m1.h.to) && /materiais\.macae@halliburton\.com/.test(m1.h.to) && !/coordenacao/.test(m1.h.to), 'Para = os dois escolhidos', m1.h.to);
@@ -138,7 +138,7 @@ const fld = (page, rot) => page.locator('.eng-modal .fld').filter({has: page.loc
   tem(/Hugo Regiani/, 'corpo: assinatura');
   conf(/HALAD-344/.test(m1.texto) && /460123456/.test(m1.texto), 'versão em texto também lista os itens');
   // 300 lb com backup de 100% = 600
-  conf(/HALAD-344[^<]*<\/td><td[^>]*>[^<]*<\/td><td[^>]*>300<\/td><td[^>]*>100%<\/td><td[^>]*>600<\/td><td[^>]*>600<\/td>/.test(H), 'química: previsto 300 + backup 100% = solicitado 600');
+  conf(/HALAD-344[^<]*<\/td><td[^>]*>[^<]*<\/td><td[^>]*>300<\/td><td[^>]*>100%<\/td><td[^>]*>600<\/td><td[^>]*>—<\/td><td[^>]*>600<\/td>/.test(H), 'química: previsto 300 + backup 100% = solicitado 600 (saldo na sonda: — , sem contagem)');
   if (SHOTS) fs.writeFileSync(path.join(SHOTS, 'email_v1.html'), H);
 
   console.log('Depois do e-mail');

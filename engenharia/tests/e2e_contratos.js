@@ -131,7 +131,7 @@ const kpi = (page, cls) => txt(page, '.' + cls + ' b');
   const novaOp = async (poco, data, qtds) => {
     await page.click('button:has-text("+ Nova operação")');
     await page.waitForSelector('.eng-modal');
-    await fld(page, 'Sonda').locator('select').selectOption({label: 'Norbe VIII'});
+    await fld(page, 'Sonda').locator('select').selectOption({label: 'NS-32 - Norbe VIII'});
     await fld(page, 'Poço').locator('input').fill(poco);
     await fld(page, 'Data prevista').locator('input').fill(data);
     await fld(page, 'Tipo de operação').locator('select').selectOption({label: 'Squeeze'});
@@ -237,7 +237,7 @@ const kpi = (page, cls) => txt(page, '.' + cls + ' b');
   await p2.waitForSelector('.eng2-card', {timeout: 60000});
   await p2.click('.eng2-card:has-text("P&A — Macaé")');
   await p2.click('button:has-text("+ Nova operação")');
-  await fld(p2, 'Sonda').locator('select').selectOption({label: 'Norbe VIII'});
+  await fld(p2, 'Sonda').locator('select').selectOption({label: 'NS-32 - Norbe VIII'});
   await fld(p2, 'Poço').locator('input').fill('7-PC2-1-RJS');
   await fld(p2, 'Data prevista').locator('input').fill('2026-11-20');
   await fld(p2, 'Tipo de operação').locator('select').selectOption({label: 'Abandono'});

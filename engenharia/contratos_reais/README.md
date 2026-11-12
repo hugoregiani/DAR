@@ -49,6 +49,8 @@ Regras:
   - COGS: `AJ-QUIM+`/`AJ-QUIM−` (químicos) e `AJ-CE+`/`AJ-CE−` (casing equipment) em Custos (COGS), US$ ±1.
   - Concluída: o ajuste vai no consumo lançado; prevista: no planejado. O Painel de Compras ignora os `AJ-` (SAP não
     numérico).
+- **Câmbio (e10):** o item guarda a parte em **R$** e a parte em **US$** (rev. share aplicado). A receita CMT da planilha é share × (R$ ÷ câmbio + US$); a receita em US$ do app usa a tabela **💱 Câmbio** do arquivo, que vem preenchida com a cotação que a planilha usou em cada mês (a mais frequente entre as operações/linhas do mês; ex.: PA e BD II jan–ago/2026 com a cotação do mês, depois a do contrato; DC 5,01807). Assim, mudar a cotação de um mês no app muda a receita, como na planilha. Os anos do Banco por colunas valem desde o **1º dia do mês** do aniversário (a planilha usa assim: P&A Ano 4 em 10/10/2026 já vale em 01/10).
+- **Datas vinculadas (e10):** todas as operações com "Vincular data à operação anterior".
 - **Situação e risco:** "Concluído" = consumo lançado igual ao previsto (+ ajuste), com a data da operação; "Previsto" =
   só planejado. Risco 0–1 → "Risco da receita / COGS" 0–100%. Contingência "Sim" → contingência.
 - **Sondas:** pelo nome ou pelo código Petrobras (DS-04 = DS-4/NS-54; KG2 = Dhirubhai Deepwater KG2; West Carina_24 →
@@ -59,13 +61,13 @@ Regras:
 - **Químicos e casing:** a tabela "SAP | Químicos" vira o banco de produtos químicos e "SAP | Casing" vira Custos
   (COGS), como no teste BP. Pessoal: linhas "Função:" do time de embarque.
 
-## Resultado (09/11/2026)
+## Resultado (12/11/2026, com o câmbio do mês)
 
 | Arquivo | Contratos | Operações | Receita (= planilha) | COGS (= planilha) |
 |---|---|---|---|---|
-| PA | 1 (P&A) | 105 (83 concluídas) | US$ 7.646.930,14 | US$ 328.640,15 |
+| PA | 1 (P&A) | 105 (83 concluídas), 15 com ajuste | US$ 7.646.930,14 | US$ 328.640,15 |
 | DC | 23 | 218 (174 concluídas), de 437 linhas | US$ 28.248.137,63 | US$ 0,00 |
 | CE | 5 | 15 (14 concluídas), de 32 linhas | US$ 959.688,51 | US$ 434.571,41 |
 | BW | 1 (Maromba) | 18 | US$ 1.578.360,62 | US$ 437.335,88 |
-| BDII | 1 (BD II) | 148 (68 concluídas) | US$ 14.951.595,10 | US$ 2.975.329,80 |
+| BDII | 1 (BD II) | 148 (68 concluídas), 1 com ajuste de receita | US$ 14.951.595,10 | US$ 2.975.329,80 |
 | Shell | 1 (BJSA) | 12 | US$ 79.401.083,86 | US$ 159.392,61 |
