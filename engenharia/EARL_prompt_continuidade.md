@@ -4,7 +4,7 @@
 
 > **Regra de entrega (pedido do usuário, 05/11/2026):** sempre que houver alteração em qualquer arquivo (EARL, EARL Engenharia, EARL Gerencial, testes), **enviar junto este prompt de continuidade atualizado** — com o que foi feito, o que está pendente e como continuar — e commitá-lo junto com a alteração. Antes de entregar, rodar os testes (os novos e todos os anteriores) e dizer o resultado.
 >
-> **Última atualização:** 12/11/2026 — **EARL Engenharia e10 + EARL Gerencial g16 + Painel de Compras** (pedidos do Hugo): contingência = **risco de não acontecer** (operação e linhas; 0% entra inteira, 100% fica mapeada mas fora), **câmbio do dólar por mês** (itens em R$ convertidos pela cotação do mês), **saldo da sonda** no e-mail do handover, Lista com **"Todas"**, sondas como **"NOME PETROBRAS - NOME DA SONDA"**, exportações com contingência/risco de cada linha, **cards com profundidade** e os 6 contratos reais gerados de novo (câmbio da planilha e datas vinculadas). Ver a seção "e10 + g16" em 4-E.
+> **Última atualização:** 12/11/2026 — **EARL Engenharia e11 + EARL Gerencial g17** (pedido do Hugo): **sombra dos cards** corrigida (a parte de cima do card se misturava com o fundo): borda fina cinza em volta de todo o card e sombra macia, como os indicadores de Pessoal do EARL; fundo cinza claro na seção "Receita e margem" da página inicial. Os 6 contratos reais gerados de novo. Antes (mesmo dia): e10 + g16 — contingência = risco de não acontecer, câmbio do dólar por mês, saldo da sonda no handover, Lista "Todas", sondas "NOME PETROBRAS - NOME DA SONDA". Ver as seções "e11 + g17" e "e10 + g16" em 4-E.
 >
 > Antes, em 09/11/2026 — **Contratos reais pré-carregados** (pasta `engenharia/contratos_reais/`): um `EARL_Engenharia_<NOME>.html` por planilha de contrato.
 >
@@ -591,6 +591,16 @@ Pedidos do Hugo (12/11/2026): "No envio do email do Handover preciso que inclua 
   - Painel de Compras: `engenharia` 37, `invariantes` 64, `pedidos_enviados` 15, `regressao` 6, `reproduzir` ok.
   - Ajustes de expectativa nos testes antigos (mudanças pedidas): sonda "NS-32 - Norbe VIII" nos seletores, no assunto do e-mail e na matriz do Gerencial; coluna "Saldo na sonda" no e-mail; colunas novas nas exportações; versão g16.
 - **Pendências:** os textos novos ainda sem EN/ES; a tabela de câmbio não tem importação por planilha (é digitada); a "Frente" do PA ainda precisa de ajuste (a planilha fatura com outra regra).
+
+### EARL Engenharia e11 + EARL Gerencial g17 (12/11/2026): sombra dos cards
+
+Pedido do Hugo (12/11/2026, com a imagem dos indicadores de Pessoal do EARL): "o sombreado dos cards não está bom, a parte superior do card parece se misturar com o fundo. Ou precisa alterar o fundo ou o sombreado do card. Veja a imagem em anexo e replique."
+
+- **Causa:** no g16 o card tinha borda quase branca e sombras com espalhamento negativo grande; em cima não sobrava sombra nenhuma e o branco do card encostava no fundo claro.
+- **Gerencial g17** (`gerencial.html`, bloco "g16/g17" no fim do `<style>`): `.kpi` com borda `1px solid #E1E5E8` (em volta toda, também em cima), degradê branco → #F0F2F3 e sombras `0 1px 2px` + `0 6px 14px` + `0 18px 34px -12px` (macias, sem apagar a borda de cima); `.kpi.dest` com borda #B8121E. No modo embutido, `.kpis`/`.qcards` com 2px de folga para a sombra não ser cortada.
+- **Engenharia e11** (`eng.css`): `.ec-kpi` com o mesmo estilo; `.ec-ger-painel` (seção "Receita e margem" da página inicial) com fundo cinza claro (#F3F5F6 → #ECEFF0), como o do Gerencial.
+- `EARL_Gerencial.html`, `EARL_Engenharia.html`, o teste BP e os 6 contratos reais gerados de novo. Testes de versão (`e2e_matriz`, `e2e_registros`, `e2e_tabelas`) agora esperam g17.
+- **Testes:** ver o resultado da entrega no fim desta seção.
 
 ## 4. Última mudança: v115 (Inventário a bordo: "Movimentar material" em cada contentor e na sacaria, em todas as categorias; Logística: desfazer a divisão da tesoura)
 

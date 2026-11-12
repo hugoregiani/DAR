@@ -86,8 +86,11 @@ const RIG = 'hg_rig_11_norbeviii';
   let fg = await gerF();
   await fg.selectOption('[data-f="ano"]', '2026');
   conf(perto(valor(await fg.textContent('.k-rec-usd b')), 700 + 600 + 106), '2026: 1.000 × 70% + 600 + 106 = US$ 1.406', await fg.textContent('.k-rec-usd b'));
-  const est = await fg.evaluate(() => { const k = document.querySelector('.kpis .kpi.k-cogs'), r = document.querySelector('.kpis .kpi.dest'); const ck = getComputedStyle(k), cr = getComputedStyle(r); return {sk: ck.boxShadow, rad: ck.borderTopLeftRadius, bg: ck.backgroundImage, sr: cr.boxShadow, u: !!document.querySelector('.k-rec-usd b small.u'), ordem: getComputedStyle(k.querySelector('b')).order, qs: getComputedStyle(document.querySelector('.qc')).boxShadow}; });
+  const est = await fg.evaluate(() => { const k = document.querySelector('.kpis .kpi.k-cogs'), r = document.querySelector('.kpis .kpi.dest'); const ck = getComputedStyle(k), cr = getComputedStyle(r); return {sk: ck.boxShadow, rad: ck.borderTopLeftRadius, bg: ck.backgroundImage, sr: cr.boxShadow, u: !!document.querySelector('.k-rec-usd b small.u'), ordem: getComputedStyle(k.querySelector('b')).order, qs: getComputedStyle(document.querySelector('.qc')).boxShadow, bt: ck.borderTopColor, btw: ck.borderTopWidth}; });
   conf(/rgba/.test(est.sk) && est.rad === '22px' && /linear-gradient/.test(est.bg) && /rgba\(204, 0, 0/.test(est.sr) && est.u && est.ordem === '-1' && /rgba/.test(est.qs), 'cards com profundidade: sombra, cantos de 22px, degradê, destaque vermelho com brilho, número grande em cima e “US$” pequeno', est);
+  // e11/g17: a parte de cima do card não se mistura com o fundo (borda fina cinza em volta toda, também em cima)
+  { const m = /rgb\((\d+), (\d+), (\d+)\)/.exec(est.bt) || []; const cinza = m.length && +m[1] < 240 && +m[1] > 200;
+    conf(est.btw === '1px' && cinza, 'card com borda fina cinza em cima (não some no fundo)', {bt: est.bt, btw: est.btw}); }
   await foto(page, 'e10_1_receita');
 
   console.log('Lista: horizonte "Todas" e nome das sondas');
@@ -156,6 +159,9 @@ const RIG = 'hg_rig_11_norbeviii';
   await page.click('.db-tab:has-text("Consumo e receita")');
   await page.waitForSelector('.ec-kpi-usd');
   conf(perto(valor(await page.innerText('.ec-kpi-usd b')), 106) && /câmbio do mês/.test(await page.innerText('.ec-kpi-usd em')) && await page.innerText('.ec-kpi-brl b') === 'R$ 530,00', 'Consumo e receita: R$ 530,00 e US$ 106,00 (R$ pelo câmbio do mês)', [await page.innerText('.ec-kpi-usd'), await page.innerText('.ec-kpi-brl b')]);
+  { const bk = await page.evaluate(() => { const c = getComputedStyle(document.querySelector('.ec-kpi-brl')); return {bt: c.borderTopColor, btw: c.borderTopWidth, sh: c.boxShadow}; });
+    const m = /rgb\((\d+), (\d+), (\d+)\)/.exec(bk.bt) || [];
+    conf(bk.btw === '1px' && m.length && +m[1] < 240 && +m[1] > 200 && /rgba/.test(bk.sh), 'Consumo e receita: card com borda fina cinza em cima e sombra macia (e11)', bk); }
   await foto(page, 'e10_5_consumo');
 
   console.log('Exportações');
