@@ -151,20 +151,20 @@ td.ec-desc{font-size:12.5px;line-height:1.35}
 .ec-pn-nota{font-size:12px;color:var(--ink-3);margin-top:8px}
 .ec-pn-ct-tab tfoot td{border-top:2px solid var(--line-2,#D4DADD)}
 /* e6: banco de produtos químicos */
-.ec-quim-info{display:flex;flex-wrap:wrap;gap:6px;align-items:baseline;font-size:12.5px;color:var(--ink-2);margin:2px 0 4px}
-.ec-quim-info b{color:var(--ink)}
-.ec-quim-nav{color:#8A4B00;font-weight:600}
-.ec-quim-tab td:nth-child(1),.ec-quim-tab th:nth-child(1){width:120px}
-.ec-quim-tab td:nth-child(3),.ec-quim-tab th:nth-child(3){width:80px}
-.ec-quim-tab td:nth-child(4),.ec-quim-tab th:nth-child(4){width:120px}
-.ec-quim-tab td:nth-child(5){width:92px;font-size:12px;color:var(--ink-3);white-space:nowrap}
-.ec-quim-tab .ec-q-sap[readonly]{background:transparent;border-color:transparent;font-weight:600}
-.ec-quim-tab .ec-q-usd{text-align:right}
-.ec-quim-aviso{margin:1px 4px 1px 0;background:#FFF4E5;border-color:#F5C98B;color:#8A4B00;cursor:help}
-.ec-quim-hist,.ec-qp-sec{margin-top:10px;border:1px solid var(--line,#E2E5E7);border-radius:12px;padding:8px 12px}
-.ec-quim-hist summary,.ec-qp-sec summary{cursor:pointer;font-size:13px;font-weight:600;color:var(--ink)}
-.ec-quim-hist .tbl-scroll,.ec-qp-wrap{max-height:30vh;overflow:auto;margin-top:8px}
-.ec-quim-plan{width:min(980px,96vw)}
+.ec-bm-info{display:flex;flex-wrap:wrap;gap:6px;align-items:baseline;font-size:12.5px;color:var(--ink-2);margin:2px 0 4px}
+.ec-bm-info b{color:var(--ink)}
+.ec-bm-nav{color:#8A4B00;font-weight:600}
+.ec-bm-tab td:nth-child(1),.ec-bm-tab th:nth-child(1){width:120px}
+.ec-bm-tab td:nth-child(3),.ec-bm-tab th:nth-child(3){width:80px}
+.ec-bm-tab td:nth-child(4),.ec-bm-tab th:nth-child(4){width:120px}
+.ec-bm-tab td:nth-child(5){width:92px;font-size:12px;color:var(--ink-3);white-space:nowrap}
+.ec-bm-tab .ec-q-sap[readonly]{background:transparent;border-color:transparent;font-weight:600}
+.ec-bm-tab .ec-q-usd{text-align:right}
+.ec-bm-aviso{margin:1px 4px 1px 0;background:#FFF4E5;border-color:#F5C98B;color:#8A4B00;cursor:help}
+.ec-bm-hist,.ec-qp-sec{margin-top:10px;border:1px solid var(--line,#E2E5E7);border-radius:12px;padding:8px 12px}
+.ec-bm-hist summary,.ec-qp-sec summary{cursor:pointer;font-size:13px;font-weight:600;color:var(--ink)}
+.ec-bm-hist .tbl-scroll,.ec-qp-wrap{max-height:30vh;overflow:auto;margin-top:8px}
+.ec-bm-plan{width:min(980px,96vw)}
 .ec-qp-chips{display:flex;flex-wrap:wrap;gap:6px;margin:10px 0 4px}
 .ec-qp-chip{font-size:12.5px;border:1px solid var(--line,#E2E5E7);border-radius:999px;padding:4px 10px;background:#fff;color:var(--ink-2)}
 .ec-qp-chip b{color:var(--ink)}
@@ -181,9 +181,9 @@ td.ec-desc{font-size:12.5px;line-height:1.35}
 .ec-qp-op span{font-size:12px;color:var(--ink-2)}
 .ec-qp-op.on{border-color:#CC0000;box-shadow:0 0 0 1px #CC0000 inset}
 .ec-qp-res{font-size:12.5px;color:var(--ink-2)}
-.ec-quim-modal>*,.ec-quim-plan>*{flex-shrink:0}
-.ec-quim-tab{min-width:760px}
-.ec-quim-plan .ec-qp-modo{margin-top:12px}
+.ec-bm-modal>*,.ec-bm-plan>*{flex-shrink:0}
+.ec-bm-tab{min-width:760px}
+.ec-bm-plan .ec-qp-modo{margin-top:12px}
 /* e6: espaço do navegador */
 .ec-esp-aviso{background:#FFF4E5;border-color:#F5C98B;margin:4px 0 14px}
 .ec-esp-aviso>div{flex:1;display:flex;flex-direction:column;gap:2px}
@@ -261,3 +261,41 @@ td.ec-desc{font-size:12.5px;line-height:1.35}
 .ec-cb-tab .sel{min-width:96px}
 .ec-cb-valor{width:120px;text-align:right}
 .ec-cb-cts{margin:8px 0}
+/* e12: filtro e ordem em todas as tabelas (eng_tabelas.js), como o das tabelas do Gerencial */
+th.etf-th{white-space:normal}
+th.etf-ord{cursor:pointer}
+th.etf-ord:hover{color:var(--ink,#2A2F30)}
+.etf-ctl{display:inline-flex;align-items:center;gap:1px;margin-left:4px;vertical-align:middle;white-space:nowrap}
+.etf-ar,.etf-b{border:1px solid transparent;background:transparent;border-radius:6px;padding:0;margin:0;cursor:pointer;line-height:1;font:inherit;font-size:10px;font-weight:400;letter-spacing:0;text-transform:none;color:#A8AFB5}
+.etf-ar{width:14px;height:18px}
+.etf-ar::before{content:'⇅'}
+.etf-asc .etf-ar,.etf-desc .etf-ar{color:#CC0000;font-size:10.5px}
+.etf-asc .etf-ar::before{content:'▲'}
+.etf-desc .etf-ar::before{content:'▼'}
+.etf-b{width:20px;height:20px;font-size:11px;color:#6B7378}
+.etf-b::before{content:'▾'}
+.etf-b:hover{border-color:#D4DADD;background:#fff;color:#2A2F30}
+.etf-b.etf-on{background:#CC0000;border-color:#CC0000;color:#fff}
+tr[data-etfh]{display:none!important}
+caption.etf-cap{caption-side:top;text-align:left;font-size:12.5px;color:var(--ink-2,#4D545A);padding:2px 2px 8px;white-space:normal}
+caption.etf-cap span{margin-right:10px}
+.etf-clr{border:1px solid #D4DADD;background:#fff;border-radius:999px;font-size:12px;padding:3px 10px;cursor:pointer;color:#2A2F30}
+.etf-clr:hover{border-color:#CC0000;color:#CC0000}
+.etf-pop{position:absolute;z-index:10050;background:#fff;border:1px solid #D4DADD;border-radius:14px;box-shadow:0 8px 24px rgba(0,0,0,.16);padding:10px;width:310px;max-width:calc(100vw - 16px);font-size:13px;color:#2A2F30;text-align:left}
+.etf-pt{font-size:10.5px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:#6B7378;margin:0 2px 8px}
+.etf-po{display:flex;gap:6px;margin-bottom:8px}
+.etf-po .btn-o{flex:1;font-size:12px;padding:5px 8px}
+.etf-q{width:100%;box-sizing:border-box;border:1px solid #D4DADD;border-radius:10px;padding:6px 9px;margin-bottom:6px;font:inherit}
+.etf-all{display:flex;align-items:center;gap:6px;padding:4px;border-bottom:1px solid #E2E5E7;cursor:pointer;color:#4D545A}
+.etf-list{max-height:240px;overflow-y:auto;margin:4px 0 8px}
+.etf-it{display:flex;align-items:center;gap:4px;padding:0 4px;border-radius:8px}
+.etf-it:hover{background:#F4F5F6}
+.etf-it label{display:flex;align-items:center;gap:6px;flex:1;min-width:0;cursor:pointer;padding:4px 0}
+.etf-v{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.etf-it em{font-style:normal;color:#6B7378;font-size:11.5px;margin-left:auto;padding-left:6px}
+.etf-so{border:0;background:transparent;color:#961B24;font-size:11.5px;font-weight:700;cursor:pointer;padding:3px 5px;border-radius:6px;white-space:nowrap;opacity:.45}
+.etf-it:hover .etf-so,.etf-so:focus{opacity:1}
+.etf-so:hover{background:#FBEFEF}
+.etf-pr{display:flex;align-items:center;gap:6px}
+.etf-pr .btn-o,.etf-pr .btn-r{font-size:12px;padding:5px 10px}
+.etf-pr .btn-r:disabled{opacity:.45;cursor:not-allowed}

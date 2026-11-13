@@ -14,6 +14,26 @@ const fs = require('fs');
 const path = require('path');
 const crypto = require('crypto');
 
+// e12: casing da planilha → banco de casing equipment (db.casingEquip, o catálogo de casing do EARL, com o valor em US$):
+// atualiza o item de mesmo SAP ou acrescenta. Sem SAP, fica em Custos (COGS).
+function casingParaBanco(d, itens, arquivo, agora) {
+  if (!Array.isArray(d.casingEquip)) d.casingEquip = [];
+  const fora = [];
+  let novos = 0, alterados = 0;
+  itens.forEach(m => {
+    const sap = String(m.sap == null ? '' : m.sap).trim();
+    if (!sap) { fora.push(m); return; }
+    const e = d.casingEquip.find(x => x && String(x.sap || '').trim() === sap);
+    if (e) { Object.assign(e, {id: e.id || 'ce_' + sap, usd: m.usd, atualizadoEm: agora}); alterados++; }
+    else { d.casingEquip.push({id: 'ce_' + sap, sap, name: m.nome || sap, unit: m.unid || 'EA', origem: 'Planilha ' + arquivo, usd: m.usd, atualizadoEm: agora}); novos++; }
+  });
+  d.casingEquip.forEach(x => { if (x && !x.id && String(x.sap || '').trim()) x.id = 'ce_' + String(x.sap).trim(); });
+  d.casHist = [...(d.casHist || []), {id: 'ce_h_' + String(arquivo).replace(/[^A-Za-z0-9]+/g, '_'), em: agora, por: '', origem: 'planilha', arquivo: arquivo + ' (aba Forecast)', novos, alterados, removidos: 0, total: d.casingEquip.length}];
+  d.casDbV1 = d.casDbV1 || agora;
+  return fora;
+}
+
+
 const [XLSX_ARQ, NOME, HTML, SAIDA, RELAT] = process.argv.slice(2);
 if (!XLSX_ARQ || !NOME || !HTML || !SAIDA) {
   console.error('uso: node contratos_reais/gerar_html.js <planilha.xlsx> <NOME> <EARL_Engenharia.html> <saída.html> [relatório.json]');
@@ -117,7 +137,8 @@ function montarBanco({b64, arquivo, nome}) {
     }
   }
   d.quimBaseV1 = d.quimBaseV1 || agora;
-  d.cogsItens = M.casing.map((m, i) => ({id: 'cg_' + slugArq + '_' + (i + 1), sap: m.sap, nome: m.nome, unid: m.unid, usd: m.usd, brl: null, atualizadoEm: agora}));
+  // e12: casing no banco de casing equipment; em Custos (COGS) só o casing sem SAP e os ajustes
+  d.cogsItens = casingParaBanco(d, M.casing, arquivo, agora).map((m, i) => ({id: 'cg_' + slugArq + '_' + (i + 1), sap: m.sap, nome: m.nome, unid: m.unid, usd: m.usd, brl: null, atualizadoEm: agora}));
   const ajUsados = new Set();
   M.operacoes.forEach(o => {
     if (o.ajQuim > 0.005) ajUsados.add('quim+'); if (o.ajQuim < -0.005) ajUsados.add('quim-');
@@ -288,6 +309,7 @@ function embutir(base, seed, nome, arquivo) {
   const {browser, page, errs} = await abrir(HTML, {hoje: HOJE});
   await page.waitForSelector('.eng-tools');
   await page.addScriptTag({content: LEITOR});
+  await page.addScriptTag({content: casingParaBanco.toString()}); // roda dentro da página, como o montarBanco
   await page.evaluate(h => { window.HOJE_ISO = h; }, HOJE);
   const b64 = fs.readFileSync(XLSX_ARQ).toString('base64');
   const res = await page.evaluate(montarBanco, {b64, arquivo, nome: NOME});

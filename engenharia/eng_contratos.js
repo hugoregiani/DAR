@@ -109,7 +109,8 @@
     var r = Number(j && j.riscoRec);
     return isFinite(r) && r > 0 ? Math.max(0, 1 - Math.min(100, r) / 100) : 1;
   };
-  // custo unitário pelo SAP (ou pelo nome): banco de produtos químicos (db.quimicos) vale sobre os Custos (db.cogsItens)
+  // custo unitário pelo SAP (ou pelo nome): banco de produtos químicos (db.quimicos) vale sobre o banco de casing equipment
+  // (db.casingEquip com valor, e12), que vale sobre os Custos (db.cogsItens)
   var engCogsIdx = () => {
     var o = {};
     var add = c => {
@@ -117,6 +118,14 @@
       if (c && c.nome) o['n:' + normNome(c.nome)] = c;
     };
     (db.cogsItens || []).forEach(add);
+    (db.casingEquip || []).forEach(c => {
+      if (c && engNum(c.usd) != null) add({
+        sap: c.sap,
+        nome: c.name,
+        unid: c.unit,
+        usd: engNum(c.usd)
+      });
+    });
     (db.quimicos || []).forEach(add);
     return o;
   };
@@ -2416,7 +2425,7 @@
       style: {
         marginTop: 0
       }
-    }, "Custo unit\xE1rio de casing equipment e de outros materiais, pelo SAP. As qu\xEDmicas ficam no banco de produtos qu\xEDmicos (bot\xE3o “Qu\xEDmicos” na barra); se o mesmo SAP estiver nos dois, vale o do banco de qu\xEDmicos. O COGS da opera\xE7\xE3o \xE9 a quantidade lan\xE7ada (ou prevista) \xD7 este custo. Planilha: colunas SAP, Produto, Unidade, COGS US$ e/ou COGS R$ (uma coluna s\xF3 “COGS” vale como US$)."), engH("div", {
+    }, "Custo unit\xE1rio de outros materiais e ajustes, pelo SAP. As qu\xEDmicas ficam no banco de produtos qu\xEDmicos (bot\xE3o “Qu\xEDmicos” na barra) e o casing equipment no banco de casing (bot\xE3o “Casing” na barra); se o mesmo SAP estiver aqui e num banco, vale o do banco. O COGS da opera\xE7\xE3o \xE9 a quantidade lan\xE7ada (ou prevista) \xD7 este custo. Planilha: colunas SAP, Produto, Unidade, COGS US$ e/ou COGS R$ (uma coluna s\xF3 “COGS” vale como US$)."), engH("div", {
       className: "ec-bar"
     }, engH("input", {
       className: "ipt",

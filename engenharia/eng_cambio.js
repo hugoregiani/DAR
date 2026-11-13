@@ -63,7 +63,16 @@
   };
   var renderEngCambio = () => {
     if (!engCb) return null;
-    var linhas = engCb.linhas || [];
+    /* e12: sempre o mês mais recente primeiro (ordem decrescente de ano e mês); linha sem ano/mês válido fica no topo */
+    var kCb = l => {
+      var a = Number(l.ano),
+        m = Number(l.mes);
+      return a > 1999 && m >= 1 && m <= 12 ? a * 12 + m : Infinity;
+    };
+    var linhas = (engCb.linhas || []).map((l, i) => ({
+      l,
+      i
+    })).sort((x, y) => kCb(y.l) - kCb(x.l) || x.i - y.i).map(x => x.l);
     var set = (k, patch) => setEngCb(x => ({
       ...x,
       sujo: true,
@@ -192,7 +201,7 @@
       style: {
         marginTop: 0
       }
-    }, "Informe o ano, o m\xEAs e quanto vale ", engH("b", null, "US$ 1,00 em R$"), " naquele m\xEAs. Nos contratos com valores em R$, a receita em US$ (cart\xF5es, Receita e margem e arquivo do gerencial) usa a cota\xE7\xE3o do m\xEAs do servi\xE7o (opera\xE7\xE3o conclu\xEDda) ou da data prevista. M\xEAs sem cota\xE7\xE3o: vale a do \xFAltimo m\xEAs informado antes dele."), engH("div", {
+    }, "Informe o ano, o m\xEAs e quanto vale ", engH("b", null, "US$ 1,00 em R$"), " naquele m\xEAs. Nos contratos com valores em R$, a receita em US$ (cart\xF5es, Receita e margem e arquivo do gerencial) usa a cota\xE7\xE3o do m\xEAs do servi\xE7o (opera\xE7\xE3o conclu\xEDda) ou da data prevista. M\xEAs sem cota\xE7\xE3o: vale a do \xFAltimo m\xEAs informado antes dele. A lista fica sempre com o m\xEAs mais recente em cima."), engH("div", {
       className: "ec-aviso ec-cb-cts"
     }, comBrl.length ? comBrl.length + ' contrato(s) com valores em R$: ' + comBrl.map(c => c.name).join(', ') + '.' : 'Nenhum contrato ativo tem valor em R$ hoje: a tabela vale para quando houver.'), engH("div", {
       className: "tbl-scroll ec-mat-wrap"

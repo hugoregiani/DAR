@@ -737,6 +737,7 @@
     sondas: (d.rigs || []).length,
     templates: (d.opTemplates || []).length,
     quimicos: (d.quimicos || []).length,
+    casing: (d.casingEquip || []).length,
     inventarios: (d.invSondas || []).length
   });
   var engExportar = () => {
@@ -823,7 +824,7 @@
     var ra = engResumoDb(db),
       rb = engResumoDb(im.dados),
       rj = engResumoDb(engMesclarDb(db, im.dados));
-    var linhas = [['Contratos', 'contratos'], ['Itens com valor', 'precos'], ['Reajustes', 'reajustes'], ['Operações', 'operacoes'], ['Consumos lançados', 'consumos'], ['Handovers', 'handovers'], ['Sondas', 'sondas'], ['Templates', 'templates'], ['Produtos químicos', 'quimicos'], ['Contagens de inventário das sondas', 'inventarios']];
+    var linhas = [['Contratos', 'contratos'], ['Itens com valor', 'precos'], ['Reajustes', 'reajustes'], ['Operações', 'operacoes'], ['Consumos lançados', 'consumos'], ['Handovers', 'handovers'], ['Sondas', 'sondas'], ['Templates', 'templates'], ['Produtos químicos', 'quimicos'], ['Casing equipment (banco)', 'casing'], ['Contagens de inventário das sondas', 'inventarios']];
     var aplicar = modo => {
       var final = modo === 'juntar' ? engMesclarDb(db, im.dados) : im.dados;
       if (!saveDB(final)) {
@@ -1109,13 +1110,17 @@
     onClick: abrirEngQuim,
     title: "Banco de produtos qu\xEDmicos: SAP, descri\xE7\xE3o, unidade e valor em US$ (COGS), atualizado por planilha"
   }, "Qu\xEDmicos"), engH("button", {
+    className: "btn-o eng-casing",
+    onClick: abrirEngCasDb,
+    title: "Banco de casing equipment: SAP, descri\xE7\xE3o, unidade e valor em US$ (COGS), atualizado por planilha. \xC9 a lista de casing para escolher nas opera\xE7\xF5es"
+  }, "Casing"), engH("button", {
     className: "btn-o eng-cambio",
     onClick: abrirEngCambio,
     title: "C\xE2mbio do d\xF3lar por m\xEAs (R$ por US$ 1,00): converte em US$ os valores em R$ dos contratos, com a cota\xE7\xE3o do m\xEAs"
   }, "\uD83D\uDCB1 C\xE2mbio"), engH("button", {
     className: "btn-o eng-exportar",
     onClick: engExportar,
-    title: "Baixa um arquivo .json com todos os dados (contratos, valores, reajustes, opera\xE7\xF5es, consumos, handovers, sondas, templates, o banco de qu\xEDmicos e o invent\xE1rio das sondas) para guardar ou levar para outro computador"
+    title: "Baixa um arquivo .json com todos os dados (contratos, valores, reajustes, opera\xE7\xF5es, consumos, handovers, sondas, templates, os bancos de qu\xEDmicos e de casing equipment e o invent\xE1rio das sondas) para guardar ou levar para outro computador"
   }, "⬇ Exportar dados"), engH("button", {
     className: "btn-o eng-importar",
     onClick: () => engRestRef.current && engRestRef.current.click(),

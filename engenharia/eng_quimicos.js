@@ -4,8 +4,6 @@
      db.quimHist = [{id, em, por, origem: 'base'|'planilha'|'manual', arquivo, novos, alterados, removidos, total}].
      A base (ENG_QUIM_BASE, tabela Químicos da aba Forecast) entra uma vez por computador, no loadDB (engQuimMig).
      Atualização: o responsável manda a planilha; o engenheiro usa "⬆ Atualizar pela planilha", confere e aplica. */
-  var [engQ, setEngQ] = useState(null);
-  var engQRef = useRef(null);
   var engUnNorm = u => {
     var s = asciiName(String(u || '')).toLowerCase().replace(/[^a-z0-9]/g, '');
     return {
@@ -35,15 +33,25 @@
     });
     return o;
   };
+  /* e12: banco de casing equipment, igual ao de químicos. engBancoMat(cfg) monta uma tela de banco de materiais (SAP,
+     descrição, unidade e valor US$, com "⬆ Atualizar pela planilha", "⬇ Baixar planilha" e histórico):
+     - químicos: db.quimicos (+ db.quimHist), classes ec-quim-*;
+     - casing equipment: db.casingEquip (o catálogo de casing do EARL, que as operações usam para escolher o casing),
+       com o valor em US$ (usd) e a data (atualizadoEm) em cada item (+ db.casHist), classes ec-casdb-*.
+     O valor US$ de cada banco é o COGS unitário usado nas operações (engCogsIdx). */
+  var engBancoMat = cfg => {
+  var [engQ, setEngQ] = useState(null);
+  var engQRef = useRef(null);
+  var CL = x => 'ec-bm-' + x + ' ec-' + cfg.p + '-' + x;
   var engQuimAvisos = (q, cat) => {
     var a = [];
     var sap = String(q.sap || '').trim();
     if (!sap) return a;
     if (!/^\d+$/.test(sap)) a.push(['SAP provisório', 'O SAP não é um número. Confira o código.']);
-    var c = cat[sapN(sap)];
-    if (!c) a.push(['fora do catálogo', 'Este SAP não está no catálogo de químicas do EARL, então não aparece para escolher nas operações.']);else if (c.unit && q.unid && engUnNorm(c.unit) !== engUnNorm(q.unid)) a.push(['unidade no EARL: ' + c.unit, 'As operações usam este produto em ' + c.unit + ' e o valor aqui é por ' + q.unid + '. O COGS da operação é quantidade × valor: confira se o valor está na mesma unidade.']);
+    var c = cat && cat[sapN(sap)];
+    if (cat && !c) a.push(['fora do catálogo', 'Este SAP não está no catálogo de químicas do EARL, então não aparece para escolher nas operações.']);else if (c && c.unit && q.unid && engUnNorm(c.unit) !== engUnNorm(q.unid)) a.push(['unidade no EARL: ' + c.unit, 'As operações usam este produto em ' + c.unit + ' e o valor aqui é por ' + q.unid + '. O COGS da operação é quantidade × valor: confira se o valor está na mesma unidade.']);
     var u = engNum(q.usd);
-    if (u == null) a.push(['sem valor', 'Sem valor em US$: o COGS deste produto fica de fora.']);else if (u === 0) a.push(['valor zero', 'Valor US$ 0: o COGS deste produto fica zerado.']);
+    if (u == null) a.push(['sem valor', 'Sem valor em US$: o COGS deste ' + cfg.item + ' fica de fora.']);else if (u === 0) a.push(['valor zero', 'Valor US$ 0: o COGS deste ' + cfg.item + ' fica zerado.']);
     return a;
   };
   var engQuimFalta = lista => {
@@ -94,8 +102,16 @@
     var l = lista.map(q => {
       var sap = String(q.sap || '').trim();
       var u = engNum(q.usd);
+      var {
+        _k,
+        _mud,
+        _sap0,
+        linha,
+        ...resto
+      } = q;
       return {
-        id: q.id || 'q_' + sap,
+        ...(cfg.manter ? resto : {}),
+        id: q.id || cfg.idPre + sap,
         sap,
         nome: String(q.nome || '').trim(),
         unid: String(q.unid || '').trim(),
@@ -103,9 +119,9 @@
         atualizadoEm: q._mud || !q.atualizadoEm ? agora : q.atualizadoEm
       };
     });
-    var cmp = engQuimComparar(db.quimicos || [], l);
+    var cmp = engQuimComparar(cfg.ler(db), l);
     var reg = {
-      id: 'qh_' + uid(),
+      id: cfg.idPre + 'h_' + uid(),
       em: agora,
       por: String(h.por != null ? h.por : (db.hoMail || {}).nome || '').trim(),
       origem: h.origem,
@@ -116,18 +132,15 @@
       total: l.length
     };
     updateDB(d => ({
-      ...d,
-      quimicos: l,
-      quimHist: [...(d.quimHist || []), reg].slice(-60),
-      quimBaseV1: d.quimBaseV1 || agora,
+      ...cfg.gravar(d, l, reg, agora),
       hoMail: h.por && String(h.por).trim() ? {
         ...(d.hoMail || {}),
         nome: String(h.por).trim()
       } : d.hoMail
     }), {
-      kind: 'Químicos',
+      kind: cfg.kind,
       action: 'Alteração',
-      name: l.length + ' produto(s) químico(s)',
+      name: l.length + ' ' + cfg.nLog,
       user: currentUser() || '—',
       detail: (h.origem === 'planilha' ? 'Planilha ' + (h.arquivo || '') + ': ' : '') + reg.novos + ' novo(s), ' + reg.alterados + ' alterado(s), ' + reg.removidos + ' removido(s)'
     });
@@ -140,9 +153,10 @@
     busca: '',
     soAviso: false,
     sujo: false,
-    lista: (db.quimicos || []).map(q => ({
+    lista: cfg.ler(db).map(q => ({
       ...q,
-      _k: uid()
+      _k: uid(),
+      _sap0: q.sap
     }))
   });
   var engQuimSalvar = () => {
@@ -159,16 +173,17 @@
       sujo: false,
       lista: l.map(q => ({
         ...q,
-        _k: uid()
+        _k: uid(),
+        _sap0: q.sap
       }))
     }));
-    setOkMsg('Banco de químicos salvo ✓ — ' + reg.novos + ' novo(s), ' + reg.alterados + ' alterado(s), ' + reg.removidos + ' removido(s)');
+    setOkMsg(cfg.titulo + ' salvo ✓ — ' + reg.novos + ' novo(s), ' + reg.alterados + ' alterado(s), ' + reg.removidos + ' removido(s)');
     setTimeout(() => setOkMsg(''), 5000);
   };
   var engQuimBaixar = lista => {
     var l = [...lista].sort((a, b) => String(a.nome || '').localeCompare(String(b.nome || ''), 'pt'));
     var sapCel = s => /^\d{1,15}$/.test(String(s || '').trim()) ? Number(s) : String(s || '');
-    engBaixarXlsx('Banco_Quimicos_EARL_' + dToday(), [['Químicos', [['SAP', 'Descrição', 'Unidade', 'Valor US$', 'Atualizado em'], ...(l.length ? l.map(q => [sapCel(q.sap), q.nome || '', q.unid || '', engNum(q.usd), q.atualizadoEm ? fmtD(String(q.atualizadoEm).slice(0, 10)) : '']) : [[100003685, 'Exemplo: CIMENTO CLASS G (apague esta linha)', 'SK', 13.15, '']])], [14, 46, 10, 14, 14]]]);
+    engBaixarXlsx(cfg.arq + dToday(), [[cfg.aba, [['SAP', 'Descrição', 'Unidade', 'Valor US$', 'Atualizado em'], ...(l.length ? l.map(q => [sapCel(q.sap), q.nome || '', q.unid || '', engNum(q.usd), q.atualizadoEm ? fmtD(String(q.atualizadoEm).slice(0, 10)) : '']) : [cfg.exemplo])], [14, 46, 10, 14, 14]]]);
   };
 
   /* ---- leitura da planilha de químicos: acha a tabela com SAP + valor (em qualquer aba; prefere "Químicos") ---- */
@@ -192,10 +207,11 @@
         (r || []).forEach((v, k) => {
           var h = nh(v);
           if (!h) return;
-          if (m.sap == null && /^(sap|cod(igo)? ?sap|material sap|n(o)? ?sap)$/.test(h)) m.sap = k;else if (m.nome == null && /descri|produto|quimic|nome/.test(h)) m.nome = k;else if (m.unid == null && /^(unid|un$|un |uom|unit)/.test(h)) m.unid = k;else if (m.usd == null && /(^| )us( |$)|usd|dolar|dollar|cogs|custo|valor|preco|price/.test(h)) m.usd = k;
+          if (m.sap == null && /^(sap|cod(igo)? ?sap|material sap|n(o)? ?sap)$/.test(h)) m.sap = k;else if (m.nome == null && /descri|produto|quimic|casing|equipamento|equipment|nome/.test(h)) m.nome = k;else if (m.unid == null && /^(unid|un$|un |uom|unit)/.test(h)) m.unid = k;else if (m.usd == null && /(^| )us( |$)|usd|dolar|dollar|cogs|custo|valor|preco|price/.test(h)) m.usd = k;
         });
         if (m.sap == null || m.usd == null) return;
-        var pts = (m.nome != null && /quimic/.test(nh(r[m.nome])) || /quimic/.test(nh(aba)) ? 2 : 0) + (m.nome != null ? 1 : 0) + (m.unid != null ? 1 : 0);
+        var tit = (m.nome != null ? nh(r[m.nome]) : '') + ' | ' + nh(aba);
+        var pts = (cfg.pref.test(tit) ? 2 : 0) - (cfg.evita.test(tit) ? 3 : 0) + (m.nome != null ? 1 : 0) + (m.unid != null ? 1 : 0);
         if (!melhor || pts > melhor.pts) melhor = {
           pts,
           aba,
@@ -265,7 +281,7 @@
     engLerWb(f).then(wb => {
       var r = engQuimLerWb(wb);
       if (!r || !r.linhas.length) {
-        setSyncErr('Não achei a tabela de químicos na planilha. Ela precisa de uma linha de cabeçalho com SAP, Descrição, Unidade e Valor US$ (ou SAP, Químicos, UOM e COGS, como na aba Forecast).');
+        setSyncErr(cfg.semTabela);
         return;
       }
       setEngQ(x => x && {
@@ -362,10 +378,11 @@
       sujo: false,
       lista: final.map(q => ({
         ...q,
-        _k: uid()
+        _k: uid(),
+        _sap0: q.sap
       }))
     }));
-    setOkMsg('Banco de químicos atualizado ✓ — ' + reg.novos + ' novo(s), ' + reg.alterados + ' alterado(s), ' + reg.removidos + ' removido(s)');
+    setOkMsg(cfg.titulo + ' atualizado ✓ — ' + reg.novos + ' novo(s), ' + reg.alterados + ' alterado(s), ' + reg.removidos + ' removido(s)');
     setTimeout(() => setOkMsg(''), 6000);
   };
 
@@ -410,7 +427,7 @@
         if (e.target === e.currentTarget) fechar();
       }
     }, engH("div", {
-      className: "modal ec-modal ec-quim-plan",
+      className: "modal ec-modal " + CL('plan'),
       onClick: e => e.stopPropagation()
     }, engH("div", {
       className: "modal-title"
@@ -427,7 +444,7 @@
       className: "hm-k"
     }, "Tabela"), engH("div", {
       className: "hm-arq"
-    }, 'aba “' + p.aba + '”, cabeçalho na linha ' + p.cabecalho + ' · ' + p.linhas.length + ' produto(s) lido(s)')), engH("div", {
+    }, 'aba “' + p.aba + '”, cabeçalho na linha ' + p.cabecalho + ' · ' + p.linhas.length + ' ' + cfg.nItens + ' lido(s)')), engH("div", {
       className: "ec-qp-chips"
     }, [['ec-qp-novos', c.novos.length, 'novo(s)'], ['ec-qp-valor', c.valor.length, 'com valor alterado'], ['ec-qp-texto', c.texto.length, 'com descrição ou unidade alterada'], ['ec-qp-iguais', c.iguais.length, 'sem mudança'], ['ec-qp-so', c.soBanco.length, 'só no banco (não estão na planilha)']].map(([cls, n, rot]) => engH("span", {
       key: cls,
@@ -456,7 +473,7 @@
       onChange: () => setP({
         modo: 'substituir'
       })
-    }), engH("b", null, "Substituir o banco pela planilha"), engH("span", null, 'O banco fica igual à planilha' + (c.soBanco.length ? ': ' + c.soBanco.length + ' produto(s) que não estão nela saem do banco.' : '.')))), engH("div", {
+    }), engH("b", null, "Substituir o banco pela planilha"), engH("span", null, 'O banco fica igual à planilha' + (c.soBanco.length ? ': ' + c.soBanco.length + ' ' + cfg.nItens + ' que não estão nela saem do banco.' : '.')))), engH("div", {
       className: "ec-bar"
     }, engH("label", {
       className: "lbl",
@@ -489,7 +506,7 @@
       }, engH("b", null, u4(r.usd))), engH("td", {
         className: 'ec-num' + (d > 0 ? ' ec-qp-sobe' : d < 0 ? ' ec-qp-desce' : '')
       }, d == null ? '—' : (d > 0 ? '+' : '') + fmtNum(d) + '%'));
-    })), true), sec('Produtos novos', c.novos.length, tab('ec-qp-tab-novos', ['SAP', 'Descrição', 'Unid.', 'Valor US$'], c.novos.map(r => engH("tr", {
+    })), true), sec(cfg.Novos, c.novos.length, tab('ec-qp-tab-novos', ['SAP', 'Descrição', 'Unid.', 'Valor US$'], c.novos.map(r => engH("tr", {
       key: r.sap
     }, engH("td", null, r.sap), engH("td", null, r.nome), engH("td", null, r.unid), engH("td", {
       className: "ec-num"
@@ -526,7 +543,7 @@
   var renderEngQuim = () => {
     if (!engQ) return null;
     var lista = engQ.lista || [];
-    var cat = engQuimCat();
+    var cat = cfg.catalogo ? engQuimCat() : null;
     var setQ = (k, patch) => setEngQ(x => ({
       ...x,
       sujo: true,
@@ -542,7 +559,7 @@
           title: 'Fechar sem salvar',
           okLabel: 'Fechar sem salvar',
           danger: true,
-          msg: engH("span", null, "O banco de qu\xEDmicos tem altera\xE7\xF5es que n\xE3o foram salvas."),
+          msg: engH("span", null, 'O ' + cfg.titulo.charAt(0).toLowerCase() + cfg.titulo.slice(1) + ' tem alterações que não foram salvas.'),
           onOk: () => setEngQ(null)
         });
         return;
@@ -557,15 +574,15 @@
     var qb = normNome(engQ.busca);
     var vis = comAviso.filter(x => (!qb || normNome(String(x.q.sap || '') + ' ' + String(x.q.nome || '')).includes(qb)) && (!engQ.soAviso || x.av.length)).sort((a, b) => !a.q.id !== !b.q.id ? a.q.id ? 1 : -1 : String(a.q.nome || '').localeCompare(String(b.q.nome || ''), 'pt'));
     var falta = engQuimFalta(lista);
-    var hist = (db.quimHist || []).slice().reverse();
+    var hist = (db[cfg.hist] || []).slice().reverse();
     var ult = hist[0];
-    var origemTxt = h => h.origem === 'base' ? 'Base inicial — ' + (h.arquivo || 'aba Forecast') : h.origem === 'planilha' ? 'Planilha ' + (h.arquivo || '') : 'Alteração na tela';
+    var origemTxt = h => h.origem === 'base' ? 'Base inicial — ' + (h.arquivo || 'aba Forecast') : h.origem === 'custos' ? 'Vindos de Custos (COGS) — ' + (h.arquivo || 'casing equipment') : h.origem === 'planilha' ? 'Planilha ' + (h.arquivo || '') : 'Alteração na tela';
     var inp = (q, k, num) => engH("input", {
       className: 'ipt ec-in ec-q-' + k,
       value: num ? typeof q[k] === 'number' ? engNumTxt(Math.round(q[k] * 10000) / 10000) : q[k] == null ? '' : q[k] : q[k] || '',
       inputMode: num ? 'decimal' : undefined,
-      readOnly: k === 'sap' && !!q.id,
-      title: k === 'sap' && q.id ? 'O SAP de um produto salvo não muda. Para trocar, tire a linha e inclua o produto de novo.' : undefined,
+      readOnly: k === 'sap' && !!q.id && !!String(q._sap0 || '').trim(),
+      title: k === 'sap' && q.id && String(q._sap0 || '').trim() ? 'O SAP de um ' + cfg.item + ' salvo não muda. Para trocar, tire a linha e inclua o ' + cfg.item + ' de novo.' : undefined,
       onChange: e => setQ(q._k, {
         [k]: e.target.value
       })
@@ -579,11 +596,11 @@
         if (e.target === e.currentTarget) fechar();
       }
     }, engH("div", {
-      className: "modal ec-modal ec-quim-modal",
+      className: "modal ec-modal " + CL('modal'),
       onClick: e => e.stopPropagation()
     }, engH("div", {
       className: "modal-title"
-    }, engH("span", null, "Banco de produtos qu\xEDmicos"), engH("button", {
+    }, engH("span", null, cfg.tituloModal), engH("button", {
       className: "modal-close",
       onClick: fechar
     }, "\xD7")), engH("div", {
@@ -591,22 +608,22 @@
       style: {
         marginTop: 0
       }
-    }, "SAP, descri\xE7\xE3o, unidade e valor unit\xE1rio em US$ (COGS) de cada produto qu\xEDmico. \xC9 o valor usado no COGS das qu\xEDmicas das opera\xE7\xF5es (previstas e lan\xE7adas). Para atualizar, receba a planilha do respons\xE1vel, clique em “⬆ Atualizar pela planilha”, confira as mudan\xE7as e aplique."), engH("div", {
-      className: "ec-quim-info"
+    }, cfg.ajuda), engH("div", {
+      className: CL('info')
     }, engH("b", {
-      className: "ec-quim-n"
-    }, lista.length + ' produto(s)'), ult && engH("span", {
-      className: "ec-quim-ult"
+      className: CL('n')
+    }, lista.length + ' ' + cfg.nItens), ult && engH("span", {
+      className: CL('ult')
     }, '· última atualização ' + fmtDH(ult.em) + ' — ' + origemTxt(ult) + (ult.por ? ' · ' + ult.por : '')), nAviso > 0 && engH("span", {
-      className: "ec-quim-nav"
+      className: CL('nav')
     }, '· ⚠ ' + nAviso + ' com aviso')), engH("div", {
       className: "ec-bar"
     }, engH("input", {
-      className: "ipt ec-quim-busca",
+      className: "ipt " + CL('busca'),
       style: {
         maxWidth: 260
       },
-      placeholder: "Buscar SAP ou produto…",
+      placeholder: cfg.busca,
       value: engQ.busca || '',
       onChange: e => {
         var v = e.target.value;
@@ -619,7 +636,7 @@
       className: "ec-ck"
     }, engH("input", {
       type: "checkbox",
-      className: "ec-quim-soaviso",
+      className: CL('soaviso'),
       checked: !!engQ.soAviso,
       onChange: e => {
         var v = e.target.checked;
@@ -633,7 +650,7 @@
         flex: 1
       }
     }), engH("button", {
-      className: "btn-o ec-quim-novo",
+      className: "btn-o " + CL('novo'),
       onClick: () => setEngQ(x => ({
         ...x,
         sujo: true,
@@ -648,16 +665,16 @@
           usd: ''
         }]
       }))
-    }, "＋ Produto"), engH("button", {
-      className: "btn-r ec-quim-carregar",
+    }, cfg.novo), engH("button", {
+      className: "btn-r " + CL('carregar'),
       onClick: () => engQRef.current && engQRef.current.click()
     }, "⬆ Atualizar pela planilha"), engH("button", {
-      className: "btn-o ec-quim-baixar",
+      className: "btn-o " + CL('baixar'),
       onClick: () => engQuimBaixar(lista)
     }, lista.length ? '⬇ Baixar planilha' : '⬇ Modelo da planilha')), engH("div", {
       className: "tbl-scroll ec-itens-wrap"
     }, engH("table", {
-      className: "db-table ec-itens ec-quim-tab"
+      className: "db-table ec-itens " + CL('tab')
     }, engH("thead", null, engH("tr", null, ['SAP', 'Descrição', 'Unid.', 'Valor US$', 'Atualizado', 'Aviso', ''].map((h, k) => engH("th", {
       key: k
     }, h)))), engH("tbody", null, vis.map(({
@@ -667,10 +684,10 @@
       key: q._k,
       'data-sap': String(q.sap || '')
     }, engH("td", null, inp(q, 'sap')), engH("td", null, inp(q, 'nome')), engH("td", null, inp(q, 'unid')), engH("td", null, inp(q, 'usd', 1)), engH("td", {
-      className: "ec-quim-em"
+      className: CL('em')
     }, q.atualizadoEm ? fmtD(String(q.atualizadoEm).slice(0, 10)) : '—'), engH("td", null, av.map(a => engH("span", {
       key: a[0],
-      className: "ec-tag ec-quim-aviso",
+      className: "ec-tag " + CL('aviso'),
       title: a[1]
     }, '⚠ ' + a[0]))), engH("td", null, engH("button", {
       className: "btn-o hm-x",
@@ -683,8 +700,8 @@
     }, "\xD7")))), !vis.length && engH("tr", null, engH("td", {
       colSpan: 7,
       className: "ec-vazio"
-    }, lista.length ? 'Nenhum produto no filtro.' : 'Nenhum produto — use “⬆ Atualizar pela planilha” ou “＋ Produto”.'))))), hist.length > 0 && engH("details", {
-      className: "ec-quim-hist"
+    }, lista.length ? 'Nenhum ' + cfg.item + ' no filtro.' : 'Nenhum ' + cfg.item + ' — use “⬆ Atualizar pela planilha” ou “' + cfg.novo + '”.'))))), hist.length > 0 && engH("details", {
+      className: CL('hist')
     }, engH("summary", null, 'Histórico de atualizações (' + hist.length + ')'), engH("div", {
       className: "tbl-scroll"
     }, engH("table", {
@@ -712,7 +729,7 @@
         flex: 1
       }
     }), engH("button", {
-      className: "btn-r ec-quim-salvar",
+      className: "btn-r " + CL('salvar'),
       disabled: falta.length > 0 || !engQ.sujo,
       onClick: engQuimSalvar
     }, "Salvar"))), engQ.plan && renderEngQuimPlan(), engH("input", {
@@ -729,3 +746,90 @@
       }
     }));
   };
+  return {
+    abrir: abrirEngQuim,
+    render: renderEngQuim,
+    lerWb: engQuimLerWb
+  };
+  };
+  // químicos (e6): db.quimicos
+  var engBQ = engBancoMat({
+    p: 'quim',
+    item: 'produto',
+    nItens: 'produto(s)',
+    Novos: 'Produtos novos',
+    novo: '＋ Produto',
+    busca: 'Buscar SAP ou produto…',
+    titulo: 'Banco de químicos',
+    tituloModal: 'Banco de produtos químicos',
+    kind: 'Químicos',
+    nLog: 'produto(s) químico(s)',
+    idPre: 'q_',
+    catalogo: true,
+    manter: false,
+    pref: /quimic/,
+    evita: /casing/,
+    arq: 'Banco_Quimicos_EARL_',
+    aba: 'Químicos',
+    exemplo: [100003685, 'Exemplo: CIMENTO CLASS G (apague esta linha)', 'SK', 13.15, ''],
+    semTabela: 'Não achei a tabela de químicos na planilha. Ela precisa de uma linha de cabeçalho com SAP, Descrição, Unidade e Valor US$ (ou SAP, Químicos, UOM e COGS, como na aba Forecast).',
+    ajuda: 'SAP, descrição, unidade e valor unitário em US$ (COGS) de cada produto químico. É o valor usado no COGS das químicas das operações (previstas e lançadas). Para atualizar, receba a planilha do responsável, clique em “⬆ Atualizar pela planilha”, confira as mudanças e aplique. Planilha com as abas de químicos e de casing equipment: aqui entra a aba de químicos.',
+    hist: 'quimHist',
+    ler: d => d.quimicos || [],
+    gravar: (d, l, reg, agora) => ({
+      ...d,
+      quimicos: l,
+      quimHist: [...(d.quimHist || []), reg].slice(-60),
+      quimBaseV1: d.quimBaseV1 || agora
+    })
+  });
+  // casing equipment (e12): db.casingEquip, o catálogo de casing do EARL ({sap, name, unit, origem}) com usd e atualizadoEm
+  var engBC = engBancoMat({
+    p: 'casdb',
+    item: 'item',
+    nItens: 'item(ns)',
+    Novos: 'Itens novos',
+    novo: '＋ Item',
+    busca: 'Buscar SAP ou item…',
+    titulo: 'Banco de casing equipment',
+    tituloModal: 'Banco de casing equipment',
+    kind: 'Casing equipment',
+    nLog: 'item(ns) de casing equipment',
+    idPre: 'ce_',
+    catalogo: false,
+    manter: true,
+    pref: /casing|equip/,
+    evita: /quimic/,
+    arq: 'Banco_Casing_Equipment_EARL_',
+    aba: 'Casing Equipment',
+    exemplo: [103101982, 'Exemplo: ASSY BAF,BYP,9-5/8 TO 10-3/4IN,FOR SSRII (apague esta linha)', 'EA', 250, ''],
+    semTabela: 'Não achei a tabela de casing equipment na planilha. Ela precisa de uma linha de cabeçalho com SAP, Descrição, Unidade e Valor US$ (ou SAP, Casing, UOM e COGS, como na aba Forecast).',
+    ajuda: 'SAP, descrição, unidade e valor unitário em US$ (COGS) de cada item de casing equipment. É a lista de casing que aparece para escolher nas operações, e o valor é o COGS do casing das operações (previstas e lançadas). Para atualizar, receba a planilha do responsável, clique em “⬆ Atualizar pela planilha”, confira as mudanças e aplique. Planilha com as abas de químicos e de casing equipment: aqui entra a aba de casing.',
+    hist: 'casHist',
+    ler: d => (d.casingEquip || []).map(c => ({
+      ...c,
+      id: c.id || (String(c.sap || '').trim() ? 'ce_' + String(c.sap).trim() : ''),
+      nome: c.name || '',
+      unid: c.unit || ''
+    })),
+    gravar: (d, l, reg) => ({
+      ...d,
+      casingEquip: l.map(({
+        nome,
+        unid,
+        name,
+        unit,
+        ...r
+      }) => ({
+        ...r,
+        name: nome,
+        unit: unid || 'EA'
+      })),
+      casHist: [...(d.casHist || []), reg].slice(-60)
+    })
+  });
+  var abrirEngQuim = engBQ.abrir,
+    renderEngQuim = engBQ.render,
+    engQuimLerWb = engBQ.lerWb,
+    abrirEngCasDb = engBC.abrir,
+    renderEngCasDb = engBC.render;

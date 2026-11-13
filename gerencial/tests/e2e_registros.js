@@ -131,7 +131,7 @@ const carregar = (page, nome, P) => page.setInputFiles('#inArq', [{name: nome, m
   await page.waitForSelector('[data-a="arq"]');
   await carregar(page, 'v1.json', V1);
   await page.waitForSelector('.kpis');
-  conf((await page.textContent('#ver')).includes('g17'), 'versão g17');
+  conf((await page.textContent('#ver')).includes('g18'), 'versão g18');
 
   console.log('Registrar');
   conf(await page.locator('.bar [data-a="regAbrir"]').count() === 1 && (await page.$$eval('.tab', l => l.map(b => b.textContent.trim())))[1] === 'Comparar registros (0)', 'botão "📌 Registrar" na barra do topo e aba "Comparar registros (0)"');
@@ -169,6 +169,18 @@ const carregar = (page, nome, P) => page.setInputFiles('#inArq', [{name: nome, m
   conf(await page.inputValue('[data-cmp="base"]') === '2026-10-01' && (await chipsOn()).join() === '2026-11-01' && await page.isDisabled('.cx-chip input[data-cmpsel="2026-10-01"]'), 'abre comparando o penúltimo (base) com o último registro; a base não dá para marcar em "Comparar com"');
   const lista = await page.$$eval('.t-regs tbody tr', l => l.map(r => r.innerText.replace(/\s+/g, ' ').trim()));
   conf(lista.length === 3 && /^Agora /.test(lista[0]) && /^01\/11\/2026 .*forecast de novembro .* comparar/.test(lista[1]) && /^01\/10\/2026 .*base/.test(lista[2]), 'lista: Agora, 01/11 (comparar) e 01/10 (base), com a observação', lista);
+  // g18: a lista dos registros com ordem e seleção de itens, como as outras tabelas
+  const datas = () => page.$$eval('.t-regs tbody tr', l => l.map(r => r.cells[0].innerText.trim()));
+  conf(await page.locator('.t-regs thead .tf-b').count() === 9, 'lista dos registros: ▾ em todas as colunas com título');
+  await page.click('.t-regs thead [data-tfsort="regs|0"]');
+  conf((await datas()).join() === '01/10/2026,01/11/2026,Agora', 'clique em Data: crescente (Agora por último)', await datas());
+  await page.click('.t-regs thead [data-tfsort="regs|0"]');
+  conf((await datas()).join() === 'Agora,01/11/2026,01/10/2026', 'de novo: decrescente', await datas());
+  await page.click('.t-regs thead [data-tff="regs|8"]');
+  await page.click('#tfPop .tf-it:has-text("base") .tf-so');
+  conf((await datas()).join() === '01/10/2026' && /Mostrando 1 de 3/.test(await page.innerText('.tf-info')), '“só este” em “Na comparação” = base: só 01/10', await datas());
+  await page.click('[data-tfclr="regs"]');
+  conf((await datas()).join() === 'Agora,01/11/2026,01/10/2026', 'limpar: volta à lista completa', await datas());
   const ta = tot(A26), tb = tot(B26);
   let cs = await cards(page);
   conf(cs[0][1] === 'US$ ' + nf2(tb.r) && cs[0][2] === 'base 01/10/2026: US$ ' + nf2(ta.r) && cs[0][3] === fDelta(tb.r - ta.r) + ' (' + fPct(ta.r, tb.r) + ')', 'card Receita: ' + nf2(ta.r) + ' → ' + nf2(tb.r) + ' (' + fPct(ta.r, tb.r) + ')', cs[0]);

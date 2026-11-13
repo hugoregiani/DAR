@@ -18,6 +18,26 @@ const {abrir} = require('../tests/harness');
 const fs = require('fs');
 const path = require('path');
 
+// e12: casing da planilha → banco de casing equipment (db.casingEquip, o catálogo de casing do EARL, com o valor em US$):
+// atualiza o item de mesmo SAP ou acrescenta. Sem SAP, fica em Custos (COGS).
+function casingParaBanco(d, itens, arquivo, agora) {
+  if (!Array.isArray(d.casingEquip)) d.casingEquip = [];
+  const fora = [];
+  let novos = 0, alterados = 0;
+  itens.forEach(m => {
+    const sap = String(m.sap == null ? '' : m.sap).trim();
+    if (!sap) { fora.push(m); return; }
+    const e = d.casingEquip.find(x => x && String(x.sap || '').trim() === sap);
+    if (e) { Object.assign(e, {id: e.id || 'ce_' + sap, usd: m.usd, atualizadoEm: agora}); alterados++; }
+    else { d.casingEquip.push({id: 'ce_' + sap, sap, name: m.nome || sap, unit: m.unid || 'EA', origem: 'Planilha ' + arquivo, usd: m.usd, atualizadoEm: agora}); novos++; }
+  });
+  d.casingEquip.forEach(x => { if (x && !x.id && String(x.sap || '').trim()) x.id = 'ce_' + String(x.sap).trim(); });
+  d.casHist = [...(d.casHist || []), {id: 'ce_h_' + String(arquivo).replace(/[^A-Za-z0-9]+/g, '_'), em: agora, por: '', origem: 'planilha', arquivo: arquivo + ' (aba Forecast)', novos, alterados, removidos: 0, total: d.casingEquip.length}];
+  d.casDbV1 = d.casDbV1 || agora;
+  return fora;
+}
+
+
 const [XLSX_ARQ, HTML, SAIDA] = process.argv.slice(2);
 if (!XLSX_ARQ || !HTML || !SAIDA) {
   console.error('uso: node teste_bp/gerar_seed_bp.js <planilha.xlsx> <EARL_Engenharia.html> <saida_seed.json>');
@@ -28,6 +48,7 @@ if (!XLSX_ARQ || !HTML || !SAIDA) {
   const {browser, page, errs} = await abrir(HTML, {hoje: '2026-11-02'});
   await page.waitForSelector('.eng-tools');
   const b64 = fs.readFileSync(XLSX_ARQ).toString('base64');
+  await page.addScriptTag({content: casingParaBanco.toString()}); // roda dentro da página
   const res = await page.evaluate(b64 => {
     /* ---------- leitura da planilha (com o XLSX embutido no app) ---------- */
     const wb = XLSX.read(b64, {type: 'base64'});
@@ -108,8 +129,8 @@ if (!XLSX_ARQ || !HTML || !SAIDA) {
       avisos.push('banco de químicos diferente da base: substituído pela tabela da planilha');
     }
     d.quimBaseV1 = d.quimBaseV1 || agora;
-    // casing: COGS unitário em Contratos → Custos (COGS)
-    d.cogsItens = casRows.map((r, i) => ({id: 'cg_bp_cas_' + (i + 1), sap: txt(r[0]), nome: txt(r[1]), unid: txt(r[4]), usd: num(r[5]), brl: null, atualizadoEm: agora}));
+    // casing: banco de casing equipment (e12; antes em Contratos → Custos (COGS)); sem SAP fica em Custos
+    d.cogsItens = casingParaBanco(d, casRows.map(r => ({sap: txt(r[0]), nome: txt(r[1]), unid: txt(r[4]), usd: num(r[5])})), 'Contrato_BP_Teste_EARL.xlsx', agora).map((m, i) => ({id: 'cg_bp_cas_' + (i + 1), ...m, brl: null, atualizadoEm: agora}));
 
     // catálogo de químicas do EARL (nome e unidade pelo SAP)
     const cat = {};

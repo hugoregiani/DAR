@@ -58,7 +58,7 @@ A Engenharia do EARL separada do resto do sistema, para usar **sem servidor, sem
   - **Avisos:** produto fora do catálogo de químicas do EARL, unidade diferente da usada nas operações (o COGS é quantidade × valor, então as duas precisam estar na mesma unidade), SAP provisório e valor zero ou em branco.
   - **Histórico:** cada atualização fica registrada com data, origem (base, planilha ou tela), quem fez e quantos produtos ficaram novos, alterados e removidos.
   - **Atenção:** o valor vale para todas as operações, inclusive as já lançadas; ao mudar um valor, o COGS delas muda junto.
-- **Custos (COGS):** botão na tela de Contratos, para casing equipment e outros materiais. As químicas ficam no banco de Químicos; se o mesmo SAP estiver nos dois, vale o do banco de Químicos. Custo unitário pelo SAP, em US$ e/ou R$. Pode ser digitado ou carregado de planilha (colunas `SAP`, `Produto`, `Unidade`, `COGS US$` e/ou `COGS R$`; uma coluna só "COGS" vale como US$). O consumo da operação e a aba "Consumo e receita" mostram COGS e margem.
+- **Custos (COGS):** botão na tela de Contratos, para outros materiais e ajustes (desde o e12 o casing equipment fica no banco de Casing). As químicas ficam no banco de Químicos; se o mesmo SAP estiver aqui e num banco, vale o do banco. Custo unitário pelo SAP, em US$ e/ou R$. Pode ser digitado ou carregado de planilha (colunas `SAP`, `Produto`, `Unidade`, `COGS US$` e/ou `COGS R$`; uma coluna só "COGS" vale como US$). O consumo da operação e a aba "Consumo e receita" mostram COGS e margem.
 - **⬇ Arquivo do gerencial:** botão na barra (e na aba Consumo e receita). O engenheiro marca os contratos sob a responsabilidade dele e gera um `.json` com os contratos (itens, saldos, valores, reajustes) e as operações (previsto com valores, consumo lançado, receita, COGS e risco). Esse arquivo vai para a pasta do SharePoint do gerencial e é lido pelo **EARL Gerencial** (`../gerencial`).
 - **Inventário das sondas:** aba em cada contrato (e na Visão geral), para lançar o **inventário real dos produtos químicos a bordo** de cada sonda do contrato.
   - **Sondas do contrato:** as das operações do contrato e as cadastradas com o contrato. Uma sonda de fora entra por **＋ Contagem de outra sonda…**.
@@ -97,6 +97,13 @@ A Engenharia do EARL separada do resto do sistema, para usar **sem servidor, sem
 - **Sondas:** sempre como **"NOME PETROBRAS - NOME DA SONDA"** (ex.: NS-60 - Deepwater Aquila); sem nome Petrobras, só o nome. Vale no Gantt, calendário, lista, seletores, handover (assunto e corpo), consumo, inventário e Receita e margem. As planilhas exportadas continuam com "Sonda" (código) e "Nome da sonda" separados.
 - **Exportações:** "Consumo de produtos químicos", "Casing equipment" e "Pessoal" ganharam **Contingência (linha)** e **Risco da linha (%)**; a operação já tinha Contingência e Risco (%). O Painel de Compras aplica o risco da linha.
 - **Cards** da aba "Consumo e receita" com profundidade, como os do Gerencial g16.
+
+### e12 (13/11/2026)
+
+- **Banco de casing equipment** (botão **Casing** na barra, ao lado de "Químicos"): igual ao banco de químicos — SAP, descrição, unidade e valor US$ (COGS), busca, "só com aviso", "＋ Item", **⬆ Atualizar pela planilha** (confere novos, valor alterado, descrição/unidade alterada e "só no banco"; atualizar e acrescentar ou substituir), **⬇ Baixar planilha** e histórico. É o próprio catálogo de casing do EARL (`db.casingEquip`), então item novo do banco aparece para escolher nas operações. O valor é o COGS do casing das operações (o banco de químicos vale sobre o de casing, que vale sobre Custos). Uma vez, ao abrir: o casing que estava em **Contratos → Custos (COGS)** passa para o banco (em Custos ficam os ajustes `AJ-`, o que está em R$ e o que não tem SAP).
+- **Planilha com as duas abas:** a mesma planilha (aba de químicos + aba "Casing Equipment") atualiza os dois bancos: em "Químicos" o app lê a aba de químicos; em "Casing", a de casing (pelo nome da aba ou do título da coluna).
+- **Câmbio:** a lista fica sempre com o mês mais recente em cima (ordem decrescente); "＋ Mês" entra em cima.
+- **Filtro e ordem em todas as tabelas** (`eng_tabelas.js`): clique no título da coluna ordena (▲ crescente, de novo ▼ decrescente; vazios no fim); o **▾** abre a lista dos valores com a contagem, busca, "(Selecionar tudo)", "só este", ↑/↓ e Aplicar, como no Gerencial. Com filtro ou ordem aparece "Mostrando X de Y linha(s)" e **Limpar filtro e ordem**. Vale para os bancos de dados (químicos, casing, Custos, câmbio, sondas, contratos), a Lista, Consumo e receita, inventário, handovers e as demais tabelas com uma linha de títulos; tabelas de edição leem o valor dos campos; linha nova (＋) aparece mesmo com filtro.
 
 ### e11 (12/11/2026)
 
@@ -154,7 +161,7 @@ node teste_bp/e2e_bp.js Contrato_BP_Teste_EARL.xlsx EARL_Engenharia_BP_teste.htm
 
 - **Contrato BP:** os 134 itens com o valor em US$ do Ano 1 (os itens 8-1 e 8-2 entram no cadastro) e início em 22/06/2026.
 - **Sonda NS-39:** cadastrada, com base em Macaé.
-- **COGS:** os 60 químicos no banco de Químicos (iguais à base do app) e os 102 casing em Custos (COGS).
+- **COGS:** os 60 químicos no banco de Químicos (iguais à base do app) e os 102 casing com valor no banco de Casing (e12; antes em Custos (COGS)).
 - **27 operações**, uma por coluna do Forecast:
   - **Tipo:** revestimento → Cimentação primária com o tamanho; P&A → Abandono; LCP → Tampão de combate à perda; o resto → Outros, com a descrição da planilha.
   - **Datas:** vinculadas à operação anterior da sonda (e10, pedido do Hugo).
@@ -220,4 +227,4 @@ node contratos_reais/e2e_contratos_reais.js <pasta das planilhas> <pasta dos HTM
     - apagar com operações: só com APAGAR, levando as operações e o handover;
     - os contratos apagados não voltam ao reabrir.
 - **A seção Receita e margem é o `../gerencial/gerencial.html`**, embutido pelo patch (`ENG_GER_HTML`, num iframe, no modo embutido do Gerencial). Mudou o Gerencial? Gere de novo o `EARL_Engenharia.html`.
-- Versão: `EARL_VERSION = 'EARL Engenharia e11 (base v115)'`. O teste do fluxo completo com o Gerencial está em `../gerencial/tests/e2e_gerencial.js`.
+- Versão: `EARL_VERSION = 'EARL Engenharia e12 (base v115)'`. O teste do fluxo completo com o Gerencial está em `../gerencial/tests/e2e_gerencial.js`.

@@ -90,7 +90,7 @@ const ABAS = [['contratos', 't-cts'], ['ppu', 't-ppu'], ['quim', 't-quim'], ['ca
   await page.setInputFiles('#inArq', [{name: 'eng_ana.json', mimeType: 'application/json', buffer: Buffer.from(JSON.stringify(pacA))}, {name: 'eng_bruno.json', mimeType: 'application/json', buffer: Buffer.from(JSON.stringify(pacB))}]);
   await page.waitForSelector('.kpis');
   await page.evaluate(() => { const m = document.getElementById('msg'); if (m) m.remove(); });
-  conf((await page.textContent('#ver')).includes('g17'), 'versão g17');
+  conf((await page.textContent('#ver')).includes('g18'), 'versão g18');
 
   console.log('Ordem crescente e decrescente em todas as colunas');
   for (const [aba, cls] of ABAS) {
@@ -287,6 +287,34 @@ const ABAS = [['contratos', 't-cts'], ['ppu', 't-ppu'], ['quim', 't-quim'], ['ca
   await page.click('.tab[data-tab="contratos"]');
   R = await rolagem('t-cts');
   conf(R.n === 4 && !R.rola, 'Contratos (4 linhas): sem rolagem', R);
+
+  console.log('g18: largura da 1ª coluna da matriz (arrastar a borda do título)');
+  await page.click('.tab[data-tab="receita"]');
+  await page.waitForSelector('.t-mx th.mx-rot .mx-rsz');
+  const larg = () => page.evaluate(() => { const th = document.querySelector('.t-mx th.mx-rot'), td = document.querySelector('.t-mx tbody td.mx-rot'); return {th: Math.round(th.getBoundingClientRect().width), td: Math.round(td.getBoundingClientRect().width), fix: document.querySelector('.t-mx').classList.contains('mx-fix')}; });
+  const arrastar = async dx => {
+    await page.locator('.t-mx th.mx-rot .mx-rsz').scrollIntoViewIfNeeded();
+    const b = await page.locator('.t-mx th.mx-rot .mx-rsz').boundingBox();
+    const x = b.x + b.width / 2, y = b.y + b.height / 2;
+    await page.mouse.move(x, y); await page.mouse.down(); await page.mouse.move(x + dx / 2, y, {steps: 4}); await page.mouse.move(x + dx, y, {steps: 4}); await page.mouse.up();
+  };
+  const L0 = await larg();
+  await arrastar(160);
+  let L1 = await larg();
+  conf(Math.abs(L1.th - (L0.th + 160)) <= 3 && Math.abs(L1.td - L1.th) <= 1 && L1.fix, 'arrastar a alça +160 px: a 1ª coluna (título e linhas) fica 160 px mais larga', {L0, L1});
+  await page.click('.tab[data-tab="contratos"]'); await page.click('.tab[data-tab="receita"]');
+  conf(Math.abs((await larg()).th - L1.th) <= 1, 'a largura continua ao trocar de aba (redesenho)', await larg());
+  conf(JSON.parse(await page.evaluate(() => localStorage.getItem('earlger:mxw'))).mx === L1.th - 0 || Math.abs(JSON.parse(await page.evaluate(() => localStorage.getItem('earlger:mxw'))).mx - L1.th) <= 1, 'largura guardada no navegador', await page.evaluate(() => localStorage.getItem('earlger:mxw')));
+  await page.reload(); await page.waitForSelector('.t-mx th.mx-rot .mx-rsz');
+  conf(Math.abs((await larg()).th - L1.th) <= 1, 'e continua depois de fechar e abrir', await larg());
+  await arrastar(-900);
+  conf((await larg()).th === 120, 'arrastar para a esquerda: no mínimo 120 px', await larg());
+  await foto(page, 't4_largura');
+  await page.locator('.t-mx th.mx-rot .mx-rsz').scrollIntoViewIfNeeded();
+  await page.dblclick('.t-mx th.mx-rot .mx-rsz');
+  const L2 = await larg();
+  conf(!L2.fix && Math.abs(L2.th - L0.th) <= 1 && !JSON.parse(await page.evaluate(() => localStorage.getItem('earlger:mxw'))).mx, 'duplo clique na alça volta à largura padrão', {L0, L2});
+  await page.click('.tab[data-tab="contratos"]');
 
   console.log('Celular');
   await page.setViewportSize({width: 390, height: 800});

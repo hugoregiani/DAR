@@ -310,6 +310,13 @@ html.emb .qcards{grid-template-columns:repeat(4,minmax(0,1fr))}
 .t-mx tr.mx-it td.mx-rot b{color:var(--ink)}
 .t-mx .mx-hl{background:#FFF4D6!important}
 .t-mx th.mx-hl{background:#FCE7AE!important;color:var(--ink)}
+/* g18: largura da 1ª coluna ajustável (alça na borda direita do título) */
+.t-mx th.mx-rot{padding-right:14px}
+.mx-rsz{position:absolute;top:0;right:-5px;width:11px;height:100%;cursor:col-resize;z-index:6;touch-action:none}
+.mx-rsz::after{content:'';position:absolute;left:4px;top:18%;bottom:18%;width:3px;border-radius:2px;background:#C5CBD0;transition:background .12s}
+.mx-rsz:hover::after,.mx-arrastando .mx-rsz::after{background:var(--red);top:0;bottom:0}
+html.mx-arr,html.mx-arr *{cursor:col-resize!important;user-select:none}
+.t-mx.mx-fix .mx-rot{width:var(--mxw);min-width:var(--mxw);max-width:var(--mxw)}
 @media(max-width:760px){.t-mx .mx-rot{min-width:150px;max-width:200px}.qcards{grid-template-columns:1fr 1fr}.qc-ano,.kpis .k-margem{grid-column:1/-1}.mes-box,.q-box{min-width:0;width:100%}}
 @media(max-width:1100px){.kpis,.qcards{grid-template-columns:repeat(3,minmax(0,1fr))}.cx-kpis{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:760px){.hdr{gap:10px;padding:0 12px}.hdr img{height:24px}.hdr .ver{display:none}h1{font-size:30px;padding-left:22px}h1:before{left:0;top:-6px}.f select{max-width:100%}.f{flex:1 1 140px}.kpis{grid-template-columns:1fr 1fr}.kpi b{font-size:min(17px,10.5cqi)}.kpi em{font-size:11px}}
@@ -390,7 +397,7 @@ https://github.com/nodeca/pako/blob/main/LICENSE
    Para cada contrato vale o arquivo mais novo. Tudo fica neste navegador (localStorage, prefixo earlger:). */
 (function () {
   'use strict';
-  var VERSAO = 'EARL Gerencial g17';
+  var VERSAO = 'EARL Gerencial g18';
   var CHAVE = 'earlger:pacotes_v1';
   var $ = function (s) { return document.querySelector(s); };
   var esc = function (v) { return String(v == null ? '' : v).replace(/[&<>"']/g, function (c) { return {'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'}[c]; }); };
@@ -407,7 +414,7 @@ https://github.com/nodeca/pako/blob/main/LICENSE
   var hojeTxt = function () { var d = new Date(), p = function (n) { return String(n).padStart(2, '0'); }; return d.getFullYear() + '-' + p(d.getMonth() + 1) + '-' + p(d.getDate()); };
   var r4 = function (v) { return Math.round(v * 10000) / 10000; };
 
-  var S = {pacotes: [], tab: 'receita', f: {ano: '', qIni: 0, qFim: 0, mIni: 0, mFim: 0, cliente: '', contrato: '', regiao: '', tipo: '', busca: ''}, soComConsumo: true, msg: null, graf: true, tend: 'linear', gmodo: 'mes', mx: {abertos: {}, mostrar: 1}, mesPop: false, mesPasso: 0, qPop: false, qPasso: 0, mxVer: null, gmet: 'ambos', regs: [], cmp: {base: null, sel: [], abertos: {}, mostrar: 1, soMud: false}, tf: {}};
+  var S = {pacotes: [], tab: 'receita', f: {ano: '', qIni: 0, qFim: 0, mIni: 0, mFim: 0, cliente: '', contrato: '', regiao: '', tipo: '', busca: ''}, soComConsumo: true, msg: null, graf: true, tend: 'linear', gmodo: 'mes', mx: {abertos: {}, mostrar: 1}, mesPop: false, mesPasso: 0, qPop: false, qPasso: 0, mxVer: null, mxw: {}, gmet: 'ambos', regs: [], cmp: {base: null, sel: [], abertos: {}, mostrar: 1, soMud: false}, tf: {}};
   try { S.pacotes = JSON.parse(localStorage.getItem(CHAVE) || '[]') || []; } catch (e) { S.pacotes = []; }
   /* modo embutido: a seção "Receita e margem" dentro da página inicial do EARL Engenharia (iframe). Os dados vêm da
      Engenharia (window.parent.engGerDados()), nada de arquivos, registros nem abas; as preferências (gráfico etc.) ficam
@@ -417,6 +424,7 @@ https://github.com/nodeca/pako/blob/main/LICENSE
   var PREF_EMB = (function () { try { return ((window.parent.EARL_ARMAZ || {}).P || 'earleng:') + 'ger:'; } catch (e) { return 'earleng:ger:'; } })(); // o mesmo prefixo do arquivo da Engenharia (earleng: ou earlengbp:)
   var CHV = function (k) { return (EMB ? PREF_EMB : 'earlger:') + k; };
   try { var t0 = localStorage.getItem(CHV('tab')); if (t0) S.tab = t0 === 'matriz' ? 'receita' : t0; } catch (e) {}
+  try { var w0 = JSON.parse(localStorage.getItem(CHV('mxw')) || '{}'); ['mx', 'cx'].forEach(function (k) { var n = Number(w0 && w0[k]); if (n >= 120 && n <= 1200) S.mxw[k] = Math.round(n); }); } catch (e) {}
   try { if (localStorage.getItem(CHV('graf')) === 'oculto') S.graf = false; var t1 = localStorage.getItem(CHV('tend')); if (t1 === 'linear' || t1 === 'mm3' || t1 === 'nenhuma') S.tend = t1; var t2 = localStorage.getItem(CHV('gmodo')); if (t2 === 'mes' || t2 === 'mescli' || t2 === 'cli') S.gmodo = t2; var t3 = localStorage.getItem(CHV('gmet')); if (t3 === 'rec' || t3 === 'cogs' || t3 === 'ambos' || t3 === 'mg') S.gmet = t3; } catch (e) {}
   /* versão compartilhada: os dados vêm de dentro do arquivo (#earlger-dados) e nada é gravado no navegador */
   var DADOS_EMB = (function () { try { var de = document.getElementById('earlger-dados'); return de ? JSON.parse(de.textContent) : null; } catch (e) { return null; } })();
@@ -652,6 +660,28 @@ https://github.com/nodeca/pako/blob/main/LICENSE
   /* ---------- telas ---------- */
   var barra = function (pct, verm) { var w = Math.max(0, Math.min(100, pct || 0)); return '<div class="barra"><i class="' + (verm ? 'r' : '') + '" style="width:' + w.toFixed(1) + '%"></i></div>'; };
   var pctCel = function (pct) { return pct == null ? '—' : '<div class="pct">' + barra(pct, pct > 100) + '<span' + (pct > 100 ? ' class="neg"' : '') + '>' + fN(pct) + '%</span></div>'; };
+  /* g18: largura da 1ª coluna das matrizes (Receita, COGS e margem; comparação) ajustável arrastando a borda do título.
+     Fica guardada neste navegador (mx = matriz da aba Receita, cx = comparação); duplo clique volta ao padrão. */
+  var alcaMx = function (k) { return '<span class="mx-rsz" data-rsz="' + k + '" role="separator" aria-orientation="vertical" aria-label="Largura da primeira coluna" title="Arraste para aumentar ou diminuir a largura desta coluna (duplo clique: largura padrão)"></span>'; };
+  var estMx = function (k) { var w = S.mxw[k]; return w ? ' mx-fix" style="--mxw:' + w + 'px"' : '"'; };
+  var guardarMxw = function () { if (COMPARTILHADO) return; try { localStorage.setItem(CHV('mxw'), JSON.stringify(S.mxw)); } catch (e) {} };
+  document.addEventListener('pointerdown', function (e) {
+    var h = e.target.closest && e.target.closest('.mx-rsz'); if (!h || e.button > 0) return;
+    e.preventDefault(); e.stopPropagation();
+    var th = h.closest('th'), tb = h.closest('table'), k = h.dataset.rsz;
+    var x0 = e.clientX, w0 = th.getBoundingClientRect().width, w = Math.round(w0);
+    tb.classList.add('mx-fix', 'mx-arrastando'); document.documentElement.classList.add('mx-arr'); tb.style.setProperty('--mxw', w + 'px');
+    var mover = function (ev) { w = Math.max(120, Math.min(1200, Math.round(w0 + ev.clientX - x0))); tb.style.setProperty('--mxw', w + 'px'); };
+    var soltar = function () {
+      document.removeEventListener('pointermove', mover); document.removeEventListener('pointerup', soltar); document.removeEventListener('pointercancel', soltar);
+      tb.classList.remove('mx-arrastando'); document.documentElement.classList.remove('mx-arr'); S.mxw[k] = w; guardarMxw(); if (EMB) ajustarAltura();
+    };
+    document.addEventListener('pointermove', mover); document.addEventListener('pointerup', soltar); document.addEventListener('pointercancel', soltar);
+  }, true);
+  document.addEventListener('dblclick', function (e) {
+    var h = e.target.closest && e.target.closest('.mx-rsz'); if (!h) return;
+    e.preventDefault(); delete S.mxw[h.dataset.rsz]; guardarMxw(); render();
+  });
   var tabela = function (cab, linhas, rodape, cls) {
     return '<div class="tw tw15"><table class="' + (cls || '') + '"><thead><tr>' + cab.map(function (h) { return '<th' + (h.n ? ' class="n"' : '') + '>' + esc(h.t || h) + '</th>'; }).join('') + '</tr></thead><tbody>' +
       (linhas.length ? linhas.join('') : '<tr><td colspan="' + cab.length + '" class="vazio">Nada no filtro.</td></tr>') + '</tbody>' + (rodape ? '<tfoot>' + rodape + '</tfoot>' : '') + '</table></div>';
@@ -1368,7 +1398,7 @@ https://github.com/nodeca/pako/blob/main/LICENSE
     });
     M.mostrar = null;
     var pad = function (d) { return ' style="padding-left:' + (8 + d * 18) + 'px"'; };
-    var cab1 = '<tr><th rowspan="3" class="mx-rot">' + NIV_MX.map(function (n) { return n.t; }).join(' › ') + ' › Operação › Item PPU</th>' +
+    var cab1 = '<tr><th rowspan="3" class="mx-rot">' + NIV_MX.map(function (n) { return n.t; }).join(' › ') + ' › Operação › Item PPU' + alcaMx('mx') + '</th>' +
       qs.map(function (qd) { return '<th class="mx-tri mx-ini" colspan="' + (qd.meses.length * 2 + 2) + '">' + esc(qd.rot) + '</th>'; }).join('') +
       '<th class="mx-tri mx-t mx-ini" colspan="3" rowspan="2">Total</th></tr>';
     var cab2 = '<tr>' + qs.map(function (qd) {
@@ -1392,7 +1422,7 @@ https://github.com/nodeca/pako/blob/main/LICENSE
     }).join('');
     var tot = somaMx(A.linhas);
     var tab = qs.length
-      ? '<div class="tw mx-wrap tw15"><table class="t-mx"><thead>' + cab1 + cab2 + cab3 + '</thead><tbody>' + corpo + '</tbody><tfoot><tr><td class="mx-rot">Total ' + esc(S.f.ano || '') + ' <span class="sub2">' + tot.n + ' op.</span></td>' + celulasMx(tot, qs) + '</tr></tfoot></table></div>'
+      ? '<div class="tw mx-wrap tw15"><table class="t-mx' + estMx('mx') + '><thead>' + cab1 + cab2 + cab3 + '</thead><tbody>' + corpo + '</tbody><tfoot><tr><td class="mx-rot">Total ' + esc(S.f.ano || '') + ' <span class="sub2">' + tot.n + ' op.</span></td>' + celulasMx(tot, qs) + '</tr></tfoot></table></div>'
       : '<p class="vazio">Nada no filtro.</p>';
     var per = periodoTxt();
     var barraM = '<div class="dd-bar"><span class="dd-l">Mostrar até</span><span class="dd-ate">' + MX_ATE.map(function (t, i) { return '<button class="btn-o" data-mxmostrar="' + i + '">' + t + '</button>'; }).join('') + '</span>' +
@@ -1651,15 +1681,24 @@ https://github.com/nodeca/pako/blob/main/LICENSE
     var M = S.cmp, met = S.gmet, ms = MEDIDAS[met], ro = COMPARTILHADO;
     var agora = montarFoto(C); agora.data = 'agora';
     var per = periodoTxt(), perTxt = esc((S.f.ano || '') + (per ? ' · ' + per : ''));
-    var linhaLista = function (reg, k) {
-      var t = somaRC(filtraLinhas(linhasReg(reg))), papel = k === M.base ? '<span class="tag t-pl">base</span>' : M.sel.indexOf(k) >= 0 ? '<span class="tag t-ho">comparar</span>' : '';
-      return '<tr><td><b>' + rotReg(k) + '</b></td><td>' + (k === 'agora' ? '—' : fDH(reg.em)) + '</td><td>' + esc(reg.obs || '') + '</td><td class="n">' + (reg.cts || []).length + '</td><td class="n">' + t.n + '</td><td class="n">' + fUSD(t.r) + '</td><td class="n">' + fUSD(t.c) + '</td><td class="n">' + fUSD(t.r - t.c) + '</td><td>' + papel + '</td><td>' +
-        (k === 'agora' || ro ? '' : '<button class="btn-x" title="Remover o registro de ' + fD(k) + '" data-regdel="' + k + '">🗑</button>') + '</td></tr>';
-    };
-    var lista = S.regs.slice().reverse().map(function (r) { return linhaLista(r, r.data); });
-    lista.unshift(linhaLista(agora, 'agora'));
+    /* g18: a lista dos registros também tem ordem e seleção de itens (como as outras tabelas) */
+    var regRows = [{k: 'agora', reg: agora}].concat(S.regs.slice().reverse().map(function (r) { return {k: r.data, reg: r}; }));
+    regRows.forEach(function (x) { x.t = somaRC(filtraLinhas(linhasReg(x.reg))); x.papel = x.k === M.base ? 'base' : M.sel.indexOf(x.k) >= 0 ? 'comparar' : ''; });
+    var colsReg = [
+      {t: 'Data', h: function (x) { return '<b>' + rotReg(x.k) + '</b>'; }, v: function (x) { return x.k === 'agora' ? '9999-12-31' : x.k; }, f: function (x) { return rotReg(x.k); }},
+      {t: 'Registrado em', h: function (x) { return x.k === 'agora' ? '—' : fDH(x.reg.em); }, v: function (x) { return x.k === 'agora' ? '' : x.reg.em || ''; }, f: function (x) { return x.k === 'agora' ? '—' : fD(String(x.reg.em || '').slice(0, 10)); }},
+      {t: 'Observação', h: function (x) { return esc(x.reg.obs || ''); }, v: function (x) { return x.reg.obs || ''; }, f: function (x) { return x.reg.obs || ''; }},
+      {t: 'Contratos', n: 1, h: function (x) { return String((x.reg.cts || []).length); }, v: function (x) { return (x.reg.cts || []).length; }, f: function (x) { return String((x.reg.cts || []).length); }},
+      {t: 'Operações ' + (S.f.ano || ''), n: 1, h: function (x) { return String(x.t.n); }, v: function (x) { return x.t.n; }, f: function (x) { return String(x.t.n); }},
+      {t: 'Receita US$', n: 1, h: function (x) { return fUSD(x.t.r); }, v: function (x) { return x.t.r; }, f: function (x) { return fUSD(x.t.r); }},
+      {t: 'COGS US$', n: 1, h: function (x) { return fUSD(x.t.c); }, v: function (x) { return x.t.c; }, f: function (x) { return fUSD(x.t.c); }},
+      {t: 'Margem US$', n: 1, h: function (x) { return fUSD(x.t.r - x.t.c); }, v: function (x) { return x.t.r - x.t.c; }, f: function (x) { return fUSD(x.t.r - x.t.c); }},
+      {t: 'Na comparação', h: function (x) { return x.papel === 'base' ? '<span class="tag t-pl">base</span>' : x.papel ? '<span class="tag t-ho">comparar</span>' : ''; }, v: function (x) { return x.papel; }, f: function (x) { return x.papel || '—'; }},
+      {t: '', h: function (x) { return x.k === 'agora' || ro ? '' : '<button class="btn-x" title="Remover o registro de ' + fD(x.k) + '" data-regdel="' + x.k + '">🗑</button>'; }}
+    ];
+    var TR = tabelaF('regs', colsReg, regRows, {cls: 't-regs'});
     var h = '<div class="card"><div class="card-h"><h2>Registros (' + S.regs.length + ')</h2>' + (ro ? '' : '<button class="btn-r cx-btn" data-a="regAbrir">📌 Registrar</button>') + '<button class="btn-o cx-btn" data-a="regExport"' + (S.regs.length ? '' : ' disabled') + '>⬇ Exportar registros</button>' + (ro ? '' : '<button class="btn-o cx-btn" data-a="regImport">⬆ Importar registros</button>') + '</div>' +
-      tabela(['Data', 'Registrado em', 'Observação', N('Contratos'), N('Operações ' + (S.f.ano || '')), N('Receita US$'), N('COGS US$'), N('Margem US$'), 'Na comparação', ''], lista, null, 't-regs') +
+      TR.html +
       '<p class="nota">Cada registro guarda uma foto de todas as operações carregadas naquele dia (todos os anos e clientes), com receita e COGS já com o risco. Um registro por data: registrar de novo na mesma data sobrescreve. Os valores da lista são do ano/período e filtros escolhidos lá em cima.</p></div>';
     if (!S.regs.length) { _cmp = null; return h + '<div class="card"><p class="vazio">Ainda não há registros. Clique em <b>📌 Registrar</b> para guardar a foto de hoje; registre de novo em outras datas e compare aqui o que mudou.</p></div>'; }
     var todos = S.regs.map(function (r) { return r.data; }).concat(['agora']);
@@ -1710,7 +1749,7 @@ https://github.com/nodeca/pako/blob/main/LICENSE
     _cmp.rows = rows; _cmp.qs = qs; _cmp.ms = ms; _cmp.itens = itens; _cmp.nL = nL;
     var pad = function (d) { return ' style="padding-left:' + (8 + d * 18) + 'px"'; };
     var nm = ms.length, porMes = nm * nC * 2;
-    var cab1 = '<tr><th rowspan="3" class="mx-rot">' + NIV_CX.map(function (n) { return n.t; }).join(' › ') + ' › Operação</th>' +
+    var cab1 = '<tr><th rowspan="3" class="mx-rot">' + NIV_CX.map(function (n) { return n.t; }).join(' › ') + ' › Operação' + alcaMx('cx') + '</th>' +
       qs.map(function (qd) { return '<th class="mx-tri mx-ini" colspan="' + (qd.meses.length + 1) * porMes + '">' + esc(qd.rot) + '</th>'; }).join('') +
       '<th class="mx-tri mx-t mx-ini" colspan="' + nm * (1 + 3 * nC) + '">Total</th></tr>';
     var cab2 = '<tr>' + qs.map(function (qd) {
@@ -1731,7 +1770,7 @@ https://github.com/nodeca/pako/blob/main/LICENSE
     }).join('');
     var tot = somaCx(itens, nL);
     var tab = qs.length
-      ? '<div class="tw mx-wrap tw15"><table class="t-mx t-cx"><thead>' + cab1 + cab2 + cab3 + '</thead><tbody>' + (corpo || '<tr><td class="mx-rot vazio" colspan="2">Nada mudou no filtro.</td></tr>') + '</tbody><tfoot><tr><td class="mx-rot">Total ' + perTxt + '</td>' + celulasCx(tot, qs, ms) + '</tr></tfoot></table></div>'
+      ? '<div class="tw mx-wrap tw15"><table class="t-mx t-cx' + estMx('cx') + '><thead>' + cab1 + cab2 + cab3 + '</thead><tbody>' + (corpo || '<tr><td class="mx-rot vazio" colspan="2">Nada mudou no filtro.</td></tr>') + '</tbody><tfoot><tr><td class="mx-rot">Total ' + perTxt + '</td>' + celulasCx(tot, qs, ms) + '</tr></tfoot></table></div>'
       : '<p class="vazio">Nada no filtro.</p>';
     h += '<div class="card mx-card cx-card"><div class="card-h"><h2>' + nomeM + ' por mês — ' + esc(rotReg(M.base)) + ' → ' + esc(nomeComp) + ' (US$)</h2>' + cabMet() + '</div>' +
       '<div class="dd-bar"><span class="dd-l">Mostrar até</span><span class="dd-ate">' + ['Cliente', 'Contrato', 'Sonda', 'Poço', 'Operação'].map(function (t, i) { return '<button class="btn-o" data-cxmostrar="' + i + '">' + t + '</button>'; }).join('') + '</span>' +

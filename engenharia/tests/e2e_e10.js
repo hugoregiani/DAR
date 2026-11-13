@@ -138,12 +138,13 @@ const RIG = 'hg_rig_11_norbeviii';
   await page.click('.eng-tools button:has-text("Câmbio")');
   await page.waitForSelector('.ec-cb-modal');
   conf(await page.locator('.ec-cb-tab tbody tr').count() === 2 && /contrato\(s\) com valores em R\$: P&A/.test(await page.innerText('.ec-cb-cts')), 'tabela com os 2 meses e o contrato P&A com valores em R$');
-  await page.locator('.ec-cb-valor').nth(1).fill('5,00');
+  // e12: a lista fica em ordem decrescente (dez/2026 em cima de out/2026; o "＋ Mês" — jan/2027 — entra em cima)
+  await page.locator('.ec-cb-valor').nth(0).fill('5,00');
   await page.click('.ec-cb-mais');
-  await page.locator('.ec-cb-valor').nth(2).fill('abc');
+  await page.locator('.ec-cb-valor').nth(0).fill('abc');
   await page.click('.ec-cb-salvar');
   conf(/valor inválido/.test(await page.innerText('.ec-cb-erro')), 'valor inválido não salva');
-  await page.locator('.ec-cb-valor').nth(2).fill('5,1234');
+  await page.locator('.ec-cb-valor').nth(0).fill('5,1234');
   await foto(page, 'e10_4_cambio');
   await page.click('.ec-cb-salvar');
   await page.waitForSelector('.ec-cb-modal', {state: 'detached'});

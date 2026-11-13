@@ -58,10 +58,21 @@ Regras:
   CE, Câmbio/COPQ, Mero 4, Perenco, Tenaris DS e a "Frente" do PA; "Commander NS-40" (Drill Quip) usa a NS-40.
 - **Tipo de operação:** pela descrição (LWO, HWO, PWC, Abandono, Squeeze, Top-job, Disponibilidade, Cimentação
   primária + revestimento); o resto vai para "Outros" com a descrição (até 20 letras).
-- **Químicos e casing:** a tabela "SAP | Químicos" vira o banco de produtos químicos e "SAP | Casing" vira Custos
-  (COGS), como no teste BP. Pessoal: linhas "Função:" do time de embarque.
+- **Químicos e casing:** a tabela "SAP | Químicos" vira o banco de produtos químicos e "SAP | Casing" vira o banco de
+  casing equipment (e12; antes ia para Custos (COGS)), como no teste BP. Em Custos ficam só os ajustes `AJ-`. Pessoal: linhas "Função:" do time de embarque.
 
-## Resultado (12/11/2026, com o câmbio do mês)
+## Resultado (13/11/2026, planilhas novas de Shell, BD II, BW, CE e DC; PA a de 09/11)
+
+| Arquivo | Contratos | Operações | Receita (= planilha) | COGS (= planilha) |
+|---|---|---|---|---|
+| PA | 1 (P&A) | 105 (83 concluídas), 15 com ajuste | US$ 7.646.930,14 | US$ 328.640,15 |
+| DC | 23 | 218 (175 concluídas) | US$ 28.693.532,99 | US$ 0,00 |
+| CE | 5 | 16 (14 concluídas) | US$ 959.688,51 | US$ 452.798,42 |
+| BW | 1 (Maromba) | 18, sem ajuste | US$ 1.642.699,16 | US$ 437.335,88 |
+| BDII | 1 (BD II) | 148 (70 concluídas), 1 com ajuste de receita | US$ 14.745.524,05 | US$ 2.952.539,98 |
+| Shell | 1 (BJSA) | 12 | US$ 79.401.083,86 | US$ 159.392,61 |
+
+## Resultado anterior (12/11/2026, com o câmbio do mês)
 
 | Arquivo | Contratos | Operações | Receita (= planilha) | COGS (= planilha) |
 |---|---|---|---|---|

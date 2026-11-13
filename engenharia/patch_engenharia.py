@@ -87,7 +87,7 @@ assert i > 0
 s = s[:i] + css + s[i:]
 
 # ---------------------------------------------------------------- app (código compilado)
-rep("var EARL_VERSION = 'EARL v115';", "var EARL_VERSION = 'EARL Engenharia e11 (base v115)';")
+rep("var EARL_VERSION = 'EARL v115';", "var EARL_VERSION = 'EARL Engenharia e12 (base v115)';")
 rep("var HO_ST = {\n  pendente: {", "var HO_ST = {\n  email: {\n    label: 'Enviado por e-mail',\n    c: '#304220',\n    bg: '#F1F5EC',\n    brd: '#D9E4CC'\n  },\n  pendente: {")
 # quem gera o e-mail assina os registros (sem login)
 rep("  var currentUser = () => authUser && authUser.email || sbUser || '';",
@@ -515,6 +515,63 @@ var engQuimMig = d => {
       }
     });
   } catch (e) {}
+  /* e12: banco de casing equipment = db.casingEquip (o catálogo de casing do EARL, que as operações usam) com o valor em
+     US$ (usd) e a data (atualizadoEm). Uma vez: cada item ganha id (ce_<SAP>, para juntar dados de outro computador) e o
+     custo de casing que estava em Custos (COGS) (db.cogsItens com SAP e só US$, que não é ajuste AJ- nem químico do banco
+     de químicos) passa para o banco de casing; o que não é casing (R$, sem SAP, ajustes) continua em Custos. */
+  try {
+    if (d && !d.casDbV1) {
+      if (!Array.isArray(d.casingEquip)) d.casingEquip = [];
+      var qSap = new Set((d.quimicos || []).map(q => String(q && q.sap || '').trim()).filter(Boolean));
+      var fica = [],
+        mov = 0,
+        novosCe = 0;
+      (d.cogsItens || []).forEach(c => {
+        var sap = String(c && c.sap || '').trim();
+        if (!c || !sap || /^AJ-/i.test(sap) || qSap.has(sap) || typeof c.usd !== 'number' || c.brl != null && c.brl !== '') {
+          fica.push(c);
+          return;
+        }
+        var e = d.casingEquip.find(x => x && String(x.sap || '').trim() === sap);
+        if (e) {
+          if (e.usd == null) {
+            e.usd = c.usd;
+            e.atualizadoEm = c.atualizadoEm || e.atualizadoEm;
+          }
+        } else {
+          d.casingEquip.push({
+            id: 'ce_' + sap,
+            sap,
+            name: String(c.nome || '').trim() || sap,
+            unit: String(c.unid || '').trim() || 'EA',
+            origem: 'Custos (COGS)',
+            usd: c.usd,
+            atualizadoEm: c.atualizadoEm || new Date().toISOString()
+          });
+          novosCe++;
+        }
+        mov++;
+      });
+      d.casingEquip.forEach(x => {
+        if (x && !x.id && String(x.sap || '').trim()) x.id = 'ce_' + String(x.sap).trim();
+      });
+      if (mov) {
+        d.cogsItens = fica;
+        d.casHist = [...(d.casHist || []), {
+          id: 'ce_h_mig',
+          em: new Date().toISOString(),
+          por: '',
+          origem: 'custos',
+          arquivo: mov + ' item(ns) de casing',
+          novos: novosCe,
+          alterados: mov - novosCe,
+          removidos: 0,
+          total: d.casingEquip.length
+        }];
+      }
+      d.casDbV1 = new Date().toISOString();
+    }
+  } catch (e) {}
   /* e8: contrato apagado pelo card não volta pela migração da semente (que recria pelo número) */
   try {
     if (d && Array.isArray(d.ctApagados) && d.ctApagados.length) {
@@ -532,9 +589,16 @@ rep("  return migrateDB(JSON.parse(JSON.stringify(SEED_DB)));", "  return engQui
 # Código novo (antes de renderHandover) e janelas novas na árvore
 novo = open(os.path.join(AQUI, 'eng_app.js'), encoding='utf-8').read() + '\n' + open(os.path.join(AQUI, 'eng_contratos.js'), encoding='utf-8').read() + '\n' + open(os.path.join(AQUI, 'eng_quimicos.js'), encoding='utf-8').read() + '\n' + open(os.path.join(AQUI, 'eng_inventario.js'), encoding='utf-8').read() + '\n' + open(os.path.join(AQUI, 'eng_cambio.js'), encoding='utf-8').read()
 rep("  var renderHandover = () => {\n", novo.rstrip('\n') + "\n  var renderHandover = () => {\n")
-rep("renderRigForm(), renderConfirmBox(),", "renderEngSondas(), renderEngContratos(), renderEngQuim(), renderEngEspaco(), renderEngCons(), renderEngImpDados(), renderEngGer(), renderEngInvEd(), renderEngExp(), renderEngCambio(), renderRigForm(), renderConfirmBox(),")
+rep("renderRigForm(), renderConfirmBox(),", "renderEngSondas(), renderEngContratos(), renderEngQuim(), renderEngCasDb(), renderEngEspaco(), renderEngCons(), renderEngImpDados(), renderEngGer(), renderEngInvEd(), renderEngExp(), renderEngCambio(), renderRigForm(), renderConfirmBox(),")
 # sonda salva com data de alteração (para o "juntar" da importação ficar com a mais recente)
 rep("      regiao: regiaoDaBase(rigDraft.base) || rigDraft.regiao || 'nne',", "      regiao: regiaoDaBase(rigDraft.base) || rigDraft.regiao || 'nne',\n      updatedAt: new Date().toISOString(),")
+
+# e12: filtro e ordem em todas as tabelas (script avulso, fora do React), no fim do <body>
+tf = open(os.path.join(AQUI, 'eng_tabelas.js'), encoding='utf-8').read()
+assert '</script' not in tf.lower()
+i = s.rfind('</body>')
+assert i > 0 and s[i:].strip() == '</body>\n</html>'.strip() or s[i:].replace('\n', '').strip() == '</body></html>', repr(s[i:i + 40])
+s = s[:i] + '<script>\n' + tf + '</script>\n' + s[i:]
 
 open(OUT, 'w', encoding='utf-8').write(s)
 print('ok →', OUT, '(%.1f MB)' % (len(s.encode('utf-8')) / 1e6))
