@@ -86,6 +86,9 @@ const arqX = (nome, b64) => ({name: nome, mimeType: 'application/vnd.openxmlform
   await page.fill('.ei-modal .ei-itens tbody tr:nth-child(3) .ei-qtd', '12');
   await page.fill('.ei-data', '2026-11-02');
   await page.fill('.ei-obs', 'fim da operação');
+  // espera o app registrar o texto antes de salvar (com a máquina ocupada, o clique em Salvar podia chegar antes)
+  await page.waitForFunction(() => document.querySelector('.ei-obs').value === 'fim da operação');
+  await page.waitForTimeout(200);
   await foto(page, 'i2_contagem');
   await page.click('.ei-salvar');
   await page.waitForSelector('.ei-modal', {state: 'detached'});

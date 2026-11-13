@@ -47,7 +47,7 @@ const salvarQuimico = async (page, sap, valor) => {
   await page.goto('file://' + BRANCO);
   await page.evaluate(() => {
     localStorage.setItem('earlsim113:hal_cmt_db_v1', 'x'.repeat(2600000));
-    localStorage.setItem('earlsim114:hal_cmt_db_v1', 'x'.repeat(2350000));
+    localStorage.setItem('earlsim114:hal_cmt_db_v1', 'x'.repeat(2515000)); // e13: os dados da Engenharia gravam comprimidos (~57 mil caracteres): sobra menos que isso
     localStorage.setItem('earlger:earl_ger_pacotes', 'x'.repeat(60000));
     localStorage.setItem('hal_cmt_db_v1', 'x'.repeat(40000));
   });
@@ -78,7 +78,7 @@ const salvarQuimico = async (page, sap, valor) => {
   await page.reload();
   await page.waitForSelector('.eng-tools');
   const d = await page.evaluate(() => ({q: JSON.parse(localStorage.getItem('hal_cmt_db_v1')).quimicos.find(x => x.sap === '100003837').usd, sim: Storage.prototype.getItem.length >= 0 && window.EARL_ARMAZ.G.call(localStorage, 'earlsim114:hal_cmt_db_v1').length, ger: window.EARL_ARMAZ.G.call(localStorage, 'earlger:earl_ger_pacotes').length, full: window.EARL_ARMAZ.G.call(localStorage, 'hal_cmt_db_v1').length}));
-  conf(d.q === 12.5 && d.sim === 2350000 && d.ger === 60000 && d.full === 40000, 'depois de liberar, a gravação funciona e o resto continua intacto', d);
+  conf(d.q === 12.5 && d.sim === 2515000 && d.ger === 60000 && d.full === 40000, 'depois de liberar, a gravação funciona e o resto continua intacto', d);
   conf(errs.length === 0, 'nenhum erro', errs.slice(0, 3));
   await browser.close();
 

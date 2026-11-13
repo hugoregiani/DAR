@@ -205,7 +205,7 @@ const usd = v => 'US$ ' + v.toLocaleString('pt-BR', {minimumFractionDigits: 2, m
     return {b, pg, r};
   };
   // 1) espaço do file:// cheio (EARL completo e simulações abertos do disco): o caso relatado
-  let c1 = await cenario(() => { localStorage.setItem('earlsim113:hal_cmt_db_v1', 'x'.repeat(2600000)); localStorage.setItem('earlsim115:hal_cmt_db_v1', 'x'.repeat(2550000)); });
+  let c1 = await cenario(() => { localStorage.setItem('earlsim113:hal_cmt_db_v1', 'x'.repeat(2600000)); localStorage.setItem('earlsim115:hal_cmt_db_v1', 'x'.repeat(2630000)); }); // e13: os dados do BP gravam comprimidos (~60 mil caracteres): sobra menos que isso
   await foto(c1.pg, 'bp8_sem_espaco');
   conf(c1.r.ops === '16' && perto(c1.r.usd, T.ano['2026']) && /não está salvando/.test(c1.r.tag) && /espaço do navegador/.test(c1.r.aviso) && !c1.r.er.length, 'sem espaço no navegador: abre com os dados da planilha (2026: 16 operações e a receita), e avisa que não salva', c1.r);
   await c1.b.close();

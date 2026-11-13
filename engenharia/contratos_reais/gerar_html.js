@@ -268,7 +268,7 @@ function embutir(base, seed, nome, arquivo) {
   function gravar(){
     var ks=[];for(var i=0;i<localStorage.length;i++){var k=localStorage.key(i);if(k&&k.indexOf(P)===0)ks.push(k);}
     ks.forEach(function(k){R.call(localStorage,k);});
-    S.call(localStorage,P+'hal_cmt_db_v1',SEED);S.call(localStorage,P+'earl_pl_id',PLID);
+    S.call(localStorage,P+'hal_cmt_db_v1',typeof Z==='function'?Z(SEED):SEED);S.call(localStorage,P+'earl_pl_id',PLID);
   }
   var precisa=true;try{precisa=G.call(localStorage,P+'earl_pl_id')!==PLID||!G.call(localStorage,P+'hal_cmt_db_v1');}catch(e){}
   if(precisa){try{gravar();}catch(e){window.EARL_PL_SEM_ESPACO=true;}}

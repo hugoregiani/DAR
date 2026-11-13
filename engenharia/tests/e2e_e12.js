@@ -22,7 +22,7 @@ const VIS = ' tbody tr:not([data-etfh])';
 (async () => {
   const {browser, page, errs} = await abrir(ARQ, {h: 1000, hoje: '2026-11-13'});
   await page.waitForSelector('.eng2-card', {timeout: 60000});
-  conf(/e12/.test(await page.evaluate(() => EARL_VERSION)), 'versão e12', await page.evaluate(() => EARL_VERSION));
+  conf(/e1[2-9]/.test(await page.evaluate(() => EARL_VERSION)), 'versão e12 ou mais nova', await page.evaluate(() => EARL_VERSION));
 
   /* ------------------------------------------------------------------ dados de teste */
   console.log('Dados de teste: casing em Custos (COGS) como antes do e12 e 3 operações com casing');

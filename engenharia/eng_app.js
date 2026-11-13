@@ -810,6 +810,16 @@
         out[k] = [...m.values()];
         return;
       }
+      if (k === 'clientLogos' && a && b && typeof a === 'object' && typeof b === 'object') {
+        var lg = {
+          ...a
+        };
+        Object.keys(b).forEach(c => {
+          if (!lg[c] || String(b[c] && b[c].updatedAt || '') > String(lg[c] && lg[c].updatedAt || '')) lg[c] = b[c];
+        });
+        out[k] = lg;
+        return;
+      }
       if (k === 'hoMail' && a && b && typeof a === 'object') out[k] = {
         ...b,
         ...a,

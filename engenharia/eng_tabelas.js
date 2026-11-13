@@ -273,7 +273,7 @@
     var sel = E.f[ci] || null;
     var marcado = function (v) { return !sel || sel.indexOf(v === '(vazio)' ? '' : v) >= 0; };
     var p = document.createElement('div');
-    p.id = 'etfPop'; p.className = 'etf-pop'; p._alvo = t; p._ci = ci;
+    p.id = 'etfPop'; p.className = 'etf-pop'; p._alvo = t; p._ci = ci; p._aberto = Date.now();
     p.setAttribute('role', 'dialog'); p.setAttribute('aria-label', 'Filtrar e ordenar: ' + col.t);
     p.innerHTML = '<div class="etf-pt">' + esc(col.t) + '</div>' +
       '<div class="etf-po"><button type="button" class="btn-o" data-o="1">↑ Crescente</button><button type="button" class="btn-o" data-o="-1">↓ Decrescente</button></div>' +
@@ -328,6 +328,7 @@
   };
   // fecha o painel: clique fora, Esc, rolagem fora dele
   document.addEventListener('keydown', function (e) { if (e.key === 'Escape' && document.getElementById('etfPop')) { e.stopPropagation(); fecharPop(); } }, true);
-  document.addEventListener('scroll', function (e) { var p = document.getElementById('etfPop'); if (p && !p.contains(e.target)) fecharPop(); }, true);
+  // (a rolagem que acontece logo ao abrir — o navegador trazendo o título para a tela — não fecha o painel)
+  document.addEventListener('scroll', function (e) { var p = document.getElementById('etfPop'); if (p && !p.contains(e.target) && Date.now() - (p._aberto || 0) > 400) fecharPop(); }, true);
   window.EARL_TF = {processar: processar, estado: function (t) { return ST.get(t); }};
 })();

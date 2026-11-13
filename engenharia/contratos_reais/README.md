@@ -33,6 +33,10 @@ node contratos_reais/e2e_contratos_reais.js <pasta das planilhas> <pasta dos HTM
 | Banco de dados contratos | linha "Data:" com a data de cada bloco de 6 colunas (Ano 1, Ano 2, RENECOM…); preço do bloco = Receita CMT (US$) ou US$ × Rev. Share | preço inicial (US$, Receita CMT ou R$ ÷ câmbio) e "Data reajuste / Índice / Valor reajustado" (índice acumulado) |
 | Operação no EARL | cada coluna | as linhas do mesmo contrato, sonda, poço, data, situação, risco e SO |
 
+Ao abrir, o arquivo grava os dados embutidos no navegador **comprimidos** (e13: `Z(SEED)`, ~7× menor), porque todos os
+arquivos abertos do disco dividem o mesmo espaço. Os arquivos entregues ao Hugo levam a versão no nome
+(`EARL_Engenharia_PA_V01.html`…).
+
 Regras:
 - **Contratos:** só os que têm operação no Forecast. Os que só estão no Banco ficam de fora e aparecem nos avisos
   (Tenaris DS no CE, Baker DS no DC — os dois têm operações no outro arquivo). Contrato que já existe no EARL é

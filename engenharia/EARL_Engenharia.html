@@ -1,6 +1,9 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
+<script>/* lz-string 1.5.0 (MIT, Pieroxy) — compressão dos dados no navegador (e13) */
+var LZString=function(){var r=String.fromCharCode,o="ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/=",n="ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+-$",e={};function t(r,o){if(!e[r]){e[r]={};for(var n=0;n<r.length;n++)e[r][r.charAt(n)]=n}return e[r][o]}var i={compressToBase64:function(r){if(null==r)return"";var n=i._compress(r,6,function(r){return o.charAt(r)});switch(n.length%4){default:case 0:return n;case 1:return n+"===";case 2:return n+"==";case 3:return n+"="}},decompressFromBase64:function(r){return null==r?"":""==r?null:i._decompress(r.length,32,function(n){return t(o,r.charAt(n))})},compressToUTF16:function(o){return null==o?"":i._compress(o,15,function(o){return r(o+32)})+" "},decompressFromUTF16:function(r){return null==r?"":""==r?null:i._decompress(r.length,16384,function(o){return r.charCodeAt(o)-32})},compressToUint8Array:function(r){for(var o=i.compress(r),n=new Uint8Array(2*o.length),e=0,t=o.length;e<t;e++){var s=o.charCodeAt(e);n[2*e]=s>>>8,n[2*e+1]=s%256}return n},decompressFromUint8Array:function(o){if(null==o)return i.decompress(o);for(var n=new Array(o.length/2),e=0,t=n.length;e<t;e++)n[e]=256*o[2*e]+o[2*e+1];var s=[];return n.forEach(function(o){s.push(r(o))}),i.decompress(s.join(""))},compressToEncodedURIComponent:function(r){return null==r?"":i._compress(r,6,function(r){return n.charAt(r)})},decompressFromEncodedURIComponent:function(r){return null==r?"":""==r?null:(r=r.replace(/ /g,"+"),i._decompress(r.length,32,function(o){return t(n,r.charAt(o))}))},compress:function(o){return i._compress(o,16,function(o){return r(o)})},_compress:function(r,o,n){if(null==r)return"";var e,t,i,s={},u={},a="",p="",c="",l=2,f=3,h=2,d=[],m=0,v=0;for(i=0;i<r.length;i+=1)if(a=r.charAt(i),Object.prototype.hasOwnProperty.call(s,a)||(s[a]=f++,u[a]=!0),p=c+a,Object.prototype.hasOwnProperty.call(s,p))c=p;else{if(Object.prototype.hasOwnProperty.call(u,c)){if(c.charCodeAt(0)<256){for(e=0;e<h;e++)m<<=1,v==o-1?(v=0,d.push(n(m)),m=0):v++;for(t=c.charCodeAt(0),e=0;e<8;e++)m=m<<1|1&t,v==o-1?(v=0,d.push(n(m)),m=0):v++,t>>=1}else{for(t=1,e=0;e<h;e++)m=m<<1|t,v==o-1?(v=0,d.push(n(m)),m=0):v++,t=0;for(t=c.charCodeAt(0),e=0;e<16;e++)m=m<<1|1&t,v==o-1?(v=0,d.push(n(m)),m=0):v++,t>>=1}0==--l&&(l=Math.pow(2,h),h++),delete u[c]}else for(t=s[c],e=0;e<h;e++)m=m<<1|1&t,v==o-1?(v=0,d.push(n(m)),m=0):v++,t>>=1;0==--l&&(l=Math.pow(2,h),h++),s[p]=f++,c=String(a)}if(""!==c){if(Object.prototype.hasOwnProperty.call(u,c)){if(c.charCodeAt(0)<256){for(e=0;e<h;e++)m<<=1,v==o-1?(v=0,d.push(n(m)),m=0):v++;for(t=c.charCodeAt(0),e=0;e<8;e++)m=m<<1|1&t,v==o-1?(v=0,d.push(n(m)),m=0):v++,t>>=1}else{for(t=1,e=0;e<h;e++)m=m<<1|t,v==o-1?(v=0,d.push(n(m)),m=0):v++,t=0;for(t=c.charCodeAt(0),e=0;e<16;e++)m=m<<1|1&t,v==o-1?(v=0,d.push(n(m)),m=0):v++,t>>=1}0==--l&&(l=Math.pow(2,h),h++),delete u[c]}else for(t=s[c],e=0;e<h;e++)m=m<<1|1&t,v==o-1?(v=0,d.push(n(m)),m=0):v++,t>>=1;0==--l&&(l=Math.pow(2,h),h++)}for(t=2,e=0;e<h;e++)m=m<<1|1&t,v==o-1?(v=0,d.push(n(m)),m=0):v++,t>>=1;for(;;){if(m<<=1,v==o-1){d.push(n(m));break}v++}return d.join("")},decompress:function(r){return null==r?"":""==r?null:i._decompress(r.length,32768,function(o){return r.charCodeAt(o)})},_decompress:function(o,n,e){var t,i,s,u,a,p,c,l=[],f=4,h=4,d=3,m="",v=[],g={val:e(0),position:n,index:1};for(t=0;t<3;t+=1)l[t]=t;for(s=0,a=Math.pow(2,2),p=1;p!=a;)u=g.val&g.position,g.position>>=1,0==g.position&&(g.position=n,g.val=e(g.index++)),s|=(u>0?1:0)*p,p<<=1;switch(s){case 0:for(s=0,a=Math.pow(2,8),p=1;p!=a;)u=g.val&g.position,g.position>>=1,0==g.position&&(g.position=n,g.val=e(g.index++)),s|=(u>0?1:0)*p,p<<=1;c=r(s);break;case 1:for(s=0,a=Math.pow(2,16),p=1;p!=a;)u=g.val&g.position,g.position>>=1,0==g.position&&(g.position=n,g.val=e(g.index++)),s|=(u>0?1:0)*p,p<<=1;c=r(s);break;case 2:return""}for(l[3]=c,i=c,v.push(c);;){if(g.index>o)return"";for(s=0,a=Math.pow(2,d),p=1;p!=a;)u=g.val&g.position,g.position>>=1,0==g.position&&(g.position=n,g.val=e(g.index++)),s|=(u>0?1:0)*p,p<<=1;switch(c=s){case 0:for(s=0,a=Math.pow(2,8),p=1;p!=a;)u=g.val&g.position,g.position>>=1,0==g.position&&(g.position=n,g.val=e(g.index++)),s|=(u>0?1:0)*p,p<<=1;l[h++]=r(s),c=h-1,f--;break;case 1:for(s=0,a=Math.pow(2,16),p=1;p!=a;)u=g.val&g.position,g.position>>=1,0==g.position&&(g.position=n,g.val=e(g.index++)),s|=(u>0?1:0)*p,p<<=1;l[h++]=r(s),c=h-1,f--;break;case 2:return v.join("")}if(0==f&&(f=Math.pow(2,d),d++),l[c])m=l[c];else{if(c!==h)return null;m=i+i.charAt(0)}v.push(m),l[h++]=i+m.charAt(0),i=m,0==--f&&(f=Math.pow(2,d),d++)}}};return i}();"function"==typeof define&&define.amd?define(function(){return LZString}):"undefined"!=typeof module&&null!=module?module.exports=LZString:"undefined"!=typeof angular&&null!=angular&&angular.module("LZString",[]).factory("LZString",function(){return LZString});
+</script>
 <script>
 /* EARL Engenharia (avulso): os dados ficam neste navegador, com prefixo próprio, para não
    misturar com outros arquivos do EARL abertos do disco (file:// divide o mesmo armazenamento). */
@@ -11,12 +14,18 @@
   function memoria(){var m={},o={getItem:function(k){return Object.prototype.hasOwnProperty.call(m,k)?m[k]:null;},setItem:function(k,v){m[k]=String(v);},removeItem:function(k){delete m[k];},clear:function(){m={};},key:function(i){return Object.keys(m)[i]||null;}};Object.defineProperty(o,'length',{get:function(){return Object.keys(m).length;}});return o;}
   ['localStorage','sessionStorage'].forEach(function(n){var b=false;try{window[n].getItem('earl');}catch(e){b=true;}
     if(b){try{Object.defineProperty(window,n,{configurable:true,value:memoria()});}catch(e){}if(n==='localStorage')window.EARL_ARMAZ_BLOQUEADO=true;}});
-  SP.getItem=function(k){return G.call(this,P+k);};
-  SP.setItem=function(k,v){return S.call(this,P+k,v);};
+  /* e13: valores grandes (o banco de dados) ficam comprimidos (LZ-String, ~7x menor): os arquivos abertos do disco dividem
+     o mesmo espaço do navegador e, sem isso, poucos contratos abertos já o enchiam. Ler e gravar continua igual para o
+     app; valor antigo, sem compressão, é lido como está e comprimido na próxima gravação. Z(v) = como fica gravado. */
+  var LZ='\u2603lz1:',ultC=null,ultD=null;
+  var Z=function(v){v=String(v);if(v.length<20000||!window.LZString)return v;try{var c=LZ+LZString.compressToUTF16(v);return c.length<v.length?c:v;}catch(e){return v;}};
+  var U=function(v){if(v==null||v.charCodeAt(0)!==0x2603||v.indexOf(LZ)!==0)return v;if(v===ultC)return ultD;try{var d=LZString.decompressFromUTF16(v.slice(LZ.length));if(d!=null){ultC=v;ultD=d;return d;}}catch(e){}return v;};
+  SP.getItem=function(k){return U(G.call(this,P+k));};
+  SP.setItem=function(k,v){return S.call(this,P+k,Z(v));};
   SP.removeItem=function(k){return R.call(this,P+k);};
   try{var IO=IDBFactory.prototype.open;IDBFactory.prototype.open=function(n,v){return v===undefined?IO.call(this,P+n):IO.call(this,P+n,v);};}catch(e){}
   window.EARL_ENG_AVULSO=true;
-  window.EARL_ARMAZ={P:P,G:G,S:S,R:R}; /* funções originais, sem prefixo: tela "Espaço do navegador" */
+  window.EARL_ARMAZ={P:P,G:G,S:S,R:R,Z:Z,U:U}; /* funções originais, sem prefixo: tela "Espaço do navegador"; Z/U: comprimir/descomprimir */
 })();
 </script>
 
@@ -3709,6 +3718,19 @@ caption.etf-cap span{margin-right:10px}
 .etf-pr{display:flex;align-items:center;gap:6px}
 .etf-pr .btn-o,.etf-pr .btn-r{font-size:12px;padding:5px 10px}
 .etf-pr .btn-r:disabled{opacity:.45;cursor:not-allowed}
+/* e13: logo do cliente — a logo (ou as iniciais) no topo do contrato é um botão para inserir/trocar a logo */
+.eng-logo-btn{position:relative;border:0;padding:0;margin:0;background:transparent;cursor:pointer;border-radius:16px;flex:none;line-height:0}
+.eng-logo-btn:focus-visible{outline:2px solid #CC0000;outline-offset:3px}
+.eng-logo-btn .cmark{transition:box-shadow .14s,transform .14s}
+.eng-logo-btn:hover .cmark{box-shadow:0 0 0 2px rgba(204,0,0,.35),0 4px 12px rgba(16,24,28,.12);transform:translateY(-1px)}
+.eng-logo-ed{position:absolute;right:-6px;bottom:-6px;width:22px;height:22px;border-radius:50%;background:#fff;border:1px solid #D4DADD;color:#4D545A;font-size:12px;line-height:20px;text-align:center;box-shadow:0 1px 3px rgba(16,24,28,.18)}
+.eng-logo-btn:hover .eng-logo-ed{background:#CC0000;border-color:#CC0000;color:#fff}
+.eng-logo-modal{width:min(560px,94vw)}
+.eng-logo-box{display:flex;gap:18px;align-items:center;margin:6px 0 10px}
+.eng-logo-box > div{display:flex;flex-direction:column;gap:4px;min-width:0}
+.eng-logo-nome{font-size:17px;color:var(--ink,#2A2F30)}
+.eng-logo-st{font-size:12.5px;color:var(--ink-2,#4D545A)}
+.eng-logo-cts{font-size:12px;color:var(--ink-3,#6B7378)}
 </style>
 </head>
 <body>
@@ -28381,7 +28403,7 @@ var loadDB = () => {
   } catch (_) {}
   return engQuimMig(migrateDB(JSON.parse(JSON.stringify(SEED_DB))));
 };
-var EARL_VERSION = 'EARL Engenharia e12 (base v115)';
+var EARL_VERSION = 'EARL Engenharia e13 (base v115)';
 var fnSafe = v => String(v == null ? '' : v).replace(/[\\/]/g, '-').replace(/["*?<>|:]/g, '').replace(/\s+/g, ' ').trim();
 var sanitizeFileName = fnSafe;
 var finalizeDateStr = m => {
@@ -60798,11 +60820,7 @@ _Gerado por: ${user}_`;
     var nAtivas = planFiltered.filter(j => j.status !== PJ_STATUS.CANC).length;
     return React.createElement(React.Fragment, null, React.createElement("div", {
       className: "eng2-ctbar"
-    }, ctSel ? React.createElement(ClientMark, {
-      nome: ctSel.clientName,
-      src: clientLogoOf(db, ctSel.clientName),
-      size: 46
-    }) : React.createElement(ClientMark, {
+    }, ctSel ? engLogoBotao(ctSel.clientName, 46) : React.createElement(ClientMark, {
       geral: true,
       size: 46
     }), React.createElement("div", {
@@ -62712,6 +62730,16 @@ _Gerado por: ${user}_`;
           if (!y || engMarca(x) > engMarca(y)) m.set(x.id, x);
         });
         out[k] = [...m.values()];
+        return;
+      }
+      if (k === 'clientLogos' && a && b && typeof a === 'object' && typeof b === 'object') {
+        var lg = {
+          ...a
+        };
+        Object.keys(b).forEach(c => {
+          if (!lg[c] || String(b[c] && b[c].updatedAt || '') > String(lg[c] && lg[c].updatedAt || '')) lg[c] = b[c];
+        });
+        out[k] = lg;
         return;
       }
       if (k === 'hoMail' && a && b && typeof a === 'object') out[k] = {
@@ -68432,6 +68460,203 @@ _Gerado por: ${user}_`;
     }, "Salvar c\xE2mbio"))));
   };
   /* ============ fim CÂMBIO (e10) ============ */
+
+  /* =================== e13: logo do cliente (inserir ao abrir o contrato) ===================
+     Pedido do Hugo (13/11/2026): "insira uma opção de inserir a logo do cliente ao abrir o contrato. A logo deve
+     ficar no lugar de onde em alguns contratos já tem a logo."
+     Clique na logo (ou nas iniciais) no topo do contrato → janela "Logo do cliente": escolher uma imagem (PNG, JPG,
+     SVG…), trocar ou tirar. Grava em db.clientLogos[normNome(cliente)] = {src, nome, arquivo, updatedAt, updatedBy} —
+     o mesmo lugar que o EARL usa (clientLogoOf): vale para todos os contratos do cliente, nos cards da página inicial,
+     no topo do contrato e nas operações. A imagem é reduzida para no máximo 240 px (ocupa pouco espaço no navegador). */
+  var [engLogo, setEngLogo] = useState(null);
+  var engLogoRef = useRef(null);
+  var abrirEngLogo = nome => setEngLogo({
+    nome: String(nome || '').trim(),
+    erro: ''
+  });
+  var engLogoKey = nome => normNome(nome);
+  var engLogoEnviado = nome => {
+    var l = db.clientLogos || {};
+    var c = findClient(db, nome) || {
+      name: nome
+    };
+    var k = clientKeys(c).find(k => l[k] && l[k].src);
+    return k ? {
+      ...l[k],
+      _k: k
+    } : null;
+  };
+  var engLogoGravar = (nome, src, arquivo) => {
+    var k = engLogoKey(nome);
+    updateDB(d => ({
+      ...d,
+      clientLogos: {
+        ...(d.clientLogos || {}),
+        [k]: {
+          src,
+          nome,
+          arquivo: arquivo || '',
+          updatedAt: new Date().toISOString(),
+          updatedBy: currentUser() || ''
+        }
+      }
+    }), {
+      kind: 'Cliente',
+      action: 'Alteração',
+      name: nome,
+      user: currentUser() || '—',
+      detail: 'logo do cliente (' + (arquivo || 'imagem') + ')'
+    });
+    setEngLogo(null);
+    setOkMsg('Logo de ' + nome + ' salva ✓ — vale para todos os contratos deste cliente');
+    setTimeout(() => setOkMsg(''), 4000);
+  };
+  var engLogoArquivo = f => {
+    if (!f || !engLogo) return;
+    var nome = engLogo.nome;
+    if (!/^image\//i.test(f.type || '') && !/\.(png|jpe?g|gif|webp|svg|bmp)$/i.test(f.name || '')) {
+      setEngLogo(x => x && {
+        ...x,
+        erro: 'Escolha um arquivo de imagem (PNG, JPG, SVG…).'
+      });
+      return;
+    }
+    var rd = new FileReader();
+    rd.onerror = () => setEngLogo(x => x && {
+      ...x,
+      erro: 'Não foi possível ler a imagem.'
+    });
+    if (/svg/i.test(f.type || '') || /\.svg$/i.test(f.name || '')) {
+      rd.onload = () => engLogoGravar(nome, rd.result, f.name);
+      rd.readAsDataURL(f);
+      return;
+    }
+    rd.onload = () => {
+      var img = new Image();
+      img.onerror = () => setEngLogo(x => x && {
+        ...x,
+        erro: 'Esta imagem não abriu. Tente outro arquivo (PNG ou JPG).'
+      });
+      img.onload = () => {
+        var k = Math.min(1, 240 / Math.max(img.width || 1, img.height || 1));
+        var cv = document.createElement('canvas');
+        cv.width = Math.max(1, Math.round(img.width * k));
+        cv.height = Math.max(1, Math.round(img.height * k));
+        cv.getContext('2d').drawImage(img, 0, 0, cv.width, cv.height);
+        engLogoGravar(nome, cv.toDataURL('image/png'), f.name);
+      };
+      img.src = rd.result;
+    };
+    rd.readAsDataURL(f);
+  };
+  var engLogoTirar = nome => {
+    var c = findClient(db, nome) || {
+      name: nome
+    };
+    updateDB(d => {
+      var l = {
+        ...(d.clientLogos || {})
+      };
+      clientKeys(c).forEach(k => delete l[k]);
+      return {
+        ...d,
+        clientLogos: l
+      };
+    }, {
+      kind: 'Cliente',
+      action: 'Alteração',
+      name: nome,
+      user: currentUser() || '—',
+      detail: 'logo do cliente removida'
+    });
+    setEngLogo(null);
+    setOkMsg('Logo de ' + nome + ' removida');
+    setTimeout(() => setOkMsg(''), 3000);
+  };
+  // a logo no topo do contrato vira um botão (o lápis aparece no canto)
+  var engLogoBotao = (nome, size) => engH("button", {
+    type: "button",
+    className: "eng-logo-btn",
+    title: 'Inserir ou trocar a logo do cliente ' + nome,
+    "aria-label": 'Logo do cliente ' + nome + ': inserir ou trocar',
+    onClick: () => abrirEngLogo(nome)
+  }, engH(ClientMark, {
+    nome,
+    src: clientLogoOf(db, nome),
+    size
+  }), engH("span", {
+    className: "eng-logo-ed",
+    "aria-hidden": "true"
+  }, "✎"));
+  var renderEngLogo = () => {
+    if (!engLogo) return null;
+    var nome = engLogo.nome;
+    var env = engLogoEnviado(nome);
+    var atual = clientLogoOf(db, nome);
+    var cts = (db.contratos || []).filter(c => c && !c.archived && normNome(c.clientName) === normNome(nome));
+    var fechar = () => setEngLogo(null);
+    return engH("div", {
+      className: "overlay",
+      style: {
+        zIndex: 330
+      },
+      onClick: e => {
+        if (e.target === e.currentTarget) fechar();
+      }
+    }, engH("div", {
+      className: "modal ec-modal eng-logo-modal",
+      onClick: e => e.stopPropagation()
+    }, engH("div", {
+      className: "modal-title"
+    }, engH("span", null, "Logo do cliente"), engH("button", {
+      className: "modal-close",
+      onClick: fechar
+    }, "\xD7")), engH("div", {
+      className: "eng-logo-box"
+    }, engH(ClientMark, {
+      nome,
+      src: atual,
+      size: 96
+    }), engH("div", null, engH("b", {
+      className: "eng-logo-nome"
+    }, nome), engH("span", {
+      className: "eng-logo-st"
+    }, env ? 'Logo enviada' + (env.arquivo ? ' (' + env.arquivo + ')' : '') + (env.updatedAt ? ' em ' + fmtD(String(env.updatedAt).slice(0, 10)) : '') : atual ? 'Logo padrão do EARL' : 'Sem logo: aparecem as iniciais'), engH("span", {
+      className: "eng-logo-cts"
+    }, cts.length ? 'Vale para ' + cts.length + ' contrato(s) deste cliente: ' + cts.map(c => c.name).join(', ') + '.' : 'Vale para todos os contratos deste cliente.'))), engH("div", {
+      className: "eng-help"
+    }, "Escolha a imagem da logo (PNG, JPG ou SVG; de preferência quadrada e com fundo branco ou transparente). Ela aparece no card da p\xE1gina inicial, no topo do contrato e nas opera\xE7\xF5es. Fica guardada neste arquivo e vai junto no “⬇ Exportar dados”."), engLogo.erro && engH("div", {
+      className: "ec-aviso ec-neg eng-logo-erro"
+    }, engLogo.erro), engH("div", {
+      className: "ec-foot"
+    }, env && engH("button", {
+      className: "btn-o eng-logo-tirar",
+      onClick: () => engLogoTirar(nome)
+    }, atual && env ? 'Tirar a logo enviada' : 'Tirar'), engH("span", {
+      style: {
+        flex: 1
+      }
+    }), engH("button", {
+      className: "btn-o",
+      onClick: fechar
+    }, "Cancelar"), engH("button", {
+      className: "btn-r eng-logo-escolher",
+      onClick: () => engLogoRef.current && engLogoRef.current.click()
+    }, env || atual ? '⬆ Trocar a logo' : '⬆ Inserir a logo')), engH("input", {
+      ref: engLogoRef,
+      type: "file",
+      accept: "image/*,.svg",
+      style: {
+        display: 'none'
+      },
+      onChange: e => {
+        var f = e.target.files && e.target.files[0];
+        e.target.value = '';
+        engLogoArquivo(f);
+      }
+    })));
+  };
+  /* ============ fim LOGO DO CLIENTE (e13) ============ */
   var renderHandover = () => {
     var hd = hoDraft;
     if (!hd) return null;
@@ -111860,7 +112085,7 @@ ${transferDraft.notes ? '<p><b>Observações:</b> ' + esc(transferDraft.notes) +
     style: {
       flex: 1
     }
-  }, okMsg)), renderMainTabs(), safeTab === 'home' && renderHome(), safeTab === 'mob' && !planAssumed && renderSupQueue(), safeTab === 'mob' && planAssumed && React.createElement(React.Fragment, null, renderPlanRef(), renderStepper(), step === 1 && renderStep1(), step === 2 && renderStep2(), step === 3 && renderStep3(), step === 4 && renderStepChem(), step === 5 && renderStep4(), step === 6 && renderStep5(), renderMobFooter()), safeTab === 'ops' && renderOps(), safeTab === 'plan' && renderPlanejamento(), safeTab === 'coord' && renderCoord(), safeTab === 'logi' && renderLogi(), safeTab === 'lab' && renderLab(), safeTab === 'pes' && React.createElement(React.Fragment, null, secBar('pes'), renderParteApp('pessoal')), safeTab === 'eqp' && React.createElement(React.Fragment, null, secBar('eqp'), renderParteApp('equipamentos')), safeTab === 'dar' && renderDarFor(null), safeTab === 'rig' && renderRigXray(), safeTab === 'sl' && React.createElement(React.Fragment, null, hubLocation !== 'brasil' && secBar('pes'), renderEscalas()), safeTab === 'pab' && React.createElement(React.Fragment, null, secBar('pes'), renderPesBordo(), renderPesDesForm(), renderEmbForm()), safeTab === 'bulk' && renderBulk(), safeTab === 'chem' && renderChem(), safeTab === 'fc' && renderForecast(), safeTab === 'ind' && renderIndicadores(), safeTab === 'pfl' && React.createElement(React.Fragment, null, hubLocation !== 'brasil' && secBar('pes'), renderPerfis()), safeTab === 'equip' && React.createElement(React.Fragment, null, secBar(hubLocation === 'brasil' ? 'eqpBr' : 'eqp'), renderEquipmentWithScroll()), safeTab === 'eqs' && React.createElement(React.Fragment, null, secBar(hubLocation === 'brasil' ? 'eqpBr' : 'eqp'), renderEqSondas()), safeTab === 'hi' && hiMob && React.createElement(React.Fragment, null, renderHIStepper(), hiStep === 6 && renderHIEquipe(), hiStep === 7 && renderHIEquip(), hiStep === 8 && renderHI6(), hiStep === 9 && renderHI7(), hiStep === 10 && renderHI8(), hiStep === 11 && renderHI9(), hiStep === 12 && renderHI10(), renderHIFooter()), safeTab === 'jl' && jlMob && renderJL(), safeTab === 'db' && adminUnlocked && renderDB(), safeTab === 'ana' && adminUnlocked && renderAnalytics(mobs.filter(mobNoRecorte)), safeTab === 'br' && adminUnlocked && renderBrasil(), renderAvisos(), renderPlanForm(), renderHandover(), renderHoReview(), renderCoordRev(), renderParteRev(), renderLogView(), renderEnvView(), renderEmbModal(), renderCiencia(), renderAmoView(), renderAmoSup(), renderAmoLog(), renderAmoLab(), renderAmoFoto(), renderAdicForm(), renderProcView(), safeTab !== 'rig' && renderExpForm(), safeTab !== 'rig' && renderAmoForm(), renderReleaseGate(), renderPlanCascade(), renderEngSondas(), renderEngContratos(), renderEngQuim(), renderEngCasDb(), renderEngEspaco(), renderEngCons(), renderEngImpDados(), renderEngGer(), renderEngInvEd(), renderEngExp(), renderEngCambio(), renderRigForm(), renderConfirmBox(), renderDiaPanel(), escalaPrompt && (() => {
+  }, okMsg)), renderMainTabs(), safeTab === 'home' && renderHome(), safeTab === 'mob' && !planAssumed && renderSupQueue(), safeTab === 'mob' && planAssumed && React.createElement(React.Fragment, null, renderPlanRef(), renderStepper(), step === 1 && renderStep1(), step === 2 && renderStep2(), step === 3 && renderStep3(), step === 4 && renderStepChem(), step === 5 && renderStep4(), step === 6 && renderStep5(), renderMobFooter()), safeTab === 'ops' && renderOps(), safeTab === 'plan' && renderPlanejamento(), safeTab === 'coord' && renderCoord(), safeTab === 'logi' && renderLogi(), safeTab === 'lab' && renderLab(), safeTab === 'pes' && React.createElement(React.Fragment, null, secBar('pes'), renderParteApp('pessoal')), safeTab === 'eqp' && React.createElement(React.Fragment, null, secBar('eqp'), renderParteApp('equipamentos')), safeTab === 'dar' && renderDarFor(null), safeTab === 'rig' && renderRigXray(), safeTab === 'sl' && React.createElement(React.Fragment, null, hubLocation !== 'brasil' && secBar('pes'), renderEscalas()), safeTab === 'pab' && React.createElement(React.Fragment, null, secBar('pes'), renderPesBordo(), renderPesDesForm(), renderEmbForm()), safeTab === 'bulk' && renderBulk(), safeTab === 'chem' && renderChem(), safeTab === 'fc' && renderForecast(), safeTab === 'ind' && renderIndicadores(), safeTab === 'pfl' && React.createElement(React.Fragment, null, hubLocation !== 'brasil' && secBar('pes'), renderPerfis()), safeTab === 'equip' && React.createElement(React.Fragment, null, secBar(hubLocation === 'brasil' ? 'eqpBr' : 'eqp'), renderEquipmentWithScroll()), safeTab === 'eqs' && React.createElement(React.Fragment, null, secBar(hubLocation === 'brasil' ? 'eqpBr' : 'eqp'), renderEqSondas()), safeTab === 'hi' && hiMob && React.createElement(React.Fragment, null, renderHIStepper(), hiStep === 6 && renderHIEquipe(), hiStep === 7 && renderHIEquip(), hiStep === 8 && renderHI6(), hiStep === 9 && renderHI7(), hiStep === 10 && renderHI8(), hiStep === 11 && renderHI9(), hiStep === 12 && renderHI10(), renderHIFooter()), safeTab === 'jl' && jlMob && renderJL(), safeTab === 'db' && adminUnlocked && renderDB(), safeTab === 'ana' && adminUnlocked && renderAnalytics(mobs.filter(mobNoRecorte)), safeTab === 'br' && adminUnlocked && renderBrasil(), renderAvisos(), renderPlanForm(), renderHandover(), renderHoReview(), renderCoordRev(), renderParteRev(), renderLogView(), renderEnvView(), renderEmbModal(), renderCiencia(), renderAmoView(), renderAmoSup(), renderAmoLog(), renderAmoLab(), renderAmoFoto(), renderAdicForm(), renderProcView(), safeTab !== 'rig' && renderExpForm(), safeTab !== 'rig' && renderAmoForm(), renderReleaseGate(), renderPlanCascade(), renderEngSondas(), renderEngContratos(), renderEngQuim(), renderEngCasDb(), renderEngEspaco(), renderEngCons(), renderEngImpDados(), renderEngGer(), renderEngInvEd(), renderEngExp(), renderEngCambio(), renderEngLogo(), renderRigForm(), renderConfirmBox(), renderDiaPanel(), escalaPrompt && (() => {
     var e = escalaPrompt;
     var membros = (e.team.members || []).map(id => (db.people || []).find(p => p.id === id)).filter(Boolean);
     var aceitar = () => {
@@ -112336,7 +112561,7 @@ ReactDOM.createRoot(document.getElementById('app')).render(React.createElement(A
     var sel = E.f[ci] || null;
     var marcado = function (v) { return !sel || sel.indexOf(v === '(vazio)' ? '' : v) >= 0; };
     var p = document.createElement('div');
-    p.id = 'etfPop'; p.className = 'etf-pop'; p._alvo = t; p._ci = ci;
+    p.id = 'etfPop'; p.className = 'etf-pop'; p._alvo = t; p._ci = ci; p._aberto = Date.now();
     p.setAttribute('role', 'dialog'); p.setAttribute('aria-label', 'Filtrar e ordenar: ' + col.t);
     p.innerHTML = '<div class="etf-pt">' + esc(col.t) + '</div>' +
       '<div class="etf-po"><button type="button" class="btn-o" data-o="1">↑ Crescente</button><button type="button" class="btn-o" data-o="-1">↓ Decrescente</button></div>' +
@@ -112391,7 +112616,8 @@ ReactDOM.createRoot(document.getElementById('app')).render(React.createElement(A
   };
   // fecha o painel: clique fora, Esc, rolagem fora dele
   document.addEventListener('keydown', function (e) { if (e.key === 'Escape' && document.getElementById('etfPop')) { e.stopPropagation(); fecharPop(); } }, true);
-  document.addEventListener('scroll', function (e) { var p = document.getElementById('etfPop'); if (p && !p.contains(e.target)) fecharPop(); }, true);
+  // (a rolagem que acontece logo ao abrir — o navegador trazendo o título para a tela — não fecha o painel)
+  document.addEventListener('scroll', function (e) { var p = document.getElementById('etfPop'); if (p && !p.contains(e.target) && Date.now() - (p._aberto || 0) > 400) fecharPop(); }, true);
   window.EARL_TF = {processar: processar, estado: function (t) { return ST.get(t); }};
 })();
 </script>

@@ -52,14 +52,23 @@ ARMAZ = r'''<script>
   function memoria(){var m={},o={getItem:function(k){return Object.prototype.hasOwnProperty.call(m,k)?m[k]:null;},setItem:function(k,v){m[k]=String(v);},removeItem:function(k){delete m[k];},clear:function(){m={};},key:function(i){return Object.keys(m)[i]||null;}};Object.defineProperty(o,'length',{get:function(){return Object.keys(m).length;}});return o;}
   ['localStorage','sessionStorage'].forEach(function(n){var b=false;try{window[n].getItem('earl');}catch(e){b=true;}
     if(b){try{Object.defineProperty(window,n,{configurable:true,value:memoria()});}catch(e){}if(n==='localStorage')window.EARL_ARMAZ_BLOQUEADO=true;}});
-  SP.getItem=function(k){return G.call(this,P+k);};
-  SP.setItem=function(k,v){return S.call(this,P+k,v);};
+  /* e13: valores grandes (o banco de dados) ficam comprimidos (LZ-String, ~7x menor): os arquivos abertos do disco dividem
+     o mesmo espaço do navegador e, sem isso, poucos contratos abertos já o enchiam. Ler e gravar continua igual para o
+     app; valor antigo, sem compressão, é lido como está e comprimido na próxima gravação. Z(v) = como fica gravado. */
+  var LZ='\u2603lz1:',ultC=null,ultD=null;
+  var Z=function(v){v=String(v);if(v.length<20000||!window.LZString)return v;try{var c=LZ+LZString.compressToUTF16(v);return c.length<v.length?c:v;}catch(e){return v;}};
+  var U=function(v){if(v==null||v.charCodeAt(0)!==0x2603||v.indexOf(LZ)!==0)return v;if(v===ultC)return ultD;try{var d=LZString.decompressFromUTF16(v.slice(LZ.length));if(d!=null){ultC=v;ultD=d;return d;}}catch(e){}return v;};
+  SP.getItem=function(k){return U(G.call(this,P+k));};
+  SP.setItem=function(k,v){return S.call(this,P+k,Z(v));};
   SP.removeItem=function(k){return R.call(this,P+k);};
   try{var IO=IDBFactory.prototype.open;IDBFactory.prototype.open=function(n,v){return v===undefined?IO.call(this,P+n):IO.call(this,P+n,v);};}catch(e){}
   window.EARL_ENG_AVULSO=true;
-  window.EARL_ARMAZ={P:P,G:G,S:S,R:R}; /* funções originais, sem prefixo: tela "Espaço do navegador" */
+  window.EARL_ARMAZ={P:P,G:G,S:S,R:R,Z:Z,U:U}; /* funções originais, sem prefixo: tela "Espaço do navegador"; Z/U: comprimir/descomprimir */
 })();
 </script>'''
+LZS = open(os.path.join(NM, 'lz-string', 'libs', 'lz-string.min.js'), encoding='utf-8').read()
+assert '</script' not in LZS.lower()
+ARMAZ = '<script>/* lz-string 1.5.0 (MIT, Pieroxy) — compressão dos dados no navegador (e13) */\n' + LZS + '\n</script>\n' + ARMAZ
 s = s[:a] + ARMAZ + s[b:]
 assert 'earl-sim-dados' not in s and 'earlsim115' not in s
 
@@ -87,7 +96,7 @@ assert i > 0
 s = s[:i] + css + s[i:]
 
 # ---------------------------------------------------------------- app (código compilado)
-rep("var EARL_VERSION = 'EARL v115';", "var EARL_VERSION = 'EARL Engenharia e12 (base v115)';")
+rep("var EARL_VERSION = 'EARL v115';", "var EARL_VERSION = 'EARL Engenharia e13 (base v115)';")
 rep("var HO_ST = {\n  pendente: {", "var HO_ST = {\n  email: {\n    label: 'Enviado por e-mail',\n    c: '#304220',\n    bg: '#F1F5EC',\n    brd: '#D9E4CC'\n  },\n  pendente: {")
 # quem gera o e-mail assina os registros (sem login)
 rep("  var currentUser = () => authUser && authUser.email || sbUser || '';",
@@ -587,11 +596,18 @@ rep("      if (d.people && d.people.length > 0) return migrateDB(d);", "      if
 rep("  return migrateDB(JSON.parse(JSON.stringify(SEED_DB)));", "  return engQuimMig(migrateDB(JSON.parse(JSON.stringify(SEED_DB))));")
 
 # Código novo (antes de renderHandover) e janelas novas na árvore
-novo = open(os.path.join(AQUI, 'eng_app.js'), encoding='utf-8').read() + '\n' + open(os.path.join(AQUI, 'eng_contratos.js'), encoding='utf-8').read() + '\n' + open(os.path.join(AQUI, 'eng_quimicos.js'), encoding='utf-8').read() + '\n' + open(os.path.join(AQUI, 'eng_inventario.js'), encoding='utf-8').read() + '\n' + open(os.path.join(AQUI, 'eng_cambio.js'), encoding='utf-8').read()
+novo = open(os.path.join(AQUI, 'eng_app.js'), encoding='utf-8').read() + '\n' + open(os.path.join(AQUI, 'eng_contratos.js'), encoding='utf-8').read() + '\n' + open(os.path.join(AQUI, 'eng_quimicos.js'), encoding='utf-8').read() + '\n' + open(os.path.join(AQUI, 'eng_inventario.js'), encoding='utf-8').read() + '\n' + open(os.path.join(AQUI, 'eng_cambio.js'), encoding='utf-8').read() + '\n' + open(os.path.join(AQUI, 'eng_logo.js'), encoding='utf-8').read()
 rep("  var renderHandover = () => {\n", novo.rstrip('\n') + "\n  var renderHandover = () => {\n")
-rep("renderRigForm(), renderConfirmBox(),", "renderEngSondas(), renderEngContratos(), renderEngQuim(), renderEngCasDb(), renderEngEspaco(), renderEngCons(), renderEngImpDados(), renderEngGer(), renderEngInvEd(), renderEngExp(), renderEngCambio(), renderRigForm(), renderConfirmBox(),")
+rep("renderRigForm(), renderConfirmBox(),", "renderEngSondas(), renderEngContratos(), renderEngQuim(), renderEngCasDb(), renderEngEspaco(), renderEngCons(), renderEngImpDados(), renderEngGer(), renderEngInvEd(), renderEngExp(), renderEngCambio(), renderEngLogo(), renderRigForm(), renderConfirmBox(),")
 # sonda salva com data de alteração (para o "juntar" da importação ficar com a mais recente)
 rep("      regiao: regiaoDaBase(rigDraft.base) || rigDraft.regiao || 'nne',", "      regiao: regiaoDaBase(rigDraft.base) || rigDraft.regiao || 'nne',\n      updatedAt: new Date().toISOString(),")
+
+# e13: a logo no topo do contrato vira botão para inserir/trocar a logo do cliente (eng_logo.js)
+rep("""    }, ctSel ? React.createElement(ClientMark, {
+      nome: ctSel.clientName,
+      src: clientLogoOf(db, ctSel.clientName),
+      size: 46
+    }) : React.createElement(ClientMark, {""", """    }, ctSel ? engLogoBotao(ctSel.clientName, 46) : React.createElement(ClientMark, {""")
 
 # e12: filtro e ordem em todas as tabelas (script avulso, fora do React), no fim do <body>
 tf = open(os.path.join(AQUI, 'eng_tabelas.js'), encoding='utf-8').read()

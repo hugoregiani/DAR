@@ -299,3 +299,16 @@ caption.etf-cap span{margin-right:10px}
 .etf-pr{display:flex;align-items:center;gap:6px}
 .etf-pr .btn-o,.etf-pr .btn-r{font-size:12px;padding:5px 10px}
 .etf-pr .btn-r:disabled{opacity:.45;cursor:not-allowed}
+/* e13: logo do cliente — a logo (ou as iniciais) no topo do contrato é um botão para inserir/trocar a logo */
+.eng-logo-btn{position:relative;border:0;padding:0;margin:0;background:transparent;cursor:pointer;border-radius:16px;flex:none;line-height:0}
+.eng-logo-btn:focus-visible{outline:2px solid #CC0000;outline-offset:3px}
+.eng-logo-btn .cmark{transition:box-shadow .14s,transform .14s}
+.eng-logo-btn:hover .cmark{box-shadow:0 0 0 2px rgba(204,0,0,.35),0 4px 12px rgba(16,24,28,.12);transform:translateY(-1px)}
+.eng-logo-ed{position:absolute;right:-6px;bottom:-6px;width:22px;height:22px;border-radius:50%;background:#fff;border:1px solid #D4DADD;color:#4D545A;font-size:12px;line-height:20px;text-align:center;box-shadow:0 1px 3px rgba(16,24,28,.18)}
+.eng-logo-btn:hover .eng-logo-ed{background:#CC0000;border-color:#CC0000;color:#fff}
+.eng-logo-modal{width:min(560px,94vw)}
+.eng-logo-box{display:flex;gap:18px;align-items:center;margin:6px 0 10px}
+.eng-logo-box > div{display:flex;flex-direction:column;gap:4px;min-width:0}
+.eng-logo-nome{font-size:17px;color:var(--ink,#2A2F30)}
+.eng-logo-st{font-size:12.5px;color:var(--ink-2,#4D545A)}
+.eng-logo-cts{font-size:12px;color:var(--ink-3,#6B7378)}

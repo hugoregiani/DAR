@@ -98,6 +98,12 @@ A Engenharia do EARL separada do resto do sistema, para usar **sem servidor, sem
 - **Exportações:** "Consumo de produtos químicos", "Casing equipment" e "Pessoal" ganharam **Contingência (linha)** e **Risco da linha (%)**; a operação já tinha Contingência e Risco (%). O Painel de Compras aplica o risco da linha.
 - **Cards** da aba "Consumo e receita" com profundidade, como os do Gerencial g16.
 
+### e13 (13/11/2026)
+
+- **Logo do cliente** (`eng_logo.js`): ao abrir o contrato, clique na logo (ou nas iniciais) ao lado do nome → janela "Logo do cliente": **⬆ Inserir a logo** / **Trocar a logo** (PNG, JPG, SVG…; reduzida para no máximo 240 px) e **Tirar**. Fica em `db.clientLogos` (o mesmo lugar do EARL), vale para todos os contratos do cliente: card da página inicial, topo do contrato e operações. Vai no "⬇ Exportar dados"; no "Juntar" fica a mais recente de cada cliente.
+- **Espaço do navegador:** os dados grandes (o banco) ficam **comprimidos** (LZ-String, ~7× menor) na camada de armazenamento (`patch_engenharia.py`, `Z`/`U` em `EARL_ARMAZ`); o app lê e grava como antes. Os 6 contratos reais abertos no mesmo navegador ocupam ~1 milhão de caracteres (eram ~6,4 milhões e enchiam o espaço que todos os arquivos do disco dividem). Os HTML pré-carregados (contratos reais, teste BP) também gravam os dados embutidos comprimidos.
+- **Walkthrough** (`walkthrough/`): PDF "passo a passo" no padrão Halliburton (33 páginas, dados de demonstração).
+
 ### e12 (13/11/2026)
 
 - **Banco de casing equipment** (botão **Casing** na barra, ao lado de "Químicos"): igual ao banco de químicos — SAP, descrição, unidade e valor US$ (COGS), busca, "só com aviso", "＋ Item", **⬆ Atualizar pela planilha** (confere novos, valor alterado, descrição/unidade alterada e "só no banco"; atualizar e acrescentar ou substituir), **⬇ Baixar planilha** e histórico. É o próprio catálogo de casing do EARL (`db.casingEquip`), então item novo do banco aparece para escolher nas operações. O valor é o COGS do casing das operações (o banco de químicos vale sobre o de casing, que vale sobre Custos). Uma vez, ao abrir: o casing que estava em **Contratos → Custos (COGS)** passa para o banco (em Custos ficam os ajustes `AJ-`, o que está em R$ e o que não tem SAP).
@@ -227,4 +233,4 @@ node contratos_reais/e2e_contratos_reais.js <pasta das planilhas> <pasta dos HTM
     - apagar com operações: só com APAGAR, levando as operações e o handover;
     - os contratos apagados não voltam ao reabrir.
 - **A seção Receita e margem é o `../gerencial/gerencial.html`**, embutido pelo patch (`ENG_GER_HTML`, num iframe, no modo embutido do Gerencial). Mudou o Gerencial? Gere de novo o `EARL_Engenharia.html`.
-- Versão: `EARL_VERSION = 'EARL Engenharia e12 (base v115)'`. O teste do fluxo completo com o Gerencial está em `../gerencial/tests/e2e_gerencial.js`.
+- Versão: `EARL_VERSION = 'EARL Engenharia e13 (base v115)'`. O teste do fluxo completo com o Gerencial está em `../gerencial/tests/e2e_gerencial.js`.
