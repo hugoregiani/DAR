@@ -23,5 +23,8 @@ para gravar uma narração por cima, se quiserem.
 4. `python3 trilha.py trilha.wav 104.5` e
    `ffmpeg -i video_mudo.mp4 -i trilha.wav -c:v copy -c:a aac -b:a 160k -shortest -movflags +faststart EARL_Engenharia_video_V01.mp4`.
 
+`trilha.py` também serve ao vídeo tutorial (`../tutorial/`): `python3 trilha.py saida.wav <duração> "<trocas>"`
+(segundos das trocas de cena, separados por vírgula) e `TRILHA_SUAVE=1` (sem o arpejo).
+
 `video.html` é a animação: cada elemento tem `data-a` (início), `data-d` (duração) e `data-fx` (efeito); `render(t)`
 desenha o quadro do tempo t. Textos, tempos e posições do cursor (`CURSOR`) ficam nesse arquivo.

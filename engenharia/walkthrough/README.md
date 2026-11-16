@@ -21,3 +21,9 @@ node render.js EARL_Engenharia_passo_a_passo_V01.pdf png       # PDF (Chromium) 
 ```
 
 Precisa do Playwright com o Chromium (como os testes) e de uma fonte compatível com Arial (Liberation Sans).
+
+## Vídeos
+
+- `video/` — vídeo de **apresentação** (1 min 44 s, no padrão do vídeo do EARL): o que é o EARL Engenharia.
+- `tutorial/` — vídeo **tutorial** (como usar, passo a passo, em 12 partes): a tela do app gravada em uso, com o
+  mouse clicando, o texto sendo digitado e uma faixa embaixo explicando cada passo. Ver `tutorial/README.md`.

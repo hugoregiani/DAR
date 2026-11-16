@@ -4,7 +4,7 @@
 
 > **Regra de entrega (pedido do usuário, 05/11/2026):** sempre que houver alteração em qualquer arquivo (EARL, EARL Engenharia, EARL Gerencial, testes), **enviar junto este prompt de continuidade atualizado** — com o que foi feito, o que está pendente e como continuar — e commitá-lo junto com a alteração. Antes de entregar, rodar os testes (os novos e todos os anteriores) e dizer o resultado.
 >
-> **Última atualização:** 16/11/2026 — **vídeo do passo a passo** (`engenharia/walkthrough/video/`, 1 min 44 s, 1920×1080, no padrão do vídeo de apresentação do EARL, com roteiro para narração), além do que foi entregue em 13/11: e-mail para o time de engenharia (rascunho .eml com o PDF anexo e link da pasta), EARL Gerencial em branco, **e13 + walkthrough em PDF + arquivos _V01** e e12 + g18. **Pendente:** a planilha do banco de químicos/casing não chegou. Ver as seções "Vídeo", "e13" e "e12 + g18" em 4-E.
+> **Última atualização:** 16/11/2026 — **vídeo tutorial "como usar"** (`engenharia/walkthrough/tutorial/`): a tela do app gravada em uso, em 12 partes, com faixa de legenda embaixo e capítulos — o Hugo pediu "um vídeo didático que mostra como usa", não um vídeo de apresentação. Antes, no mesmo dia, o **vídeo de apresentação** (`engenharia/walkthrough/video/`, 1 min 44 s); em 13/11: e-mail para o time de engenharia, EARL Gerencial em branco, **e13 + walkthrough em PDF + arquivos _V01** e e12 + g18. **Pendente:** a planilha do banco de químicos/casing não chegou. Ver as seções "Vídeo tutorial", "Vídeo", "e13" e "e12 + g18" em 4-E.
 >
 > Antes, em 09/11/2026 — **Contratos reais pré-carregados** (pasta `engenharia/contratos_reais/`): um `EARL_Engenharia_<NOME>.html` por planilha de contrato.
 >
@@ -591,6 +591,46 @@ Pedidos do Hugo (12/11/2026): "No envio do email do Handover preciso que inclua 
   - Painel de Compras: `engenharia` 37, `invariantes` 64, `pedidos_enviados` 15, `regressao` 6, `reproduzir` ok.
   - Ajustes de expectativa nos testes antigos (mudanças pedidas): sonda "NS-32 - Norbe VIII" nos seletores, no assunto do e-mail e na matriz do Gerencial; coluna "Saldo na sonda" no e-mail; colunas novas nas exportações; versão g16.
 - **Pendências:** os textos novos ainda sem EN/ES; a tabela de câmbio não tem importação por planilha (é digitada); a "Frente" do PA ainda precisa de ajuste (a planilha fatura com outra regra).
+
+### Vídeo tutorial "como usar" (16/11/2026)
+
+- **Pedido:** depois do vídeo de apresentação, o Hugo disse: "o que eu preciso é um vídeo com passo a passo, com walkthrough… que explique como utilizar o aplicativo, não que seja um vídeo para apresentar o que o aplicativo é, mas sim um vídeo didático que mostra como usa."
+- **Resultado:** `EARL_Engenharia_tutorial_V01.mp4` (9 min 10 s, 1920×1080, 30 qps, H.264 + AAC, 33,6 MB). É a tela do próprio `EARL_Engenharia.html` com os dados de demonstração (`walkthrough/demo.js`), gravada em uso:
+  - o mouse anda e clica, e o texto é digitado letra a letra;
+  - o que vai ser clicado fica destacado em vermelho, e uma janela "Abrir" simulada aparece quando um arquivo é escolhido;
+  - uma **faixa embaixo da tela** (1920×120) explica cada passo, com o número da parte, o nome dela e o que fazer;
+  - cada parte abre com um cartão "Parte N de 12";
+  - trilha suave e baixa (média −28 dB), sem narração;
+  - **capítulos** no MP4, um por parte; a lista fica em `capitulos.txt`.
+- **As 12 partes:**
+  1. abrir o arquivo;
+  2. ver o plano (Gantt, Calendário, Lista);
+  3. planejar uma operação (dados, vínculo, contingência, PPU, químicas, casing, pessoal, risco da linha);
+  4. enviar o handover (saldo a bordo, comentários, Para/Cc, pré-visualização, .eml, REV 2);
+  5. lançar o consumo;
+  6. câmbio do mês;
+  7. banco de químicos pela planilha (o de casing é igual);
+  8. inventário da sonda;
+  9. filtrar e ordenar tabelas;
+  10. logo do cliente;
+  11. arquivo do gerencial e planilhas para Compras;
+  12. cópia de segurança (exportar/importar; não abrir pela pré-visualização do Outlook/Teams).
+- **Como funciona** (`walkthrough/tutorial/`, README com o passo a passo):
+  - `gravar_tutorial.js` grava pelo *screencast* do Chromium, com o roteiro em `PARTES[1..12]`. Os passos são feitos por ajudantes: `clicar`, `digitar`, `escolher`, `preencher`, `rolar`, `destacar` e `arquivo`.
+    - O alvo fora da tela, ou coberto por uma barra fixa, vem com rolagem suave antes do clique.
+    - Os quadros saem em 1920×960 porque o Chromium é aberto com `--force-device-scale-factor=1.3333333` e com `deviceScaleFactor` 4/3. Sem a opção, o screencast sai em 1440×720 e fica borrado ao ampliar.
+    - Nessa resolução o screencast entrega só ~15 quadros/s nos movimentos. Por isso o cursor da página fica escondido: o caminho dele é gravado e o `montar_tutorial.js` o desenha a 30 qps (`sendcmd` + `overlay@c`).
+    - O clique mede o alvo de novo logo antes de clicar, porque um aviso no topo pode sumir e deslocar a tela.
+    - O script grava `sessao.json`, com os quadros, as legendas com o horário, os capítulos e o caminho do cursor.
+    - `RAPIDO=1` confere o roteiro em ~3 min, sem gravar.
+  - `overlay.js` desenha a onda do clique, o destaque, os cartões e a janela "Abrir". O cursor dele fica escondido na gravação.
+  - `montar_tutorial.js` desenha as faixas, junta tela e faixa (`vstack`) e acrescenta a trilha e os capítulos.
+  - A trilha vem de `video/trilha.py`, que ganhou os parâmetros `trocas` e `TRILHA_SUAVE=1` e convolução em blocos, para não estourar a memória em vídeos longos.
+- **Testes (16/11/2026; o app não mudou, só os scripts do walkthrough):** todos sem falha.
+  - Engenharia: `e2e_engenharia` 62, `e2e_contratos` 75, `e2e_quimicos` 36, `e2e_espaco` 12, `e2e_inventario` 54, `e2e_painel` 23, `e2e_e10` 37, `e2e_e12` 50, `e2e_e13` 18; BP `e2e_bp` 58; contratos reais `e2e_contratos_reais` 116 (os 6 _V01).
+  - Gerencial: `e2e_gerencial` 62, `e2e_matriz` 59, `e2e_registros` 71, `e2e_tabelas` 59, `e2e_compartilhar` 27.
+  - Roteiro do tutorial: `RAPIDO=1` sem "ERRO" nas 12 partes; gravação final sem erro de JavaScript no app.
+- **Pendências:** a planilha do banco de químicos/casing que o Hugo mencionou não chegou (pedir de novo). O tutorial não tem narração (só a faixa de texto). Se pedirem narração, dá para gravar a voz por cima usando os textos das faixas (`sessao.json` → `eventos`) com os tempos.
 
 ### Vídeo do passo a passo + e-mail para o time (13–16/11/2026)
 

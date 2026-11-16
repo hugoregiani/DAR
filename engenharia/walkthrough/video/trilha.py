@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 """Trilha de fundo do vídeo (sintetizada aqui, sem direitos de terceiros): acordes suaves (Dó, Lá menor, Fá, Sol),
-baixo leve, arpejo discreto e um "whoosh" suave em cada troca de cena. Uso: python3 trilha.py saida.wav [duração]"""
-import sys, wave
+baixo leve, arpejo discreto e um "whoosh" suave em cada troca de cena. Uso: python3 trilha.py saida.wav [duração] [trocas]
+trocas: segundos das trocas de cena separados por vírgula ("" = nenhuma); TRILHA_SUAVE=1 tira o arpejo (vídeo tutorial)."""
+import os, sys, wave
 import numpy as np
 
 SAIDA = sys.argv[1]
@@ -51,7 +52,7 @@ for k in range(int(DUR / BEAT)):
 # ---- arpejo discreto em colcheias (depois da abertura; some antes do fim)
 PADRAO = [0, 2, 1, 3, 2, 1, 3, 2]
 col = BEAT / 2
-for k in range(int(DUR / col)):
+for k in range(0 if os.environ.get('TRILHA_SUAVE') else int(DUR / col)):
     ini = k * col
     if ini < 4.4 or ini > DUR - 4.5: continue
     ac = ACORDES[int(ini // COMP) % 4]
@@ -66,9 +67,12 @@ for k in range(int(DUR / col)):
 
 # ---- whoosh suave nas trocas de cena (ruído filtrado)
 TROCAS = [4.4, 13.4, 20.2, 30.4, 40.2, 49.6, 59.0, 68.4, 76.4, 84.4, 92.2, 98.6]
+if len(sys.argv) > 3:
+    TROCAS = [float(x) for x in sys.argv[3].split(',') if x.strip()]
 for tc in TROCAS:
     a, b = max(0, int((tc - 0.7) * SR)), min(N, int((tc + 0.9) * SR))
     n = b - a
+    if n < SR // 2: continue  # troca fora do vídeo
     ru = rng.standard_normal(n)
     F = np.fft.rfft(ru); fr_ = np.fft.rfftfreq(n, 1 / SR)
     F *= np.exp(-((fr_ - 1800) / 1400) ** 2)  # passa-faixa em volta de 1,8 kHz
@@ -83,10 +87,15 @@ def reverb(x, seg=2.2, mix=0.28):
     n = int(seg * SR)
     ir = rng.standard_normal(n) * np.exp(-np.arange(n) / SR / 0.55)
     ir /= np.sqrt((ir ** 2).sum())
-    m = len(x) + n
-    tam = 1 << int(np.ceil(np.log2(m)))
-    y = np.fft.irfft(np.fft.rfft(x, tam) * np.fft.rfft(ir, tam), tam)[:len(x)]
-    return (1 - mix) * x + mix * y
+    bl = 1 << 20  # convolução em blocos (sobreposição e soma): vídeos longos não estouram a memória
+    tam = 1 << int(np.ceil(np.log2(bl + n)))
+    H = np.fft.rfft(ir, tam)
+    y = np.zeros(len(x) + n)
+    for a in range(0, len(x), bl):
+        seg_ = x[a:a + bl]
+        z = np.fft.irfft(np.fft.rfft(seg_, tam) * H, tam)[:len(seg_) + n]
+        y[a:a + len(z)] += z
+    return (1 - mix) * x + mix * y[:len(x)]
 L = reverb(L); R = reverb(R)
 
 # ---- volume final: entrada e saída suaves, pico em -3 dBFS
