@@ -1,0 +1,49 @@
+EARL Engenharia — vídeo do passo a passo (V01) · roteiro para narração (opcional)
+Duração: 1 min 44 s. Os tempos indicam o início de cada cena. Ritmo calmo (~130 palavras por minuto).
+
+0:00  Abertura
+      EARL Engenharia.
+
+0:04  O problema
+      Hoje, cada contrato vive numa planilha diferente: preços e reajustes em abas, o handover montado à mão
+      no e-mail, e a receita e a margem calculadas por fora, no fim do mês.
+
+0:13  A solução
+      Com o EARL Engenharia é um arquivo só, do contrato à receita. Abre no Chrome ou no Edge, sem instalar
+      nada e sem internet.
+
+0:20  01 · Planejar
+      Cada operação nasce no Gantt do contrato, com os itens PPU, as químicas, o casing e o pessoal previstos.
+      Mudou a data? As operações seguintes da mesma sonda acompanham.
+
+0:30  02 · Handover
+      O handover junta tudo o que a operação precisa, com o saldo a bordo da sonda, e o e-mail sai pronto
+      para o Outlook.
+
+0:40  03 · Consumo
+      Depois da operação, lance o consumo: itens PPU com o valor da data, químicas, casing e pessoal.
+      O app confere o saldo do contrato.
+
+0:49  04 · Receita
+      Receita e margem aparecem na hora: realizado mais previsto, com o risco de cada operação,
+      e o câmbio do mês para os contratos em reais.
+
+0:59  05 · Compartilhar
+      Com um clique, o arquivo do gerencial junta os contratos de todos os engenheiros, e as planilhas
+      vão para o Painel de Compras.
+
+1:08  Um registro só
+      Uma operação, um registro só: do planejamento ao handover, ao consumo e à receita.
+
+1:16  Bancos de dados
+      Bancos de químicos e de casing sempre em dia, atualizados pela planilha, com filtro em todas as tabelas.
+
+1:24  Indicadores
+      E os indicadores saem direto dos dados.
+
+1:32  Tudo num arquivo só
+      Planejamento, handover, consumo, receita, câmbio, bancos de dados, inventário e os arquivos para
+      o gerencial e para compras: tudo num arquivo só.
+
+1:38  Encerramento
+      EARL Engenharia. Do contrato à receita, num arquivo só.

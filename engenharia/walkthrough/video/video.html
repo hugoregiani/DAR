@@ -1,0 +1,442 @@
+<!doctype html>
+<html lang="pt-BR"><head><meta charset="utf-8"><title>EARL Engenharia — vídeo</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{width:1280px;height:720px;overflow:hidden;background:#E9EBED}
+body{font-family:Inter,'Liberation Sans',Arial,sans-serif;color:#121417;-webkit-font-smoothing:antialiased}
+#palco{position:relative;width:1280px;height:720px;overflow:hidden;background:radial-gradient(1100px 700px at 62% 38%,#F7F8F9 0%,#EEF0F1 45%,#E3E6E8 100%)}
+.cena{position:absolute;inset:0;opacity:0}
+.a{will-change:transform,opacity}
+/* cabeçalho, passos e linha de progresso */
+#migalha{position:absolute;left:42px;top:34px;font-size:8.5px;font-weight:600;letter-spacing:2.4px;color:#9AA1A6;text-transform:uppercase}
+#migalha i{display:inline-block;width:12px;height:1.5px;background:#CC0000;vertical-align:middle;margin-right:10px}
+#migalha b{color:#5A6066;font-weight:700;margin:0 10px 0 8px}
+#marca{position:absolute;right:42px;top:34px;font-size:8.5px;font-weight:700;letter-spacing:2.4px;color:#9AA1A6}
+#passos{position:absolute;left:0;right:0;top:12px;display:flex;justify-content:center;gap:6px;opacity:0}
+.pp{display:flex;align-items:center;gap:6px;height:22px;padding:0 10px 0 4px;border-radius:999px;background:rgba(255,255,255,.85);box-shadow:0 1px 3px rgba(16,24,28,.08);font-size:8.5px;font-weight:600;color:#9AA1A6}
+.pp span{width:15px;height:15px;border-radius:50%;background:#E3E6E8;color:#9AA1A6;font-size:8px;display:flex;align-items:center;justify-content:center;font-weight:700}
+.pp.feito{color:#2A2E31}.pp.feito span{background:#2A2E31;color:#fff}
+.pp.ativo{background:#CC0000;color:#fff;box-shadow:0 3px 10px rgba(204,0,0,.35)}.pp.ativo span{background:#fff;color:#CC0000}
+#linha{position:absolute;left:42px;right:42px;top:691px;height:1.5px;background:#D5D9DC}
+#linha i{position:absolute;left:0;top:0;bottom:0;background:#CC0000;width:0}
+/* textos */
+.kick{font-size:8.5px;font-weight:700;letter-spacing:2.6px;color:#9AA1A6;text-transform:uppercase}
+.kick b{color:#CC0000;margin-right:6px}
+.kick em{font-style:normal;display:inline-block;width:8px;height:8px;border-left:1.5px solid #CC0000;border-top:1.5px solid #CC0000;margin-right:8px;vertical-align:-1px}
+.tit{font-weight:800;letter-spacing:-1.4px;line-height:1.02;color:#121417}
+.tit .p{color:#CC0000}
+.txt{font-size:12.5px;line-height:1.55;color:#5A6066}
+/* dispositivos */
+.janela{position:absolute;border-radius:12px;background:#fff;box-shadow:0 28px 60px -18px rgba(16,24,28,.35),0 8px 20px rgba(16,24,28,.10);overflow:hidden;border:1px solid #DDE1E4}
+.janela img,.tablet img,.cel img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:top left}
+.tablet{position:absolute;border-radius:22px;background:#17191B;padding:11px;box-shadow:0 30px 60px -20px rgba(16,24,28,.45),0 10px 24px rgba(16,24,28,.15)}
+.tablet .tela,.cel .tela{position:relative;width:100%;height:100%;overflow:hidden;border-radius:12px;background:#fff}
+.cel{position:absolute;border-radius:34px;background:#17191B;padding:8px;box-shadow:0 30px 60px -20px rgba(16,24,28,.5),0 10px 24px rgba(16,24,28,.18)}
+.cel .tela{border-radius:27px}
+.cel .ilha{position:absolute;left:50%;top:14px;width:62px;height:17px;margin-left:-31px;border-radius:10px;background:#0B0C0D;z-index:3}
+.chip{position:absolute;display:flex;align-items:center;gap:7px;height:20px;padding:0 10px 0 8px;border-radius:999px;background:#2A2E31;color:#fff;font-size:8px;font-weight:600;letter-spacing:.2px;box-shadow:0 4px 10px rgba(16,24,28,.25);white-space:nowrap}
+.chip i{width:7px;height:7px;border-radius:50%;background:#E5332A}
+/* cursor e clique */
+#cursor{position:absolute;left:0;top:0;width:18px;height:24px;opacity:0;z-index:50;filter:drop-shadow(0 2px 3px rgba(0,0,0,.35))}
+#onda{position:absolute;width:34px;height:34px;margin:-17px 0 0 -17px;border-radius:50%;border:2px solid #CC0000;opacity:0;z-index:49}
+.toast{position:absolute;padding:9px 14px;border-radius:10px;background:#EAF5E4;border:1px solid #C9E2BC;color:#2E5A1F;font-size:10.5px;font-weight:600;box-shadow:0 10px 24px rgba(16,24,28,.18)}
+/* cartões */
+.card{position:absolute;background:#fff;border-radius:14px;box-shadow:0 18px 40px -16px rgba(16,24,28,.22),0 2px 6px rgba(16,24,28,.06);border:1px solid #E6E9EB}
+.ic{width:26px;height:26px;border-radius:7px;background:#CC0000;display:flex;align-items:center;justify-content:center;flex:none}
+.ic svg{width:14px;height:14px;fill:none;stroke:#fff;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.fc{padding:14px 16px}
+.fc .h{display:flex;align-items:center;gap:10px;font-size:13px;font-weight:700;color:#121417}
+.fc p{font-size:10.5px;line-height:1.5;color:#5A6066;margin-top:8px}
+/* problema */
+#prob{position:absolute;left:54px;top:100px;width:560px;height:520px;border-radius:16px;background:#26292C;box-shadow:0 30px 60px -20px rgba(16,24,28,.5);padding:46px 44px}
+#prob .kick{color:#C9CED2}
+#prob .kick i{display:inline-block;width:14px;height:1.5px;background:#E5332A;vertical-align:middle;margin-right:8px}
+#prob .tit{color:#fff;font-size:34px;margin-top:12px}
+#prob .sub{font-size:12.5px;color:#B8BEC3;margin-top:16px;line-height:1.5}
+#prob ul{list-style:none;margin-top:40px}
+#prob li{position:relative;padding-left:20px;font-size:12px;line-height:1.5;color:#DDE1E4;margin-bottom:13px}
+#prob li::before{content:'';position:absolute;left:0;top:5px;width:7px;height:7px;background:#E5332A;border-radius:1px}
+.no{position:absolute;display:flex;align-items:center;gap:8px;height:30px;padding:0 12px 0 6px;border-radius:999px;background:#fff;box-shadow:0 6px 16px rgba(16,24,28,.14);font-size:10.5px;font-weight:700;color:#121417;white-space:nowrap}
+.no s{width:18px;height:18px;border-radius:5px;display:block}
+.doc{position:absolute;width:26px;height:32px;background:#fff;border:1px solid #D9DDE0;border-radius:2px;box-shadow:0 2px 6px rgba(16,24,28,.12);font-size:5px;font-weight:800;color:#CC0000;text-align:center;padding-top:20px;letter-spacing:.3px}
+.doc::before{content:'';position:absolute;left:5px;right:5px;top:5px;height:9px;background:repeating-linear-gradient(#C7CCD0 0 1px,transparent 1px 3px)}
+/* solução */
+.sc{position:absolute;top:388px;width:166px;height:136px;padding:14px 14px}
+.sc b{display:block;font-size:26px;font-weight:700;color:#CC0000;line-height:1}
+.sc h4{font-size:13px;font-weight:700;margin-top:12px}
+.sc p{font-size:8.6px;line-height:1.45;color:#5A6066;margin-top:5px}
+.sc .bar{position:absolute;left:14px;right:14px;bottom:14px;height:2px;background:#E3E6E8}
+.sc .bar i{position:absolute;left:0;top:0;bottom:0;background:#CC0000;width:0}
+/* registro / tabela / gráficos */
+.tl{position:relative;margin-top:16px}
+.tl .it{position:relative;display:flex;align-items:flex-start;gap:12px;padding:6px 0 6px 0;border-bottom:1px solid #F0F2F3}
+.tl .pt{width:13px;height:13px;border-radius:50%;background:#E3E6E8;margin-top:2px;flex:none;display:flex;align-items:center;justify-content:center;color:#fff;font-size:7px;font-weight:800}
+.tl .it.on .pt{background:#CC0000}
+.tl .it h5{font-size:11px;font-weight:700}
+.tl .it p{font-size:8.6px;color:#7A8187;margin-top:1px}
+.tl .it .tag{margin-left:auto;font-size:8px;color:#5A6066;border:1px solid #E3E6E8;border-radius:6px;padding:2px 6px;white-space:nowrap;margin-top:2px}
+.tl .it .dt{width:44px;text-align:right;font-size:8.5px;color:#9AA1A6;font-family:'JetBrains Mono',monospace;margin-top:3px}
+.tbl{width:100%;border-collapse:collapse;margin-top:12px}
+.tbl th{font-size:7.5px;letter-spacing:1.5px;color:#9AA1A6;font-weight:700;text-align:left;padding:6px 6px;border-bottom:1px solid #EEF0F1}
+.tbl td{font-size:10.5px;padding:7px 6px;border-bottom:1px solid #F2F4F5}
+.tbl td.m{font-family:'JetBrains Mono',monospace;font-size:9.5px;color:#5A6066}
+.tbl td.n{text-align:right;font-weight:700}
+.tbl tr.hl td{background:#FDF0F0}
+.badge{display:inline-flex;align-items:center;gap:5px;font-size:8.5px;font-weight:600;color:#3E6B2A;background:#EEF6E8;border:1px solid #D5E8C9;border-radius:999px;padding:3px 9px}
+.gc{position:absolute;top:182px;width:360px;height:300px;padding:20px 22px}
+.gc h4{font-size:15px;font-weight:700}
+.gc .s{font-size:10px;color:#9AA1A6;margin-top:3px}
+.br{display:flex;align-items:center;margin-top:13px;font-size:10.5px;color:#5A6066}
+.br span{width:100px;flex:none}
+.br i{display:block;height:19px;background:#D61F26;border-radius:1px;width:0}
+.br b{margin-left:8px;font-size:10.5px;color:#121417;white-space:nowrap}
+#kpis{position:absolute;left:80px;top:500px;width:1120px;height:120px;border-radius:16px;background:#26292C;display:flex;padding:28px 36px;gap:0}
+#kpis div{flex:1}
+#kpis b{display:block;font-size:30px;font-weight:700;color:#fff;letter-spacing:-.8px}
+#kpis span{display:block;font-size:8px;letter-spacing:2px;color:#AEB4B9;margin-top:9px;line-height:1.6;font-weight:600}
+.gr{position:absolute;width:262px;height:150px;padding:14px 16px}
+.gr .h{display:flex;align-items:center;gap:9px;font-size:12px;font-weight:700}
+.gr ul{list-style:none;margin-top:9px}
+.gr li{font-size:8.6px;color:#5A6066;line-height:1.35;margin-bottom:4px;padding-left:9px;position:relative}
+.gr li::before{content:'';position:absolute;left:0;top:5px;width:3px;height:3px;border-radius:50%;background:#CC0000}
+.gr.dest{box-shadow:0 0 0 2px #CC0000,0 18px 40px -16px rgba(204,0,0,.45)}
+.leg{position:absolute;font-size:8px;color:#9AA1A6;letter-spacing:.2px}
+</style></head>
+<body><div id="palco">
+
+<!-- ======================= 0 · ABERTURA ======================= -->
+<div class="cena" data-s="0,4.4">
+  <img class="a" src="img/earl_hd.png" style="position:absolute;left:358px;top:262px;width:564px" data-a="0.35" data-d="1.1" data-fx="logo">
+  <div class="a" style="position:absolute;left:358px;top:398px;width:564px;height:1.5px;background:#CC0000;transform-origin:left" data-a="1.5" data-d="0.8" data-fx="grow"></div>
+  <div class="a" style="position:absolute;left:0;right:0;top:416px;text-align:center;font-size:13px;font-weight:600;letter-spacing:6px;color:#2A2E31" data-a="1.8" data-d="0.7" data-fx="up">ENGENHARIA</div>
+</div>
+
+<!-- ======================= 1 · O PROBLEMA ======================= -->
+<div class="cena" data-s="4.4,13.4">
+  <div id="prob" class="a" data-a="4.5" data-d="0.8" data-fx="up">
+    <div class="kick a" data-a="5.0" data-d="0.4" data-fx="fade"><i></i>O problema</div>
+    <div class="tit" data-type="5.2,1.3">Cada contrato vive numa planilha diferente<span class="p">.</span></div>
+    <div class="sub a" data-a="6.7" data-d="0.5" data-fx="fade">Forecast, preços, handover e receita espalhados em abas, arquivos e e-mails.</div>
+    <ul>
+      <li class="a" data-a="7.3" data-d="0.5" data-fx="left">Preços e reajustes em abas que só o dono da planilha entende</li>
+      <li class="a" data-a="7.8" data-d="0.5" data-fx="left">Handover montado à mão, item por item, no e-mail</li>
+      <li class="a" data-a="8.3" data-d="0.5" data-fx="left">Receita e margem calculadas por fora, no fim do mês</li>
+    </ul>
+  </div>
+  <svg style="position:absolute;left:0;top:0" width="1280" height="720">
+    <g stroke="#E5332A" stroke-width="1.2" fill="none" opacity=".55">
+      <path class="draw" data-draw="7.6,1.4" d="M1000,190 L1110,262"/><path class="draw" data-draw="7.7,1.4" d="M1110,262 L1092,420"/>
+      <path class="draw" data-draw="7.8,1.4" d="M1092,420 L970,498"/><path class="draw" data-draw="7.9,1.4" d="M970,498 L860,410"/>
+      <path class="draw" data-draw="8.0,1.4" d="M860,410 L880,250"/><path class="draw" data-draw="8.1,1.4" d="M880,250 L1000,190"/>
+      <path class="draw" data-draw="8.3,1.4" d="M1000,190 L970,498"/><path class="draw" data-draw="8.4,1.4" d="M880,250 L1092,420"/>
+      <path class="draw" data-draw="8.5,1.4" d="M1110,262 L860,410"/>
+    </g>
+  </svg>
+  <div class="no a" style="left:952px;top:175px" data-a="5.6" data-d="0.5" data-fx="pop"><s style="background:#CC0000"></s>Contrato</div>
+  <div class="no a" style="left:1068px;top:247px" data-a="5.9" data-d="0.5" data-fx="pop"><s style="background:#2A2E31"></s>Forecast</div>
+  <div class="no a" style="left:1052px;top:405px" data-a="6.2" data-d="0.5" data-fx="pop"><s style="background:#5A6066"></s>Handover</div>
+  <div class="no a" style="left:930px;top:483px" data-a="6.5" data-d="0.5" data-fx="pop"><s style="background:#8C959B"></s>Consumo</div>
+  <div class="no a" style="left:808px;top:395px" data-a="6.8" data-d="0.5" data-fx="pop"><s style="background:#961B24"></s>Receita</div>
+  <div class="no a" style="left:832px;top:235px" data-a="7.1" data-d="0.5" data-fx="pop"><s style="background:#43494E"></s>Compras</div>
+  <div class="doc a" style="left:1040px;top:205px;transform:rotate(-8deg)" data-a="8.8" data-d="0.4" data-fx="pop" data-float="3,2.4">XLSX</div>
+  <div class="doc a" style="left:1098px;top:330px" data-a="9.0" data-d="0.4" data-fx="pop" data-float="3,2.8">E-MAIL</div>
+  <div class="doc a" style="left:1012px;top:452px" data-a="9.2" data-d="0.4" data-fx="pop" data-float="3,2.2">XLSX</div>
+  <div class="doc a" style="left:900px;top:452px" data-a="9.4" data-d="0.4" data-fx="pop" data-float="3,2.6">PAPEL</div>
+  <div class="doc a" style="left:856px;top:318px" data-a="9.6" data-d="0.4" data-fx="pop" data-float="3,3.0">E-MAIL</div>
+  <div class="doc a" style="left:930px;top:200px" data-a="9.8" data-d="0.4" data-fx="pop" data-float="3,2.5">XLSX</div>
+  <div class="doc a" style="left:985px;top:330px" data-a="10.0" data-d="0.4" data-fx="pop" data-float="3,2.9">PDF</div>
+</div>
+
+<!-- ======================= 2 · A SOLUÇÃO ======================= -->
+<div class="cena" data-s="13.4,20.2">
+  <div class="kick a" style="position:absolute;left:0;right:0;top:150px;text-align:center" data-a="13.6" data-d="0.5" data-fx="fade"><b>EARL ENGENHARIA</b> — A SOLUÇÃO</div>
+  <div class="tit a" style="position:absolute;left:0;right:0;top:176px;text-align:center;font-size:44px" data-a="13.8" data-d="0.7" data-fx="up">Um arquivo.<br>Do contrato à receita<span class="p">.</span></div>
+  <div class="txt a" style="position:absolute;left:0;right:0;top:300px;text-align:center;font-size:13.5px;color:#41474C" data-a="14.4" data-d="0.6" data-fx="fade">Um arquivo por contrato · abre no Chrome ou no Edge, sem instalar nada e sem internet</div>
+  <div class="card sc a" style="left:92px" data-a="14.7" data-d="0.5" data-fx="up"><b>1</b><h4>Planejar</h4><p>Operações no Gantt, com recursos, contingência e risco</p><div class="bar"><i data-bar="15.4,0.8,100"></i></div></div>
+  <div class="card sc a" style="left:314px" data-a="14.85" data-d="0.5" data-fx="up"><b>2</b><h4>Handover</h4><p>E-mail pronto para o Outlook, com o saldo a bordo da sonda</p><div class="bar"><i data-bar="16.2,0.8,100"></i></div></div>
+  <div class="card sc a" style="left:536px" data-a="15.0" data-d="0.5" data-fx="up"><b>3</b><h4>Consumo</h4><p>Itens PPU, químicas, casing e pessoal de cada operação</p><div class="bar"><i data-bar="17.0,0.8,100"></i></div></div>
+  <div class="card sc a" style="left:758px" data-a="15.15" data-d="0.5" data-fx="up"><b>4</b><h4>Receita</h4><p>Receita, COGS e margem: realizado + previsto, com o risco</p><div class="bar"><i data-bar="17.8,0.8,100"></i></div></div>
+  <div class="card sc a" style="left:980px" data-a="15.3" data-d="0.5" data-fx="up"><b>5</b><h4>Compartilhar</h4><p>Arquivo do gerencial e planilhas para o Painel de Compras</p><div class="bar"><i data-bar="18.6,0.8,100"></i></div></div>
+</div>
+
+<!-- ======================= 3 · 01 PLANEJAR ======================= -->
+<div class="cena" data-s="20.2,30.4">
+  <div class="kick a" style="position:absolute;left:40px;top:150px" data-a="20.4" data-d="0.5" data-fx="fade"><em></em><b>01</b>— Planejar · Engenharia</div>
+  <div class="tit" style="position:absolute;left:40px;top:172px;width:400px;font-size:40px" data-type="20.6,1.1">Planeje meses à frente<span class="p">.</span></div>
+  <div class="txt a" style="position:absolute;left:40px;top:278px;width:350px" data-a="21.6" data-d="0.6" data-fx="fade">Cada operação nasce no Gantt do contrato, com os itens PPU, as químicas, o casing e o pessoal previstos.<br><br>Mudou a data? As operações seguintes da mesma sonda acompanham.</div>
+  <div class="janela a" style="left:440px;top:118px;width:800px;height:500px" data-a="20.5" data-d="1.0" data-fx="slide">
+    <img src="img/05_gantt.jpg"><img src="img/08_nova_op.jpg" class="troca" data-troca="25.6,0.5">
+  </div>
+  <div class="chip a" style="left:476px;top:630px" data-a="21.8" data-d="0.4" data-fx="up"><i></i>P&amp;A — Macaé (offshore) · Petrobras</div>
+</div>
+
+<!-- ======================= 4 · 02 HANDOVER ======================= -->
+<div class="cena" data-s="30.4,40.2">
+  <div class="kick a" style="position:absolute;left:40px;top:96px" data-a="30.6" data-d="0.5" data-fx="fade"><em></em><b>02</b>— Handover · Engenharia → Logística</div>
+  <div class="tit" style="position:absolute;left:40px;top:118px;font-size:40px" data-type="30.8,1.0">Handover pronto em minutos<span class="p">.</span></div>
+  <div class="txt a" style="position:absolute;left:40px;top:172px;width:560px" data-a="31.7" data-d="0.6" data-fx="fade">Químicas com o saldo a bordo da sonda, casing, equipamentos e o embarque de cada pessoa. O e-mail sai pronto para o Outlook — e cada nova versão vira REV 2, REV 3…</div>
+  <div class="janela a" style="left:40px;top:262px;width:640px;height:400px" data-a="30.7" data-d="1.0" data-fx="slide"><img src="img/10_handover.jpg"></div>
+  <div class="cel a" style="left:916px;top:92px;width:252px;height:520px" data-a="31.4" data-d="1.0" data-fx="slideup"><div class="ilha"></div><div class="tela"><img src="img/cel_email.jpg"></div></div>
+  <div class="chip a" style="left:70px;top:640px;top:672px" data-a="32.4" data-d="0.4" data-fx="up"><i></i>Engenharia · handover da operação</div>
+  <div class="chip a" style="left:960px;top:628px" data-a="32.8" data-d="0.4" data-fx="up"><i></i>Logística · e-mail no Outlook</div>
+</div>
+
+<!-- ======================= 5 · 03 CONSUMO ======================= -->
+<div class="cena" data-s="40.2,49.6">
+  <div class="kick a" style="position:absolute;left:40px;top:150px" data-a="40.4" data-d="0.5" data-fx="fade"><em></em><b>03</b>— Consumo · depois da operação</div>
+  <div class="tit" style="position:absolute;left:40px;top:172px;width:400px;font-size:40px" data-type="40.6,1.0">Lance o que foi usado<span class="p">.</span></div>
+  <div class="txt a" style="position:absolute;left:40px;top:278px;width:350px" data-a="41.5" data-d="0.6" data-fx="fade">Em Σ Consumo: a data do serviço, os itens PPU com o valor vigente na data, as químicas, o casing e o pessoal.<br><br>O app confere o saldo de cada item do contrato.</div>
+  <div class="janela a" style="left:440px;top:118px;width:800px;height:500px" data-a="40.5" data-d="1.0" data-fx="slide"><img src="img/13_lancar_consumo.jpg"></div>
+  <div class="toast a" style="left:930px;top:520px" data-a="45.0" data-d="0.4" data-fx="pop">✓ Consumo salvo — 7 linha(s)</div>
+  <div class="chip a" style="left:476px;top:630px" data-a="41.8" data-d="0.4" data-fx="up"><i></i>NS-45 - Brava Star · 7-MRL-12-RJS · Squeeze</div>
+</div>
+
+<!-- ======================= 6 · 04 RECEITA ======================= -->
+<div class="cena" data-s="49.6,59.0">
+  <div class="kick a" style="position:absolute;left:40px;top:150px" data-a="49.8" data-d="0.5" data-fx="fade"><em></em><b>04</b>— Receita e margem</div>
+  <div class="tit" style="position:absolute;left:40px;top:172px;width:380px;font-size:40px" data-type="50.0,1.0">Receita e margem, ao vivo<span class="p">.</span></div>
+  <div class="txt a" style="position:absolute;left:40px;top:278px;width:330px" data-a="50.9" data-d="0.6" data-fx="fade">Realizado + previsto, com o risco de cada operação, por mês, por quarto e por contrato.<br><br>Contratos em R$ entram em US$ pelo câmbio do mês.</div>
+  <div class="janela a" style="left:420px;top:104px;width:720px;height:450px" data-a="49.9" data-d="1.0" data-fx="slide"><img src="img/02_receita.jpg"></div>
+  <div class="tablet a" style="left:868px;top:330px;width:380px;height:262px" data-a="50.8" data-d="1.0" data-fx="slideup"><div class="tela"><img src="img/02b_matriz.jpg"></div></div>
+  <div class="chip a" style="left:456px;top:574px" data-a="51.6" data-d="0.4" data-fx="up"><i></i>Página inicial · todos os contratos</div>
+  <div class="chip a" style="left:960px;top:606px" data-a="52.0" data-d="0.4" data-fx="up"><i></i>Receita mês a mês</div>
+</div>
+
+<!-- ======================= 7 · 05 COMPARTILHAR ======================= -->
+<div class="cena" data-s="59.0,68.4">
+  <div class="kick a" style="position:absolute;left:40px;top:150px" data-a="59.2" data-d="0.5" data-fx="fade"><em></em><b>05</b>— Compartilhar</div>
+  <div class="tit" style="position:absolute;left:40px;top:172px;width:380px;font-size:40px" data-type="59.4,1.0">Compartilhe com um clique<span class="p">.</span></div>
+  <div class="txt a" style="position:absolute;left:40px;top:278px;width:330px" data-a="60.3" data-d="0.6" data-fx="fade">O arquivo do gerencial junta os contratos de todos os engenheiros.<br><br>O inventário das sondas e o consumo de químicos vão em planilhas para o Painel de Compras.</div>
+  <div class="janela a" style="left:420px;top:104px;width:720px;height:450px" data-a="59.3" data-d="1.0" data-fx="slide"><img src="img/20_gerencial.jpg"></div>
+  <div class="tablet a" style="left:868px;top:330px;width:380px;height:262px" data-a="60.2" data-d="1.0" data-fx="slideup"><div class="tela"><img src="img/21_planilhas.jpg"></div></div>
+  <div class="chip a" style="left:456px;top:574px" data-a="61.0" data-d="0.4" data-fx="up"><i></i>⬇ Arquivo do gerencial</div>
+  <div class="chip a" style="left:960px;top:606px" data-a="61.4" data-d="0.4" data-fx="up"><i></i>⬇ Planilhas para Compras</div>
+</div>
+
+<!-- ======================= 8 · UMA OPERAÇÃO, UM REGISTRO ======================= -->
+<div class="cena" data-s="68.4,76.4">
+  <div class="tit a" style="position:absolute;left:0;right:0;top:100px;text-align:center;font-size:34px" data-a="68.6" data-d="0.6" data-fx="up">Uma operação. Um registro só<span class="p">.</span></div>
+  <div class="card a" style="left:80px;top:182px;width:520px;height:440px;padding:20px 22px" data-a="69.0" data-d="0.7" data-fx="up">
+    <div class="kick" style="font-size:7.5px">Registro da operação · SO 460100104</div>
+    <div style="display:flex;align-items:center;margin-top:8px"><div style="font-size:17px;font-weight:700">NS-32 - Norbe VIII · 7-ABL-40-RJS</div><span class="badge a" style="margin-left:auto" data-a="73.6" data-d="0.4" data-fx="pop">✓ Handover enviado</span></div>
+    <div style="font-size:10.5px;color:#7A8187;margin-top:3px">P&amp;A — Macaé (offshore) · Abandono · 18/11/2026</div>
+    <div class="tl">
+      <div class="it" data-on="69.8"><div class="pt">✓</div><div><h5>Planejada</h5><p>No Gantt do contrato, ligada à operação anterior da sonda</p></div><span class="tag">Gantt</span><span class="dt">13 nov</span></div>
+      <div class="it" data-on="70.4"><div class="pt">✓</div><div><h5>Recursos previstos</h5><p>2 itens PPU · 2 químicas · 1 casing · 3 pessoas</p></div><span class="tag">Contingência · risco</span><span class="dt">13 nov</span></div>
+      <div class="it" data-on="71.0"><div class="pt">✓</div><div><h5>Handover</h5><p>E-mail para logística e coordenação, com o saldo a bordo</p></div><span class="tag">REV 1</span><span class="dt">13 nov</span></div>
+      <div class="it" data-on="71.6"><div class="pt">✓</div><div><h5>Consumo lançado</h5><p>PPU com o valor da data, químicas, casing e pessoal</p></div><span class="tag">Σ Consumo</span><span class="dt">20 nov</span></div>
+      <div class="it" data-on="72.2"><div class="pt">✓</div><div><h5>Receita e margem</h5><p>Realizado + previsto, com o risco, em US$ e R$</p></div><span class="tag">Receita</span><span class="dt">20 nov</span></div>
+      <div class="it" data-on="72.8"><div class="pt">✓</div><div><h5>Gerencial e Compras</h5><p>No arquivo do gerencial e nas planilhas do Painel de Compras</p></div><span class="tag">Arquivos</span><span class="dt">21 nov</span></div>
+    </div>
+  </div>
+  <div class="card fc a" style="left:620px;top:182px;width:580px;height:132px" data-a="69.6" data-d="0.6" data-fx="left"><div class="h"><div class="ic"><svg viewBox="0 0 24 24"><path d="M10 13a5 5 0 0 0 7 0l3-3a5 5 0 0 0-7-7l-1 1"/><path d="M14 11a5 5 0 0 0-7 0l-3 3a5 5 0 0 0 7 7l1-1"/></svg></div>Datas vinculadas</div><p>Mudou a data ou a duração de uma operação? As seguintes da mesma sonda acompanham, mantendo a folga entre elas.</p></div>
+  <div class="card fc a" style="left:620px;top:336px;width:580px;height:132px" data-a="70.4" data-d="0.6" data-fx="left"><div class="h"><div class="ic"><svg viewBox="0 0 24 24"><path d="M12 9v4"/><path d="M12 17h.01"/><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/></svg></div>Contingência e risco</div><p>Cada operação — e cada linha — com o risco de não acontecer: 0% conta tudo, 100% fica mapeada mas fora da receita.</p></div>
+  <div class="card fc a" style="left:620px;top:490px;width:580px;height:132px" data-a="71.2" data-d="0.6" data-fx="left"><div class="h"><div class="ic"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg></div>Tudo registrado</div><p>Quem mudou, quando e o quê. O handover guarda cada versão enviada e os destinatários.</p></div>
+</div>
+
+<!-- ======================= 9 · BANCOS DE DADOS ======================= -->
+<div class="cena" data-s="76.4,84.4">
+  <div class="tit a" style="position:absolute;left:0;right:0;top:100px;text-align:center;font-size:34px" data-a="76.6" data-d="0.6" data-fx="up">Bancos de dados sempre em dia<span class="p">.</span></div>
+  <div class="card a" style="left:80px;top:182px;width:520px;height:440px;padding:20px 22px" data-a="77.0" data-d="0.7" data-fx="up">
+    <div class="kick" style="font-size:7.5px">Banco de produtos químicos</div>
+    <div style="display:flex;align-items:center;margin-top:8px"><div style="font-size:17px;font-weight:700">60 produtos · valor em US$ (COGS)</div><span class="badge" style="margin-left:auto">✓ Atualizado em 03/11</span></div>
+    <div style="font-size:10.5px;color:#7A8187;margin-top:3px">SAP, descrição, unidade e valor — vale no COGS de todas as operações</div>
+    <table class="tbl">
+      <tr><th>SAP</th><th>PRODUTO</th><th>UNID.</th><th style="text-align:right">US$</th></tr>
+      <tr class="a" data-a="77.6" data-d="0.4" data-fx="fade"><td class="m">100003670</td><td>HALAD-344</td><td>LB</td><td class="n">7,12</td></tr>
+      <tr class="a hl" data-a="77.8" data-d="0.4" data-fx="fade"><td class="m">100003685</td><td>CIMENTO CLASS G</td><td>SK</td><td class="n" data-cnt="80.4,1.2,15.04,2,,">13,15</td></tr>
+      <tr class="a" data-a="78.0" data-d="0.4" data-fx="fade"><td class="m">100003738</td><td>HALAD-413</td><td>LB</td><td class="n">7,42</td></tr>
+      <tr class="a" data-a="78.2" data-d="0.4" data-fx="fade"><td class="m">100003837</td><td>MUSOL E</td><td>GAL</td><td class="n">11,57</td></tr>
+      <tr class="a" data-a="78.4" data-d="0.4" data-fx="fade"><td class="m">213257</td><td>BARITA</td><td>TON</td><td class="n">266,88</td></tr>
+      <tr class="a" data-a="78.6" data-d="0.4" data-fx="fade"><td class="m">211444</td><td>BENTONITA</td><td>BAG</td><td class="n">224,74</td></tr>
+      <tr class="a" data-a="78.8" data-d="0.4" data-fx="fade"><td class="m">103101982</td><td>ASSY BAF,BYP,9-5/8 · casing</td><td>EA</td><td class="n">1.428,39</td></tr>
+    </table>
+    <div class="a" style="margin-top:14px;font-size:9px;color:#9AA1A6;font-family:'JetBrains Mono',monospace" data-a="80.2" data-d="0.4" data-fx="fade">03 NOV 12:00 · Planilha Banco_Quimicos_Nov2026.xlsx — 52 valor(es) atualizado(s)</div>
+  </div>
+  <div class="card fc a" style="left:620px;top:182px;width:580px;height:132px" data-a="77.6" data-d="0.6" data-fx="left"><div class="h"><div class="ic"><svg viewBox="0 0 24 24"><path d="M12 15V3"/><path d="m7 8 5-5 5 5"/><path d="M5 21h14"/></svg></div>Atualizar pela planilha</div><p>O app mostra antes o que muda — produtos novos, valor alterado, os que saem — e só então aplica.</p></div>
+  <div class="card fc a" style="left:620px;top:336px;width:580px;height:132px" data-a="78.4" data-d="0.6" data-fx="left"><div class="h"><div class="ic"><svg viewBox="0 0 24 24"><rect x="3" y="7" width="18" height="10" rx="2"/><path d="M7 7v10M17 7v10"/></svg></div>Químicos e casing equipment</div><p>Dois bancos, a mesma planilha (uma aba para cada). O casing é a lista que aparece para escolher nas operações.</p></div>
+  <div class="card fc a" style="left:620px;top:490px;width:580px;height:132px" data-a="79.2" data-d="0.6" data-fx="left"><div class="h"><div class="ic"><svg viewBox="0 0 24 24"><path d="M3 5h18l-7 8v6l-4-2v-4z"/></svg></div>Filtro em todas as tabelas</div><p>Ordem crescente ▲ e decrescente ▼ no título da coluna, e ▾ para escolher os itens — como no Excel.</p></div>
+</div>
+
+<!-- ======================= 10 · INDICADORES ======================= -->
+<div class="cena" data-s="84.4,92.2">
+  <div class="tit a" style="position:absolute;left:0;right:0;top:100px;text-align:center;font-size:34px" data-a="84.6" data-d="0.6" data-fx="up">Indicadores direto dos dados<span class="p">.</span></div>
+  <div class="card gc a" style="left:80px" data-a="85.0" data-d="0.6" data-fx="up"><h4>Receita por mês</h4><div class="s">US$ mil · 2026 · com o risco de cada operação</div>
+    <div class="br"><span>Setembro</span><i data-bar="85.8,0.8,65"></i><b>205,7</b></div>
+    <div class="br"><span>Outubro</span><i data-bar="85.9,0.8,100"></i><b>318,0</b></div>
+    <div class="br"><span>Novembro</span><i data-bar="86.0,0.8,37"></i><b>118,8</b></div>
+    <div class="br"><span>Dezembro</span><i data-bar="86.1,0.8,20"></i><b>62,9</b></div>
+    <div class="br" style="opacity:0"><span>-</span></div></div>
+  <div class="card gc a" style="left:460px" data-a="85.15" data-d="0.6" data-fx="up"><h4>Receita por contrato</h4><div class="s">US$ mil · 2026</div>
+    <div class="br"><span>BP — Macaé</span><i data-bar="86.0,0.8,100"></i><b>457,0</b></div>
+    <div class="br"><span>P&amp;A — Macaé</span><i data-bar="86.1,0.8,43"></i><b>197,3</b></div>
+    <div class="br"><span>Takatsugu J</span><i data-bar="86.2,0.8,11"></i><b>51,2</b></div>
+    <div class="br" style="opacity:0"><span>-</span></div><div class="br" style="opacity:0"><span>-</span></div></div>
+  <div class="card gc a" style="left:840px" data-a="85.3" data-d="0.6" data-fx="up"><h4>Operações por sonda</h4><div class="s">planejadas + realizadas · todos os contratos</div>
+    <div class="br"><span>NS-32 - Norbe VIII</span><i data-bar="86.2,0.8,100"></i><b>4</b></div>
+    <div class="br"><span>Olinda Star</span><i data-bar="86.3,0.8,100"></i><b>4</b></div>
+    <div class="br"><span>NS-45 - Brava Star</span><i data-bar="86.4,0.8,75"></i><b>3</b></div>
+    <div class="br"><span>NS-38 - Takatsugu J</span><i data-bar="86.5,0.8,75"></i><b>3</b></div>
+    <div class="br" style="opacity:0"><span>-</span></div></div>
+  <div id="kpis" class="a" data-a="86.8" data-d="0.6" data-fx="up">
+    <div><b data-cnt="87.2,1.4,705,0,US$ , mil">US$ 0 mil</b><span>RECEITA 2026<br>REALIZADO + PREVISTO</span></div>
+    <div><b data-cnt="87.3,1.4,147,0,US$ , mil">US$ 0 mil</b><span>COGS<br>QUÍMICAS E CASING</span></div>
+    <div><b data-cnt="87.4,1.4,79,0,,%">0%</b><span>MARGEM<br>SOBRE A RECEITA</span></div>
+    <div><b data-cnt="87.5,1.4,11,0,,">0</b><span>OPERAÇÕES EM 2026<br>3 CONTRATOS</span></div>
+    <div><b data-cnt="87.6,1.4,4,0,,">0</b><span>SONDAS<br>COM OPERAÇÃO</span></div>
+  </div>
+  <div class="leg a" style="left:80px;top:632px" data-a="87.8" data-d="0.4" data-fx="fade">Dados de demonstração.</div>
+</div>
+
+<!-- ======================= 11 · TUDO NUM ARQUIVO SÓ ======================= -->
+<div class="cena" data-s="92.2,98.6">
+  <div class="tit a" style="position:absolute;left:0;right:0;top:100px;text-align:center;font-size:34px" data-a="92.4" data-d="0.6" data-fx="up">Tudo num arquivo só<span class="p">.</span></div>
+  <div id="grade"></div>
+</div>
+
+<!-- ======================= 12 · ENCERRAMENTO ======================= -->
+<div class="cena" data-s="98.6,105">
+  <img class="a" src="img/earl_hd.png" style="position:absolute;left:374px;top:150px;width:532px" data-a="98.8" data-d="1.0" data-fx="logo">
+  <div class="a" style="position:absolute;left:374px;top:282px;width:532px;height:1.2px;background:#CC0000;transform-origin:left" data-a="99.5" data-d="0.7" data-fx="grow"></div>
+  <div class="a" style="position:absolute;left:0;right:0;top:300px;text-align:center;font-size:16px;letter-spacing:3.2px;color:#2A2E31" data-a="99.7" data-d="0.6" data-fx="fade">EXECUTION <span style="color:#CC0000">|</span> ALIGNMENT <span style="color:#CC0000">|</span> REPORTING <span style="color:#CC0000">|</span> LIFECYCLE</div>
+  <div class="tit a" style="position:absolute;left:0;right:0;top:388px;text-align:center;font-size:32px;letter-spacing:-1px" data-a="100.2" data-d="0.7" data-fx="up">Do contrato à receita, num arquivo só<span class="p">.</span></div>
+  <div class="a" style="position:absolute;left:0;right:0;top:493px;text-align:center;font-size:8.5px;font-weight:700;letter-spacing:1.6px;color:#7A8187" data-a="100.8" data-d="0.6" data-fx="fade">EARL ENGENHARIA · CONTRATOS · SUDESTE OFFSHORE · BRASIL</div>
+  <img class="a" src="img/hal_cem_hd.png" style="position:absolute;left:537px;top:550px;width:206px" data-a="101.2" data-d="0.6" data-fx="fade">
+</div>
+
+<!-- fixos -->
+<div id="migalha"><i></i>/<b id="mnum">01</b><span id="mtxt"></span></div>
+<div id="marca">HALLIBURTON CEMENTING · ENGENHARIA</div>
+<div id="passos"></div>
+<div id="linha"><i></i></div>
+<svg id="cursor" viewBox="0 0 18 24"><path d="M1 1 L1 19 L5.5 14.8 L8.6 22 L11.6 20.7 L8.6 13.6 L14.6 13.6 Z" fill="#111" stroke="#fff" stroke-width="1.4" stroke-linejoin="round"/></svg>
+<div id="onda"></div>
+</div>
+<script>
+var TOTAL = 104.5;
+/* grade final: 8 cartões */
+(function () {
+  var G = [
+    ['Planejamento', 'Gantt, calendário e lista|Datas vinculadas por sonda|Templates de operação', '<rect x="3" y="4" width="18" height="17" rx="2"/><path d="M3 9h18M8 2v4M16 2v4"/>'],
+    ['Handover', 'Químicas com o saldo a bordo|Embarque de cada pessoa|E-mail .eml com versões', '<path d="M4 4h16v16H4z"/><path d="m4 6 8 7 8-7"/>'],
+    ['Consumo', 'PPU com o valor da data|Químicas, casing e pessoal|Saldo do contrato conferido', '<path d="M3 3v18h18"/><path d="m7 15 4-4 3 3 5-6"/>'],
+    ['Receita e margem', 'Realizado + previsto, com risco|Por mês, quarto e contrato|Excel da tabela', '<path d="M12 2v20M17 6H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>'],
+    ['Câmbio do mês', 'Cotação por mês|R$ convertido em US$|Mais recente em cima', '<path d="M7 7h11l-3-3M17 17H6l3 3"/>'],
+    ['Químicos e casing', 'SAP, unidade e valor US$|Atualizar pela planilha|Histórico de atualizações', '<path d="M9 3h6M10 3v6l-5 9a2 2 0 0 0 2 3h10a2 2 0 0 0 2-3l-5-9V3"/>'],
+    ['Inventário das sondas', 'Contagem por sonda e data|Saldo no handover|Vai para o Painel de Compras', '<path d="M3 7l9-4 9 4-9 4z"/><path d="M3 7v10l9 4 9-4V7"/>'],
+    ['Gerencial e Compras', 'Arquivo do gerencial|Planilhas para o Painel de Compras|Exportar e importar dados', '<path d="M12 3v12"/><path d="m7 10 5 5 5-5"/><path d="M5 21h14"/>']
+  ];
+  var h = '';
+  G.forEach(function (g, i) {
+    var x = 80 + (i % 4) * 284, y = 186 + Math.floor(i / 4) * 214, a = 92.8 + i * 0.16;
+    h += '<div class="card gr a" data-dest="' + (94.6 + i * 0.42) + '" style="left:' + x + 'px;top:' + y + 'px;height:190px" data-a="' + a.toFixed(2) + '" data-d="0.5" data-fx="up"><div class="h"><div class="ic"><svg viewBox="0 0 24 24">' + g[2] + '</svg></div>' + g[0] + '</div><ul>' + g[1].split('|').map(function (l) { return '<li>' + l + '</li>'; }).join('') + '</ul></div>';
+  });
+  document.getElementById('grade').innerHTML = h;
+})();
+/* passos do topo */
+var NOMES = ['Planejar', 'Handover', 'Consumo', 'Receita', 'Compartilhar'];
+document.getElementById('passos').innerHTML = NOMES.map(function (n, i) { return '<div class="pp"><span>' + (i + 1) + '</span>' + n + '</div>'; }).join('');
+var PASSOS = [[20.2, 30.4], [30.4, 40.2], [40.2, 49.6], [49.6, 59.0], [59.0, 68.4]];
+var MIGALHA = [[4.4, 13.4, '00', 'O problema'], [13.4, 20.2, '00', 'A solução'], [20.2, 30.4, '01', 'Planejar'], [30.4, 40.2, '02', 'Handover'], [40.2, 49.6, '03', 'Consumo'], [49.6, 59.0, '04', 'Receita'], [59.0, 68.4, '05', 'Compartilhar'], [68.4, 76.4, '06', 'Um registro'], [76.4, 84.4, '07', 'Bancos de dados'], [84.4, 92.2, '08', 'Indicadores'], [92.2, 98.6, '09', 'Tudo num arquivo']];
+/* cursor: [t, x, y, clique] */
+var CURSOR = [
+  [21.9, 1010, 610, 0], [23.0, 893, 543, 0], [23.3, 893, 543, 1], [24.4, 1185, 283, 0], [24.8, 1185, 283, 1], [25.5, 1168, 330, 0],
+  [43.0, 960, 420, 0], [44.4, 1093, 576, 0], [44.8, 1093, 576, 1], [45.6, 1060, 612, 0]
+];
+var VISCUR = [[21.8, 26.2], [42.9, 46.6]];
+
+var cl = function (x) { return x < 0 ? 0 : x > 1 ? 1 : x; };
+var eo = function (x) { return 1 - Math.pow(1 - x, 3); };
+var eio = function (x) { return x < .5 ? 4 * x * x * x : 1 - Math.pow(-2 * x + 2, 3) / 2; };
+var pr = function (t, a, d) { return cl((t - a) / d); };
+var EL = [].slice.call(document.querySelectorAll('[data-a]'));
+var CENAS = [].slice.call(document.querySelectorAll('.cena'));
+var TIPOS = [].slice.call(document.querySelectorAll('[data-type]'));
+TIPOS.forEach(function (e) { e._html = e.innerHTML; e._txt = e.textContent; });
+var BARRAS = [].slice.call(document.querySelectorAll('[data-bar]'));
+var CNT = [].slice.call(document.querySelectorAll('[data-cnt]'));
+var DRAW = [].slice.call(document.querySelectorAll('[data-draw]'));
+DRAW.forEach(function (p) { var L = p.getTotalLength(); p._L = L; p.style.strokeDasharray = L + ' ' + L; });
+var TROCA = [].slice.call(document.querySelectorAll('[data-troca]'));
+var ON = [].slice.call(document.querySelectorAll('[data-on]'));
+var DEST = [].slice.call(document.querySelectorAll('[data-dest]'));
+var FLOAT = [].slice.call(document.querySelectorAll('[data-float]'));
+var fmt = function (v, dec) { return v.toLocaleString('pt-BR', {minimumFractionDigits: dec, maximumFractionDigits: dec}); };
+
+function render(t) {
+  CENAS.forEach(function (c) {
+    var s = c.dataset.s.split(',').map(Number), a = s[0], b = s[1];
+    var v = t >= a - 0.01 && t <= b + 0.01;
+    var op = v ? Math.min(pr(t, a, 0.35), 1 - pr(t, b - 0.45, 0.45)) : 0;
+    c.style.opacity = op;
+    c.style.display = op > 0 ? 'block' : 'none';
+    c.style.transform = v ? 'translateY(' + (-6 * pr(t, b - 0.45, 0.45)) + 'px)' : '';
+  });
+  EL.forEach(function (e) {
+    var a = +e.dataset.a, d = +e.dataset.d, p = eo(pr(t, a, d)), fx = e.dataset.fx, tr = '', op = p, fl = '';
+    if (fx === 'up') tr = 'translateY(' + (18 * (1 - p)) + 'px)';
+    else if (fx === 'left') tr = 'translateX(' + (26 * (1 - p)) + 'px)';
+    else if (fx === 'slide') { tr = 'translateX(' + (70 * (1 - p)) + 'px) scale(' + (1.03 - 0.03 * p) + ')'; fl = 'blur(' + (8 * (1 - p)) + 'px)'; }
+    else if (fx === 'slideup') { tr = 'translateY(' + (60 * (1 - p)) + 'px)'; fl = 'blur(' + (6 * (1 - p)) + 'px)'; }
+    else if (fx === 'pop') { var q = eio(pr(t, a, d)); tr = 'scale(' + (0.6 + 0.4 * q + 0.06 * Math.sin(q * Math.PI)) + ')'; op = q; }
+    else if (fx === 'logo') { tr = 'scale(' + (1.08 - 0.08 * p) + ')'; fl = 'blur(' + (14 * (1 - p)) + 'px)'; }
+    else if (fx === 'grow') { tr = 'scaleX(' + p + ')'; op = p > 0 ? 1 : 0; }
+    if (e.dataset.float) { var f = e.dataset.float.split(',').map(Number); tr += ' translateY(' + (f[0] * Math.sin(t * 2 * Math.PI / f[1])) + 'px)'; }
+    var rot = /rotate\([^)]*\)/.exec(e.getAttribute('style') || '');
+    e.style.opacity = op;
+    e.style.transform = (rot ? rot[0] + ' ' : '') + tr;
+    e.style.filter = fl;
+  });
+  TIPOS.forEach(function (e) {
+    var p = e.dataset.type.split(',').map(Number), q = pr(t, p[0], p[1]);
+    if (q >= 1) { if (e._feito !== 1) { e.innerHTML = e._html; e._feito = 1; } e.style.opacity = 1; return; }
+    e._feito = 0;
+    var n = Math.floor(e._txt.length * q);
+    e.textContent = e._txt.slice(0, n);
+    e.style.opacity = q > 0 ? 1 : 0;
+  });
+  BARRAS.forEach(function (e) { var p = e.dataset.bar.split(',').map(Number); e.style.width = (p[2] * eo(pr(t, p[0], p[1]))) + '%'; });
+  CNT.forEach(function (e) {
+    var p = e.dataset.cnt.split(','), a = +p[0], d = +p[1], alvo = +p[2], dec = +p[3];
+    var ini = e._ini != null ? e._ini : (e._ini = (/\d/.test(e.textContent) && e.closest('.tbl') ? parseFloat(e.textContent.replace('.', '').replace(',', '.')) : 0));
+    var v = ini + (alvo - ini) * eo(pr(t, a, d));
+    e.textContent = (p[4] || '') + fmt(v, dec) + (p[5] || '');
+  });
+  DRAW.forEach(function (e) { var p = e.dataset.draw.split(',').map(Number); e.style.strokeDashoffset = e._L * (1 - eo(pr(t, p[0], p[1]))); });
+  TROCA.forEach(function (e) { var p = e.dataset.troca.split(',').map(Number); e.style.opacity = eo(pr(t, p[0], p[1])); });
+  ON.forEach(function (e) { e.classList.toggle('on', t >= +e.dataset.on); e.style.opacity = 0.35 + 0.65 * eo(pr(t, +e.dataset.on - 0.5, 0.5)); });
+  DEST.forEach(function (e) { var a = +e.dataset.dest; e.classList.toggle('dest', t >= a && t < a + 0.42); });
+  /* passos do topo */
+  var ps = document.getElementById('passos'), ip = -1;
+  PASSOS.forEach(function (p, i) { if (t >= p[0] && t < p[1]) ip = i; });
+  ps.style.opacity = t >= PASSOS[0][0] - 0.2 && t < PASSOS[4][1] ? Math.min(pr(t, PASSOS[0][0] - 0.2, 0.4), 1 - pr(t, PASSOS[4][1] - 0.4, 0.4)) : 0;
+  [].forEach.call(ps.children, function (c, i) { c.className = 'pp' + (i === ip ? ' ativo' : i < ip ? ' feito' : ''); });
+  /* migalha */
+  var m = MIGALHA.find(function (x) { return t >= x[0] && t < x[1]; });
+  var mg = document.getElementById('migalha');
+  mg.style.opacity = m ? 1 : 0;
+  if (m) { document.getElementById('mnum').textContent = m[2]; document.getElementById('mtxt').textContent = m[3]; }
+  document.getElementById('marca').style.opacity = t > 4.2 && t < 98.4 ? 1 : 0;
+  /* linha de progresso */
+  document.querySelector('#linha i').style.width = (100 * cl(t / TOTAL)) + '%';
+  /* cursor */
+  var cur = document.getElementById('cursor'), onda = document.getElementById('onda');
+  var vis = VISCUR.find(function (v) { return t >= v[0] && t <= v[1]; });
+  if (!vis) { cur.style.opacity = 0; onda.style.opacity = 0; }
+  else {
+    var k = 0; while (k < CURSOR.length - 1 && CURSOR[k + 1][0] <= t) k++;
+    var A = CURSOR[k], B = CURSOR[k + 1] && CURSOR[k + 1][0] > t ? CURSOR[k + 1] : A;
+    if (t < A[0]) B = A;
+    var q = B === A ? 1 : eio(cl((t - A[0]) / (B[0] - A[0])));
+    var x = A[1] + (B[1] - A[1]) * q, y = A[2] + (B[2] - A[2]) * q;
+    cur.style.opacity = Math.min(pr(t, vis[0], 0.3), 1 - pr(t, vis[1] - 0.3, 0.3));
+    cur.style.transform = 'translate(' + x + 'px,' + y + 'px)';
+    var clk = CURSOR.find(function (c) { return c[3] && t >= c[0] && t < c[0] + 0.6; });
+    if (clk) { var w = pr(t, clk[0], 0.6); onda.style.opacity = 1 - w; onda.style.left = clk[1] + 'px'; onda.style.top = clk[2] + 'px'; onda.style.transform = 'scale(' + (0.4 + w) + ')'; }
+    else onda.style.opacity = 0;
+  }
+}
+window.render = render; window.TOTAL = TOTAL;
+render(0);
+</script>
+</body></html>
