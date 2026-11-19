@@ -19,7 +19,7 @@ if (!PLAN || !HTMLS) {
   process.exit(2);
 }
 if (SHOTS) fs.mkdirSync(SHOTS, {recursive: true});
-const NOMES = NOMES0.length ? NOMES0 : ['PA', 'DC', 'CE', 'BW', 'BDII', 'Shell'];
+const NOMES = NOMES0.length ? NOMES0 : ['PA', 'DC', 'CE', 'BW', 'BDII', 'Shell', 'BP'];
 const HOJE = new Date().toISOString().slice(0, 10);
 let ok = 0, falhas = 0;
 const conf = (cond, msg, extra) => {

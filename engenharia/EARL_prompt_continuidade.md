@@ -4,7 +4,7 @@
 
 > **Regra de entrega (pedido do usuário, 05/11/2026):** sempre que houver alteração em qualquer arquivo (EARL, EARL Engenharia, EARL Gerencial, testes), **enviar junto este prompt de continuidade atualizado** — com o que foi feito, o que está pendente e como continuar — e commitá-lo junto com a alteração. Antes de entregar, rodar os testes (os novos e todos os anteriores) e dizer o resultado.
 >
-> **Última atualização:** 16/11/2026 — **vídeo tutorial "como usar"** (`engenharia/walkthrough/tutorial/`): a tela do app gravada em uso, em 12 partes, com faixa de legenda embaixo e capítulos — o Hugo pediu "um vídeo didático que mostra como usa", não um vídeo de apresentação. Antes, no mesmo dia, o **vídeo de apresentação** (`engenharia/walkthrough/video/`, 1 min 44 s); em 13/11: e-mail para o time de engenharia, EARL Gerencial em branco, **e13 + walkthrough em PDF + arquivos _V01** e e12 + g18. **Pendente:** a planilha do banco de químicos/casing não chegou. Ver as seções "Vídeo tutorial", "Vídeo", "e13" e "e12 + g18" em 4-E.
+> **Última atualização:** 19/11/2026 — **arquivo pré-carregado do contrato BP** (`EARL_Engenharia_BP_V01.html`, gerado da planilha `BP.xlsx` pelo `contratos_reais/gerar_html.js`; o leitor passou a reconhecer descrições em inglês como '36" Conductor' → Cimentação primária 36"). **Em andamento (parado a pedido do Hugo):** narração em português e versão mais rápida do vídeo tutorial — ver "Vídeo tutorial" em 4-E. Antes, em 16/11: **vídeo tutorial "como usar"** (`engenharia/walkthrough/tutorial/`, 12 partes, faixa de legenda e capítulos) e o vídeo de apresentação; em 13/11: e-mail para o time, Gerencial em branco, **e13 + walkthrough em PDF + arquivos _V01** e e12 + g18. **Pendente:** a planilha do banco de químicos/casing não chegou.
 >
 > Antes, em 09/11/2026 — **Contratos reais pré-carregados** (pasta `engenharia/contratos_reais/`): um `EARL_Engenharia_<NOME>.html` por planilha de contrato.
 >
@@ -591,6 +591,31 @@ Pedidos do Hugo (12/11/2026): "No envio do email do Handover preciso que inclua 
   - Painel de Compras: `engenharia` 37, `invariantes` 64, `pedidos_enviados` 15, `regressao` 6, `reproduzir` ok.
   - Ajustes de expectativa nos testes antigos (mudanças pedidas): sonda "NS-32 - Norbe VIII" nos seletores, no assunto do e-mail e na matriz do Gerencial; coluna "Saldo na sonda" no e-mail; colunas novas nas exportações; versão g16.
 - **Pendências:** os textos novos ainda sem EN/ES; a tabela de câmbio não tem importação por planilha (é digitada); a "Frente" do PA ainda precisa de ajuste (a planilha fatura com outra regra).
+
+### Contrato BP pré-carregado (19/11/2026)
+
+- **Pedido:** "Faltou criar o arquivo da engenharia para a BP. Crie, por favor." O Hugo mandou a planilha `BP.xlsx`, no formato **por colunas**, como PA, BW, BDII e Shell: abas Forecast e Banco de dados contratos.
+- **Resultado:** `EARL_Engenharia_BP_V01.html`. Leva `_V01` porque o app é o mesmo dos outros _V01; ele completa o conjunto.
+  - Contrato: o BP do EARL ("BP — Macaé (offshore)") é reaproveitado, e os demais ficam arquivados.
+  - Sonda: NS-39, criada.
+  - Operações: 27 (8 concluídas), nos poços Tupinamba1 e Bumerangue.
+  - Bancos: 60 químicos e 132 itens no contrato.
+  - **Receita US$ 4.180.956,63 e COGS US$ 882.779,22, iguais à planilha**, sem nenhum ajuste.
+  - Aviso do gerador: 6 itens têm, no Forecast, um preço diferente de todos os anos do Banco (ex.: 1-42 11,64). Os totais batem assim mesmo.
+- **Leitor (`leitor_planilhas.js`, `tipoOperacao`):** descrição em inglês que começa pelo revestimento ('36" Conductor', '22" Surface', '13 5/8" Intermed', '9 7/8" Liner', '13 5/8" Casing') → **Cimentação primária** com o revestimento, como já fazia o teste BP (`teste_bp/gerar_seed_bp.js`). Antes, essas operações iam para "Outros".
+  - Nenhuma descrição das outras 6 planilhas casa com a regra.
+  - Os 6 arquivos foram gerados de novo e deram receita, COGS e tipos iguais aos de 13/11. Por isso não precisam ser reenviados.
+- `e2e_contratos_reais.js` passou a incluir o BP na lista padrão (`PA DC CE BW BDII Shell BP`). As planilhas ficam em `<pasta>/<NOME>/<NOME>.xlsx`, e a do BP é `BP/BP.xlsx`.
+- **Testes (19/11/2026):** todos sem falha.
+  - Engenharia: 62, 75, 36, 12, 54, 23, 37, 50, 18; BP `e2e_bp` 58.
+  - Gerencial: 62, 59, 71, 59, 27.
+  - Contratos reais, os 7 com o BP: 135.
+  - Tela do BP no Chromium sem erro de JavaScript.
+- **Pedido em andamento (parado):** o Hugo pediu, em 19/11, **narração em português** no vídeo tutorial ("alguém narrando o que você está fazendo") e **mais rapidez** ("ficou um pouco lento").
+  - Feito até agora: o ambiente "DAR" ganhou acesso a `huggingface.co`, `cdn-lfs.huggingface.co`, `cdn-lfs-us-1.huggingface.co`, `cas-bridge.xethub.hf.co` e `us.aws.cdn.hf.co`, para baixar vozes neurais.
+  - O Piper (`pip install piper-tts`) foi instalado num venv na pasta de rascunho.
+  - Falta baixar as vozes pt_BR do Piper (`rhasspy/piper-voices`: faber, cadu e jeff medium; edresson low) e escolher uma.
+  - Depois: escrever a narração de cada passo (a partir das legendas de `sessao.json`), deixar as esperas do roteiro proporcionais à fala e acelerar os movimentos. O plano é gravar a fala antes, para cada passo durar o tempo da fala.
 
 ### Vídeo tutorial "como usar" (16/11/2026)
 

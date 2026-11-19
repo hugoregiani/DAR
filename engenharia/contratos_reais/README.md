@@ -3,7 +3,7 @@
 Pedido do Hugo (09/11/2026): "recrie um HTML para cada arquivo em anexo, como já fiz o teste da BP … os arquivos HTML
 venham carregados com as informações para que eu compartilhe com outros usuários".
 
-Cada planilha (PA, DC, CE, BW, BDII, Shell) vira um `EARL_Engenharia_<NOME>.html`: o mesmo `EARL_Engenharia.html`, com
+Cada planilha (PA, DC, CE, BW, BDII, Shell e, desde 19/11/2026, BP) vira um `EARL_Engenharia_<NOME>.html`: o mesmo `EARL_Engenharia.html`, com
 o banco já montado a partir das abas **Forecast** e **Banco de dados contratos**. As planilhas e os HTML gerados têm
 dados reais de contrato e **não ficam no repositório**: só os scripts.
 
@@ -26,7 +26,7 @@ node contratos_reais/e2e_contratos_reais.js <pasta das planilhas> <pasta dos HTM
 
 ## Os dois formatos de planilha (`leitor_planilhas.js`)
 
-| | por colunas (PA, BW, BDII, Shell — como o BP) | por linhas (CE, DC) |
+| | por colunas (PA, BW, BDII, Shell, BP) | por linhas (CE, DC) |
 |---|---|---|
 | Forecast | rótulos na coluna F, uma operação por coluna (G em diante); seções de itens PPU, químicos, casing e time de embarque | uma linha por item cobrado: cliente, contrato, status, risco, item, quantidade, preço, sonda, poço, operação, data, receita/COGS e valores manuais |
 | Contratos no arquivo | um | vários (coluna "Contrato") |
@@ -61,11 +61,13 @@ Regras:
   West Carina, que ganha o NS-48). Sonda que não existe é criada (NS-51, NS-57 no PA; V247 no BW). Sem sonda: vendas do
   CE, Câmbio/COPQ, Mero 4, Perenco, Tenaris DS e a "Frente" do PA; "Commander NS-40" (Drill Quip) usa a NS-40.
 - **Tipo de operação:** pela descrição (LWO, HWO, PWC, Abandono, Squeeze, Top-job, Disponibilidade, Cimentação
-  primária + revestimento); o resto vai para "Outros" com a descrição (até 20 letras).
+  primária + revestimento); o resto vai para "Outros" com a descrição (até 20 letras). Descrição em inglês com o
+  revestimento no começo ('36" Conductor', '22" Surface', '13 5/8" Intermed', '9 7/8" Liner', '13 5/8" Casing', no BP)
+  também vira Cimentação primária com o revestimento, como no teste BP.
 - **Químicos e casing:** a tabela "SAP | Químicos" vira o banco de produtos químicos e "SAP | Casing" vira o banco de
   casing equipment (e12; antes ia para Custos (COGS)), como no teste BP. Em Custos ficam só os ajustes `AJ-`. Pessoal: linhas "Função:" do time de embarque.
 
-## Resultado (13/11/2026, planilhas novas de Shell, BD II, BW, CE e DC; PA a de 09/11)
+## Resultado (13/11/2026, planilhas novas de Shell, BD II, BW, CE e DC; PA a de 09/11; BP em 19/11)
 
 | Arquivo | Contratos | Operações | Receita (= planilha) | COGS (= planilha) |
 |---|---|---|---|---|
@@ -75,6 +77,7 @@ Regras:
 | BW | 1 (Maromba) | 18, sem ajuste | US$ 1.642.699,16 | US$ 437.335,88 |
 | BDII | 1 (BD II) | 148 (70 concluídas), 1 com ajuste de receita | US$ 14.745.524,05 | US$ 2.952.539,98 |
 | Shell | 1 (BJSA) | 12 | US$ 79.401.083,86 | US$ 159.392,61 |
+| BP (19/11/2026) | 1 (BP — Macaé, reaproveitado) | 27 (8 concluídas), sem ajuste; 15 viram Cimentação primária | US$ 4.180.956,63 | US$ 882.779,22 |
 
 ## Resultado anterior (12/11/2026, com o câmbio do mês)
 
@@ -86,3 +89,4 @@ Regras:
 | BW | 1 (Maromba) | 18 | US$ 1.578.360,62 | US$ 437.335,88 |
 | BDII | 1 (BD II) | 148 (68 concluídas), 1 com ajuste de receita | US$ 14.951.595,10 | US$ 2.975.329,80 |
 | Shell | 1 (BJSA) | 12 | US$ 79.401.083,86 | US$ 159.392,61 |
+| BP (19/11/2026) | 1 (BP — Macaé, reaproveitado) | 27 (8 concluídas), sem ajuste; 15 viram Cimentação primária | US$ 4.180.956,63 | US$ 882.779,22 |

@@ -444,6 +444,12 @@
       var t = tam();
       if (t) return {tipoOp: 'Cimentação primária', casing: t};
     }
+    // planilhas em inglês (BP): '36" Conductor', '22" Surface', '13 5/8" Intermed', '9 7/8" Liner', '13 5/8" Casing'
+    var mIng = String(desc || '').match(/^\s*(\d{1,2}(?:\s+\d\/\d)?)\s*"\s*(conductor|surface|liner|intermed|casing)/i);
+    if (mIng) {
+      var tIng = mIng[1].replace(/\s+/g, ' ') + '"';
+      if (tamanhos.indexOf(tIng) >= 0) return {tipoOp: 'Cimentação primária', casing: tIng};
+    }
     if (tp === 'perfuracao') return outro(desc.replace(/^perf(\.|f\.)? /i, 'Perfuração '));
     return outro(desc);
   }
