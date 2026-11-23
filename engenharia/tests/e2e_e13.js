@@ -17,7 +17,7 @@ const foto = async (page, nome) => { if (SHOTS) await page.screenshot({path: pat
 (async () => {
   const {browser, page, errs} = await abrir(ARQ, {h: 1000, hoje: '2026-11-13'});
   await page.waitForSelector('.eng2-card', {timeout: 60000});
-  conf(/e13/.test(await page.evaluate(() => EARL_VERSION)), 'versão e13');
+  conf(/e1[3-9]/.test(await page.evaluate(() => EARL_VERSION)), 'versão e13 ou mais nova');
   const card = '.eng2-card:has-text("Takatsugu J")';
   conf(await page.locator(card + ' .cmark.mono').count() === 1, 'antes: o card da Takatsugu J (Etesco) mostra as iniciais');
 

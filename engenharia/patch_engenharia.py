@@ -96,7 +96,7 @@ assert i > 0
 s = s[:i] + css + s[i:]
 
 # ---------------------------------------------------------------- app (código compilado)
-rep("var EARL_VERSION = 'EARL v115';", "var EARL_VERSION = 'EARL Engenharia e13 (base v115)';")
+rep("var EARL_VERSION = 'EARL v115';", "var EARL_VERSION = 'EARL Engenharia e14 (base v115)';")
 rep("var HO_ST = {\n  pendente: {", "var HO_ST = {\n  email: {\n    label: 'Enviado por e-mail',\n    c: '#304220',\n    bg: '#F1F5EC',\n    brd: '#D9E4CC'\n  },\n  pendente: {")
 # quem gera o e-mail assina os registros (sem login)
 rep("  var currentUser = () => authUser && authUser.email || sbUser || '';",
@@ -608,6 +608,49 @@ rep("""    }, ctSel ? React.createElement(ClientMark, {
       src: clientLogoOf(db, ctSel.clientName),
       size: 46
     }) : React.createElement(ClientMark, {""", """    }, ctSel ? engLogoBotao(ctSel.clientName, 46) : React.createElement(ClientMark, {""")
+
+# ---------------------------------------------------------------- e14: segurança (23/11/2026)
+# O antivírus do SharePoint/OneDrive (Microsoft) marcou os arquivos como "Malicious Payload". Era falso positivo
+# (ClamAV: 0 vírus; os modelos não têm macro nem JavaScript), mas o EARL v115 traz, para os relatórios de campo
+# (CSS, KPI, Job Log), três coisas com o mesmo desenho de ataque ("HTML smuggling" e phishing):
+#   * modelos Word/Excel/PDF escondidos em base64 dentro do HTML;
+#   * a JSZip em base64 executada com atob → <script> (e, se falhar, baixada do cdnjs);
+#   * o login Microsoft (MSAL de alcdn.msauth.net, login.microsoftonline.com, Graph com Mail.Send) e o
+#     carregamento de pdf-lib/pdf.js da internet.
+# Nada disso é usado na Engenharia: sai daqui. E o arquivo ganha uma política de segurança (CSP) que proíbe
+# carregar código ou enviar dados para qualquer endereço da internet.
+for nome in ('CSS_XLSX_B64', 'CSS_BLANK_PDF_B64', 'JSZIP_B64', 'JOBLOG_DOCX_B64', 'KPI_XLSX_B64'):
+    s, n = re.subn(r'var %s = "[A-Za-z0-9+/=]+";' % nome,
+                   'var %s = ""; /* e14: modelo de relatório de campo removido (não usado na Engenharia) */' % nome, s)
+    assert n == 1, nome
+SEM_INTERNET = ("Promise.reject(new Error('EARL Engenharia: recurso do EARL de campo, indisponível neste arquivo "
+                "(ele não carrega nada da internet).'))")
+i = s.index('var ensureJSZip = () => {')
+j = s.index('\n};\n', i) + 4
+assert 'atob(JSZIP_B64)' in s[i:j] and 'cdnjs' in s[i:j]
+s = s[:i] + 'var ensureJSZip = () => ' + SEM_INTERNET + ';\n' + s[j:]
+i = s.index('var loadScriptOnce = url => new Promise(')
+j = s.index('\n});\n', i) + 5
+assert 's.src = url' in s[i:j] and s.count('var loadScriptOnce') == 1
+s = s[:i] + 'var loadScriptOnce = url => ' + SEM_INTERNET + ';\n' + s[j:]
+rep("loadScriptOnce('https://cdnjs.cloudflare.com/ajax/libs/pdf-lib/1.17.1/pdf-lib.min.js')", "loadScriptOnce('')")
+rep("var PDFJS_URL = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/';", "var PDFJS_URL = '';")
+rep("var GRAPH_BASE = 'https://graph.microsoft.com/v1.0';", "var GRAPH_BASE = '';")
+rep("var GRAPH_SCOPES = ['User.Read', 'Files.ReadWrite.All', 'Sites.ReadWrite.All', 'Mail.Send'];", "var GRAPH_SCOPES = [];")
+rep("var MSAL_CDN = 'https://alcdn.msauth.net/browser/3.7.1/js/msal-browser.min.js';", "var MSAL_CDN = '';")
+rep("authority: 'https://login.microsoftonline.com/' + cfg.tenantId,", "authority: '',")
+rep('placeholder: "https://prod-xx.westus.logic.azure.com:443/workflows/...",', 'placeholder: "",')
+rep('placeholder: "https://prod-xx.brazilsouth.logic.azure.com:443/workflows/...",', 'placeholder: "",')
+# CSP: só o código do próprio arquivo roda; nada é buscado nem enviado para a internet (fetch, XHR, imagens, fontes,
+# formulários, iframes de fora). Os downloads (Excel, .eml, backup) são blob:/data: e continuam funcionando.
+CSP = ("default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; img-src data: blob:; "
+       "font-src data:; media-src data: blob:; connect-src data: blob:; frame-src blob: data:; child-src blob: data:; "
+       "worker-src blob:; form-action 'none'; base-uri 'none'; object-src 'none'")
+rep('<head>\n', '<head>\n<meta charset="UTF-8">\n<meta http-equiv="Content-Security-Policy" content="%s">\n'
+    '<meta name="referrer" content="no-referrer">\n' % CSP)
+assert 'UEsDB' not in s and 'JVBER' not in s, 'sobrou arquivo Office/PDF em base64'
+for proibido in ('login.microsoftonline.com', 'graph.microsoft.com', 'msauth.net', 'atob(JSZIP_B64)', 'logic.azure.com'):
+    assert proibido not in s, proibido
 
 # e12: filtro e ordem em todas as tabelas (script avulso, fora do React), no fim do <body>
 tf = open(os.path.join(AQUI, 'eng_tabelas.js'), encoding='utf-8').read()

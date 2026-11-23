@@ -18,6 +18,20 @@ O nome (PA, DC…) vira o prefixo do armazenamento do navegador (`earlengpa:`), 
 versão (`EARL Engenharia e9 (base v115) · PA`). O relatório `.json` traz os contratos, as sondas criadas, os ajustes e
 a conferência de receita/COGS de cada operação.
 
+**Versão nova do app para quem já usa o arquivo (V02, 23/11/2026):**
+
+- A identidade dos dados (`PLID`) é a impressão digital da **planilha**. Gerar de novo da mesma planilha mantém o que
+  cada pessoa já lançou no navegador; uma planilha nova traz dados novos.
+- Ao entregar uma versão nova, passe o arquivo anterior com `--compat`. O novo aceita os dados que o anterior guardou
+  (e os que ele já aceitava): `PLID_COMPAT`, conferido no bootstrap e no `loadDB`.
+- Exemplo: `node contratos_reais/gerar_html.js <pasta>/PA.xlsx PA EARL_Engenharia.html <saída>/EARL_Engenharia_PA.html <saída>/rel_PA.json --compat <V01>/EARL_Engenharia_PA_V01.html`.
+- `--novo-id` força dados novos (o comportamento antigo).
+- Antes da V02, a identidade vinha do banco gerado, que inclui a data de geração. Por isso, gerar de novo a mesma
+  planilha apagava o que a pessoa tinha lançado. O `contratos_reais/e2e_atualizacao.js <pasta anteriores> <pasta novos>` confere que:
+  - o lançado na versão anterior continua na nova;
+  - "Reiniciar" volta à planilha;
+  - um navegador novo recebe os dados da planilha.
+
 Teste de ponta a ponta (abre cada HTML como o usuário abre):
 
 ```bash

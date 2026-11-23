@@ -2,8 +2,13 @@
 // "Banco de dados contratos"), para compartilhar com outros usuários.
 //
 // Uso: node contratos_reais/gerar_html.js <planilha.xlsx> <NOME> <EARL_Engenharia.html> <saída.html> [relatório.json]
-//   NOME = sigla curta do arquivo (PA, DC, CE, BW, BDII, Shell): vira o prefixo do armazenamento do navegador
+//                                          [--compat <HTML da versão anterior> ...] [--novo-id]
+//   NOME = sigla curta do arquivo (PA, DC, CE, BW, BDII, Shell, BP): vira o prefixo do armazenamento do navegador
 //   ("earleng" + nome + ":"), a etiqueta no canto da tela e o sufixo da versão.
+//   Identidade dos dados (V02, 23/11/2026): é a impressão digital da PLANILHA (não mais do banco gerado). Gerar de
+//   novo da mesma planilha (ex.: nova versão do app) mantém o que cada pessoa já lançou no navegador; planilha nova
+//   = dados novos. --compat <HTML anterior> aceita também os dados guardados por aquele arquivo (e pelos que ele já
+//   aceitava): use ao entregar uma versão nova do app para quem já usa a anterior. --novo-id força dados novos.
 //
 // Passos: abre o EARL_Engenharia.html no Chromium (sem internet), lê a planilha com o XLSX do próprio app e o
 // leitor_planilhas.js, monta o banco (contratos com itens, preços e reajustes, sondas, químicos/casing com COGS,
@@ -34,7 +39,12 @@ function casingParaBanco(d, itens, arquivo, agora) {
 }
 
 
-const [XLSX_ARQ, NOME, HTML, SAIDA, RELAT] = process.argv.slice(2);
+const ARGS = process.argv.slice(2);
+const COMPAT_ARQS = [];
+for (let k = ARGS.indexOf('--compat'); k >= 0; k = ARGS.indexOf('--compat')) COMPAT_ARQS.push(ARGS.splice(k, 2)[1]);
+const NOVO_ID = ARGS.indexOf('--novo-id') >= 0;
+if (NOVO_ID) ARGS.splice(ARGS.indexOf('--novo-id'), 1);
+const [XLSX_ARQ, NOME, HTML, SAIDA, RELAT] = ARGS;
 if (!XLSX_ARQ || !NOME || !HTML || !SAIDA) {
   console.error('uso: node contratos_reais/gerar_html.js <planilha.xlsx> <NOME> <EARL_Engenharia.html> <saída.html> [relatório.json]');
   process.exit(2);
@@ -239,10 +249,25 @@ function conferir(alvo) {
 }
 
 /* --------- embute o banco no HTML (mesma ideia do teste BP: armazenamento e etiqueta próprios) --------- */
-function embutir(base, seed, nome, arquivo) {
+// identidades aceitas: as do(s) HTML anterior(es) (o PLID e a lista que ele já aceitava)
+function compatDe(arqs, pid) {
+  const ids = [];
+  arqs.forEach(a => {
+    const h = fs.readFileSync(a, 'utf8');
+    const m = h.match(/var PLID='(pl-[0-9a-f]+)'/);
+    if (!m) throw new Error('--compat: ' + a + ' não é um EARL Engenharia pré-carregado');
+    ids.push(m[1]);
+    const c = h.match(/var PLID_COMPAT=(\[[^\]]*\])/);
+    if (c) JSON.parse(c[1]).forEach(x => ids.push(x));
+  });
+  return [...new Set(ids)].filter(x => x !== pid && /^pl-[0-9a-f]+$/.test(x));
+}
+
+function embutir(base, seed, nome, arquivo, xlsxBytes) {
   let s = base;
   const obj = JSON.parse(seed);
-  const pid = 'pl-' + crypto.createHash('sha1').update(seed).digest('hex').slice(0, 12);
+  const pid = 'pl-' + crypto.createHash('sha1').update(NOVO_ID ? seed : Buffer.concat([Buffer.from(nome + '|'), xlsxBytes])).digest('hex').slice(0, 12);
+  const compat = compatDe(COMPAT_ARQS, pid);
   obj.earlPlanilhaId = pid;
   seed = JSON.stringify(obj);
   const rep = (a, b) => {
@@ -263,15 +288,18 @@ function embutir(base, seed, nome, arquivo) {
   if (i < 0 || j < 0) throw new Error('bloco de armazenamento não encontrado');
   const bloco = `  /* DADOS DA PLANILHA ${esc(arquivo)}: banco gerado pelo contratos_reais/gerar_html.js. Se o navegador não tiver esta
      versão guardada, grava; sem espaço (ou se o navegador não deixar), o app usa os dados embutidos mesmo assim. */
-  var SEED=${lit};var PLID='${pid}';var PL_NOME=${jsStr(nome)};var PL_ARQ=${jsStr(arquivo)};
-  window.EARL_PLANILHA=PL_NOME;window.EARL_PL_SEED=SEED;window.EARL_PL_ID=PLID;window.EARL_PL_SEM_ESPACO=false;
+  var SEED=${lit};var PLID='${pid}';var PLID_COMPAT=${JSON.stringify(compat)};var PL_NOME=${jsStr(nome)};var PL_ARQ=${jsStr(arquivo)};
+  window.EARL_PLANILHA=PL_NOME;window.EARL_PL_SEED=SEED;window.EARL_PL_ID=PLID;window.EARL_PL_COMPAT=PLID_COMPAT;window.EARL_PL_SEM_ESPACO=false;
   function gravar(){
     var ks=[];for(var i=0;i<localStorage.length;i++){var k=localStorage.key(i);if(k&&k.indexOf(P)===0)ks.push(k);}
     ks.forEach(function(k){R.call(localStorage,k);});
     S.call(localStorage,P+'hal_cmt_db_v1',typeof Z==='function'?Z(SEED):SEED);S.call(localStorage,P+'earl_pl_id',PLID);
   }
-  var precisa=true;try{precisa=G.call(localStorage,P+'earl_pl_id')!==PLID||!G.call(localStorage,P+'hal_cmt_db_v1');}catch(e){}
+  /* dados guardados por esta planilha (ou por uma versão anterior compatível do arquivo) ficam; senão, grava os embutidos */
+  var guardado=null,precisa=true;
+  try{guardado=G.call(localStorage,P+'earl_pl_id');precisa=!G.call(localStorage,P+'hal_cmt_db_v1')||(guardado!==PLID&&PLID_COMPAT.indexOf(guardado)<0);}catch(e){}
   if(precisa){try{gravar();}catch(e){window.EARL_PL_SEM_ESPACO=true;}}
+  else if(guardado!==PLID){try{S.call(localStorage,P+'earl_pl_id',PLID);}catch(e){}}
   window.earlPlReiniciar=function(){
     if(!confirm('Voltar aos dados da planilha '+PL_ARQ+'?\\n\\nTudo o que foi lançado neste arquivo, neste computador, será apagado.'))return;
     try{gravar();}catch(e){}
@@ -279,8 +307,10 @@ function embutir(base, seed, nome, arquivo) {
   };
   document.addEventListener('DOMContentLoaded',function(){
     var t=document.createElement('div');t.className='earl-pl-tag'+(window.EARL_PL_SEM_ESPACO?' sem':'');
-    t.innerHTML='<b>'+PL_NOME+'</b><span>'+(window.EARL_PL_SEM_ESPACO?'⚠ este navegador não está salvando: o arquivo abre, mas as alterações não ficam salvas':'dados da planilha '+PL_ARQ+' · gerado em ${geradoEm}')+'</span><button type="button" title="Voltar aos dados da planilha">Reiniciar</button>';
-    t.querySelector('button').onclick=window.earlPlReiniciar;
+    var b=document.createElement('b'),sp=document.createElement('span'),bt=document.createElement('button');
+    b.textContent=PL_NOME;sp.textContent=window.EARL_PL_SEM_ESPACO?'⚠ este navegador não está salvando: o arquivo abre, mas as alterações não ficam salvas':'dados da planilha '+PL_ARQ+' · gerado em ${geradoEm}';
+    bt.type='button';bt.title='Voltar aos dados da planilha';bt.textContent='Reiniciar';bt.onclick=window.earlPlReiniciar;
+    t.appendChild(b);t.appendChild(sp);t.appendChild(bt);
     document.body.appendChild(t);
   });
 `;
@@ -295,13 +325,13 @@ function embutir(base, seed, nome, arquivo) {
 .earl-pl-tag.sem{background:#8A3B1B}
 </style>`);
   rep('<title>EARL — Engenharia</title>', '<title>EARL — Engenharia (' + esc(nome) + ')</title>');
-  rep('      if (d.people && d.people.length > 0) return engQuimMig(migrateDB(d));', '      if (d.people && d.people.length > 0 && d.earlPlanilhaId === window.EARL_PL_ID) return engQuimMig(migrateDB(d));');
+  rep('      if (d.people && d.people.length > 0) return engQuimMig(migrateDB(d));', '      if (d.people && d.people.length > 0 && (d.earlPlanilhaId === window.EARL_PL_ID || (window.EARL_PL_COMPAT || []).indexOf(d.earlPlanilhaId) >= 0)) return engQuimMig(migrateDB(d));');
   rep('  return engQuimMig(migrateDB(JSON.parse(JSON.stringify(SEED_DB))));', '  return engQuimMig(migrateDB(JSON.parse(window.EARL_PL_SEED)));');
   const m = s.match(/var EARL_VERSION = '([^']*)';/g);
   if (!m || m.length !== 1) throw new Error('EARL_VERSION');
   const v = m[0].match(/'([^']*)'/)[1];
   rep("var EARL_VERSION = '" + v + "';", "var EARL_VERSION = '" + v + ' · ' + nome.replace(/'/g, '') + "';");
-  return {html: s, pid, pref};
+  return {html: s, pid, pref, compat};
 }
 
 (async () => {
@@ -320,10 +350,10 @@ function embutir(base, seed, nome, arquivo) {
   const banco = await page.evaluate(() => localStorage.getItem('hal_cmt_db_v1'));
   if (!banco) throw new Error('banco não gravado');
   const base = fs.readFileSync(HTML, 'utf8');
-  const out = embutir(base, banco, NOME, arquivo);
+  const out = embutir(base, banco, NOME, arquivo, fs.readFileSync(XLSX_ARQ));
   fs.writeFileSync(SAIDA, out.html);
   delete res.alvo;
-  const rel = {arquivo, nome: NOME, geradoEm: new Date().toISOString(), saida: path.basename(SAIDA), tamanhoMB: Math.round(out.html.length / 1e5) / 10, prefixo: out.pref, id: out.pid, ...res, conferencia: conf, errosApp: errs};
+  const rel = {arquivo, nome: NOME, geradoEm: new Date().toISOString(), saida: path.basename(SAIDA), tamanhoMB: Math.round(out.html.length / 1e5) / 10, prefixo: out.pref, id: out.pid, idsAceitos: out.compat, ...res, conferencia: conf, errosApp: errs};
   if (RELAT) fs.writeFileSync(RELAT, JSON.stringify(rel, null, 1));
   console.log(JSON.stringify(rel, null, 1).slice(0, 6000));
   if (errs.length) { console.error('ERROS NO APP:', errs); process.exitCode = 1; }

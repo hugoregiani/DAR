@@ -98,6 +98,32 @@ A Engenharia do EARL separada do resto do sistema, para usar **sem servidor, sem
 - **Exportações:** "Consumo de produtos químicos", "Casing equipment" e "Pessoal" ganharam **Contingência (linha)** e **Risco da linha (%)**; a operação já tinha Contingência e Risco (%). O Painel de Compras aplica o risco da linha.
 - **Cards** da aba "Consumo e receita" com profundidade, como os do Gerencial g16.
 
+### e14 (23/11/2026) — segurança
+
+O antivírus do SharePoint/OneDrive (Microsoft) marcou os arquivos como "Virus Found — Malicious Payload". Era **falso
+positivo**: o ClamAV (3,6 milhões de assinaturas) não achou nada, e os modelos não têm macro nem JavaScript. O que
+disparava o alerta era o desenho de três trechos do EARL v115, usados só nos relatórios de campo:
+- modelos Word/Excel/PDF escondidos em base64 dentro do HTML (CSS, KPI, Job Log);
+- a JSZip em base64 executada com `atob` → `<script>`;
+- o login Microsoft (MSAL de alcdn.msauth.net, login.microsoftonline.com, Graph com Mail.Send) e o pdf-lib/pdf.js
+  baixados da internet.
+
+Isso é o mesmo desenho de "HTML smuggling" e de phishing. Mudanças no `patch_engenharia.py`:
+- Saem os modelos, a JSZip em base64 e todo carregamento de código da internet (`loadScriptOnce` e `ensureJSZip`
+  devolvem erro), além dos endereços de login/Graph/Logic Apps.
+- Entra uma política de segurança (**Content-Security-Policy**) logo no início do `<head>`:
+  - só roda o código do próprio arquivo, sem `eval`;
+  - nada é buscado nem enviado para a internet (fetch, XHR, beacon, imagens, fontes, formulários, iframes de fora);
+  - os downloads (Excel, .eml, backup) são `blob:`/`data:` e continuam funcionando.
+- O Gerencial (g19) ganhou a mesma política.
+
+O teste `tests/e2e_seguranca.js` confere tudo isso:
+- os arquivos não têm conteúdo escondido, nem código ou login da internet;
+- a política não atrapalha o uso normal;
+- as tentativas de mandar dados para fora são barradas (nenhum pedido chega à rede);
+- texto malicioso nos dados (nomes de cliente, contrato, sonda, poço, produto, função, e o arquivo do Gerencial de
+  outra pessoa) aparece como texto e não executa, na tela, no filtro, no e-mail do handover e no Gerencial.
+
 ### e13 (13/11/2026)
 
 - **Logo do cliente** (`eng_logo.js`): ao abrir o contrato, clique na logo (ou nas iniciais) ao lado do nome → janela "Logo do cliente": **⬆ Inserir a logo** / **Trocar a logo** (PNG, JPG, SVG…; reduzida para no máximo 240 px) e **Tirar**. Fica em `db.clientLogos` (o mesmo lugar do EARL), vale para todos os contratos do cliente: card da página inicial, topo do contrato e operações. Vai no "⬇ Exportar dados"; no "Juntar" fica a mais recente de cada cliente.
@@ -233,4 +259,4 @@ node contratos_reais/e2e_contratos_reais.js <pasta das planilhas> <pasta dos HTM
     - apagar com operações: só com APAGAR, levando as operações e o handover;
     - os contratos apagados não voltam ao reabrir.
 - **A seção Receita e margem é o `../gerencial/gerencial.html`**, embutido pelo patch (`ENG_GER_HTML`, num iframe, no modo embutido do Gerencial). Mudou o Gerencial? Gere de novo o `EARL_Engenharia.html`.
-- Versão: `EARL_VERSION = 'EARL Engenharia e13 (base v115)'`. O teste do fluxo completo com o Gerencial está em `../gerencial/tests/e2e_gerencial.js`.
+- Versão: `EARL_VERSION = 'EARL Engenharia e14 (base v115)'`. O teste do fluxo completo com o Gerencial está em `../gerencial/tests/e2e_gerencial.js`.

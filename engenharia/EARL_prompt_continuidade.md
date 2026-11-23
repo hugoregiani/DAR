@@ -4,7 +4,7 @@
 
 > **Regra de entrega (pedido do usuário, 05/11/2026):** sempre que houver alteração em qualquer arquivo (EARL, EARL Engenharia, EARL Gerencial, testes), **enviar junto este prompt de continuidade atualizado** — com o que foi feito, o que está pendente e como continuar — e commitá-lo junto com a alteração. Antes de entregar, rodar os testes (os novos e todos os anteriores) e dizer o resultado.
 >
-> **Última atualização:** 19/11/2026 — **arquivo pré-carregado do contrato BP** (`EARL_Engenharia_BP_V01.html`, gerado da planilha `BP.xlsx` pelo `contratos_reais/gerar_html.js`; o leitor passou a reconhecer descrições em inglês como '36" Conductor' → Cimentação primária 36"). **Em andamento (parado a pedido do Hugo):** narração em português e versão mais rápida do vídeo tutorial — ver "Vídeo tutorial" em 4-E. Antes, em 16/11: **vídeo tutorial "como usar"** (`engenharia/walkthrough/tutorial/`, 12 partes, faixa de legenda e capítulos) e o vídeo de apresentação; em 13/11: e-mail para o time, Gerencial em branco, **e13 + walkthrough em PDF + arquivos _V01** e e12 + g18. **Pendente:** a planilha do banco de químicos/casing não chegou.
+> **Última atualização:** 23/11/2026 — **segurança, entrega _V02** (EARL Engenharia e14 + Gerencial g19). O antivírus do SharePoint/OneDrive marcou os HTML como "Virus Found — Malicious Payload". A varredura deu **falso positivo**: ClamAV com 0 vírus, e os modelos sem macro nem JavaScript. O alarme vinha de trechos do EARL v115 com desenho de ataque (modelos Office/PDF em base64, JSZip em base64 executada, login Microsoft e código da internet). Esses trechos saíram, e a Engenharia e o Gerencial ganharam uma política que bloqueia a internet. Teste novo: `tests/e2e_seguranca.js`. Ver "Segurança (e14/g19)" em 4-E. Antes, em 19/11: arquivo do contrato **BP**. **Em andamento (parado):** narração e versão mais rápida do vídeo tutorial. **Pendente:** a planilha do banco de químicos/casing não chegou.
 >
 > Antes, em 09/11/2026 — **Contratos reais pré-carregados** (pasta `engenharia/contratos_reais/`): um `EARL_Engenharia_<NOME>.html` por planilha de contrato.
 >
@@ -591,6 +591,50 @@ Pedidos do Hugo (12/11/2026): "No envio do email do Handover preciso que inclua 
   - Painel de Compras: `engenharia` 37, `invariantes` 64, `pedidos_enviados` 15, `regressao` 6, `reproduzir` ok.
   - Ajustes de expectativa nos testes antigos (mudanças pedidas): sonda "NS-32 - Norbe VIII" nos seletores, no assunto do e-mail e na matriz do Gerencial; coluna "Saldo na sonda" no e-mail; colunas novas nas exportações; versão g16.
 - **Pendências:** os textos novos ainda sem EN/ES; a tabela de câmbio não tem importação por planilha (é digitada); a "Frente" do PA ainda precisa de ajuste (a planilha fatura com outra regra).
+
+### Segurança (e14/g19) — entrega _V02 (23/11/2026)
+
+- **Pedido:** "Tenho recebido notificações de vírus nesses arquivos… faça uma varredura… e quais proteções você pode colocar para que ele fique livre de qualquer vírus ou falhas que possam comprometer a segurança dos dados." O print era do SharePoint/OneDrive ("Microsoft Teams Chat Files/EARL_Engenharia_BDII_V01 1.html"): "Virus Found … contains the following: Malicious Payload".
+- **Varredura:**
+  - ClamAV 1.5.4, com 3,6 milhões de assinaturas e as heurísticas ligadas: **0 vírus** nos 13 arquivos entregues (HTML, PDF, MP4 e textos).
+  - Os modelos embutidos, extraídos e examinados à parte: sem macro (vbaProject), sem vínculo externo, sem JavaScript no PDF. A JSZip embutida é a original 3.10.1.
+  - Os dados dos contratos estão em JSON simples, e as logos são imagens comuns.
+- **Causa do falso positivo:** três trechos do EARL v115 (relatórios de campo e sincronização SharePoint) têm o mesmo desenho de "HTML smuggling" e de phishing.
+  - `CSS_XLSX_B64`, `CSS_BLANK_PDF_B64`, `JOBLOG_DOCX_B64` e `KPI_XLSX_B64`: Word/Excel/PDF em base64.
+  - `JSZIP_B64` executado com `atob` → `<script>`.
+  - MSAL de alcdn.msauth.net, login.microsoftonline.com, Graph com `Mail.Send`, e pdf-lib/pdf.js/jszip do cdnjs (`loadScriptOnce`).
+- **Proteções no `patch_engenharia.py` (e14):**
+  - Os 5 base64 viram `""`; `ensureJSZip` e `loadScriptOnce` devolvem erro; somem os endereços de login/Graph/MSAL/Logic Apps/cdnjs.
+  - O script confere que não sobrou `UEsDB` (zip/Office), `JVBER` (PDF), nem esses endereços.
+  - **Content-Security-Policy** no início do `<head>`: `default-src 'none'`; scripts e estilos só do próprio arquivo (inline, sem eval); imagens, fontes, conexões e frames só `data:`/`blob:`; `form-action 'none'`, `base-uri 'none'`, `object-src 'none'`. Mais `referrer no-referrer`.
+  - Os downloads (Excel, .eml, backup) continuam funcionando. O Gerencial embutido (srcdoc) herda a política.
+- **Gerencial g19:** a mesma política no `gerencial.html`. O HTML compartilhado copia a página, então leva a política junto.
+- **Teste `engenharia/tests/e2e_seguranca.js`** (30 conferências; passe também os HTML dos contratos):
+  - estático: política presente e antes dos scripts; nada em base64 de Office/PDF/zip/exe/rar/7z; sem login/Graph/MSAL; nada carregado da internet;
+  - uso normal (telas, e-mail do handover, exportações) sem nenhuma violação;
+  - tentativas de fetch, XHR, beacon, imagem, script, formulário e eval: todas barradas, e **nenhum pedido chega à rede** (um "servidor" falso no Playwright conta os pedidos; uma página sem a política, como controle, passa);
+  - texto malicioso (`"><img onerror=…><svg onload=…>`) nos nomes de cliente, contrato, sonda, poço, produto, casing e função, e no arquivo do Gerencial de outra pessoa: aparece como texto e não executa (telas, filtro, consumo, handover, .eml, químicos, Gerencial embutido e avulso).
+- **Contratos:** os 7 (PA, DC, CE, BW, BDII, Shell, BP) gerados de novo com o e14, com receita e COGS iguais aos de antes. O BP de teste também foi gerado de novo.
+- **Perda de dados ao atualizar (achado e corrigido nesta entrega):** a identidade dos dados (`PLID`) era o sha1 do banco gerado, que muda a cada geração (datas). Por isso, quem abrisse a V02 perderia o que lançou na V01 (o bootstrap apaga e grava a planilha; o `loadDB` ignorava o banco de outra identidade).
+  - Agora o `PLID` é o sha1 de `NOME|bytes da planilha`: estável enquanto a planilha for a mesma. Planilha nova = dados novos; `--novo-id` força dados novos.
+  - `--compat <HTML anterior>` grava `PLID_COMPAT`: o bootstrap e o `loadDB` aceitam esses dados, e a versão nova assume a identidade.
+  - A etiqueta do canto passou a ser montada com `textContent`, e não mais com `innerHTML`.
+  - Teste `contratos_reais/e2e_atualizacao.js <pasta anteriores> <pasta novos>`: lança na V01, abre a V02 no mesmo navegador (o lançado continua, também ao reabrir), "Reiniciar" volta à planilha, e um navegador novo recebe a planilha. Resultado: 42 ok nos 7. Com os arquivos sem a correção, o teste falha, o que confirma o problema.
+  - **Para a próxima versão (V03):** gerar com `--compat <V02>`. A V02 já aceita a V01, e a lista passa adiante.
+- **Entrega _V02:** `EARL_Engenharia_V02.html`, `EARL_Gerencial_V02.html`, os 7 `EARL_Engenharia_<NOME>_V02.html`, `EARL_SHA256_V02.txt` (impressões digitais e como conferir no PowerShell) e `EARL_relatorio_seguranca_V02.md` (para a TI).
+  - O PDF, o vídeo e o tutorial não mudaram (continuam V01).
+  - Os arquivos V01 devem ser apagados do SharePoint/Teams.
+- **Testes (23/11/2026):** todos sem falha.
+  - Engenharia: 62, 75, 36, 12, 54, 23, 37, 50, 18; BP 58.
+  - Gerencial: 62, 59, 71, 59, 27.
+  - Contratos reais: 135.
+  - `e2e_seguranca`: 30 conferências + 5 por arquivo de contrato (65 com os 7).
+  - `e2e_atualizacao`: 42.
+  - ClamAV nos arquivos V02: 0 vírus.
+- **Se o SharePoint ainda acusar:** é a heurística da Microsoft, que não dá para reproduzir aqui.
+  - Enviar o arquivo à Microsoft como falso positivo (Microsoft Security Intelligence → "Submit a file", como "Incorrectly detected").
+  - Ou pedir à TI que libere pelo SHA-256 (indicador "Allow" no Defender).
+  - Compartilhar o arquivo dentro de um .zip não resolve: o antivírus abre o zip.
 
 ### Contrato BP pré-carregado (19/11/2026)
 
