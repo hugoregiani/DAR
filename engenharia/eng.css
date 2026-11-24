@@ -312,3 +312,21 @@ caption.etf-cap span{margin-right:10px}
 .eng-logo-nome{font-size:17px;color:var(--ink,#2A2F30)}
 .eng-logo-st{font-size:12.5px;color:var(--ink-2,#4D545A)}
 .eng-logo-cts{font-size:12px;color:var(--ink-3,#6B7378)}
+
+/* e15: importar contrato por contrato; apagar no topo do contrato */
+.ec-imp-ajuda{font-size:13px;color:var(--ink-2,#4D545A);margin:10px 0 8px;line-height:1.45}
+.ec-imp-cts td,.ec-imp-cts th{vertical-align:middle}
+.ec-imp-cts tr.ec-imp-on td{background:#FBF4F4}
+.ec-imp-cts .ec-imp-subst{color:#8A1C1C;font-weight:600}
+.ec-imp-cts .ec-imp-novo{color:#2F5D2A;font-weight:600}
+.ec-imp-cts .ec-imp-fica{color:var(--ink-3,#6B7378);font-weight:400}
+.ec-imp-arq{font-style:normal;font-size:11px;color:#8A6D1B;background:#FBF3DC;border-radius:999px;padding:1px 7px;margin-left:6px}
+.ec-imp-nota{font-size:12px;color:var(--ink-3,#6B7378);margin:6px 0}
+.ec-imp-det{margin:8px 0 4px;font-size:13px}
+.ec-imp-det summary{cursor:pointer;color:var(--ink-2,#4D545A)}
+.ec-importar[disabled]{opacity:.5;cursor:not-allowed}
+.eng2-ctbar-apagar{color:#B42318;border-color:#F1C5C0}
+.eng2-ctbar-apagar:hover{background:#FDF1F0}
+@media (max-width:760px){.eng2-ctbar-apagar{order:4;flex:1 1 100%;justify-content:center}}
+.ec-imp-cambio{margin:8px 0;padding:10px 12px;border-radius:10px;background:#FBF3DC;color:#5B4A12;font-size:12.5px;line-height:1.45}
+.ec-imp-cbx{display:flex;gap:8px;align-items:flex-start;margin-top:6px;font-weight:600;cursor:pointer}

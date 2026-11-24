@@ -4,7 +4,7 @@
 
 > **Regra de entrega (pedido do usuário, 05/11/2026):** sempre que houver alteração em qualquer arquivo (EARL, EARL Engenharia, EARL Gerencial, testes), **enviar junto este prompt de continuidade atualizado** — com o que foi feito, o que está pendente e como continuar — e commitá-lo junto com a alteração. Antes de entregar, rodar os testes (os novos e todos os anteriores) e dizer o resultado.
 >
-> **Última atualização:** 23/11/2026 — **segurança, entrega _V02** (EARL Engenharia e14 + Gerencial g19). O antivírus do SharePoint/OneDrive marcou os HTML como "Virus Found — Malicious Payload". A varredura deu **falso positivo**: ClamAV com 0 vírus, e os modelos sem macro nem JavaScript. O alarme vinha de trechos do EARL v115 com desenho de ataque (modelos Office/PDF em base64, JSZip em base64 executada, login Microsoft e código da internet). Esses trechos saíram, e a Engenharia e o Gerencial ganharam uma política que bloqueia a internet. Teste novo: `tests/e2e_seguranca.js`. Ver "Segurança (e14/g19)" em 4-E. Antes, em 19/11: arquivo do contrato **BP**. **Em andamento (parado):** narração e versão mais rápida do vídeo tutorial. **Pendente:** a planilha do banco de químicos/casing não chegou.
+> **Última atualização:** 24/11/2026 — **entrega _V03: EARL Engenharia e15**. Exportar leva tudo; importar é **contrato por contrato** (o de mesmo nome é substituído, com as operações; o novo entra; os outros não mudam; o câmbio daqui não muda sem "usar o câmbio do arquivo"); **🗑 Apagar contrato** no topo do contrato, e no último contrato o arquivo fica em branco. Saiu o "Juntar". Testes novos: `tests/e2e_e15.js` e `contratos_reais/e2e_importar.js`. O PDF do passo a passo foi refeito (V03); o Gerencial não mudou (continua V02). Ver "e15" em 4-E. Antes, em 23/11: **segurança, V02** (e14/g19). **Em andamento (parado):** narração e versão mais rápida do vídeo tutorial; ao regravar, o topo do contrato já terá o botão "Apagar contrato". **Pendente:** a planilha do banco de químicos/casing não chegou.
 >
 > Antes, em 09/11/2026 — **Contratos reais pré-carregados** (pasta `engenharia/contratos_reais/`): um `EARL_Engenharia_<NOME>.html` por planilha de contrato.
 >
@@ -591,6 +591,38 @@ Pedidos do Hugo (12/11/2026): "No envio do email do Handover preciso que inclua 
   - Painel de Compras: `engenharia` 37, `invariantes` 64, `pedidos_enviados` 15, `regressao` 6, `reproduzir` ok.
   - Ajustes de expectativa nos testes antigos (mudanças pedidas): sonda "NS-32 - Norbe VIII" nos seletores, no assunto do e-mail e na matriz do Gerencial; coluna "Saldo na sonda" no e-mail; colunas novas nas exportações; versão g16.
 - **Pendências:** os textos novos ainda sem EN/ES; a tabela de câmbio não tem importação por planilha (é digitada); a "Frente" do PA ainda precisa de ajuste (a planilha fatura com outra regra).
+
+### e15 — exportar, importar contrato por contrato e apagar — entrega _V03 (24/11/2026)
+
+- **Pedido:** "Quando eu exportar, tem que exportar não só cada operação, mas o contrato, tudo. Quando importar em outro arquivo, se já tenho o contrato (mesmo nome), ele deve substituir esse contrato e as operações. Tenho que poder deletar um contrato; ao deletar, deve deletar junto todas as operações, deixando o aplicativo todo em branco."
+- **Exportar** (`engExportar`, eng_app.js): já levava o banco inteiro. Ganhou a lista `contratos` no .json (nome, cliente, número, nº de operações), e o aviso diz o que foi exportado.
+- **Importar** (`engImportarContratos`, `engCtAqui`, `engCambioDif`, `renderEngImpDados`):
+  - A tela lista os contratos do arquivo, menos os arquivados sem operações (cadastro do EARL). Os ativos vêm marcados, com "o que acontece aqui" por linha.
+  - **Correspondência**, nesta ordem: ativo de mesmo nome (normalizado), depois mesmo id, depois arquivado de mesmo nome. A ordem importa: o cadastro do EARL tem cópias arquivadas com os mesmos nomes, e o teste e15 pegou a importação substituindo a cópia arquivada.
+  - **Substituir:** saem as operações daqui do contrato, com os handovers delas, e as contagens de inventário e os templates do contrato. Entram os do arquivo. O id daqui é mantido, e ids repetidos ganham novos. O contrato sai de `ctApagados`.
+  - **Contrato novo:** entra com as operações.
+  - **Os outros contratos não mudam.** Os bancos globais (químicos, casing, clientes, pessoas, logos, e-mails) entram pelo `engMesclarDb`, com o mais recente vencendo. Entram também as sondas usadas e as contagens sem contrato.
+  - **Câmbio:** fica o daqui; só entram os meses que faltam. Se as cotações diferem, a tela mostra os meses, com a opção "Usar o câmbio do arquivo nesses meses".
+    - Achado nos arquivos reais: o PA e o BD II diferem em out–dez/26.
+    - Na primeira versão, importar o P&A no arquivo do BD II mudava a receita do BD II em US$ 96 mil.
+  - Pede confirmação quando substitui, e o aviso aparece depois de recarregar (`sessionStorage eng_aviso`).
+  - Saiu o "Juntar". Ficou o "Substituir tudo".
+- **Apagar** (`engCtApagar`, eng_contratos.js; botão `.eng2-ctbar-apagar` no topo do contrato, pelo `patch_engenharia.py`):
+  - Apaga o contrato, as operações, os handovers, as contagens de inventário e os templates.
+  - No último contrato ativo, apaga também os arquivados sem operações, e o arquivo fica em branco. Todos vão para `ctApagados`, para a semente não recriar.
+- **Contratos reais V03:** os 7 gerados de novo com o e15, com receita e COGS iguais.
+  - A identidade é a mesma da V02 (a impressão digital da planilha), e a V03 aceita os dados da V01 por `--compat`.
+  - `e2e_atualizacao` V02→V03: 42 ok; V01→V03 (PA, BP): 12 ok. A conferência "dona dos dados" agora aceita a mesma identidade.
+- **PDF do passo a passo V03:** telas novas (`capturar.js` completo) e o passo 21, "Exportar, importar e apagar". Fica na pasta `walkthrough/`, e o `img/` não vai para o repositório.
+- **Vídeos:** o tutorial e o de apresentação mostram o topo do contrato sem o botão novo. O tutorial será regravado no pedido da narração (parado).
+- **Testes (24/11/2026):** todos sem falha.
+  - Engenharia: 62, 76, 36, 12, 54, 23, 37, 50, 18; **e15 26**.
+  - Gerencial: 62, 59, 71, 59, 27.
+  - BP: 58.
+  - Contratos reais: 135; `e2e_atualizacao` 42; **`e2e_importar` PA→BDII 9 e BP→DC 9**.
+  - `e2e_seguranca`: 70.
+  - ClamAV: 0 vírus.
+  - Testes antigos ajustados por causa do fim do "Juntar": `e2e_contratos`, `e2e_inventario` e `e2e_engenharia` (a tabela de números fica num "Ver os números").
 
 ### Segurança (e14/g19) — entrega _V02 (23/11/2026)
 

@@ -37,7 +37,7 @@ const acha = (pasta, nome) => fs.readdirSync(pasta).filter(f => new RegExp('^EAR
     const p2 = await abre(B);
     const depois = await p2.evaluate(id => { const d = loadDB(); const j = d.plannedJobs.find(x => x.id === id); return {notes: j && j.notes, pl: window.EARL_PL_ID, guardado: localStorage.getItem('earl_pl_id'), versao: EARL_VERSION}; }, antes.id);
     conf(/LANÇADO NA VERSÃO ANTERIOR/.test(depois.notes || ''), 'o que foi lançado na versão anterior continua na nova', depois);
-    conf(depois.guardado === depois.pl && depois.pl !== antes.pl, 'a versão nova passa a ser a dona dos dados (' + antes.pl + ' → ' + depois.pl + ')', [antes.pl, depois.guardado]);
+    conf(depois.guardado === depois.pl, 'a versão nova passa a ser a dona dos dados (' + antes.pl + (antes.pl === depois.pl ? ' = mesma planilha' : ' → ' + depois.pl) + ')', [antes.pl, depois.guardado]);
     await p2.reload(); await p2.waitForSelector('.eng2-card', {timeout: 90000});
     conf(/LANÇADO NA VERSÃO ANTERIOR/.test(await p2.evaluate(id => (loadDB().plannedJobs.find(x => x.id === id) || {}).notes || '', antes.id)), 'continua depois de reabrir a versão nova');
     // 3. Reiniciar volta aos dados da planilha

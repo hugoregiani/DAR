@@ -228,7 +228,7 @@ const kpi = (page, cls) => txt(page, '.' + cls + ' b');
   const db = await page.evaluate(() => { const d = JSON.parse(localStorage.getItem('hal_cmt_db_v1')); const c = d.contratos.find(x => x.name === 'Contrato Teste Macaé'); return {it: c.items.length, rj: c.reajustes.map(r => r.desde), brl: c.items[0].brl, cli: c.clientId, reg: c.regiao}; });
   conf(db.it === 4 && db.rj.join() === '2026-11-05,2027-01-01' && db.brl === 1500 && db.reg === 'macae' && !!db.cli, 'contrato gravado com itens, valores, reajustes, cliente e região', db);
 
-  console.log('Levar para outro computador (exportar → importar e juntar)');
+  console.log('Levar para outro computador (exportar → importar o contrato)');
   const ex = await baixar(page, () => page.click('.eng-tools button:has-text("Exportar dados")'));
   const exPath = path.join(require('os').tmpdir(), ex.nome);
   fs.writeFileSync(exPath, ex.buf);
@@ -245,12 +245,16 @@ const kpi = (page, cls) => txt(page, '.' + cls + ' b');
   await p2.waitForSelector('.eng-modal', {state: 'detached'});
   await p2.setInputFiles('.eng-tools input[type=file]', exPath);
   await p2.waitForSelector('.ec-imp-dados');
+  // e15: importa contrato por contrato — aqui, só o contrato novo (o P&A daqui, com a operação do outro computador, fica)
+  for (const cb of await p2.locator('.ec-imp-cts tbody tr').all()) if (!/Contrato Teste Macaé/.test(await cb.innerText())) await cb.locator('.ec-imp-ct-cb').uncheck();
+  conf(/entra como contrato novo, com 2 operação/.test(await p2.innerText('.ec-imp-cts')), 'outro computador: o contrato do arquivo aparece como novo, com as 2 operações');
+  await p2.click('.ec-imp-det summary');
   const tab2 = (await p2.innerText('.ec-imp-tab')).replace(/\s+/g, ' ');
-  conf(/Operações 1 2 3/.test(tab2) && /Contratos 16 17 17/.test(tab2), 'outro computador: 1 operação aqui + 2 no arquivo = 3 depois de juntar', tab2);
-  await Promise.all([p2.waitForEvent('load'), p2.click('.ec-juntar')]);
+  conf(/Operações 1 2 3/.test(tab2) && /Contratos 16 17 17/.test(tab2), 'outro computador: 1 operação aqui + 2 do contrato importado = 3', tab2);
+  await Promise.all([p2.waitForEvent('load'), p2.click('.ec-importar')]);
   await p2.waitForSelector('.eng2-card', {timeout: 60000});
   const j2 = await p2.evaluate(() => { const d = JSON.parse(localStorage.getItem('hal_cmt_db_v1')); const c = d.contratos.find(x => x.name === 'Contrato Teste Macaé'); return {ops: d.plannedJobs.map(j => j.well).sort(), cons: d.plannedJobs.filter(j => j.ppuCons).length, rj: c ? c.reajustes.length : -1, brl: c ? c.items[0].brl : null}; });
-  conf(j2.ops.join() === '7-PC2-1-RJS,7-TST-1-RJS,7-TST-2-RJS' && j2.cons === 1 && j2.rj === 2 && j2.brl === 1500, 'depois de juntar: as 3 operações, o consumo, o contrato com valores e reajustes', j2);
+  conf(j2.ops.join() === '7-PC2-1-RJS,7-TST-1-RJS,7-TST-2-RJS' && j2.cons === 1 && j2.rj === 2 && j2.brl === 1500, 'depois de importar: as 3 operações, o consumo, o contrato com valores e reajustes', j2);
   await p2.click('.eng2-card:has-text("Contrato Teste")');
   await p2.click('.db-tab:has-text("Consumo e receita")');
   conf(await kpi(p2, 'ec-kpi-brl') === 'R$ 8.705,00', 'outro computador vê a mesma receita');

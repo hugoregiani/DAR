@@ -17,7 +17,7 @@ python3 preparar_imagens.py <EARL_Demo_walkthrough.pdf>        # foto e logos (n
 node capturar.js inicio,cards,matriz,logo,contratos,plano,novaop,handover,bancos,inventario,arquivos
 node capturar.js consumo
 python3 gerar_deck.py                                          # textos e ordem dos slides
-node render.js EARL_Engenharia_passo_a_passo_V01.pdf png       # PDF (Chromium) e as prévias em prev/
+node render.js EARL_Engenharia_passo_a_passo_V03.pdf png       # PDF (Chromium) e as prévias em prev/ (versão atual: V03, 24/11/2026)
 ```
 
 Precisa do Playwright com o Chromium (como os testes) e de uma fonte compatível com Arial (Liberation Sans).

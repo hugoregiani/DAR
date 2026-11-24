@@ -98,6 +98,49 @@ A Engenharia do EARL separada do resto do sistema, para usar **sem servidor, sem
 - **Exportações:** "Consumo de produtos químicos", "Casing equipment" e "Pessoal" ganharam **Contingência (linha)** e **Risco da linha (%)**; a operação já tinha Contingência e Risco (%). O Painel de Compras aplica o risco da linha.
 - **Cards** da aba "Consumo e receita" com profundidade, como os do Gerencial g16.
 
+### e15 (24/11/2026) — exportar, importar contrato por contrato e apagar
+
+Pedido do Hugo: "quando eu exportar, tem que exportar não só cada operação, mas o contrato, tudo. Quando importar em
+outro arquivo, se o contrato já existe (mesmo nome), deve substituir o contrato e as operações. E tenho que poder
+deletar um contrato; ao deletar, apaga junto todas as operações, deixando o aplicativo em branco."
+
+- **⬇ Exportar dados:** o arquivo .json leva o banco inteiro. São os contratos (itens, valores, reajustes), as
+  operações (consumos, handovers), o inventário, o câmbio, os bancos de químicos e casing, as sondas e as logos. Ganhou
+  a lista `contratos` (nome, cliente, número, nº de operações), e o aviso diz o que foi exportado.
+- **⬆ Importar dados (`engImportarContratos` em `eng_app.js`):** a tela lista os contratos do arquivo (os arquivados
+  sem operações, que são o cadastro do EARL, ficam de fora). Os ativos vêm marcados, e cada linha diz o que acontece
+  aqui. Para cada contrato marcado:
+  - **já existe aqui** → o contrato daqui é **substituído** pelo do arquivo, com as operações: saem as daqui (com
+    consumos, handovers, contagens de inventário e templates do contrato) e entram as do arquivo. O "mesmo" contrato é,
+    nesta ordem: o ativo de mesmo nome (sem acento, maiúscula ou espaço extra), o de mesmo id, o arquivado de mesmo nome;
+  - **não existe** → entra como contrato novo.
+
+  Os detalhes:
+  - Os outros contratos daqui não mudam.
+  - O id do contrato daqui é mantido. Operação, handover, contagem ou template com id repetido ganha id novo.
+  - O contrato sai de `ctApagados`, para voltar mesmo se tinha sido apagado aqui.
+  - Pede confirmação quando substitui. Depois de recarregar, avisa o que entrou.
+- **Junto com os contratos:**
+  - as sondas que as operações usam;
+  - os bancos (químicos, casing, clientes, pessoas, logos, e-mails): fica o registro alterado por último;
+  - as contagens de inventário sem contrato.
+- **Câmbio:**
+  - Vale para todos os contratos do arquivo. Por padrão fica o daqui e só entram os meses que faltam, para os outros
+    contratos não mudarem de valor.
+  - Se o arquivo tem cotações diferentes, a tela mostra os meses e oferece "Usar o câmbio do arquivo nesses meses".
+  - Achado no teste com os arquivos reais: PA e BD II diferem em out–dez/26 (5,1496 × 5,1918/5,4153). Antes, importar
+    o P&A no arquivo do BD II mudava a receita do BD II.
+- **Saiu o "Juntar"** (registro por registro, que trazia de volta o que tinha sido apagado). Ficou o "Substituir tudo".
+- **Apagar contrato:**
+  - Pode ser pelo botão **🗑 Apagar contrato** no topo do contrato, além do ⋯ do card.
+  - Apaga também as contagens de inventário e os templates do contrato.
+  - Se era o último contrato ativo, saem também os arquivados sem operações (o cadastro do EARL), e o arquivo fica
+    **em branco**. Eles vão para `ctApagados`, e a migração da semente não os recria.
+- **Testes:**
+  - `tests/e2e_e15.js` (26): exporta, importa (substitui pelo nome mesmo com outro id, contrato novo, não marcado não
+    muda, sem duplicar ao importar de novo, apagado volta ao importar) e apaga até ficar em branco.
+  - `contratos_reais/e2e_importar.js` (com os arquivos reais): A → B, câmbio, importar no próprio arquivo, apagar tudo.
+
 ### e14 (23/11/2026) — segurança
 
 O antivírus do SharePoint/OneDrive (Microsoft) marcou os arquivos como "Virus Found — Malicious Payload". Era **falso
@@ -259,4 +302,4 @@ node contratos_reais/e2e_contratos_reais.js <pasta das planilhas> <pasta dos HTM
     - apagar com operações: só com APAGAR, levando as operações e o handover;
     - os contratos apagados não voltam ao reabrir.
 - **A seção Receita e margem é o `../gerencial/gerencial.html`**, embutido pelo patch (`ENG_GER_HTML`, num iframe, no modo embutido do Gerencial). Mudou o Gerencial? Gere de novo o `EARL_Engenharia.html`.
-- Versão: `EARL_VERSION = 'EARL Engenharia e14 (base v115)'`. O teste do fluxo completo com o Gerencial está em `../gerencial/tests/e2e_gerencial.js`.
+- Versão: `EARL_VERSION = 'EARL Engenharia e15 (base v115)'`. O teste do fluxo completo com o Gerencial está em `../gerencial/tests/e2e_gerencial.js`.

@@ -2592,17 +2592,23 @@
       }
     });
   };
+  /* e15 (pedido do Hugo, 24/11/2026): apagar o contrato apaga junto tudo o que é dele — operações (com consumos e
+     handovers), contagens de inventário e templates. Se era o último contrato ativo, o arquivo fica em branco: saem
+     também os contratos arquivados sem operações (o cadastro do EARL que veio na semente). Também pelo botão
+     "🗑 Apagar contrato" no topo do contrato. */
   var engCtApagar = ct => {
     setEngCtMenuAb('');
     var ops = (db.plannedJobs || []).filter(j => pjDoContrato(j, ct));
     var nCons = ops.filter(j => j.ppuCons).length,
       nHo = ops.filter(j => j.handoverId).length;
+    var ultimo = !(db.contratos || []).some(c => c.id !== ct.id && !c.archived);
+    var vazios = ultimo ? (db.contratos || []).filter(c => c.id !== ct.id && c.archived && !(db.plannedJobs || []).some(j => pjDoContrato(j, c))) : [];
     askConfirm({
       title: 'Apagar o contrato',
       okLabel: ops.length ? 'Apagar contrato e operações' : 'Apagar contrato',
       danger: true,
       msg: engH("span", null, "Apagar ", engH("b", null, ct.name), ops.length ? engH(React.Fragment, null, " e as ", engH("b", null, ops.length + " operação(ões)"), " dele" + (nCons ? ' (' + nCons + ' com consumo lançado' + (nHo ? ', ' + nHo + ' com handover' : '') + ')' : nHo ? ' (' + nHo + ' com handover)' : '') + "? Itens PPU, valores, reajustes e consumos também são apagados.") : "? Ele não tem operações."),
-      hint: 'Não dá para desfazer (só pelo “⬇ Exportar dados” de antes). Para só tirar o card da página inicial, use Arquivar.' + (ops.length ? ' Para confirmar, digite APAGAR.' : ''),
+      hint: (ultimo ? 'É o último contrato: o arquivo fica em branco. ' : '') + 'Não dá para desfazer (só pelo “⬇ Exportar dados” de antes). Para só tirar o card da página inicial, use Arquivar.' + (ops.length ? ' Para confirmar, digite APAGAR.' : ''),
       input: ops.length ? {
         placeholder: 'digite APAGAR',
         required: true
@@ -2613,18 +2619,29 @@
           return;
         }
         var ids = new Set(ops.map(j => j.id));
+        var fora = new Set([ct.id, ...vazios.map(c => c.id)]);
+        var agora = new Date().toISOString();
         updateDB(d => ({
           ...d,
-          contratos: (d.contratos || []).filter(c => c.id !== ct.id),
+          contratos: (d.contratos || []).filter(c => !fora.has(c.id)),
           plannedJobs: (d.plannedJobs || []).filter(j => !ids.has(j.id)),
           handovers: (d.handovers || []).filter(h => !((h.opIds || []).length && h.opIds.every(id => ids.has(id)))),
-          ctApagados: [...(Array.isArray(d.ctApagados) ? d.ctApagados : []).filter(x => x && x.id !== ct.id), {
+          invSondas: (d.invSondas || []).filter(v => !fora.has(v.ctId)),
+          opTemplates: (d.opTemplates || []).filter(t => !fora.has(t.contratoId)),
+          ctApagados: [...(Array.isArray(d.ctApagados) ? d.ctApagados : []).filter(x => x && !fora.has(x.id)), {
             id: ct.id,
             numero: ct.numero || '',
             nome: ct.name || '',
-            em: new Date().toISOString(),
+            em: agora,
             operacoes: ids.size
-          }],
+          }, ...vazios.map(c => ({
+            id: c.id,
+            numero: c.numero || '',
+            nome: c.name || '',
+            em: agora,
+            operacoes: 0,
+            arquivado: true
+          }))],
           gerCfg: d.gerCfg ? {
             ...d.gerCfg,
             contratos: (d.gerCfg.contratos || []).filter(id => id !== ct.id)
@@ -2641,7 +2658,7 @@
           detail: ids.size + ' operação(ões) apagada(s) junto · pelo card da página inicial'
         });
         if (planCt === ct.id) setPlanCt('');
-        setOkMsg('Contrato apagado — ' + ct.name + (ids.size ? ' e ' + ids.size + ' operação(ões)' : ''));
+        setOkMsg('Contrato apagado — ' + ct.name + (ids.size ? ' e ' + ids.size + ' operação(ões)' : '') + (ultimo ? ' · o arquivo ficou em branco' : ''));
         setTimeout(() => setOkMsg(''), 6000);
       }
     });

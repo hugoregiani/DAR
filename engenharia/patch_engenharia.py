@@ -96,7 +96,7 @@ assert i > 0
 s = s[:i] + css + s[i:]
 
 # ---------------------------------------------------------------- app (código compilado)
-rep("var EARL_VERSION = 'EARL v115';", "var EARL_VERSION = 'EARL Engenharia e14 (base v115)';")
+rep("var EARL_VERSION = 'EARL v115';", "var EARL_VERSION = 'EARL Engenharia e15 (base v115)';")
 rep("var HO_ST = {\n  pendente: {", "var HO_ST = {\n  email: {\n    label: 'Enviado por e-mail',\n    c: '#304220',\n    bg: '#F1F5EC',\n    brd: '#D9E4CC'\n  },\n  pendente: {")
 # quem gera o e-mail assina os registros (sem login)
 rep("  var currentUser = () => authUser && authUser.email || sbUser || '';",
@@ -651,6 +651,17 @@ rep('<head>\n', '<head>\n<meta charset="UTF-8">\n<meta http-equiv="Content-Secur
 assert 'UEsDB' not in s and 'JVBER' not in s, 'sobrou arquivo Office/PDF em base64'
 for proibido in ('login.microsoftonline.com', 'graph.microsoft.com', 'msauth.net', 'atob(JSZIP_B64)', 'logic.azure.com'):
     assert proibido not in s, proibido
+
+# e15: "🗑 Apagar contrato" no topo do contrato (além do ⋯ do card): apaga o contrato e tudo o que é dele
+rep(r"""    }, "\u21C4 Trocar contrato")), React.createElement("div", {
+      className: "toolbar"
+    }""", r"""    }, "\u21C4 Trocar contrato"), ctSel && React.createElement("button", {
+      className: "btn-o eng2-ctbar-apagar",
+      title: "Apagar este contrato e tudo o que é dele (operações, consumos, handovers, inventário)",
+      onClick: () => engCtApagar(ctSel)
+    }, "\uD83D\uDDD1 Apagar contrato")), React.createElement("div", {
+      className: "toolbar"
+    }""")
 
 # e12: filtro e ordem em todas as tabelas (script avulso, fora do React), no fim do <body>
 tf = open(os.path.join(AQUI, 'eng_tabelas.js'), encoding='utf-8').read()

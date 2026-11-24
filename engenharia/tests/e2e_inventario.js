@@ -259,11 +259,15 @@ const arqX = (nome, b64) => ({name: nome, mimeType: 'application/vnd.openxmlform
   fs.writeFileSync(bkPath, bk.buf);
   await page.setInputFiles('.eng-tools input[type=file]', bkPath);
   await page.waitForSelector('.ec-imp-dados');
-  conf(/Contagens de inventário das sondas 0 3 3/.test((await page.innerText('.ec-imp-tab')).replace(/\s+/g, ' ')), 'importar dados mostra as contagens (0 aqui, 3 no arquivo, 3 depois de juntar)');
-  await page.click('.ec-imp-dados button:has-text("Juntar")');
+  await page.click('.ec-imp-det summary');
+  conf(/Contagens de inventário das sondas 0 3 3/.test((await page.innerText('.ec-imp-tab')).replace(/\s+/g, ' ')), 'importar dados mostra as contagens (0 aqui, 3 no arquivo, 3 depois de importar)');
+  const recarregou = page.waitForEvent('load');
+  await page.click('.ec-importar');
+  await page.click('.modal button:has-text("Substituir e importar")');
+  await recarregou;
   await page.waitForSelector('.eng2-card, .eng2-ctbar', {timeout: 60000});
   await page.waitForFunction(() => (JSON.parse(localStorage.getItem('hal_cmt_db_v1')).invSondas || []).length === 3, null, {timeout: 20000});
-  conf(true, 'juntar traz as 3 contagens de volta');
+  conf(true, 'importar os contratos traz as 3 contagens de volta');
 
   console.log('Celular');
   await page.setViewportSize({width: 390, height: 860});

@@ -251,16 +251,17 @@ passo(18, S5, 'Filtro e ordem nas tabelas', [
 
 S6 = 'Compartilhar e guardar'
 secao(6, S6, 'Os arquivos para o gerencial e para compras, e a cópia dos seus dados.',
-      [(19, 'Arquivo do gerencial'), (20, 'Planilhas para o Painel de Compras'), (21, 'Exportar e importar dados')])
+      [(19, 'Arquivo do gerencial'), (20, 'Planilhas para o Painel de Compras'), (21, 'Exportar, importar e apagar')])
 passo(19, S6, 'Arquivo do gerencial', [
     'Marque os contratos sob sua responsabilidade e gere o arquivo.',
     'Salve na pasta do SharePoint do gerencial: o EARL Gerencial junta os arquivos de todos os engenheiros. Para cada contrato, vale o arquivo mais novo.'], '20_gerencial.jpg')
 passo(20, S6, 'Planilhas para o Painel de Compras', [
     'Quatro planilhas separadas: inventário das sondas e consumo de químicos (o Painel de Compras usa estas duas), casing equipment e pessoal.',
     'Cada linha leva a contingência e o risco de não acontecer.'], '21_planilhas.jpg')
-passo(21, S6, 'Exportar e importar dados', [
-    '<b>⬇ Exportar dados</b> baixa um arquivo .json com tudo.',
-    'Em outro computador, <b>⬆ Importar dados</b> mostra o que há aqui e no arquivo. <b>Juntar</b> fica com o mais recente de cada registro; <b>Substituir</b> deixa igual ao arquivo.'], '22_importar.jpg')
+passo(21, S6, 'Exportar, importar e apagar', [
+    '<b>⬇ Exportar dados</b> baixa um arquivo .json com tudo: contratos (itens, valores, reajustes), operações, consumos, handovers, inventário e câmbio.',
+    'No outro arquivo, <b>⬆ Importar dados</b>: marque os contratos. O que já existe (mesmo nome) é <b>substituído</b>, com as operações; o novo entra; os outros não mudam.',
+    '<b>🗑 Apagar contrato</b> (no topo do contrato ou no ⋯ do card) apaga o contrato e tudo o que é dele. No último, o arquivo fica em branco.'], '22_importar.jpg')
 
 texto('O que este passo a passo não mostrou', 'Mais no mesmo arquivo', [
     'O cadastro de sondas e os templates de operação.',

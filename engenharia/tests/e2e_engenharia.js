@@ -198,7 +198,8 @@ const fld = (page, rot) => page.locator('.eng-modal .fld').filter({has: page.loc
   conf(await page.evaluate(() => JSON.parse(localStorage.getItem('hal_cmt_db_v1')).plannedJobs.length) === 0, 'dados apagados antes de restaurar');
   await page.setInputFiles('.eng-tools input[type=file]', bkPath);
   await page.waitForSelector('.ec-imp-dados');
-  conf(/Operações 0 1 1/.test((await page.innerText('.ec-imp-tab')).replace(/\s+/g, ' ')), 'importar mostra este computador × arquivo × depois de juntar');
+  await page.click('.ec-imp-det summary');
+  conf(/Operações 0 1 1/.test((await page.innerText('.ec-imp-tab')).replace(/\s+/g, ' ')), 'importar mostra este computador × arquivo × depois de importar');
   await page.click('.ec-substituir');
   await Promise.all([page.waitForEvent('load'), page.locator('.modal').filter({hasText: 'Substituir os dados'}).locator('button', {hasText: /^Substituir$/}).click()]);
   await page.waitForSelector('.eng2-card, .eng2-ctbar', {timeout: 60000});

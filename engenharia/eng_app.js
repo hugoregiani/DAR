@@ -748,6 +748,13 @@
         geradoEm: new Date().toISOString(),
         por: (db.hoMail || {}).nome || '',
         resumo: engResumoDb(db),
+        contratos: (db.contratos || []).filter(c => !c.archived).map(c => ({
+          id: c.id,
+          nome: c.name,
+          cliente: c.clientName || '',
+          numero: c.numero || '',
+          operacoes: (db.plannedJobs || []).filter(j => pjDoContrato(j, c)).length
+        })),
         db
       })], {
         type: 'application/json'
@@ -755,7 +762,8 @@
       forceDownload([new File([blob], 'EARL_Engenharia_dados_' + engAgoraTxt() + '.json', {
         type: 'application/json'
       })]);
-      setOkMsg('Dados exportados ✓ — leve o arquivo .json para o outro computador e use “⬆ Importar dados” lá');
+      var rx = engResumoDb(db);
+      setOkMsg('Dados exportados ✓ — tudo: ' + (db.contratos || []).filter(c => !c.archived).length + ' contrato(s) com itens, valores e reajustes, ' + rx.operacoes + ' operação(ões) com consumos e handovers, sondas, inventário, câmbio, químicos e casing. No outro arquivo, use “⬆ Importar dados”.');
       setTimeout(() => setOkMsg(''), 6000);
     } catch (e) {
       setSyncErr('Falha ao exportar os dados: ' + (e && e.message || e));
@@ -771,6 +779,7 @@
         if (!dados || typeof dados !== 'object' || !Array.isArray(dados.people) || !Array.isArray(dados.rigs)) throw new Error('o arquivo não é uma exportação do EARL');
         setEngImpDados({
           nome: file.name,
+          sel: (dados.contratos || []).filter(c => !c.archived).map(c => c.id),
           dados,
           geradoEm: j && j.geradoEm || '',
           por: j && j.por || ''
@@ -828,20 +837,237 @@
     });
     return out;
   };
+  /* ---- e15: importar = contrato por contrato (pedido do Hugo, 24/11/2026) ----
+     O arquivo exportado leva tudo (o banco inteiro). Ao importar, para cada contrato marcado:
+       * já existe aqui (mesmo nome; ou o mesmo id) → o contrato daqui é SUBSTITUÍDO pelo do arquivo, e as operações
+         dele também: as daqui saem (com consumos, handovers, contagens de inventário e templates do contrato) e
+         entram as do arquivo;
+       * não existe → entra como contrato novo, com as operações.
+     Os outros contratos daqui não mudam. Junto vêm as sondas que as operações usam e os bancos (químicos, casing,
+     clientes, logos, e-mails), ficando o registro alterado por último; o câmbio fica o lançado por último em cada mês.
+     O id do contrato daqui é mantido (as referências continuam valendo); operação, handover, contagem e template com
+     id repetido ganham id novo. */
+  var engNormNome = t => String(t || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().replace(/\s+/g, ' ').trim();
+  var engNovoId = pre => pre + Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
+  /* contrato daqui que corresponde ao do arquivo: o ativo de mesmo nome; senão o de mesmo id; senão um arquivado de
+     mesmo nome (o cadastro do EARL traz cópias arquivadas com os mesmos nomes) */
+  var engCtAqui = (lista, ct) => {
+    var l = lista || [],
+      n = engNormNome(ct.name);
+    return l.find(c => !c.archived && engNormNome(c.name) === n) || l.find(c => c.id === ct.id) || l.find(c => engNormNome(c.name) === n) || null;
+  };
+  var engCtsArquivo = d => (d.contratos || []).map(ct => ({
+    ct,
+    ops: (d.plannedJobs || []).filter(j => pjDoContrato(j, ct)).length
+  })).filter(x => !x.ct.archived || x.ops > 0);
+  /* câmbio: um por mês, vale para todos os contratos do arquivo. Por padrão fica o daqui (os outros contratos não
+     mudam) e só entram os meses que faltam; com "usar o câmbio do arquivo", os meses diferentes ficam com o do arquivo. */
+  var engCambioDif = (atual, novo) => {
+    var aqui = {};
+    (atual.cambio || []).forEach(c => {
+      if (c && c.ano != null) aqui[c.ano + '-' + c.mes] = c;
+    });
+    return (novo.cambio || []).filter(c => {
+      var a = c && aqui[c.ano + '-' + c.mes];
+      return a && Number(a.valor) !== Number(c.valor);
+    }).map(c => ({
+      ano: c.ano,
+      mes: c.mes,
+      arquivo: Number(c.valor),
+      aqui: Number(aqui[c.ano + '-' + c.mes].valor)
+    })).sort((a, b) => a.ano - b.ano || a.mes - b.mes);
+  };
+  var engImportarContratos = (atual, novo, ids, op) => {
+    var cambioArq = !!(op && op.cambioArq);
+    var GLOBAIS = ['quimicos', 'quimHist', 'casingEquip', 'casHist', 'clients', 'people', 'equipment', 'wells', 'clientLogos', 'hoMail', 'subtypesPeople', 'subtypesEquip'];
+    var base = {};
+    GLOBAIS.forEach(k => {
+      if (novo[k] != null) base[k] = novo[k];
+    });
+    var out = engMesclarDb(atual, base);
+    var cts = [...(out.contratos || [])],
+      jobs = [...(out.plannedJobs || [])],
+      hos = [...(out.handovers || [])],
+      inv = [...(out.invSondas || [])],
+      tpls = [...(out.opTemplates || [])],
+      rigs = [...(out.rigs || [])];
+    var apagados = Array.isArray(out.ctApagados) ? out.ctApagados.slice() : [];
+    var rel = [];
+    var poeSonda = id => {
+      if (!id || rigs.some(r => r.id === id)) return;
+      var r = (novo.rigs || []).find(x => x.id === id);
+      if (r) rigs.push(r);
+    };
+    (novo.contratos || []).filter(c => ids.indexOf(c.id) >= 0).forEach(src => {
+      var loc = engCtAqui(cts, src);
+      var dest = loc ? loc.id : cts.some(c => c.id === src.id) ? engNovoId('ct_') : src.id;
+      var srcOps = (novo.plannedJobs || []).filter(j => pjDoContrato(j, src));
+      var locOps = loc ? jobs.filter(j => pjDoContrato(j, loc)) : [];
+      var fora = new Set(locOps.map(j => j.id));
+      jobs = jobs.filter(j => !fora.has(j.id));
+      hos = hos.filter(h => !((h.opIds || []).length && h.opIds.every(id => fora.has(id))));
+      if (loc) {
+        inv = inv.filter(v => v.ctId !== loc.id);
+        tpls = tpls.filter(t => t.contratoId !== loc.id);
+      }
+      var mapa = {},
+        usados = new Set(jobs.map(j => j.id));
+      srcOps.forEach(j => {
+        var id = usados.has(j.id) ? engNovoId('pj_') : j.id;
+        mapa[j.id] = id;
+        usados.add(id);
+      });
+      var mapaH = {},
+        hUs = new Set(hos.map(h => h.id));
+      var srcHos = (novo.handovers || []).filter(h => (h.opIds || []).length && h.opIds.every(id => id in mapa));
+      srcHos.forEach(h => {
+        var id = hUs.has(h.id) ? engNovoId('ho_') : h.id;
+        mapaH[h.id] = id;
+        hUs.add(id);
+      });
+      var mapaT = {},
+        tUs = new Set(tpls.map(t => t.id));
+      var srcTpls = (novo.opTemplates || []).filter(t => t.contratoId === src.id);
+      srcTpls.forEach(t => {
+        var id = tUs.has(t.id) ? engNovoId('tpl_') : t.id;
+        mapaT[t.id] = id;
+        tUs.add(id);
+      });
+      hos = hos.concat(srcHos.map(h => ({
+        ...h,
+        id: mapaH[h.id],
+        opIds: h.opIds.map(id => mapa[id])
+      })));
+      tpls = tpls.concat(srcTpls.map(t => ({
+        ...t,
+        id: mapaT[t.id],
+        contratoId: dest
+      })));
+      jobs = jobs.concat(srcOps.map(j => {
+        poeSonda(j.rigId);
+        return {
+          ...j,
+          id: mapa[j.id],
+          contratoId: dest,
+          handoverId: j.handoverId ? mapaH[j.handoverId] || null : j.handoverId,
+          templateId: j.templateId && mapaT[j.templateId] || j.templateId
+        };
+      }));
+      var iUs = new Set(inv.map(v => v.id));
+      (novo.invSondas || []).filter(v => v.ctId === src.id).forEach(v => {
+        poeSonda(v.rigId);
+        var id = iUs.has(v.id) ? engNovoId('inv_') : v.id;
+        iUs.add(id);
+        inv.push({
+          ...v,
+          id,
+          ctId: dest
+        });
+      });
+      var novoCt = {
+        ...src,
+        id: dest
+      };
+      cts = loc ? cts.map(c => c.id === loc.id ? novoCt : c) : cts.concat([novoCt]);
+      apagados = apagados.filter(x => x && x.id !== dest);
+      rel.push({
+        nome: src.name,
+        substituido: !!loc,
+        nomeAqui: loc ? loc.name : '',
+        sairam: locOps.length,
+        entraram: srcOps.length
+      });
+    });
+    /* contagens de inventário sem contrato (feitas na Visão geral): entram as que não existem aqui; no mesmo id, a mais recente */
+    var ctsArq = new Set((novo.contratos || []).map(c => c.id));
+    (novo.invSondas || []).filter(v => !v.ctId || !ctsArq.has(v.ctId)).forEach(v => {
+      var k = inv.findIndex(x => x.id === v.id);
+      if (k < 0) {
+        poeSonda(v.rigId);
+        inv.push(v);
+      } else if (engMarca(v) > engMarca(inv[k])) inv[k] = v;
+    });
+    var cb = {};
+    (atual.cambio || []).forEach(c => {
+      if (c && c.ano != null && c.mes != null) cb[c.ano + '-' + c.mes] = c;
+    });
+    (novo.cambio || []).forEach(c => {
+      if (!c || c.ano == null || c.mes == null) return;
+      var k = c.ano + '-' + c.mes;
+      if (!cb[k] || cambioArq) cb[k] = c;
+    });
+    return {
+      db: {
+        ...out,
+        contratos: cts,
+        plannedJobs: jobs,
+        handovers: hos,
+        invSondas: inv,
+        opTemplates: tpls,
+        rigs,
+        cambio: Object.values(cb),
+        ctApagados: apagados
+      },
+      rel
+    };
+  };
+  /* aviso que sobrevive ao recarregar (importar recarrega a página) */
+  useEffect(() => {
+    try {
+      var f = sessionStorage.getItem('eng_aviso');
+      if (f) {
+        sessionStorage.removeItem('eng_aviso');
+        setOkMsg(f);
+        setTimeout(() => setOkMsg(''), 9000);
+      }
+    } catch (e) {}
+  }, []);
   var renderEngImpDados = () => {
     var im = engImpDados;
     if (!im) return null;
+    var lista = engCtsArquivo(im.dados);
+    var sel = im.sel || [];
+    var difCb = engCambioDif(db, im.dados);
+    var sim = engImportarContratos(db, im.dados, sel, {
+      cambioArq: im.cambioArq
+    });
     var ra = engResumoDb(db),
       rb = engResumoDb(im.dados),
-      rj = engResumoDb(engMesclarDb(db, im.dados));
+      rj = engResumoDb(sim.db);
     var linhas = [['Contratos', 'contratos'], ['Itens com valor', 'precos'], ['Reajustes', 'reajustes'], ['Operações', 'operacoes'], ['Consumos lançados', 'consumos'], ['Handovers', 'handovers'], ['Sondas', 'sondas'], ['Templates', 'templates'], ['Produtos químicos', 'quimicos'], ['Casing equipment (banco)', 'casing'], ['Contagens de inventário das sondas', 'inventarios']];
-    var aplicar = modo => {
-      var final = modo === 'juntar' ? engMesclarDb(db, im.dados) : im.dados;
+    var ocultos = (im.dados.contratos || []).length - lista.length;
+    var marcar = id => setEngImpDados(x => ({
+      ...x,
+      sel: (x.sel || []).indexOf(id) >= 0 ? x.sel.filter(y => y !== id) : [...(x.sel || []), id]
+    }));
+    var gravar = (final, aviso) => {
       if (!saveDB(final)) {
         setSyncErr('O navegador não deixou gravar os dados (armazenamento cheio).');
         return;
       }
+      try {
+        sessionStorage.setItem('eng_aviso', aviso);
+      } catch (e) {}
       location.reload();
+    };
+    var importar = () => {
+      var r = engImportarContratos(db, im.dados, sel, {
+        cambioArq: im.cambioArq
+      });
+      var subs = r.rel.filter(x => x.substituido),
+        novos = r.rel.filter(x => !x.substituido);
+      var aviso = 'Importado ✓ — ' + r.rel.map(x => x.nome + (x.substituido ? ' (substituído: ' + x.entraram + ' operação(ões))' : ' (novo: ' + x.entraram + ' operação(ões))')).join(' · ');
+      if (!subs.length) return gravar(r.db, aviso);
+      askConfirm({
+        title: 'Importar e substituir',
+        okLabel: 'Substituir e importar',
+        danger: true,
+        msg: engH("span", null, subs.length === 1 ? "O contrato " : "Os contratos ", subs.map((x, i) => engH(React.Fragment, {
+          key: i
+        }, i ? ', ' : '', engH("b", null, x.nomeAqui))), subs.length === 1 ? " já existe aqui e será substituído" : " já existem aqui e serão substituídos", " pelo do arquivo, com as operações: saem ", engH("b", null, subs.reduce((a, x) => a + x.sairam, 0) + " operação(ões) daqui"), " e entram ", engH("b", null, subs.reduce((a, x) => a + x.entraram, 0) + " do arquivo"), "." + (novos.length ? ' ' + novos.length + ' contrato(s) novo(s) entra(m).' : '')),
+        hint: 'Os outros contratos daqui não mudam. Se tiver dúvida, exporte os dados daqui antes.',
+        onOk: () => gravar(r.db, aviso)
+      });
     };
     var fechar = () => setEngImpDados(null);
     return engH("div", {
@@ -871,10 +1097,70 @@
     }, "Exportado"), im.geradoEm && engH("div", {
       className: "hm-arq"
     }, fmtDH(im.geradoEm) + (im.por ? ' · ' + im.por : ''))), engH("div", {
+      className: "ec-imp-ajuda"
+    }, "Marque os contratos que vêm do arquivo. ", engH("b", null, "Contrato que já existe aqui (mesmo nome) é substituído"), ", com as operações dele; contrato novo entra; os outros contratos daqui não mudam."), lista.length ? engH("div", {
       className: "tbl-scroll"
     }, engH("table", {
-      className: "db-table ec-imp-tab"
-    }, engH("thead", null, engH("tr", null, engH("th", null), engH("th", null, "Neste computador"), engH("th", null, "No arquivo"), engH("th", null, "Depois de juntar"))), engH("tbody", null, linhas.map(([rot, k]) => engH("tr", {
+      className: "db-table ec-imp-cts",
+      "data-tf": "0"
+    }, engH("thead", null, engH("tr", null, engH("th", null), engH("th", null, "Contrato no arquivo"), engH("th", null, "Cliente"), engH("th", null, "Operações no arquivo"), engH("th", null, "O que acontece aqui"))), engH("tbody", null, lista.map(({
+      ct,
+      ops
+    }) => {
+      var loc = engCtAqui(db.contratos, ct);
+      var nAqui = loc ? (db.plannedJobs || []).filter(j => pjDoContrato(j, loc)).length : 0;
+      var on = sel.indexOf(ct.id) >= 0;
+      return engH("tr", {
+        key: ct.id,
+        className: on ? 'ec-imp-on' : ''
+      }, engH("td", null, engH("input", {
+        type: "checkbox",
+        className: "ec-imp-ct-cb",
+        checked: on,
+        onChange: () => marcar(ct.id),
+        "aria-label": 'Importar ' + ct.name
+      })), engH("td", null, engH("b", null, ct.name), ct.archived ? engH("em", {
+        className: "ec-imp-arq"
+      }, " arquivado") : null), engH("td", null, ct.clientName || '—'), engH("td", {
+        className: "ec-num"
+      }, ops), engH("td", {
+        className: loc ? 'ec-imp-subst' : 'ec-imp-novo'
+      }, !on ? engH("span", {
+        className: "ec-imp-fica"
+      }, loc ? 'não muda (o daqui fica)' : 'não entra') : loc ? 'substitui “' + loc.name + '” daqui: saem ' + nAqui + ' operação(ões), entram ' + ops : 'entra como contrato novo, com ' + ops + ' operação(ões)'));
+    })))) : engH("div", {
+      className: "ec-vazio"
+    }, "O arquivo não tem contratos com operações."), ocultos > 0 && engH("div", {
+      className: "ec-imp-nota"
+    }, ocultos + ' contrato(s) arquivado(s) e sem operações do arquivo ficam de fora (são do cadastro do EARL).'), difCb.length > 0 && engH("div", {
+      className: "ec-imp-cambio"
+    }, engH("div", null, "💱 O câmbio do arquivo é diferente do daqui em ", engH("b", null, difCb.length + " mês(es)"), " (", difCb.slice(0, 4).map(c => String(c.mes).padStart(2, '0') + '/' + String(c.ano).slice(2) + ': ' + c.arquivo.toLocaleString('pt-BR', {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 4
+    }) + ' no arquivo × ' + c.aqui.toLocaleString('pt-BR', {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 4
+    }) + ' aqui').join('; ') + (difCb.length > 4 ? '…' : ''), "). O câmbio vale para todos os contratos deste arquivo: fica o daqui, para os outros contratos não mudarem."), engH("label", {
+      className: "ec-imp-cbx"
+    }, engH("input", {
+      type: "checkbox",
+      className: "ec-imp-cambio-arq",
+      checked: !!im.cambioArq,
+      onChange: e => {
+        var v = e.target.checked;
+        setEngImpDados(x => ({
+          ...x,
+          cambioArq: v
+        }));
+      }
+    }), " Usar o câmbio do arquivo nesses meses (muda a receita em US$ dos contratos daqui que têm valores em R$)")), engH("details", {
+      className: "ec-imp-det"
+    }, engH("summary", null, "Ver os números (neste computador, no arquivo e depois de importar)"), engH("div", {
+      className: "tbl-scroll"
+    }, engH("table", {
+      className: "db-table ec-imp-tab",
+      "data-tf": "0"
+    }, engH("thead", null, engH("tr", null, engH("th", null), engH("th", null, "Neste computador"), engH("th", null, "No arquivo"), engH("th", null, "Depois de importar"))), engH("tbody", null, linhas.map(([rot, k]) => engH("tr", {
       key: k
     }, engH("td", null, rot), engH("td", {
       className: "ec-num"
@@ -882,16 +1168,17 @@
       className: "ec-num"
     }, rb[k]), engH("td", {
       className: "ec-num"
-    }, rj[k])))))), engH("div", {
+    }, rj[k]))))))), engH("div", {
       className: "ec-imp-opcoes"
     }, engH("div", {
       className: "ec-imp-op"
-    }, engH("b", null, "Juntar"), engH("span", null, "Acrescenta o que veio do arquivo ao que j\xE1 est\xE1 aqui. Quando o mesmo registro (opera\xE7\xE3o, handover, contrato, sonda…) existe nos dois, fica o alterado por \xFAltimo. O que foi apagado num computador volta ao juntar."), engH("button", {
-      className: "btn-r ec-juntar",
-      onClick: () => aplicar('juntar')
-    }, "Juntar com os dados deste computador")), engH("div", {
+    }, engH("b", null, "Importar contratos"), engH("span", null, "Os contratos marcados entram; os que já existem aqui são substituídos, com as operações. Vêm junto as sondas, os produtos químicos, o casing e as logos do arquivo (fica o mais recente) e os meses de câmbio que faltam aqui."), engH("button", {
+      className: "btn-r ec-importar",
+      disabled: !sel.length,
+      onClick: importar
+    }, sel.length ? 'Importar ' + sel.length + ' contrato(s)' : 'Marque um contrato')), engH("div", {
       className: "ec-imp-op"
-    }, engH("b", null, "Substituir"), engH("span", null, "Os dados deste computador passam a ser exatamente os do arquivo. Use para levar tudo para um computador novo."), engH("button", {
+    }, engH("b", null, "Substituir tudo"), engH("span", null, "Os dados deste computador passam a ser exatamente os do arquivo (todos os contratos). Use para levar tudo para um computador novo."), engH("button", {
       className: "btn-o ec-substituir",
       onClick: () => askConfirm({
         title: 'Substituir os dados',
@@ -899,7 +1186,7 @@
         danger: true,
         msg: engH("span", null, "Apagar os dados deste computador e ficar com os do arquivo?"),
         hint: 'Se tiver dúvida, exporte os dados daqui antes.',
-        onOk: () => aplicar('substituir')
+        onOk: () => gravar(im.dados, 'Dados substituídos pelos do arquivo ✓')
       })
     }, "Substituir pelos dados do arquivo"))), engH("div", {
       className: "ec-foot"

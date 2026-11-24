@@ -32,6 +32,14 @@ a conferência de receita/COGS de cada operação.
   - "Reiniciar" volta à planilha;
   - um navegador novo recebe os dados da planilha.
 
+Importar o contrato de um arquivo em outro (e15): `node contratos_reais/e2e_importar.js <pasta dos HTML> PA BDII`.
+O teste exporta do arquivo A e importa no B. Confere que:
+- o B fica com os contratos dele e os do A;
+- a receita dos contratos do B não muda, e o câmbio diferente aparece na tela;
+- com "usar o câmbio do arquivo", o contrato importado fica igual ao do A;
+- importar no próprio A não duplica;
+- apagar os contratos deixa o B em branco.
+
 Teste de ponta a ponta (abre cada HTML como o usuário abre):
 
 ```bash
