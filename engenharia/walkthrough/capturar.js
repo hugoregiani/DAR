@@ -1,4 +1,4 @@
-// Capturas das telas do walkthrough (EARL Engenharia) com os dados de demonstração do demo.js.
+// Capturas das telas do walkthrough (EARL Forecast de Receita) com os dados de demonstração do demo.js.
 // Uso: node capturar.js [passos separados por vírgula] [EARL_Engenharia.html]  — sem passos, captura tudo.
 // Rode o passo 'consumo' separado (depois do 'handover' a faixa verde do e-mail fica na tela):
 //   node capturar.js inicio,cards,matriz,logo,contratos,plano,novaop,handover,bancos,inventario,arquivos && node capturar.js consumo
@@ -18,14 +18,17 @@ const SO = (process.argv[2] || '').split(',').filter(Boolean);
   await page.clock.setFixedTime(new Date('2026-11-13T12:00:00'));
   const errs = []; page.on('pageerror', e => errs.push(String(e)));
   await page.goto('file://' + path.resolve(APP));
-  await page.waitForSelector('.eng2-card', {timeout: 60000});
+  await page.waitForSelector('.eng-tools', {timeout: 60000});
   await montar(page);
   const shot = async (n, o) => { await page.waitForTimeout(500); await page.screenshot({path: path.join(OUT, n + '.jpg'), type: 'jpeg', quality: 82, ...(o || {})}); console.log('ok', n); };
   const passo = async (nome, fn) => { if (SO.length && !SO.includes(nome)) return; try { await fn(); } catch (e) { console.log('ERRO', nome, String(e).slice(0, 300)); await page.screenshot({path: path.join(OUT, 'erro_' + nome + '.jpg'), type: 'jpeg', quality: 60}); await page.keyboard.press('Escape').catch(() => {}); await page.keyboard.press('Escape').catch(() => {}); await fechar().catch(() => {}); const v = page.locator('.nav-back-btn'); if (await v.count()) await v.click().catch(() => {}); } };
   const fechar = async () => { for (let i = 0; i < 3; i++) { const x = page.locator('.modal-close:visible'); if (!(await x.count())) break; await x.last().click().catch(() => {}); await page.waitForTimeout(300); const c = page.locator('button:text-is("Fechar sem salvar"), button:text-is("Sair sem salvar")'); if (await c.count()) await c.first().click(); } };
   const inicio = async () => { await fechar(); if (await page.locator('.nav-back-btn').count()) { await page.click('.nav-back-btn'); await page.waitForTimeout(500); } };
+  // e16: a página inicial tem as abas 📊 Indicadores ('ind') e 📁 Contratos ('cts')
+  const aba = async k => { await inicio(); await page.waitForSelector('.fr-tab-' + k); if (await page.locator('.fr-tab-' + k + ':not(.on)').count()) { await page.click('.fr-tab-' + k); await page.waitForTimeout(k === 'ind' ? 2500 : 700); } await page.evaluate(() => window.scrollTo(0, 0)); };
 
   await passo('inicio', async () => {
+    await aba('ind');
     await page.waitForTimeout(1500);
     await shot('01_inicio');
     await page.evaluate(() => { const e = document.querySelector('.ec-ger-painel'); if (e) e.scrollIntoView({block: 'start'}); window.scrollBy(0, -20); });
@@ -34,11 +37,12 @@ const SO = (process.argv[2] || '').split(',').filter(Boolean);
     await page.evaluate(() => window.scrollTo(0, 0));
   });
   await passo('cards', async () => {
-    await page.evaluate(() => { const c = document.querySelector('.eng2-card'); c.scrollIntoView({block: 'start'}); window.scrollBy(0, -120); });
+    await aba('cts');
     await shot('01b_cards');
     await page.evaluate(() => window.scrollTo(0, 0));
   });
   await passo('matriz', async () => {
+    await aba('ind');
     const fr = await (await page.$('.ec-ger-frame')).contentFrame();
     const mx = await fr.evaluate(() => { const t = document.querySelector('.t-mx'); return t ? t.closest('.card').getBoundingClientRect().top : null; });
     await page.evaluate(mx => {
@@ -53,6 +57,7 @@ const SO = (process.argv[2] || '').split(',').filter(Boolean);
     await page.evaluate(() => { document.querySelectorAll('*').forEach(e => { if (e.scrollTop) e.scrollTop = 0; }); window.scrollTo(0, 0); });
   });
   await passo('logo', async () => {
+    await aba('cts');
     await page.click('.eng2-card:has-text("Takatsugu J")');
     await page.waitForSelector('.eng2-ctbar .eng-logo-btn');
     await page.hover('.eng2-ctbar .eng-logo-btn');
@@ -72,6 +77,7 @@ const SO = (process.argv[2] || '').split(',').filter(Boolean);
     await fechar();
   });
   await passo('plano', async () => {
+    await aba('cts');
     await page.click('.eng2-card:has-text("P&A")');
     await page.waitForTimeout(1500);
     await shot('05_gantt');
@@ -95,6 +101,7 @@ const SO = (process.argv[2] || '').split(',').filter(Boolean);
     for (let i = 0; i < qtds.length; i++) await q.nth(n - qtds.length + i).fill(String(qtds[i]));
   };
   await passo('novaop', async () => {
+    await aba('cts');
     await page.click('.eng2-card:has-text("P&A")');
     await page.waitForTimeout(1000);
     await page.click('button:has-text("+ Nova operação")');
@@ -130,6 +137,7 @@ const SO = (process.argv[2] || '').split(',').filter(Boolean);
     await inicio();
   });
   await passo('handover', async () => {
+    await aba('cts');
     await page.click('.eng2-card:has-text("P&A")');
     await page.waitForTimeout(800);
     await page.click('.db-tab:has-text("Lista")');
@@ -163,6 +171,7 @@ const SO = (process.argv[2] || '').split(',').filter(Boolean);
     await inicio();
   });
   await passo('consumo', async () => {
+    await aba('cts');
     await page.click('.eng2-card:has-text("P&A")');
     await page.waitForTimeout(800);
     await page.click('.db-tab:has-text("Consumo e receita")');
@@ -185,6 +194,7 @@ const SO = (process.argv[2] || '').split(',').filter(Boolean);
     await page.click('.eng-tools .eng-casing'); await page.waitForSelector('.ec-casdb-tab'); await shot('16_casing'); await fechar();
   });
   await passo('inventario', async () => {
+    await aba('cts');
     await page.click('.eng2-card:has-text("P&A")');
     await page.waitForTimeout(800);
     await page.click('.db-tab:has-text("Inventário das sondas")');
@@ -196,7 +206,13 @@ const SO = (process.argv[2] || '').split(',').filter(Boolean);
     await inicio();
   });
   await passo('arquivos', async () => {
-    await page.click('.eng-tools .eng-gerencial'); await page.waitForTimeout(800); await shot('20_gerencial'); await fechar();
+    // juntar os contratos: a aba Indicadores › Por contrato
+    await aba('ind');
+    const fr = await (await page.$('.ec-ger-frame')).contentFrame();
+    await fr.click('.tab[data-tab="contratos"]'); await page.waitForTimeout(800);
+    await page.evaluate(() => { const e = document.querySelector('.fr-tabs'); if (e) e.scrollIntoView({block: 'start'}); window.scrollBy(0, -16); });
+    await shot('20_por_contrato');
+    await fr.click('.tab[data-tab="receita"]'); await page.evaluate(() => window.scrollTo(0, 0));
     await page.click('.eng-tools .eng-planilhas'); await page.waitForTimeout(800); await shot('21_planilhas'); await fechar();
     const [dl] = await Promise.all([page.waitForEvent('download'), page.click('.eng-tools .eng-exportar')]);
     const p = path.join(__dirname, 'dados_demo.json'); await dl.saveAs(p);

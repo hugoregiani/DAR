@@ -37,6 +37,8 @@ h1:before{content:"";position:absolute;left:-22px;top:-12px;width:18px;height:18
 .drop.on{border-color:var(--red);background:#FFF7F7}
 .drop b{display:block;font-size:17px;color:var(--ink);margin-bottom:6px}
 .drop ol{text-align:left;display:inline-block;margin:12px auto 0;font-size:13px;line-height:1.7}
+.drop ol b,.drop .drop-novo b{display:inline;font-size:inherit;margin:0}
+.drop .drop-novo{max-width:760px;margin:14px auto 0;padding:10px 14px;border-radius:12px;background:#F4F6F7;font-size:13px;line-height:1.6;text-align:left;color:var(--ink)}
 .filtros{display:flex;flex-wrap:wrap;gap:8px;align-items:flex-end;margin:14px 0 6px}
 .f{display:flex;flex-direction:column;gap:3px}
 .f label{font-size:10.5px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--ink-3)}
@@ -303,6 +305,8 @@ html.emb body{background:transparent;min-height:0}
 html.emb .hdr{display:none}
 html.emb .wrap{max-width:none;padding:0 0 6px}
 html.emb .filtros{margin-top:0}
+html.emb .emb-bar{margin:0 0 12px}
+html.emb .emb-info{color:var(--ink-2)}
 html.emb .qcards{grid-template-columns:repeat(4,minmax(0,1fr))}
 @media(max-width:760px){html.emb .qcards{grid-template-columns:1fr 1fr}}
 .t-mx tr.mx-op[data-mx]{cursor:pointer}
@@ -400,7 +404,7 @@ https://github.com/nodeca/pako/blob/main/LICENSE
    Para cada contrato vale o arquivo mais novo. Tudo fica neste navegador (localStorage, prefixo earlger:). */
 (function () {
   'use strict';
-  var VERSAO = 'EARL Gerencial g19';
+  var VERSAO = 'EARL Gerencial g20';
   var CHAVE = 'earlger:pacotes_v1';
   var $ = function (s) { return document.querySelector(s); };
   var esc = function (v) { return String(v == null ? '' : v).replace(/[&<>"']/g, function (c) { return {'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'}[c]; }); };
@@ -443,6 +447,7 @@ https://github.com/nodeca/pako/blob/main/LICENSE
     S.msg = {txt: txt, erro: !!erro};
     var el = $('#msg'); if (!el) { el = document.createElement('div'); el.id = 'msg'; document.body.appendChild(el); }
     el.className = 'msg' + (erro ? ' err' : ''); el.textContent = txt; el.style.display = '';
+    if (EMB && window.earlGerNaTela) window.earlGerNaTela(el, 'msg');
     clearTimeout(tmsg); tmsg = setTimeout(function () { el.style.display = 'none'; }, erro ? 9000 : 5000);
   };
 
@@ -985,7 +990,8 @@ https://github.com/nodeca/pako/blob/main/LICENSE
   var telaVazia = function () {
     return '<h1>Gerencial</h1><p class="sub">Receita, COGS e margem, consumo de itens PPU, químicas, casing equipment e pessoal de todos os contratos — realizado e previsto.</p>' + barraTopo() +
       '<div class="drop" id="drop"><b>Carregue os arquivos dos engenheiros</b>Arraste aqui os arquivos .json (ou a pasta, ou o .zip baixado do SharePoint), ou use os botões acima.' +
-      '<ol><li>No <b>EARL Engenharia</b>, cada engenheiro clica em <b>“⬇ Arquivo do gerencial”</b>, marca os contratos dele e salva o arquivo na pasta do SharePoint do gerencial.</li>' +
+      '<p class="drop-novo"><b>Novo (EARL Forecast de Receita):</b> estes indicadores agora ficam na aba <b>📊 Indicadores</b> do próprio Forecast de Receita. Cada pessoa usa “⬇ Exportar dados” e você usa “⬆ Importar dados” no seu arquivo: os contratos importados entram nos indicadores. Este Gerencial separado continua abrindo os arquivos “Arquivo do gerencial” das versões anteriores.</p>' +
+      '<ol><li>No <b>EARL Engenharia</b> (versões anteriores), cada engenheiro clica em <b>“⬇ Arquivo do gerencial”</b>, marca os contratos dele e salva o arquivo na pasta do SharePoint do gerencial.</li>' +
       '<li>Aqui, carregue a pasta sincronizada do SharePoint (<b>📁 Carregar pasta</b>) ou os arquivos baixados (<b>⬆ Carregar arquivos</b>, aceita .zip).</li>' +
       '<li>Para cada contrato vale o arquivo mais novo. Os arquivos ficam guardados neste navegador; carregue de novo quando houver arquivos novos.</li></ol></div>';
   };
@@ -997,6 +1003,12 @@ https://github.com/nodeca/pako/blob/main/LICENSE
       (n ? '<button class="btn-o" data-a="excel">⬇ Excel consolidado</button><button class="btn-o b-reg" data-a="regAbrir" title="Guardar uma foto das informações nesta data, para comparar depois">📌 Registrar</button><button class="btn-o b-sh" data-a="shAbrir" title="Gerar um arquivo .html com os dados de agora, para mandar por e-mail">📤 Compartilhar (HTML)</button>' : '') + '<span class="sp"></span>' +
       (n ? '<span class="info">' + n + ' arquivo(s) · mais novo de ' + fDH(ult) + '</span><button class="btn-o" data-a="limpar">Limpar</button>' : '') + '</div>';
   };
+  // g20: no EARL Forecast de Receita (aba Indicadores) os dados vêm dos contratos do próprio arquivo — sem carregar
+  // arquivos; ficam o Excel, os registros (fotos por data, para comparar) e o HTML compartilhado
+  var barraEmb = function (C) {
+    return '<div class="bar emb-bar"><span class="info emb-info"><b>' + C.contratos.length + ' contrato(s)</b> · ' + C.ops.length + ' operação(ões) · realizado + previsto, com o risco de cada operação</span><span class="sp"></span>' +
+      '<button class="btn-o" data-a="excel">⬇ Excel consolidado</button><button class="btn-o b-reg" data-a="regAbrir" title="Guardar uma foto das informações nesta data, para comparar depois">📌 Registrar</button><button class="btn-o b-sh" data-a="shAbrir" title="Gerar um arquivo .html com os dados de agora, para mandar por e-mail">📤 Compartilhar (HTML)</button></div>';
+  };
   var opcoes = function (lista, val, todos) { return '<option value="">' + esc(todos) + '</option>' + lista.map(function (x) { var v = typeof x === 'string' ? x : x.v, t = typeof x === 'string' ? x : x.t; return '<option value="' + esc(v) + '"' + (v === val ? ' selected' : '') + '>' + esc(t) + '</option>'; }).join(''); };
   var uniq = function (l) { return l.filter(function (x, i) { return x && l.indexOf(x) === i; }).sort(function (a, b) { return a.localeCompare(b, 'pt'); }); };
 
@@ -1004,11 +1016,11 @@ https://github.com/nodeca/pako/blob/main/LICENSE
     fecharFiltroTab();
     $('#ver').textContent = VERSAO;
     var app = $('#app');
-    if (!S.pacotes.length) { app.innerHTML = EMB ? '<p class="vazio emb-vazio">Nenhum contrato com operações. Lance as operações nos contratos para ver a receita, o COGS e a margem aqui.</p>' : telaVazia(); ajustarAltura(); return; }
+    if (!S.pacotes.length) { app.innerHTML = EMB ? '<p class="vazio emb-vazio">Nenhum contrato com operações. Lance as operações na aba Contratos, ou traga os contratos de outras pessoas com “⬆ Importar dados”, para ver a receita, o COGS e a margem aqui.</p>' : telaVazia(); ajustarAltura(); return; }
     var C = consolidar(), anos = anosDe(C);
     if (anos.indexOf(S.f.ano) < 0) S.f.ano = anoPadrao(anos);
     var F = filtrar(C), A = agregar(F), f = S.f, T = A.T;
-    var h = EMB ? '' : ((COMPARTILHADO ? '<div class="sh-faixa">📤 <b>Versão compartilhada</b> do EARL Gerencial, com os dados de ' + fDH(DADOS_EMB.geradoEm) + (DADOS_EMB.soFiltro ? ' · só ' + esc(DADOS_EMB.soFiltro) : '') + '. Só consulta: filtros, gráficos, tabelas' + (S.regs.length ? ', comparação de registros' : '') + ' e Excel funcionam; os arquivos e os registros não mudam.</div>' : '') + '<h1>Gerencial</h1><p class="sub">' + C.contratos.length + ' contrato(s) de ' + uniq(S.pacotes.map(function (p) { return p.pac.por || '—'; })).length + ' engenheiro(s) · ' + C.ops.length + ' operação(ões) · realizado + previsto, com o risco aplicado</p>' + barraTopo());
+    var h = EMB ? barraEmb(C) : ((COMPARTILHADO ? '<div class="sh-faixa">📤 <b>Versão compartilhada</b> do EARL Gerencial, com os dados de ' + fDH(DADOS_EMB.geradoEm) + (DADOS_EMB.soFiltro ? ' · só ' + esc(DADOS_EMB.soFiltro) : '') + '. Só consulta: filtros, gráficos, tabelas' + (S.regs.length ? ', comparação de registros' : '') + ' e Excel funcionam; os arquivos e os registros não mudam.</div>' : '') + '<h1>Gerencial</h1><p class="sub">' + C.contratos.length + ' contrato(s) de ' + uniq(S.pacotes.map(function (p) { return p.pac.por || '—'; })).length + ' engenheiro(s) · ' + C.ops.length + ' operação(ões) · realizado + previsto, com o risco aplicado</p>' + barraTopo());
     h += '<div class="filtros">' +
       '<div class="f"><label>Ano</label><select data-f="ano">' + anos.map(function (a) { return '<option' + (a === f.ano ? ' selected' : '') + '>' + esc(a) + '</option>'; }).join('') + '</select></div>' +
       '<div class="f q-f"><label>Quarto (início e fim)</label><button type="button" class="q-box" data-a="qAbrir" title="Clique no quarto inicial e depois no final (um quarto só: clique duas vezes no mesmo)">' +
@@ -1028,8 +1040,11 @@ https://github.com/nodeca/pako/blob/main/LICENSE
       '<div class="kpi k-rec-op"><span>Receita / operação (US$)</span><b>' + (nC ? bUSD(T.rU / nC) : '—') + '</b><em>realizado ' + (nCR ? fUSD(T.rRU / nCR) : '—') + ' · previsto ' + (nCP ? fUSD(T.rPU / nCP) : '—') + (T.nF ? ' · sem as ' + T.nF + ' fora' : '') + '</em></div>' +
       '<div class="kpi k-margem"><span>Margem em US$</span><b>' + bUSD(T.rU - T.cU) + '</b><em>' + margemTxt(T.rU, T.cU) + ' da receita</em></div></div>';
     var tabs = [['receita', 'Receita e margem'], ['cmp', 'Comparar registros (' + S.regs.length + ')'], ['contratos', 'Contratos'], ['ppu', 'Itens PPU'], ['quim', 'Químicas'], ['cas', 'Casing equipment'], ['pes', 'Pessoal'], ['ops', 'Operações'], ['fontes', 'Arquivos (' + S.pacotes.length + ')']];
-    if (EMB) S.tab = 'receita';
-    else h += '<div class="tabs">' + tabs.map(function (t) { return '<button class="tab' + (S.tab === t[0] ? ' on' : '') + '" data-tab="' + t[0] + '">' + esc(t[1]) + '</button>'; }).join('') + '</div>';
+    if (EMB) {
+      tabs = tabs.filter(function (t) { return t[0] !== 'fontes'; }).map(function (t) { return t[0] === 'contratos' ? ['contratos', 'Por contrato'] : t; });
+      if (S.tab === 'fontes') S.tab = 'receita';
+    }
+    h += '<div class="tabs">' + tabs.map(function (t) { return '<button class="tab' + (S.tab === t[0] ? ' on' : '') + '" data-tab="' + t[0] + '">' + esc(t[1]) + '</button>'; }).join('') + '</div>';
     h += telas[S.tab] ? telas[S.tab](C, F, A) : '';
     app.innerHTML = h;
     if (S.tab === 'receita' && S.graf) desenharGrafico(A, C);
@@ -1938,7 +1953,19 @@ https://github.com/nodeca/pako/blob/main/LICENSE
     var dados = {tipo: 'EARL-Gerencial-Compartilhado', formato: 1, versao: VERSAO, geradoEm: new Date().toISOString(), soFiltro: desc, pacotes: pacs, registros: regs,
       estado: {tab: tab, f: Object.assign({}, S.f, {busca: ''}), gmet: S.gmet, gmodo: S.gmodo, tend: S.tend, graf: S.graf, cmp: {base: S.cmp.base, sel: S.cmp.sel.slice(), soMud: S.cmp.soMud}}};
     var clone = document.documentElement.cloneNode(true);
-    ['#msg', '#dlg', '#tfPop', '#earlger-dados'].forEach(function (sel) { var e = clone.querySelector(sel); if (e) e.parentNode.removeChild(e); });
+    ['#msg', '#dlg', '#tfPop', '#earlger-dados', '#earlger-embutido'].forEach(function (sel) { var e = clone.querySelector(sel); if (e) e.parentNode.removeChild(e); });
+    clone.classList.remove('emb');
+    if (EMB) { // embutido, o Gerencial usa o Excel (xlsx) e as logos do arquivo principal: o HTML compartilhado leva os dois
+      try {
+        var pai = window.parent;
+        var lib = Array.prototype.find.call(pai.document.scripts, function (x) { return /^\/\* xlsx\/0\.18\.5/.test(x.textContent); });
+        var vaga = Array.prototype.find.call(clone.querySelectorAll('script'), function (x) { return !x.id && !x.src && !x.textContent.trim(); });
+        if (lib && vaga) vaga.textContent = lib.textContent;
+        var ims = clone.querySelectorAll('.hdr img');
+        if (ims[0] && pai.LOGO) ims[0].setAttribute('src', pai.LOGO);
+        if (ims[1] && pai.LOGO_CT) ims[1].setAttribute('src', pai.LOGO_CT);
+      } catch (e) {}
+    }
     var app = clone.querySelector('#app'); if (app) app.innerHTML = '';
     var ver = clone.querySelector('#ver'); if (ver) ver.textContent = '';
     var tt = clone.querySelector('title'); if (tt) tt.textContent = 'EARL — Gerencial (compartilhado em ' + fD(hojeTxt()) + ')';
@@ -2225,7 +2252,19 @@ https://github.com/nodeca/pako/blob/main/LICENSE
       try { d = window.parent && window.parent.engGerDados ? window.parent.engGerDados() : null; } catch (e) { d = null; }
       S.pacotes = d && d.pacote && (d.pacote.contratos || []).length ? [{arquivo: 'EARL Engenharia', carregadoEm: d.pacote.geradoEm, pac: d.pacote}] : [];
     };
-    S.tab = 'receita'; S.regs = []; carregarEmb();
+    carregarEmb();
+    // diálogos e avisos aparecem na parte do quadro que está na tela (o quadro tem a altura do conteúdo)
+    var naTela = function (el, modo) {
+      try {
+        var r = window.frameElement.getBoundingClientRect(), vh = window.parent.innerHeight;
+        var topo = Math.max(0, -r.top), alt = Math.max(220, Math.min(vh, r.bottom) - Math.max(0, r.top));
+        el.style.position = 'absolute';
+        if (modo === 'ovl') { el.style.top = topo + 'px'; el.style.bottom = 'auto'; el.style.height = alt + 'px'; }
+        else { el.style.top = (topo + alt - 80) + 'px'; el.style.bottom = 'auto'; }
+      } catch (e) {}
+    };
+    new MutationObserver(function (ms) { ms.forEach(function (m) { m.addedNodes.forEach(function (n) { if (n.id === 'dlg') naTela(n, 'ovl'); }); }); }).observe(document.body, {childList: true});
+    window.earlGerNaTela = naTela;
     window.earlGerAtualizar = function () { carregarEmb(); render(); };
     if (window.ResizeObserver) new ResizeObserver(ajustarAltura).observe(document.body);
   }

@@ -84,7 +84,7 @@ function estatico(arq, completo) {
   await p.waitForTimeout(500);
   await baixar(() => p.locator('button', {hasText: /Baixar as \d planilhas/}).first().click());
   for (let i = 0; i < 3; i++) { const x = p.locator('.modal-close:visible'); if (!(await x.count())) break; await x.last().click(); await p.waitForTimeout(300); }
-  await p.click('.eng-tools .eng-gerencial');
+  await p.evaluate(() => window.engArquivoGerencial());
   await p.waitForTimeout(500);
   await baixar(() => p.locator('button', {hasText: 'Gerar arquivo'}).first().click());
   for (let i = 0; i < 3; i++) { const x = p.locator('.modal-close:visible'); if (!(await x.count())) break; await x.last().click(); await p.waitForTimeout(300); }
@@ -169,8 +169,8 @@ function estatico(arq, completo) {
   // banco de químicos e Gerencial embutido
   await p.click('.eng-tools .eng-quimicos'); await p.waitForSelector('.ec-quim-tab'); await p.waitForTimeout(500);
   for (let i = 0; i < 3; i++) { const x = p.locator('.modal-close:visible'); if (!(await x.count())) break; await x.last().click(); await p.waitForTimeout(300); }
-  await p.click('.eng2-ctbar-sw'); await p.waitForSelector('.eng2-card'); await p.waitForTimeout(2000);
-  const pac = await baixar(async () => { await p.click('.eng-tools .eng-gerencial'); await p.waitForTimeout(500); await p.locator('button', {hasText: 'Gerar arquivo'}).first().click(); });
+  await p.click('.eng2-ctbar-sw'); await p.waitForSelector('.fr-tab-ind'); await p.click('.fr-tab-ind'); await p.waitForSelector('.ec-ger-frame'); await p.waitForTimeout(2500);
+  const pac = await baixar(async () => { await p.evaluate(() => window.engArquivoGerencial()); await p.waitForTimeout(500); await p.locator('button', {hasText: 'Gerar arquivo'}).first().click(); });
   for (let i = 0; i < 3; i++) { const x = p.locator('.modal-close:visible'); if (!(await x.count())) break; await x.last().click(); await p.waitForTimeout(300); }
   conf((await xss(p)) === 0, 'Engenharia: nenhum código malicioso executou (telas, filtro, consumo, handover, e-mail, químicos, Gerencial embutido)', await xss(p));
   console.log('    (bloqueios registrados pela política: %s)', JSON.stringify((await violacoes()).slice(0, 4)));

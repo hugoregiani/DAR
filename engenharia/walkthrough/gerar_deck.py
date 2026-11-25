@@ -91,8 +91,8 @@ def add(corpo, num=True):
 
 def capa():
     add('<div class="cfundo"></div><img class="cfoto" src="img/capa.jpg" alt=""><img class="cearl" src="img/earl.png" alt="EARL">'
-        '<div class="cbar"></div><div class="ctit">EARL Engenharia —<br>passo a passo</div>'
-        '<div class="csub"><p>Do contrato ao handover e à receita, no arquivo da Engenharia, passo a passo.</p>'
+        '<div class="cbar"></div><div class="ctit">EARL Forecast de Receita —<br>passo a passo</div>'
+        '<div class="csub"><p>Do contrato ao handover e à receita de todos os contratos, no Forecast de Receita, passo a passo.</p>'
         '<p>Todas as telas foram capturadas do próprio arquivo, na versão atual.</p></div>', num=False)
 
 
@@ -127,7 +127,7 @@ def fluxo():
               ('Handover', 'o e-mail para logística e coordenação', 'HANDOVER ENVIADO'),
               ('Consumo', 'o que foi usado na operação', 'CONCLUÍDA'),
               ('Receita e margem', 'realizado + previsto, com o risco', 'RESULTADO'),
-              ('Arquivos', 'Gerencial e Painel de Compras', 'COMPARTILHADO')]
+              ('Juntar', 'Indicadores de todos os contratos e Painel de Compras', 'COMPARTILHADO')]
     h = ''
     x0, w, gap = 62, 168, 30
     for i, (t, d, l) in enumerate(caixas):
@@ -137,7 +137,7 @@ def fluxo():
         if i:
             h += '<div class="seta" style="left:%dpx;width:%dpx"></div>' % (x - gap + 5, gap - 12)
     voltas = [(130, 418, 'Mudou a data de uma operação? As seguintes da mesma sonda acompanham, mantendo a folga.'),
-              (450, 476, 'O EARL Gerencial junta os arquivos de todos os engenheiros e mostra a receita de todos os contratos.'),
+              (450, 476, 'Cada pessoa exporta os dados; quem importa vê, na aba Indicadores, a receita de todos os contratos.'),
               (450, 534, 'O Painel de Compras lê o inventário das sondas e o consumo de químicos para planejar as compras.')]
     for x, y, t in voltas:
         h += '<div class="vl" style="left:%dpx;top:%dpx;width:%dpx"><i></i><span>%s</span></div>' % (x, y, 1218 - x, E(t))
@@ -152,32 +152,32 @@ def fim():
 # ------------------------------------------------------------------ conteúdo
 capa()
 texto('O que você está vendo', 'Leia primeiro', [
-    'O <b>EARL Engenharia</b> é um arquivo (.html) que abre no Chrome ou no Edge, sem instalar nada e sem internet. Cada contrato tem o seu arquivo, já carregado com os itens, os valores e as operações da planilha do contrato.',
+    'O <b>EARL Forecast de Receita</b> (antes “EARL Engenharia”) é um arquivo (.html) que abre no Chrome ou no Edge, sem instalar nada e sem internet. Cada contrato tem o seu arquivo, já carregado com os itens, os valores e as operações da planilha do contrato.',
     'As telas deste passo a passo usam <b class="v">dados de demonstração</b>. Poços, Sales Orders, números VIDA, números de contrato e valores são fictícios. Os nomes de clientes e sondas foram mantidos para as telas ficarem naturais.',
     'Nenhuma tela foi editada depois da captura.'],
     'Um arquivo por contrato e um registro por operação, do planejamento ao handover e à receita.')
 texto('Antes de começar', 'O arquivo', [
     'Abra o arquivo com dois cliques, no <b>Chrome</b> ou no <b>Edge</b>. Não abra pela pré-visualização do Outlook ou do Teams: ali o navegador não deixa salvar.',
     'Os dados ficam guardados <b>no navegador deste computador</b>. Para guardar uma cópia ou levar para outro computador, use <b>⬇ Exportar dados</b> (passo 21).',
-    'Na barra do topo ficam as ferramentas de todos os contratos: Contratos, Sondas, Químicos, Casing, Câmbio e os arquivos para exportar.'],
+    'A página inicial tem duas abas: <b>📊 Indicadores</b> (receita e margem de todos os contratos) e <b>📁 Contratos</b> (onde se lançam as operações). Na barra do topo ficam Contratos, Sondas, Químicos, Casing, Câmbio e os arquivos para exportar.'],
     'Exporte os dados de vez em quando: é a sua cópia de segurança.')
 fluxo()
 
 S1 = 'Começando'
-secao(1, S1, 'A página inicial, a logo do cliente, a receita de todos os contratos e os contratos com os seus itens e valores.',
-      [(1, 'A página inicial'), (2, 'A logo do cliente'), (3, 'Receita e margem'), (4, 'A receita mês a mês'), (5, 'Contratos, itens e valores')])
-passo(1, S1, 'A página inicial', [
-    'Cada contrato é um card: o cliente, as operações dos próximos 30 dias numa faixa, quantas sondas e a próxima data.',
+secao(1, S1, 'As abas Contratos e Indicadores, a logo do cliente, a receita de todos os contratos e os contratos com os seus itens e valores.',
+      [(1, 'A aba Contratos'), (2, 'A logo do cliente'), (3, 'A aba Indicadores'), (4, 'A receita mês a mês'), (5, 'Contratos, itens e valores')])
+passo(1, S1, 'A aba Contratos', [
+    'Na aba <b>📁 Contratos</b> da página inicial, cada contrato é um card: o cliente, as operações dos próximos 30 dias numa faixa, quantas sondas e a próxima data.',
     'O card vermelho junta todos os contratos. Clique num card para abrir o contrato.',
     'No “…” do card dá para arquivar ou apagar um contrato.'], '01b_cards.jpg')
 passo(2, S1, 'A logo do cliente', [
     'Ao abrir o contrato, clique na logo (ou nas iniciais) ao lado do nome do contrato.',
     'Na janela, <b>⬆ Inserir a logo</b>: escolha a imagem (PNG, JPG ou SVG). Ela aparece no card da página inicial, no topo do contrato e nas operações, em todos os contratos do cliente.',
     'Dá para trocar ou tirar a logo depois.'], '23_logo.jpg')
-passo(3, S1, 'Receita e margem', [
-    'Receita, COGS e margem em US$, já com o risco de cada operação: o realizado (consumo lançado) mais o previsto.',
-    'Os cards Q1 a Q4 também são filtros: clique num quarto para ver só ele.',
-    'Filtre por ano, mês, cliente, contrato, região ou tipo de contrato.'], '02_receita.jpg')
+passo(3, S1, 'A aba Indicadores', [
+    'Na aba <b>📊 Indicadores</b>: receita, COGS e margem em US$ de todos os contratos do arquivo, já com o risco de cada operação: o realizado (consumo lançado) mais o previsto.',
+    'Os cards Q1 a Q4 também são filtros. Filtre por ano, mês, cliente, contrato, região ou tipo de contrato; as abas mostram Itens PPU, Químicas, Casing, Pessoal, Operações e Por contrato.',
+    '<b>📌 Registrar</b> guarda uma foto dos números para comparar depois; <b>📤 Compartilhar</b> gera um HTML para mandar por e-mail.'], '02_receita.jpg')
 passo(4, S1, 'A receita mês a mês', [
     'A tabela abre por cliente › contrato › sonda › poço › operação › item PPU. Clique numa linha para abrir.',
     'Arraste a borda da primeira coluna para deixá-la mais larga ou mais estreita; duplo clique volta ao tamanho padrão.',
@@ -250,11 +250,12 @@ passo(18, S5, 'Filtro e ordem nas tabelas', [
     'Com filtro, a tabela mostra “Mostrando X de Y” e o botão “Limpar filtro e ordem”.'], '19_filtro.jpg')
 
 S6 = 'Compartilhar e guardar'
-secao(6, S6, 'Os arquivos para o gerencial e para compras, e a cópia dos seus dados.',
-      [(19, 'Arquivo do gerencial'), (20, 'Planilhas para o Painel de Compras'), (21, 'Exportar, importar e apagar')])
-passo(19, S6, 'Arquivo do gerencial', [
-    'Marque os contratos sob sua responsabilidade e gere o arquivo.',
-    'Salve na pasta do SharePoint do gerencial: o EARL Gerencial junta os arquivos de todos os engenheiros. Para cada contrato, vale o arquivo mais novo.'], '20_gerencial.jpg')
+secao(6, S6, 'Juntar os contratos de várias pessoas, as planilhas para compras e a cópia dos seus dados.',
+      [(19, 'Juntar os contratos de várias pessoas'), (20, 'Planilhas para o Painel de Compras'), (21, 'Exportar, importar e apagar')])
+passo(19, S6, 'Juntar os contratos de várias pessoas', [
+    'Cada pessoa trabalha no arquivo do contrato dela e usa <b>⬇ Exportar dados</b>.',
+    'No seu arquivo, <b>⬆ Importar dados</b> (passo 21): cada contrato entra ou substitui o de mesmo nome, com as operações.',
+    'Pronto: a aba <b>📊 Indicadores</b> mostra todos os contratos juntos; em “Por contrato”, um ao lado do outro.'], '20_por_contrato.jpg')
 passo(20, S6, 'Planilhas para o Painel de Compras', [
     'Quatro planilhas separadas: inventário das sondas e consumo de químicos (o Painel de Compras usa estas duas), casing equipment e pessoal.',
     'Cada linha leva a contingência e o risco de não acontecer.'], '21_planilhas.jpg')
@@ -271,7 +272,7 @@ texto('O que este passo a passo não mostrou', 'Mais no mesmo arquivo', [
     'Tudo isso já está no mesmo arquivo. Ficou de fora para o passo a passo continuar curto.')
 fim()
 
-out = ['<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><title>EARL Engenharia — passo a passo</title><style>', CSS, '</style></head><body>']
+out = ['<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><title>EARL Forecast de Receita — passo a passo</title><style>', CSS, '</style></head><body>']
 n = 0
 for corpo, num in slides:
     n += 1

@@ -1,6 +1,6 @@
-# EARL — Engenharia (avulso)
+# EARL — Forecast de Receita (antes "EARL Engenharia", avulso)
 
-A Engenharia do EARL separada do resto do sistema, para usar **sem servidor, sem login e sem internet**: é só abrir o arquivo `EARL_Engenharia.html` no Chrome ou no Edge. Ele abre direto na Engenharia, com todos os contratos (Nordeste e Sudeste juntos).
+A Engenharia do EARL separada do resto do sistema, agora chamada **EARL Forecast de Receita** (e16), para usar **sem servidor, sem login e sem internet**: é só abrir o arquivo `EARL_Engenharia.html` no Chrome ou no Edge. Ele abre direto na Engenharia, com todos os contratos (Nordeste e Sudeste juntos).
 
 ## O que tem
 
@@ -22,7 +22,7 @@ A Engenharia do EARL separada do resto do sistema, para usar **sem servidor, sem
   4. **Pessoal:** pessoas e dias por função, que dão o homem-dia.
 
   Cada parte começa com o previsto da operação, e **⇩ Copiar previsto** preenche tudo de uma vez. O app avisa quando um item PPU passa do saldo ou não tem valor cadastrado.
-- **Página inicial: Receita e margem** (e8). Logo abaixo do título fica a mesma seção "Receita e margem" do **EARL Gerencial**, com os dados desta Engenharia (todos os contratos não arquivados):
+- **Página inicial: Receita e margem** (e8; desde a e16 é a aba **📊 Indicadores**, ver e16). Logo abaixo do título fica a mesma seção "Receita e margem" do **EARL Gerencial**, com os dados desta Engenharia (todos os contratos não arquivados):
   - **Filtros iguais aos do Gerencial:** ano, **quarto (início e fim)**, mês (início e fim), cliente, contrato, região e tipo de contrato.
     - Para vários quartos, clique no quarto inicial e depois no final, como nos meses.
     - Depois do primeiro clique, passar o cursor sobre os outros quartos ou meses mostra a prévia do período.
@@ -59,7 +59,7 @@ A Engenharia do EARL separada do resto do sistema, para usar **sem servidor, sem
   - **Histórico:** cada atualização fica registrada com data, origem (base, planilha ou tela), quem fez e quantos produtos ficaram novos, alterados e removidos.
   - **Atenção:** o valor vale para todas as operações, inclusive as já lançadas; ao mudar um valor, o COGS delas muda junto.
 - **Custos (COGS):** botão na tela de Contratos, para outros materiais e ajustes (desde o e12 o casing equipment fica no banco de Casing). As químicas ficam no banco de Químicos; se o mesmo SAP estiver aqui e num banco, vale o do banco. Custo unitário pelo SAP, em US$ e/ou R$. Pode ser digitado ou carregado de planilha (colunas `SAP`, `Produto`, `Unidade`, `COGS US$` e/ou `COGS R$`; uma coluna só "COGS" vale como US$). O consumo da operação e a aba "Consumo e receita" mostram COGS e margem.
-- **⬇ Arquivo do gerencial:** botão na barra (e na aba Consumo e receita). O engenheiro marca os contratos sob a responsabilidade dele e gera um `.json` com os contratos (itens, saldos, valores, reajustes) e as operações (previsto com valores, consumo lançado, receita, COGS e risco). Esse arquivo vai para a pasta do SharePoint do gerencial e é lido pelo **EARL Gerencial** (`../gerencial`).
+- **⬇ Arquivo do gerencial** (até a e15; **saiu na e16**, ver abaixo): botão na barra (e na aba Consumo e receita). O engenheiro marca os contratos sob a responsabilidade dele e gera um `.json` com os contratos (itens, saldos, valores, reajustes) e as operações (previsto com valores, consumo lançado, receita, COGS e risco). Esse arquivo vai para a pasta do SharePoint do gerencial e é lido pelo **EARL Gerencial** (`../gerencial`).
 - **Inventário das sondas:** aba em cada contrato (e na Visão geral), para lançar o **inventário real dos produtos químicos a bordo** de cada sonda do contrato.
   - **Sondas do contrato:** as das operações do contrato e as cadastradas com o contrato. Uma sonda de fora entra por **＋ Contagem de outra sonda…**.
   - **Contagem:** cada uma tem data, responsável e observação, e uma linha por produto (SAP, produto, unidade e quantidade a bordo).
@@ -97,6 +97,39 @@ A Engenharia do EARL separada do resto do sistema, para usar **sem servidor, sem
 - **Sondas:** sempre como **"NOME PETROBRAS - NOME DA SONDA"** (ex.: NS-60 - Deepwater Aquila); sem nome Petrobras, só o nome. Vale no Gantt, calendário, lista, seletores, handover (assunto e corpo), consumo, inventário e Receita e margem. As planilhas exportadas continuam com "Sonda" (código) e "Nome da sonda" separados.
 - **Exportações:** "Consumo de produtos químicos", "Casing equipment" e "Pessoal" ganharam **Contingência (linha)** e **Risco da linha (%)**; a operação já tinha Contingência e Risco (%). O Painel de Compras aplica o risco da linha.
 - **Cards** da aba "Consumo e receita" com profundidade, como os do Gerencial g16.
+
+### e16 (25/11/2026) — Forecast de Receita: abas Indicadores e Contratos
+
+Pedido do Hugo: "Vamos trocar o nome de engenharia para forecast de receita. Crie uma aba para indicadores e uma aba
+para os contratos. Assim a gente pode acabar com esse botão de exportar para o arquivo do gerencial. Vão ter várias
+pessoas trabalhando em diferentes contratos: elas exportam os dados, eu importo todos os contratos no meu aplicativo e
+vejo todos os indicadores ali de uma vez."
+
+- **Nome:** "EARL Forecast de Receita" no título da página, na faixa vermelha, na trilha, no título da página inicial
+  (`patch_engenharia.py`) e nos arquivos dos contratos reais (`EARL — Forecast de Receita (PA)`). O nome dos arquivos
+  no repositório, o prefixo do armazenamento (`earleng…`) e os tipos das planilhas (`EARL-Eng-…`, lidos pelo Painel de
+  Compras) **não mudaram**, para não perder dados nem quebrar a leitura nas outras ferramentas. A exportação agora se
+  chama `EARL_Forecast_dados_<data>.json` (campo `app: 'EARL Forecast de Receita'`).
+- **Página inicial com duas abas** (`renderEngHomeTabs` em `eng_contratos.js`, CSS `.fr-tabs`/`.fr-tab`):
+  - **📊 Indicadores** (`renderEngIndicadores`): o Gerencial embutido (`ENG_GER_HTML`, iframe `.ec-ger-frame`), com
+    todos os contratos ativos deste arquivo. Agora com as abas do Gerencial (Receita e margem, Comparar registros, Por
+    contrato, Itens PPU, Químicas, Casing equipment, Pessoal, Operações) e a barra com ⬇ Excel consolidado,
+    📌 Registrar e 📤 Compartilhar (HTML). Ver o g20 em `../gerencial/README.md`.
+  - **📁 Contratos:** os cartões dos contratos (Visão geral + um por contrato), como antes.
+  - A aba escolhida fica guardada (`eng_home_tab_v1`). Sem nada guardado, abre em Indicadores. Os testes abrem em
+    Contratos (`window.EARL_ABA_INICIAL`, posto pelo `tests/harness.js`; `aba: 'ind'` ou `''` muda).
+- **Saiu o botão "⬇ Arquivo do gerencial"** (da barra do topo e da aba Consumo e receita). O pacote continua sendo
+  gerado (`engPacoteGerencial`) para a aba Indicadores, e a janela antiga ainda abre por código
+  (`window.engArquivoGerencial()`, usada nos testes).
+- **Juntar os contratos de várias pessoas:** cada pessoa usa "⬇ Exportar dados"; o Hugo usa "⬆ Importar dados" (e15:
+  contrato por contrato, o de mesmo nome é substituído) e vê todos os contratos na aba Indicadores.
+- **Gerencial separado** (`EARL_Gerencial.html`): não é mais entregue; continua no repositório e abre os
+  "Arquivo do gerencial" das versões anteriores. A tela inicial dele explica o jeito novo.
+- **Testes:** `tests/e2e_e16.js` (29): duas pessoas exportam, o Hugo importa e vê os 5 contratos nos indicadores
+  (receita de cada ano, filtro por contrato, aba Por contrato), alterar uma operação muda os indicadores, a aba é
+  lembrada, Registrar (janela na parte visível, guarda e continua depois de reabrir) e Compartilhar (HTML independente
+  que abre sozinho com os mesmos números e baixa o Excel). Os outros testes passaram a escolher a aba
+  (`.fr-tab-ind`/`.fr-tab-cts`).
 
 ### e15 (24/11/2026) — exportar, importar contrato por contrato e apagar
 
@@ -302,4 +335,4 @@ node contratos_reais/e2e_contratos_reais.js <pasta das planilhas> <pasta dos HTM
     - apagar com operações: só com APAGAR, levando as operações e o handover;
     - os contratos apagados não voltam ao reabrir.
 - **A seção Receita e margem é o `../gerencial/gerencial.html`**, embutido pelo patch (`ENG_GER_HTML`, num iframe, no modo embutido do Gerencial). Mudou o Gerencial? Gere de novo o `EARL_Engenharia.html`.
-- Versão: `EARL_VERSION = 'EARL Engenharia e15 (base v115)'`. O teste do fluxo completo com o Gerencial está em `../gerencial/tests/e2e_gerencial.js`.
+- Versão: `EARL_VERSION = 'EARL Forecast de Receita e16 (base v115)'`. O teste do fluxo completo com o Gerencial está em `../gerencial/tests/e2e_gerencial.js`.

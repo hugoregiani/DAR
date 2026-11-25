@@ -1,4 +1,4 @@
-# Walkthrough do EARL Engenharia (PDF no padrão Halliburton)
+# Walkthrough do EARL Forecast de Receita (antes "EARL Engenharia"; PDF no padrão Halliburton)
 
 Pedido do Hugo (13/11/2026): "prepara um walkthrough no padrão do arquivo em anexo (EARL_Demo_walkthrough.pdf) para os
 usuários do arquivo da engenharia. Simples, claro e direto."
@@ -9,6 +9,12 @@ com o texto ao lado, ou duas telas), "O que este passo a passo não mostrou" e "
 `EARL_Engenharia.html`, com **dados de demonstração** (`demo.js`: 3 contratos com números e valores inventados,
 14 operações, consumo, inventário e câmbio).
 
+**V04 (25/11/2026, e16):** o nome passou para "EARL Forecast de Receita". A página inicial tem as abas 📊 Indicadores e
+📁 Contratos (o `capturar.js` troca de aba com `aba('ind')`/`aba('cts')`). O passo 1 é "A aba Contratos", o passo 3 é
+"A aba Indicadores" e o passo 19 virou "Juntar os contratos de várias pessoas" (tela `20_por_contrato.jpg`: Indicadores ›
+Por contrato), no lugar do antigo "Arquivo do gerencial". **Os vídeos (`video/` e `tutorial/`) ainda mostram o nome e a
+página inicial antigos**; serão gravados de novo junto com a narração.
+
 ## Como gerar de novo (depois de mudar o app)
 
 ```bash
@@ -17,7 +23,7 @@ python3 preparar_imagens.py <EARL_Demo_walkthrough.pdf>        # foto e logos (n
 node capturar.js inicio,cards,matriz,logo,contratos,plano,novaop,handover,bancos,inventario,arquivos
 node capturar.js consumo
 python3 gerar_deck.py                                          # textos e ordem dos slides
-node render.js EARL_Engenharia_passo_a_passo_V03.pdf png       # PDF (Chromium) e as prévias em prev/ (versão atual: V03, 24/11/2026)
+node render.js EARL_Forecast_Receita_passo_a_passo_V04.pdf png # PDF (Chromium) e as prévias em prev/ (versão atual: V04, 25/11/2026)
 ```
 
 Precisa do Playwright com o Chromium (como os testes) e de uma fonte compatível com Arial (Liberation Sans).

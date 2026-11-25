@@ -82,7 +82,7 @@ const RIG = 'hg_rig_11_norbeviii';
   conf(P.cambio.length === 2 && P.cambio[1].valor === 5.3, 'arquivo do gerencial leva a tabela do câmbio', P.cambio);
 
   console.log('Receita e margem (Gerencial embutido) e cards');
-  const gerF = async () => { await page.waitForSelector('.ec-ger-frame'); const f = await (await page.$('.ec-ger-frame')).contentFrame(); await f.waitForSelector('.kpis'); return f; };
+  const gerF = async () => { if (await page.locator('.fr-tab-ind:not(.on)').count()) await page.click('.fr-tab-ind'); await page.waitForSelector('.ec-ger-frame'); const f = await (await page.$('.ec-ger-frame')).contentFrame(); await f.waitForSelector('.kpis'); return f; };
   let fg = await gerF();
   await fg.selectOption('[data-f="ano"]', '2026');
   conf(perto(valor(await fg.textContent('.k-rec-usd b')), 700 + 600 + 106), '2026: 1.000 × 70% + 600 + 106 = US$ 1.406', await fg.textContent('.k-rec-usd b'));
@@ -94,6 +94,7 @@ const RIG = 'hg_rig_11_norbeviii';
   await foto(page, 'e10_1_receita');
 
   console.log('Lista: horizonte "Todas" e nome das sondas');
+  await page.click('.fr-tab-cts');
   await page.click('.eng2-card:has-text("P&A — Macaé")');
   await page.click('.db-tab:has-text("Lista")');
   await page.waitForTimeout(150);
@@ -156,6 +157,7 @@ const RIG = 'hg_rig_11_norbeviii';
   fg = await gerF();
   await fg.selectOption('[data-f="ano"]', '2026');
   conf(perto(valor(await fg.textContent('.k-rec-usd b')), 0 + 800 + 212 + 106), 'Receita e margem 2026: A fora (risco 100%) + 1.012 + 106 = US$ 1.118', await fg.textContent('.k-rec-usd b'));
+  await page.click('.fr-tab-cts');
   await page.click('.eng2-card:has-text("P&A — Macaé")');
   await page.click('.db-tab:has-text("Consumo e receita")');
   await page.waitForSelector('.ec-kpi-usd');

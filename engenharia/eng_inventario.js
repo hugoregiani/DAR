@@ -920,7 +920,7 @@
       type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
     });
   };
-  var engExpSobre = (t, cts, nome, extra) => [['Arquivo', 'EARL Engenharia — ' + t.titulo], ['Tipo', t.tipo], ['Formato', 1], ['Gerado em', new Date().toISOString()], ['Engenheiro', nome || ''], ['App', EARL_VERSION], ['Contratos', cts.map(c => c.name).join(' | ')], ...(extra || [])];
+  var engExpSobre = (t, cts, nome, extra) => [['Arquivo', 'EARL Forecast de Receita — ' + t.titulo], ['Tipo', t.tipo], ['Formato', 1], ['Gerado em', new Date().toISOString()], ['Engenheiro', nome || ''], ['App', EARL_VERSION], ['Contratos', cts.map(c => c.name).join(' | ')], ...(extra || [])];
   /* prev = linhas previstas: levam a contingência e o risco de não acontecer de cada linha (e10) */
   var engExpMat = (l, prev) => (l || []).map(m => ({
     sap: String(m.sap || '').trim(),

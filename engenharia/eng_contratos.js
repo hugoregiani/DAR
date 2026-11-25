@@ -777,7 +777,7 @@
       style: {
         marginBottom: 10
       }
-    }, engH("b", null, "Arquivado"), engH("span", null, "N\xE3o aparece na Engenharia. Clique em “Desarquivar” para voltar.")), engH("div", {
+    }, engH("b", null, "Arquivado"), engH("span", null, "N\xE3o aparece nos contratos nem nos indicadores. Clique em “Desarquivar” para voltar.")), engH("div", {
       className: "hm-sec"
     }, "Dados do contrato"), engH("div", {
       className: "ec-dados"
@@ -2101,9 +2101,6 @@
       className: "btn-o",
       onClick: abrirEngContratos
     }, "Contratos"), engH("button", {
-      className: "btn-o",
-      onClick: abrirEngGer
-    }, "\u2B07 Arquivo do gerencial"), engH("button", {
       className: "btn-o ec-excel",
       onClick: () => engRecExcel(ctSel ? ctSel.name : 'todos os contratos', calcs, !!ctSel)
     }, "⬇ Excel"));
@@ -2506,52 +2503,61 @@
     }, "Salvar COGS")));
   };
 
-  /* ---------------- painel "Receita e margem" (página inicial da Engenharia) — e8 ----------------
-     É a seção "Receita e margem" do EARL Gerencial (gerencial/gerencial.html), a mesma, num quadro (iframe) com os
-     dados desta Engenharia: filtros (ano, quartos de início e fim, meses, cliente, contrato, região e tipo), cartões,
-     cartões dos quartos, gráfico e a matriz. O patch embute o gerencial.html em ENG_GER_HTML; dentro do quadro ele
-     roda no "modo embutido" e pede os dados a window.engGerDados() — o mesmo pacote do "Arquivo do gerencial", com
-     todos os contratos não arquivados. A cada alteração no banco, o quadro é avisado (earlGerAtualizar). */
+  /* ---------------- e16: página inicial com duas abas (pedido do Hugo, 25/11/2026) ----------------
+     "Indicadores": o EARL Gerencial inteiro (gerencial/gerencial.html, embutido em ENG_GER_HTML, no "modo embutido")
+     com os contratos deste arquivo — receita e margem, matriz, gráficos, comparar registros, por contrato, itens
+     PPU, químicas, casing, pessoal, operações, Excel e HTML compartilhado. "Contratos": os cards (abrir o contrato
+     para alterar as operações). Quem junta os contratos de várias pessoas importa o "⬇ Exportar dados" de cada uma
+     ("⬆ Importar dados") e vê tudo nos Indicadores — não há mais o "Arquivo do gerencial". O quadro pede os dados a
+     window.engGerDados() (todos os contratos não arquivados) e é avisado a cada alteração (earlGerAtualizar). */
   var engGerFrameRef = useRef(null);
-  var [engGerAberto, setEngGerAberto] = useState(() => {
+  var [engHomeTab, setEngHomeTab] = useState(() => {
+    if (window.EARL_ABA_INICIAL === 'cts' || window.EARL_ABA_INICIAL === 'ind') return window.EARL_ABA_INICIAL; // testes automáticos
     try {
-      return localStorage.getItem('eng_painel_ger_v1') !== 'fechado';
+      return localStorage.getItem('eng_home_tab_v1') === 'cts' ? 'cts' : 'ind';
     } catch (e) {
-      return true;
+      return 'ind';
     }
   });
-  window.engGerDados = () => ({
-    pacote: engPacoteGerencial(engContratos.map(c => c.id), (db.hoMail || {}).nome || '')
+  var mudarEngHomeTab = k => {
+    setEngHomeTab(k);
+    try {
+      localStorage.setItem('eng_home_tab_v1', k);
+    } catch (e) {}
+  };
+  window.engGerDados = por => ({
+    pacote: engPacoteGerencial(engContratos.map(c => c.id), por || (db.hoMail || {}).nome || '')
   });
+  /* o pacote também sai em arquivo (sem botão): usado pelos testes do Gerencial e por quem ainda usa o Gerencial avulso */
+  window.engArquivoGerencial = () => abrirEngGer();
   useEffect(() => {
     try {
       var w = engGerFrameRef.current && engGerFrameRef.current.contentWindow;
       if (w && w.earlGerAtualizar) w.earlGerAtualizar();
     } catch (e) {}
   }, [db, engContratos]);
-  var renderEngPainel = () => engH("div", {
-    className: "ec-painel ec-ger-painel"
+  var renderEngHomeTabs = () => {
+    var nOps = (db.plannedJobs || []).filter(j => engContratos.some(c => pjDoContrato(j, c))).length;
+    return engH("div", {
+      className: "fr-tabs",
+      role: "tablist"
+    }, [['ind', '\uD83D\uDCCA Indicadores', 'todos os contratos deste arquivo'], ['cts', '\uD83D\uDCC1 Contratos', engContratos.length + ' contrato(s) · ' + nOps + ' operação(ões)']].map(([k, t, sub]) => engH("button", {
+      key: k,
+      type: "button",
+      role: "tab",
+      "aria-selected": engHomeTab === k,
+      className: 'fr-tab fr-tab-' + k + (engHomeTab === k ? ' on' : ''),
+      onClick: () => mudarEngHomeTab(k)
+    }, engH("b", null, t), engH("span", null, sub))));
+  };
+  var renderEngIndicadores = () => engH("div", {
+    className: "ec-ger-painel fr-ind"
   }, engH("div", {
-    className: "ec-painel-h"
-  }, engH("b", null, "Receita e margem"), engH("span", {
-    className: "ec-ger-sub"
-  }, "realizado + previsto, com o risco de cada operação · " + engContratos.length + " contrato(s)"), engH("span", {
-    style: {
-      flex: 1
-    }
-  }), engH("button", {
-    className: "btn-o ec-painel-tg",
-    onClick: () => {
-      var v = !engGerAberto;
-      setEngGerAberto(v);
-      try {
-        localStorage.setItem('eng_painel_ger_v1', v ? 'aberto' : 'fechado');
-      } catch (e) {}
-    }
-  }, engGerAberto ? 'Recolher' : 'Mostrar')), engGerAberto && engH("iframe", {
+    className: "fr-ind-ajuda"
+  }, "Receita, COGS e margem (realizado + previsto, com o risco de cada operação) de ", engH("b", null, engContratos.length + " contrato(s)"), ". Para juntar os contratos de outras pessoas: cada uma usa “⬇ Exportar dados” e você usa “⬆ Importar dados”. Para alterar operações, abra a aba Contratos."), engH("iframe", {
     ref: engGerFrameRef,
     className: "ec-ger-frame",
-    title: "Receita e margem",
+    title: "Indicadores",
     srcDoc: ENG_GER_HTML
   }));
   /* ---------------- e8: arquivar ou apagar pelo card do contrato (página inicial) ----------------

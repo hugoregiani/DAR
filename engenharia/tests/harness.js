@@ -2,9 +2,11 @@
 // opções: w, h (tamanho da janela) e hoje ('AAAA-MM-DD': fixa o relógio do navegador nesse dia).
 const {chromium} = require('playwright');
 const path = require('path');
-async function abrir(arquivo, {w = 1440, h = 900, hoje} = {}) {
+// aba: aba inicial da página inicial (e16): 'cts' = Contratos (padrão dos testes), 'ind' = Indicadores, '' = a do app.
+async function abrir(arquivo, {w = 1440, h = 900, hoje, aba = 'cts'} = {}) {
   const browser = await chromium.launch();
   const ctx = await browser.newContext({viewport: {width: w, height: h}, acceptDownloads: true});
+  if (aba) await ctx.addInitScript(a => { window.EARL_ABA_INICIAL = a; }, aba);
   await ctx.route(/^https?:\/\//, r => r.abort()); // prova que não depende de internet
   const page = await ctx.newPage();
   if (hoje) await page.clock.setFixedTime(new Date(hoje + 'T12:00:00'));

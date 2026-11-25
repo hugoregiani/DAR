@@ -42,8 +42,8 @@ const db = page => page.evaluate(() => JSON.parse(localStorage.getItem('hal_cmt_
   await page.reload();
   await page.waitForSelector('.eng2-card', {timeout: 60000});
 
-  console.log('Seção "Receita e margem" (a do Gerencial)');
-  const gf = async () => { const h = await page.waitForSelector('.ec-ger-frame'); const f = await h.contentFrame(); await f.waitForSelector('.kpis', {timeout: 30000}); return f; };
+  console.log('Aba Indicadores (o Gerencial)');
+  const gf = async () => { if (await page.locator('.fr-tab-ind:not(.on)').count()) await page.click('.fr-tab-ind'); const h = await page.waitForSelector('.ec-ger-frame'); const f = await h.contentFrame(); await f.waitForSelector('.kpis', {timeout: 30000}); return f; };
   let fg = await gf();
   const k = async c => (await fg.textContent('.' + c + ' b')).trim();
   conf(await k('k-rec-usd') === 'US$ 3.500,00' && await k('k-ops') === '2' && /realizado US\$ 0,00 · previsto US\$ 3.500,00/.test(await fg.textContent('.k-rec-usd em')), '2026: P&A US$ 2.000 + Takatsugu US$ 1.500 (previstos)', await k('k-rec-usd'));
@@ -67,7 +67,8 @@ const db = page => page.evaluate(() => JSON.parse(localStorage.getItem('hal_cmt_
   const [dl] = await Promise.all([page.waitForEvent('download'), fg.click('[data-a="mxExcel"]')]);
   conf(/^EARL_Gerencial_receita_2026_2026-11-09\.xlsx$/.test(dl.suggestedFilename()), '"⬇ Excel desta tabela" baixa de dentro da seção', dl.suggestedFilename());
 
-  console.log('Card do contrato: Arquivar (a seção atualiza na hora)');
+  console.log('Card do contrato: Arquivar (os indicadores atualizam)');
+  await page.click('.fr-tab-cts');
   const card = nome => page.locator('.eng2-card').filter({has: page.locator('.eng2-name', {hasText: nome})});
   conf(await card('Takatsugu J').locator('.eng2-menu-b').count() === 1 && await page.locator('.eng2-card.eng2-hero .eng2-menu-b').count() === 0, 'botão ⋯ nos cards dos contratos (não no da Visão geral)');
   await card('Takatsugu J').hover();
@@ -81,8 +82,10 @@ const db = page => page.evaluate(() => JSON.parse(localStorage.getItem('hal_cmt_
   conf(!(await card('Takatsugu J').count()), 'card do Takatsugu J sai da página inicial');
   let d = await db(page);
   conf(d.contratos.find(c => c.id === TK).archived === true && d.plannedJobs.some(j => j.id === 'opT'), 'contrato arquivado; a operação continua guardada');
+  fg = await gf();
   await fg.waitForFunction(() => document.querySelector('.k-rec-usd b').textContent.trim() === 'US$ 2.000,00', null, {timeout: 10000}).catch(() => {});
-  conf(await k('k-rec-usd') === 'US$ 2.000,00' && await k('k-ops') === '1', 'a seção Receita e margem atualiza na hora: sem o Takatsugu (US$ 2.000)', await k('k-rec-usd'));
+  conf(await k('k-rec-usd') === 'US$ 2.000,00' && await k('k-ops') === '1', 'aba Indicadores: sem o Takatsugu (US$ 2.000)', await k('k-rec-usd'));
+  await page.click('.fr-tab-cts');
   await page.click('.eng-tools button:has-text("Contratos")');
   await page.waitForSelector('.ec-lista');
   await page.locator('.ec-ck', {hasText: 'arquivados'}).locator('input').check();
@@ -118,8 +121,9 @@ const db = page => page.evaluate(() => JSON.parse(localStorage.getItem('hal_cmt_
   await page.waitForTimeout(300);
   d = await db(page);
   conf(!d.contratos.some(c => c.id === PA) && !d.plannedJobs.some(j => j.id === 'opA' || j.id === 'opB') && d.plannedJobs.some(j => j.id === 'opT') && !d.handovers.some(h => h.id === 'ho1'), 'P&A apagado com as 2 operações e o handover; a operação do Takatsugu fica', {cts: d.contratos.length, ops: d.plannedJobs.map(j => j.id)});
+  fg = await gf();
   await fg.waitForFunction(() => document.querySelector('.k-rec-usd b') && document.querySelector('.k-rec-usd b').textContent.trim() === 'US$ 0,00', null, {timeout: 10000}).catch(() => {});
-  conf(await k('k-rec-usd') === 'US$ 0,00', 'a seção atualiza: sem receita (P&A apagado, Takatsugu arquivado)', await k('k-rec-usd'));
+  conf(await k('k-rec-usd') === 'US$ 0,00', 'aba Indicadores: sem receita (P&A apagado, Takatsugu arquivado)', await k('k-rec-usd'));
 
   console.log('Reabrir: os apagados não voltam (a semente recria pelo número)');
   await page.reload();

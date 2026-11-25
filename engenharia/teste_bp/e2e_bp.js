@@ -60,7 +60,7 @@ const usd = v => 'US$ ' + v.toLocaleString('pt-BR', {minimumFractionDigits: 2, m
   conf(PL.n === 27 && PL.real.length === 9 && PL.fora === 2, 'planilha lida: 27 operações, 9 concluídas, 2 com risco 100%', {n: PL.n, real: PL.real.length, fora: PL.fora});
 
   console.log('Engenharia (arquivo de teste BP)');
-  conf(await p.title() === 'EARL — Engenharia (TESTE BP)' && /TESTE BP/.test(await txt(p, '.earl-bp-tag')), 'abre direto na Engenharia com a etiqueta TESTE BP');
+  conf(await p.title() === 'EARL — Forecast de Receita (TESTE BP)' && /TESTE BP/.test(await txt(p, '.earl-bp-tag')), 'abre direto no Forecast de Receita com a etiqueta TESTE BP', await p.title());
   const db = await p.evaluate(() => JSON.parse(localStorage.getItem('hal_cmt_db_v1')));
   const ct = db.contratos.find(c => c.id === 'ct_bp');
   const ops = db.plannedJobs.filter(j => j.contratoId === 'ct_bp').sort((a, b) => a.id.localeCompare(b.id));
@@ -73,8 +73,8 @@ const usd = v => 'US$ ' + v.toLocaleString('pt-BR', {minimumFractionDigits: 2, m
   conf(ordem.every(Boolean), 'cada operação com a data, a situação e o risco da planilha', ordem.map((x, i) => x ? null : ops[i].id).filter(Boolean));
   await foto(p, 'bp1_inicio');
 
-  console.log('Arquivo do gerencial (gerado pelo app)');
-  await p.click('.eng-tools button:has-text("Arquivo do gerencial")');
+  console.log('Arquivo do gerencial (o mesmo pacote que alimenta a aba Indicadores)');
+  await p.evaluate(() => window.engArquivoGerencial());
   await p.waitForSelector('.ec-ger-modal');
   conf(await p.inputValue('.ec-ger-nome') === 'Renata Alberton', 'responsável da planilha já vem preenchido (Renata Alberton)');
   const [dl] = await Promise.all([p.waitForEvent('download'), p.click('.ec-ger-ok')]);
@@ -113,8 +113,8 @@ const usd = v => 'US$ ' + v.toLocaleString('pt-BR', {minimumFractionDigits: 2, m
   const fora = go.filter(o => o.risco >= 100);
   conf(fora.length === 2 && fora.every(o => o.previsto.receita.usd > 0), 'risco 100%: 2 operações mapeadas (com valor bruto), fora da receita e do COGS', fora.map(o => o.id + ' bruto ' + o.previsto.receita.usd));
 
-  console.log('Página inicial: seção Receita e margem (a do Gerencial, embutida)');
-  const gerF = async pg => { await pg.waitForSelector('.ec-ger-frame', {timeout: 60000}); const h = await pg.$('.ec-ger-frame'); const f = await h.contentFrame(); await f.waitForSelector('.kpis', {timeout: 30000}); return f; };
+  console.log('Página inicial: aba Indicadores (o Gerencial, embutido)');
+  const gerF = async pg => { await pg.waitForSelector('.fr-tab-ind', {timeout: 60000}); if (await pg.locator('.fr-tab-ind:not(.on)').count()) await pg.click('.fr-tab-ind'); await pg.waitForSelector('.ec-ger-frame', {timeout: 60000}); const h = await pg.$('.ec-ger-frame'); const f = await h.contentFrame(); await f.waitForSelector('.kpis', {timeout: 30000}); return f; };
   const pnF = async f => ({usd: valor(await f.textContent('.k-rec-usd b')), cogs: valor(await f.textContent('.k-cogs b')), ops: (await f.textContent('.k-ops b')).trim(), sub: (await f.textContent('.k-ops em')).trim(), rsub: (await f.textContent('.k-rec-usd em')).trim()});
   let fg = await gerF(p);
   let v = await pnF(fg);
@@ -145,6 +145,7 @@ const usd = v => 'US$ ' + v.toLocaleString('pt-BR', {minimumFractionDigits: 2, m
   await fg.click('.q-box'); await fg.click('[data-a="qTodos"]');
 
   console.log('Contrato BP: lista, consumo e receita');
+  await p.click('.fr-tab-cts');
   await p.click('.eng2-card:has-text("BP — Macaé")');
   await p.click('.db-tab:has-text("Consumo e receita")');
   await p.waitForSelector('.ec-kpi-usd');

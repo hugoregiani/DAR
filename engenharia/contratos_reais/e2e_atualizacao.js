@@ -11,7 +11,7 @@ if (!ANT || !NOV) { console.error('uso: node contratos_reais/e2e_atualizacao.js 
 const NOMES = N0.length ? N0 : ['PA', 'DC', 'CE', 'BW', 'BDII', 'Shell', 'BP'];
 let ok = 0, falhas = 0;
 const conf = (c, msg, extra) => { if (c) { ok++; console.log('  ✓ ' + msg); } else { falhas++; console.log('  ✗ ' + msg + (extra !== undefined ? ' → ' + JSON.stringify(extra).slice(0, 400) : '')); } };
-const acha = (pasta, nome) => fs.readdirSync(pasta).filter(f => new RegExp('^EARL_Engenharia_' + nome + '(_V\\d+)?\\.html$').test(f)).sort().map(f => path.join(pasta, f)).pop();
+const acha = (pasta, nome) => fs.readdirSync(pasta).filter(f => new RegExp('^EARL_(Engenharia|Forecast_Receita)_' + nome + '(_V\\d+)?\\.html$').test(f)).sort().map(f => path.join(pasta, f)).pop();
 
 (async () => {
   const browser = await chromium.launch();
@@ -20,6 +20,7 @@ const acha = (pasta, nome) => fs.readdirSync(pasta).filter(f => new RegExp('^EAR
     if (!A || !B) { console.log('\n== ' + NOME + ': arquivo anterior ou novo não encontrado, pulado'); continue; }
     console.log('\n== ' + NOME + ': ' + path.basename(A) + ' → ' + path.basename(B));
     const ctx = await browser.newContext();
+    await ctx.addInitScript(() => { window.EARL_ABA_INICIAL = 'cts'; });
     await ctx.route(/^https?:\/\//, r => r.abort());
     const erros = [];
     const abre = async arq => {
@@ -48,6 +49,7 @@ const acha = (pasta, nome) => fs.readdirSync(pasta).filter(f => new RegExp('^EAR
     await ctx.close();
     // 4. quem nunca abriu recebe os dados da planilha
     const ctx2 = await browser.newContext();
+    await ctx2.addInitScript(() => { window.EARL_ABA_INICIAL = 'cts'; });
     await ctx2.route(/^https?:\/\//, r => r.abort());
     const p3 = await ctx2.newPage(); p3.on('pageerror', e => erros.push(String(e)));
     await p3.goto('file://' + B); await p3.waitForSelector('.eng2-card', {timeout: 90000});

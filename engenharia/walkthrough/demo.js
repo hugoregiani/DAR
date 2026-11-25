@@ -78,6 +78,7 @@ const montar = async page => {
     saveDB(d);
   });
   await page.reload();
-  await page.waitForSelector('.eng2-card', {timeout: 60000});
+  await page.waitForSelector('.eng-tools', {timeout: 60000});
+  await page.waitForTimeout(800);
 };
 module.exports = {montar};

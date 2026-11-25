@@ -58,7 +58,7 @@ const fld = (page, rot) => page.locator('.eng-modal .fld').filter({has: page.loc
   conf(await page.locator('.eng2-card').count() === 17, 'todos os contratos (16) + Visão geral na página inicial', await page.locator('.eng2-card').count());
   conf(!(await page.locator('.crumb-hub, .crumb-loc').count()), 'trilha sem "trocar locação" e sem região');
   const corpo1 = await page.innerText('body');
-  conf(/Engenharia/.test(corpo1) && /Sondas/.test(corpo1) && /Exportar dados/.test(corpo1) && /Importar dados/.test(corpo1), 'abre direto na Engenharia, com Contratos · Sondas · Exportar dados · Importar dados');
+  conf(/Forecast de Receita/.test(corpo1) && /Indicadores/.test(corpo1) && /Sondas/.test(corpo1) && /Exportar dados/.test(corpo1) && /Importar dados/.test(corpo1), 'abre direto no Forecast de Receita (abas Indicadores e Contratos), com Contratos · Sondas · Exportar dados · Importar dados');
   conf(!/Configurar sync|SAIR ADMIN|Coordenação|Logística\n/.test(corpo1), 'sem sync, admin ou outros apps');
   conf(await page.locator('.app-tile').count() === 0, 'sem o menu de apps');
   await foto(page, '02_engenharia');
@@ -187,7 +187,7 @@ const fld = (page, rot) => page.locator('.eng-modal .fld').filter({has: page.loc
   console.log('Exportar dados');
   const bk = await baixar(page, () => page.click('.eng-tools button:has-text("Exportar dados")'));
   const bj = JSON.parse(bk.txt);
-  conf(/^EARL_Engenharia_dados_\d{4}-\d{2}-\d{2}_\d{2}h\d{2}\.json$/.test(bk.nome) && bj.db.handovers.length === 1 && bj.db.plannedJobs.length === 1, 'exportação .json com a operação e o handover', bk.nome);
+  conf(/^EARL_Forecast_dados_\d{4}-\d{2}-\d{2}_\d{2}h\d{2}\.json$/.test(bk.nome) && bj.db.handovers.length === 1 && bj.db.plannedJobs.length === 1, 'exportação .json com a operação e o handover', bk.nome);
 
   console.log('Importar dados (substituir)');
   const bkPath = path.join(require('os').tmpdir(), bk.nome);

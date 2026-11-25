@@ -72,7 +72,16 @@ ARMAZ = '<script>/* lz-string 1.5.0 (MIT, Pieroxy) — compressão dos dados no 
 s = s[:a] + ARMAZ + s[b:]
 assert 'earl-sim-dados' not in s and 'earlsim115' not in s
 
-rep('<title>EARL — Halliburton Cementing — SIMULAÇÃO</title>', '<title>EARL — Engenharia</title>')
+rep('<title>EARL — Halliburton Cementing — SIMULAÇÃO</title>', '<title>EARL — Forecast de Receita</title>')
+# e16 (25/11/2026, pedido do Hugo): o app passa a se chamar "Forecast de Receita" (os nomes internos — arquivos,
+# prefixos do armazenamento earleng*, tipos das planilhas EARL-Eng-* do Painel de Compras — continuam os mesmos,
+# para ninguém perder dados nem quebrar o Painel de Compras)
+rep("    plan: {\n      label: 'Engenharia',", "    plan: {\n      label: 'Forecast de Receita',")
+rep(r'''}, "Engenharia"), React.createElement("p", {
+      className: "pg-sub"
+    }, "Planejamento de opera\xE7\xF5es.")), React.createElement("div", {''', r'''}, "Forecast de Receita"), React.createElement("p", {
+      className: "pg-sub"
+    }, "Indicadores e contratos.")), React.createElement("div", {''')
 
 # 2. Bibliotecas embutidas (mesmas versões do cdnjs).
 LIBS = [
@@ -96,7 +105,7 @@ assert i > 0
 s = s[:i] + css + s[i:]
 
 # ---------------------------------------------------------------- app (código compilado)
-rep("var EARL_VERSION = 'EARL v115';", "var EARL_VERSION = 'EARL Engenharia e15 (base v115)';")
+rep("var EARL_VERSION = 'EARL v115';", "var EARL_VERSION = 'EARL Forecast de Receita e16 (base v115)';")
 rep("var HO_ST = {\n  pendente: {", "var HO_ST = {\n  email: {\n    label: 'Enviado por e-mail',\n    c: '#304220',\n    bg: '#F1F5EC',\n    brd: '#D9E4CC'\n  },\n  pendente: {")
 # quem gera o e-mail assina os registros (sem login)
 rep("  var currentUser = () => authUser && authUser.email || sbUser || '';",
@@ -163,7 +172,7 @@ rep('''}, "EARL"))), React.createElement("div", {
       }
     }, React.createElement("span", {
       className: "eng-hdr-tag"
-    }, "Engenharia")), mainTab === 'mob' ''')
+    }, "Forecast de Receita")), mainTab === 'mob' ''')
 rep("hubLocation && (authUser || adminUnlocked) && (() => {\n      var meus = pendMinhas();",
     "false && (() => {\n      var meus = pendMinhas();")
 rep('''    }), React.createElement("button", {
@@ -442,12 +451,13 @@ rep('}, React.createElement("b", null, p.rig.name), React.createElement("span", 
 # e6: gravação recusada pelo navegador: mensagem certa para a Engenharia e aviso na página inicial
 rep("""      if (!saveDB(next)) setTimeout(() => setSyncErr('⚠ O navegador recusou a gravação — o armazenamento local está cheio ' + 'e esta alteração NÃO foi salva neste aparelho. Costuma ser anexo de nota fiscal grande demais: ' + 'apague anexos antigos em Granéis & HCl (ou exporte o banco) e repita a operação.'), 0);""",
     """      if (!saveDB(next)) setTimeout(() => {
-        setSyncErr('⚠ O navegador recusou a gravação e esta alteração NÃO foi salva neste computador. O espaço do navegador para arquivos abertos do disco está cheio (ele é dividido com o EARL completo, as simulações, o Gerencial e os testes). Use “Ver e liberar espaço” na página inicial da Engenharia, ou “⬇ Exportar dados” para não perder o que foi feito.');
+        setSyncErr('⚠ O navegador recusou a gravação e esta alteração NÃO foi salva neste computador. O espaço do navegador para arquivos abertos do disco está cheio (ele é dividido com o EARL completo, as simulações, o Gerencial e os testes). Use “Ver e liberar espaço” na página inicial, ou “⬇ Exportar dados” para não perder o que foi feito.');
         engEspacoFalhou();
       }, 0);""")
 
 # e5: painel "Receita e COGS" na página inicial da Engenharia
-rep("engContratos.length + ' contrato(s) vigente(s)')), engAlerta(planJobs), React.createElement(\"div\", {", "engContratos.length + ' contrato(s) vigente(s)')), engAlerta(planJobs), renderEngEspacoAviso(), renderEngPainel(), React.createElement(\"div\", {")
+# e16: duas abas na página inicial — Indicadores (o Gerencial embutido) e Contratos (os cards)
+rep("engContratos.length + ' contrato(s) vigente(s)')), engAlerta(planJobs), React.createElement(\"div\", {", "engContratos.length + ' contrato(s) vigente(s)')), engAlerta(planJobs), renderEngEspacoAviso(), renderEngHomeTabs(), engHomeTab === 'ind' ? renderEngIndicadores() : React.createElement(\"div\", {")
 # e8: card do contrato com o botão ⋯ (Arquivar / Apagar)
 rep('''      }, b))), React.createElement("span", {
         className: "eng2-go",
@@ -457,7 +467,7 @@ rep('''      }, b))), React.createElement("span", {
         className: "eng2-go",
         "aria-hidden": "true"
       }, "\\u2192"));
-    })), !engContratos.length && React.createElement("div", {''')
+    })), engHomeTab !== 'ind' && !engContratos.length && React.createElement("div", {''')
 
 # e6: banco de produtos químicos. A base (quimicos_base.json, tabela Químicos da aba Forecast) entra uma vez
 # em cada computador, no loadDB, quando o banco ainda não tem produtos químicos (flag quimBaseV1).
@@ -623,7 +633,7 @@ for nome in ('CSS_XLSX_B64', 'CSS_BLANK_PDF_B64', 'JSZIP_B64', 'JOBLOG_DOCX_B64'
     s, n = re.subn(r'var %s = "[A-Za-z0-9+/=]+";' % nome,
                    'var %s = ""; /* e14: modelo de relatório de campo removido (não usado na Engenharia) */' % nome, s)
     assert n == 1, nome
-SEM_INTERNET = ("Promise.reject(new Error('EARL Engenharia: recurso do EARL de campo, indisponível neste arquivo "
+SEM_INTERNET = ("Promise.reject(new Error('EARL Forecast de Receita: recurso do EARL de campo, indisponível neste arquivo "
                 "(ele não carrega nada da internet).'))")
 i = s.index('var ensureJSZip = () => {')
 j = s.index('\n};\n', i) + 4

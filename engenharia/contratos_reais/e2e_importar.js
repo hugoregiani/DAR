@@ -7,7 +7,7 @@ const os = require('os');
 const path = require('path');
 const [PASTA, NA = 'PA', NB = 'BDII'] = process.argv.slice(2);
 if (!PASTA) { console.error('uso: node contratos_reais/e2e_importar.js <pasta dos HTML> [A B]'); process.exit(2); }
-const acha = n => fs.readdirSync(PASTA).filter(f => new RegExp('^EARL_Engenharia_' + n + '(_V\\d+)?\\.html$').test(f)).sort().map(f => path.join(PASTA, f)).pop();
+const acha = n => fs.readdirSync(PASTA).filter(f => new RegExp('^EARL_(Engenharia|Forecast_Receita)_' + n + '(_V\\d+)?\\.html$').test(f)).sort().map(f => path.join(PASTA, f)).pop();
 const TMP = fs.mkdtempSync(path.join(os.tmpdir(), 'earl-imp-'));
 let ok = 0, falhas = 0;
 const conf = (c, msg, extra) => { if (c) { ok++; console.log('  ✓ ' + msg); } else { falhas++; console.log('  ✗ ' + msg + (extra !== undefined ? ' → ' + JSON.stringify(extra).slice(0, 500) : '')); } };
@@ -22,7 +22,7 @@ const resumo = p => p.evaluate(() => {
 (async () => {
   const browser = await chromium.launch();
   const ctxA = await browser.newContext({acceptDownloads: true}), ctxB = await browser.newContext({acceptDownloads: true});
-  for (const c of [ctxA, ctxB]) await c.route(/^https?:\/\//, r => r.abort());
+  for (const c of [ctxA, ctxB]) { await c.addInitScript(() => { window.EARL_ABA_INICIAL = 'cts'; }); await c.route(/^https?:\/\//, r => r.abort()); }
   const erros = [];
   const abre = async (ctx, arq) => { const p = await ctx.newPage(); p.on('pageerror', e => erros.push(String(e))); await p.goto('file://' + arq); await p.waitForSelector('.eng2-card', {timeout: 90000}); await p.waitForFunction(() => typeof window.engGerDados === 'function', null, {timeout: 30000}); return p; };
   const importar = async (p, arq, cambioArq) => {
