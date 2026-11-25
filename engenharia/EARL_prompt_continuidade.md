@@ -617,7 +617,12 @@ Pedidos do Hugo (12/11/2026): "No envio do email do Handover preciso que inclua 
   - Ajustados para as abas: `e2e_contratos` (+2: sem o botão; abas do Gerencial), `e2e_painel`, `e2e_e10`, `e2e_seguranca`, `e2e_engenharia` (nome e arquivo de exportação), `teste_bp/e2e_bp.js` (título), `contratos_reais/e2e_contratos_reais.js` (título; Indicadores para a receita, Contratos para percorrer). `e2e_atualizacao`/`e2e_importar` acham os arquivos pelos dois nomes. Gerencial: versão g20.
 - **Contratos reais V04:** gerados com `--compat` dos arquivos V03 (`$S/ctr/gerar_todos9.sh` → `$S/ctr/out9`) e entregues renomeados (`EARL_Forecast_<NOME>_V04.html`). Renomear não perde dados (identidade = planilha; prefixo = NOME).
 - **PDF do passo a passo V04** (`walkthrough/`): capa e textos com o nome novo; passo 1 "A aba Contratos", passo 3 "A aba Indicadores", passo 19 "Juntar os contratos de várias pessoas" (`img/20_por_contrato.jpg`); `capturar.js` troca de aba (`aba('ind'|'cts')`).
-- **Testes (25/11/2026):** em andamento (os resultados entram no próximo commit).
+- **Testes (25/11/2026), com o nome "Forecast":** todos sem falha.
+  - Engenharia: 62, 78, 36, 12, 54, 23, 37, 50, 18, 26; **e16 29**.
+  - Gerencial: 62 (o `e2e_gerencial` gera o arquivo do gerencial por `window.engArquivoGerencial()`), 59, 71, 59, 27.
+  - BP: 58. Contratos reais: 135; `e2e_atualizacao` V03→V04 42 (e PA/BP direto nos arquivos renomeados `EARL_Forecast_<NOME>_V04.html`: 12); `e2e_importar` PA→BDII 9, BP→DC 9.
+  - `e2e_seguranca`: 70. ClamAV: 0 vírus nos 9 arquivos entregues.
+- **Painel de Compras:** não mudou. Ele ainda chama o quadro de "Engenharia" e tem um "Forecast (modelo antigo)", que é a planilha Excel antiga; se o Hugo quiser, renomear lá o quadro para "EARL Forecast".
 
 ### e15 — exportar, importar contrato por contrato e apagar — entrega _V03 (24/11/2026)
 
