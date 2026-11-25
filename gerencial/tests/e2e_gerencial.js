@@ -45,7 +45,7 @@ async function novaOp(page, ctCard, poco, data, monta) {
   await page.waitForSelector('.eng-modal', {state: 'detached'});
 }
 async function arquivoGerencial(page, nome, arq) {
-  await page.click('.eng-tools button:has-text("Arquivo do gerencial")');
+  await page.evaluate(() => window.engArquivoGerencial()); // e16: sem o botão; o pacote é o mesmo da aba Indicadores
   await page.waitForSelector('.ec-ger-modal');
   await page.fill('.ec-ger-nome', nome);
   const f = await baixar(page, () => page.click('.ec-ger-ok'), arq);
