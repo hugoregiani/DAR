@@ -238,7 +238,7 @@
       if (rec.comentarios) add(mailP('<b>Comentários do handover:</b><br>' + hEsc(rec.comentarios).replace(/\n/g, '<br>')));
     }
     add(mailP('Atenciosamente,<br><b>' + hEsc(rec.engenheiro || 'Engenharia') + '</b><br>Engenharia · Halliburton Cementing · ' + hEsc(regiao)));
-    add(`<div style="border-top:1px solid #E8EAEC;margin-top:16px;padding-top:6px;font-size:10.5px;color:#9CA3AF">Handover gerado pelo EARL Forecast de Receita em ${hEsc(fmtDH(quando))}.</div></div>`);
+    add(`<div style="border-top:1px solid #E8EAEC;margin-top:16px;padding-top:6px;font-size:10.5px;color:#9CA3AF">Handover gerado pelo EARL Forecast em ${hEsc(fmtDH(quando))}.</div></div>`);
     var T = [];
     T.push(assunto, '');
     T.push('Prezados,', 'segue o handover da operação abaixo, com tudo o que a engenharia está solicitando para ela.' + ((rec.versao || 1) > 1 ? ' Esta é a revisão ' + rec.versao + ' e substitui as versões anteriores.' : ''), '');
@@ -263,7 +263,7 @@
       notas.forEach(o => T.push((varias ? (o.well || nomeOp(o)) + ' — ' : '') + 'Observações da operação: ' + o.notes));
       if (rec.comentarios) T.push('Comentários do handover: ' + rec.comentarios);
     }
-    T.push('', 'Atenciosamente,', rec.engenheiro || 'Engenharia', 'Engenharia · Halliburton Cementing · ' + regiao, '', 'Handover gerado pelo EARL Forecast de Receita em ' + fmtDH(quando) + '.');
+    T.push('', 'Atenciosamente,', rec.engenheiro || 'Engenharia', 'Engenharia · Halliburton Cementing · ' + regiao, '', 'Handover gerado pelo EARL Forecast em ' + fmtDH(quando) + '.');
     return {
       assunto,
       arquivo,
@@ -743,7 +743,7 @@
   var engExportar = () => {
     try {
       var blob = new Blob([JSON.stringify({
-        app: 'EARL Forecast de Receita',
+        app: 'EARL Forecast',
         versao: EARL_VERSION,
         geradoEm: new Date().toISOString(),
         por: (db.hoMail || {}).nome || '',
@@ -1257,11 +1257,11 @@
     var m = /^earlsim(\d+)/.exec(g);
     var este = g === P ? ' — este arquivo' : '';
     if (g === 'earleng:') return {
-      nome: 'EARL Forecast de Receita' + este,
+      nome: 'EARL Forecast' + este,
       obs: 'dados da engenharia: não se apagam por aqui'
     };
     if (g === 'earlengbp:') return {
-      nome: 'EARL Forecast de Receita — teste BP' + este,
+      nome: 'EARL Forecast — teste BP' + este,
       apaga: !este,
       obs: este ? 'para voltar aos dados da planilha, use “Reiniciar” na etiqueta TESTE BP' : 'dados de teste; ao abrir o teste de novo, ele volta aos dados da planilha'
     };
@@ -1292,7 +1292,7 @@
     okLabel: 'Apagar',
     danger: true,
     msg: engH("span", null, 'Apagar do navegador os dados de “' + nome + '”?'),
-    hint: 'Os dados do Forecast de Receita, do Gerencial e do EARL completo não são tocados.',
+    hint: 'Os dados do Forecast, do Gerencial e do EARL completo não são tocados.',
     onOk: () => {
       var A = window.EARL_ARMAZ;
       try {
@@ -1354,7 +1354,7 @@
       style: {
         marginTop: 0
       }
-    }, "No Chrome e no Edge, todos os arquivos HTML abertos do disco (EARL completo, simula\xE7\xF5es, Forecast de Receita, Gerencial e testes) dividem o mesmo espa\xE7o, de cerca de 5 milh\xF5es de caracteres. Quando ele enche, nenhum desses arquivos consegue salvar."), !med.ok ? engH("div", {
+    }, "No Chrome e no Edge, todos os arquivos HTML abertos do disco (EARL completo, simula\xE7\xF5es, Forecast, Gerencial e testes) dividem o mesmo espa\xE7o, de cerca de 5 milh\xF5es de caracteres. Quando ele enche, nenhum desses arquivos consegue salvar."), !med.ok ? engH("div", {
       className: "ho-pend"
     }, 'O navegador não deixa este arquivo usar o armazenamento (' + med.erro + ').') : engH(React.Fragment, null, engH("div", {
       className: "ec-esp-total"
@@ -1381,7 +1381,7 @@
       }, "Apagar")));
     }))))), engH("div", {
       className: "ec-pn-nota"
-    }, "Antes de apagar, se tiver d\xFAvida, use “⬇ Exportar dados”. Os dados do Forecast de Receita, do Gerencial e do EARL completo n\xE3o se apagam por aqui."), engH("div", {
+    }, "Antes de apagar, se tiver d\xFAvida, use “⬇ Exportar dados”. Os dados do Forecast, do Gerencial e do EARL completo n\xE3o se apagam por aqui."), engH("div", {
       className: "ec-foot"
     }, engH("span", {
       style: {

@@ -954,7 +954,7 @@ html.emb .kpis,html.emb .qcards{padding:2px 2px 8px}
   var telaVazia = function () {
     return '<h1>Gerencial</h1><p class="sub">Receita, COGS e margem, consumo de itens PPU, químicas, casing equipment e pessoal de todos os contratos — realizado e previsto.</p>' + barraTopo() +
       '<div class="drop" id="drop"><b>Carregue os arquivos dos engenheiros</b>Arraste aqui os arquivos .json (ou a pasta, ou o .zip baixado do SharePoint), ou use os botões acima.' +
-      '<p class="drop-novo"><b>Novo (EARL Forecast de Receita):</b> estes indicadores agora ficam na aba <b>📊 Indicadores</b> do próprio Forecast de Receita. Cada pessoa usa “⬇ Exportar dados” e você usa “⬆ Importar dados” no seu arquivo: os contratos importados entram nos indicadores. Este Gerencial separado continua abrindo os arquivos “Arquivo do gerencial” das versões anteriores.</p>' +
+      '<p class="drop-novo"><b>Novo (EARL Forecast):</b> estes indicadores agora ficam na aba <b>📊 Indicadores</b> do próprio Forecast. Cada pessoa usa “⬇ Exportar dados” e você usa “⬆ Importar dados” no seu arquivo: os contratos importados entram nos indicadores. Este Gerencial separado continua abrindo os arquivos “Arquivo do gerencial” das versões anteriores.</p>' +
       '<ol><li>No <b>EARL Engenharia</b> (versões anteriores), cada engenheiro clica em <b>“⬇ Arquivo do gerencial”</b>, marca os contratos dele e salva o arquivo na pasta do SharePoint do gerencial.</li>' +
       '<li>Aqui, carregue a pasta sincronizada do SharePoint (<b>📁 Carregar pasta</b>) ou os arquivos baixados (<b>⬆ Carregar arquivos</b>, aceita .zip).</li>' +
       '<li>Para cada contrato vale o arquivo mais novo. Os arquivos ficam guardados neste navegador; carregue de novo quando houver arquivos novos.</li></ol></div>';
@@ -967,7 +967,7 @@ html.emb .kpis,html.emb .qcards{padding:2px 2px 8px}
       (n ? '<button class="btn-o" data-a="excel">⬇ Excel consolidado</button><button class="btn-o b-reg" data-a="regAbrir" title="Guardar uma foto das informações nesta data, para comparar depois">📌 Registrar</button><button class="btn-o b-sh" data-a="shAbrir" title="Gerar um arquivo .html com os dados de agora, para mandar por e-mail">📤 Compartilhar (HTML)</button>' : '') + '<span class="sp"></span>' +
       (n ? '<span class="info">' + n + ' arquivo(s) · mais novo de ' + fDH(ult) + '</span><button class="btn-o" data-a="limpar">Limpar</button>' : '') + '</div>';
   };
-  // g20: no EARL Forecast de Receita (aba Indicadores) os dados vêm dos contratos do próprio arquivo — sem carregar
+  // g20: no EARL Forecast (aba Indicadores) os dados vêm dos contratos do próprio arquivo — sem carregar
   // arquivos; ficam o Excel, os registros (fotos por data, para comparar) e o HTML compartilhado
   var barraEmb = function (C) {
     return '<div class="bar emb-bar"><span class="info emb-info"><b>' + C.contratos.length + ' contrato(s)</b> · ' + C.ops.length + ' operação(ões) · realizado + previsto, com o risco de cada operação</span><span class="sp"></span>' +

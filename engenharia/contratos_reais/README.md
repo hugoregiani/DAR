@@ -1,4 +1,4 @@
-# Contratos reais: um EARL Forecast de Receita (antes "EARL Engenharia") pré-carregado por planilha
+# Contratos reais: um EARL Forecast (antes "EARL Engenharia") pré-carregado por planilha
 
 Pedido do Hugo (09/11/2026): "recrie um HTML para cada arquivo em anexo, como já fiz o teste da BP … os arquivos HTML
 venham carregados com as informações para que eu compartilhe com outros usuários".
@@ -32,12 +32,12 @@ a conferência de receita/COGS de cada operação.
   - "Reiniciar" volta à planilha;
   - um navegador novo recebe os dados da planilha.
 
-**V04 (25/11/2026, e16):** o app passou a se chamar **EARL Forecast de Receita** (título `EARL — Forecast de Receita (PA)`).
+**V04 (25/11/2026, e16):** o app passou a se chamar **EARL Forecast** (título `EARL — Forecast (PA)`).
 O script continua gerando `EARL_Engenharia_<NOME>.html`; na entrega, os arquivos são renomeados para
-`EARL_Forecast_Receita_<NOME>_V04.html`. Renomear não perde dados: a identidade dos dados vem da planilha (PLID) e o
+`EARL_Forecast_<NOME>_V04.html`. Renomear não perde dados: a identidade dos dados vem da planilha (PLID) e o
 prefixo do armazenamento vem do NOME (`earlengpa:`), não do nome do arquivo. Gerado com `--compat <V03>/EARL_Engenharia_<NOME>_V03.html`.
 Os testes `e2e_atualizacao.js` e `e2e_importar.js` acham os arquivos pelos dois nomes (`EARL_Engenharia_…` ou
-`EARL_Forecast_Receita_…`). Na página inicial, o `e2e_contratos_reais.js` abre a aba 📊 Indicadores para conferir a
+`EARL_Forecast_…`). Na página inicial, o `e2e_contratos_reais.js` abre a aba 📊 Indicadores para conferir a
 receita ano a ano e a aba 📁 Contratos para percorrer os contratos.
 
 Importar o contrato de um arquivo em outro (e15): `node contratos_reais/e2e_importar.js <pasta dos HTML> PA BDII`.

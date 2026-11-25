@@ -72,14 +72,14 @@ ARMAZ = '<script>/* lz-string 1.5.0 (MIT, Pieroxy) — compressão dos dados no 
 s = s[:a] + ARMAZ + s[b:]
 assert 'earl-sim-dados' not in s and 'earlsim115' not in s
 
-rep('<title>EARL — Halliburton Cementing — SIMULAÇÃO</title>', '<title>EARL — Forecast de Receita</title>')
-# e16 (25/11/2026, pedido do Hugo): o app passa a se chamar "Forecast de Receita" (os nomes internos — arquivos,
+rep('<title>EARL — Halliburton Cementing — SIMULAÇÃO</title>', '<title>EARL — Forecast</title>')
+# e16 (25/11/2026, pedido do Hugo): o app passa a se chamar "Forecast" (os nomes internos — arquivos,
 # prefixos do armazenamento earleng*, tipos das planilhas EARL-Eng-* do Painel de Compras — continuam os mesmos,
 # para ninguém perder dados nem quebrar o Painel de Compras)
-rep("    plan: {\n      label: 'Engenharia',", "    plan: {\n      label: 'Forecast de Receita',")
+rep("    plan: {\n      label: 'Engenharia',", "    plan: {\n      label: 'Forecast',")
 rep(r'''}, "Engenharia"), React.createElement("p", {
       className: "pg-sub"
-    }, "Planejamento de opera\xE7\xF5es.")), React.createElement("div", {''', r'''}, "Forecast de Receita"), React.createElement("p", {
+    }, "Planejamento de opera\xE7\xF5es.")), React.createElement("div", {''', r'''}, "Forecast"), React.createElement("p", {
       className: "pg-sub"
     }, "Indicadores e contratos.")), React.createElement("div", {''')
 
@@ -105,7 +105,7 @@ assert i > 0
 s = s[:i] + css + s[i:]
 
 # ---------------------------------------------------------------- app (código compilado)
-rep("var EARL_VERSION = 'EARL v115';", "var EARL_VERSION = 'EARL Forecast de Receita e16 (base v115)';")
+rep("var EARL_VERSION = 'EARL v115';", "var EARL_VERSION = 'EARL Forecast e16 (base v115)';")
 rep("var HO_ST = {\n  pendente: {", "var HO_ST = {\n  email: {\n    label: 'Enviado por e-mail',\n    c: '#304220',\n    bg: '#F1F5EC',\n    brd: '#D9E4CC'\n  },\n  pendente: {")
 # quem gera o e-mail assina os registros (sem login)
 rep("  var currentUser = () => authUser && authUser.email || sbUser || '';",
@@ -172,7 +172,7 @@ rep('''}, "EARL"))), React.createElement("div", {
       }
     }, React.createElement("span", {
       className: "eng-hdr-tag"
-    }, "Forecast de Receita")), mainTab === 'mob' ''')
+    }, "Forecast")), mainTab === 'mob' ''')
 rep("hubLocation && (authUser || adminUnlocked) && (() => {\n      var meus = pendMinhas();",
     "false && (() => {\n      var meus = pendMinhas();")
 rep('''    }), React.createElement("button", {
@@ -633,7 +633,7 @@ for nome in ('CSS_XLSX_B64', 'CSS_BLANK_PDF_B64', 'JSZIP_B64', 'JOBLOG_DOCX_B64'
     s, n = re.subn(r'var %s = "[A-Za-z0-9+/=]+";' % nome,
                    'var %s = ""; /* e14: modelo de relatório de campo removido (não usado na Engenharia) */' % nome, s)
     assert n == 1, nome
-SEM_INTERNET = ("Promise.reject(new Error('EARL Forecast de Receita: recurso do EARL de campo, indisponível neste arquivo "
+SEM_INTERNET = ("Promise.reject(new Error('EARL Forecast: recurso do EARL de campo, indisponível neste arquivo "
                 "(ele não carrega nada da internet).'))")
 i = s.index('var ensureJSZip = () => {')
 j = s.index('\n};\n', i) + 4

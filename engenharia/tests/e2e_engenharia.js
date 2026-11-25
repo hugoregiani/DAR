@@ -58,7 +58,7 @@ const fld = (page, rot) => page.locator('.eng-modal .fld').filter({has: page.loc
   conf(await page.locator('.eng2-card').count() === 17, 'todos os contratos (16) + Visão geral na página inicial', await page.locator('.eng2-card').count());
   conf(!(await page.locator('.crumb-hub, .crumb-loc').count()), 'trilha sem "trocar locação" e sem região');
   const corpo1 = await page.innerText('body');
-  conf(/Forecast de Receita/.test(corpo1) && /Indicadores/.test(corpo1) && /Sondas/.test(corpo1) && /Exportar dados/.test(corpo1) && /Importar dados/.test(corpo1), 'abre direto no Forecast de Receita (abas Indicadores e Contratos), com Contratos · Sondas · Exportar dados · Importar dados');
+  conf(/Forecast/.test(corpo1) && /Indicadores/.test(corpo1) && /Sondas/.test(corpo1) && /Exportar dados/.test(corpo1) && /Importar dados/.test(corpo1), 'abre direto no Forecast (abas Indicadores e Contratos), com Contratos · Sondas · Exportar dados · Importar dados');
   conf(!/Configurar sync|SAIR ADMIN|Coordenação|Logística\n/.test(corpo1), 'sem sync, admin ou outros apps');
   conf(await page.locator('.app-tile').count() === 0, 'sem o menu de apps');
   await foto(page, '02_engenharia');

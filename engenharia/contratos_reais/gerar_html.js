@@ -324,7 +324,7 @@ function embutir(base, seed, nome, arquivo, xlsxBytes) {
 @media(max-width:700px){.earl-pl-tag span{display:none}}
 .earl-pl-tag.sem{background:#8A3B1B}
 </style>`);
-  rep('<title>EARL — Forecast de Receita</title>', '<title>EARL — Forecast de Receita (' + esc(nome) + ')</title>');
+  rep('<title>EARL — Forecast</title>', '<title>EARL — Forecast (' + esc(nome) + ')</title>');
   rep('      if (d.people && d.people.length > 0) return engQuimMig(migrateDB(d));', '      if (d.people && d.people.length > 0 && (d.earlPlanilhaId === window.EARL_PL_ID || (window.EARL_PL_COMPAT || []).indexOf(d.earlPlanilhaId) >= 0)) return engQuimMig(migrateDB(d));');
   rep('  return engQuimMig(migrateDB(JSON.parse(JSON.stringify(SEED_DB))));', '  return engQuimMig(migrateDB(JSON.parse(window.EARL_PL_SEED)));');
   const m = s.match(/var EARL_VERSION = '([^']*)';/g);

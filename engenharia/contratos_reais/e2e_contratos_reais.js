@@ -70,7 +70,7 @@ function totaisPlanilha(b64) {
     console.log('    planilha: %s contrato(s), %s · RECEITA FINAL %s · COGS FINAL %s', PL.contratos.length, PL.ops ? PL.ops + ' operações (' + PL.concl + ' concluídas)' : PL.linhas + ' linhas', usd(PL.rec), usd(PL.cogs));
 
     /* ---- abertura ---- */
-    conf(await p.title() === 'EARL — Forecast de Receita (' + NOME + ')', 'título “EARL — Forecast de Receita (' + NOME + ')”', await p.title());
+    conf(await p.title() === 'EARL — Forecast (' + NOME + ')', 'título “EARL — Forecast (' + NOME + ')”', await p.title());
     const tag = (await p.innerText('.earl-pl-tag')).replace(/\s+/g, ' ');
     conf(tag.indexOf(NOME) === 0 && tag.indexOf('dados da planilha ' + path.basename(XLS)) > 0, 'etiqueta no canto: ' + NOME + ' · dados da planilha ' + path.basename(XLS), tag);
     const db = await p.evaluate(() => { const d = JSON.parse(localStorage.getItem('hal_cmt_db_v1')); return {marca: d.earlPlanilhaId === window.EARL_PL_ID, ativos: d.contratos.filter(c => !c.archived).map(c => ({id: c.id, nome: c.name, itens: c.items.length, semPreco: c.items.filter(i => typeof i.usd !== 'number' && typeof i.brl !== 'number').length})), ops: d.plannedJobs.length, cons: d.plannedJobs.filter(j => j.ppuCons).length, semRig: d.plannedJobs.filter(j => !j.rigId).length, cadeia: d.plannedJobs.every(j => j.anchor === 'chain'), contOk: d.plannedJobs.filter(j => j.contingencia).every(j => j.risco === 100 - (Number(j.riscoRec) || 0)), nCont: d.plannedJobs.filter(j => j.contingencia).length, cambio: (d.cambio || []).length, comBrl: d.contratos.filter(c => !c.archived && c.items.some(i => typeof i.brl === 'number')).length, rigs: [...new Set(d.plannedJobs.map(j => j.rigId).filter(Boolean))].filter(id => !d.rigs.some(r => r.id === id)).length}; });

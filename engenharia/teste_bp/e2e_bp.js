@@ -60,7 +60,7 @@ const usd = v => 'US$ ' + v.toLocaleString('pt-BR', {minimumFractionDigits: 2, m
   conf(PL.n === 27 && PL.real.length === 9 && PL.fora === 2, 'planilha lida: 27 operações, 9 concluídas, 2 com risco 100%', {n: PL.n, real: PL.real.length, fora: PL.fora});
 
   console.log('Engenharia (arquivo de teste BP)');
-  conf(await p.title() === 'EARL — Forecast de Receita (TESTE BP)' && /TESTE BP/.test(await txt(p, '.earl-bp-tag')), 'abre direto no Forecast de Receita com a etiqueta TESTE BP', await p.title());
+  conf(await p.title() === 'EARL — Forecast (TESTE BP)' && /TESTE BP/.test(await txt(p, '.earl-bp-tag')), 'abre direto no Forecast com a etiqueta TESTE BP', await p.title());
   const db = await p.evaluate(() => JSON.parse(localStorage.getItem('hal_cmt_db_v1')));
   const ct = db.contratos.find(c => c.id === 'ct_bp');
   const ops = db.plannedJobs.filter(j => j.contratoId === 'ct_bp').sort((a, b) => a.id.localeCompare(b.id));

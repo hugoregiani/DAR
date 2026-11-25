@@ -91,8 +91,8 @@ def add(corpo, num=True):
 
 def capa():
     add('<div class="cfundo"></div><img class="cfoto" src="img/capa.jpg" alt=""><img class="cearl" src="img/earl.png" alt="EARL">'
-        '<div class="cbar"></div><div class="ctit">EARL Forecast de Receita —<br>passo a passo</div>'
-        '<div class="csub"><p>Do contrato ao handover e à receita de todos os contratos, no Forecast de Receita, passo a passo.</p>'
+        '<div class="cbar"></div><div class="ctit">EARL Forecast —<br>passo a passo</div>'
+        '<div class="csub"><p>Do contrato ao handover e à receita de todos os contratos, no Forecast, passo a passo.</p>'
         '<p>Todas as telas foram capturadas do próprio arquivo, na versão atual.</p></div>', num=False)
 
 
@@ -152,7 +152,7 @@ def fim():
 # ------------------------------------------------------------------ conteúdo
 capa()
 texto('O que você está vendo', 'Leia primeiro', [
-    'O <b>EARL Forecast de Receita</b> (antes “EARL Engenharia”) é um arquivo (.html) que abre no Chrome ou no Edge, sem instalar nada e sem internet. Cada contrato tem o seu arquivo, já carregado com os itens, os valores e as operações da planilha do contrato.',
+    'O <b>EARL Forecast</b> (antes “EARL Engenharia”) é um arquivo (.html) que abre no Chrome ou no Edge, sem instalar nada e sem internet. Cada contrato tem o seu arquivo, já carregado com os itens, os valores e as operações da planilha do contrato.',
     'As telas deste passo a passo usam <b class="v">dados de demonstração</b>. Poços, Sales Orders, números VIDA, números de contrato e valores são fictícios. Os nomes de clientes e sondas foram mantidos para as telas ficarem naturais.',
     'Nenhuma tela foi editada depois da captura.'],
     'Um arquivo por contrato e um registro por operação, do planejamento ao handover e à receita.')
@@ -272,7 +272,7 @@ texto('O que este passo a passo não mostrou', 'Mais no mesmo arquivo', [
     'Tudo isso já está no mesmo arquivo. Ficou de fora para o passo a passo continuar curto.')
 fim()
 
-out = ['<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><title>EARL Forecast de Receita — passo a passo</title><style>', CSS, '</style></head><body>']
+out = ['<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><title>EARL Forecast — passo a passo</title><style>', CSS, '</style></head><body>']
 n = 0
 for corpo, num in slides:
     n += 1

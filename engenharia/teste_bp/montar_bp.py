@@ -71,7 +71,7 @@ rep(s[_i:_j], _ini + r"""  /* TESTE BP: banco com os dados da planilha Contrato_
 @media(max-width:700px){.earl-bp-tag span{display:none}}
 .earl-bp-tag.sem{background:#8A3B1B}
 </style>""".replace('__SEED__', lit).replace('__BPID__', BPID))
-rep('<title>EARL — Forecast de Receita</title>', '<title>EARL — Forecast de Receita (TESTE BP)</title>')
+rep('<title>EARL — Forecast</title>', '<title>EARL — Forecast (TESTE BP)</title>')
 # loadDB: só usa o banco guardado se for desta versão do teste; senão (ou sem espaço), os dados embutidos
 rep("      if (d.people && d.people.length > 0) return engQuimMig(migrateDB(d));", "      if (d.people && d.people.length > 0 && d.testeBP === window.EARL_BP_ID) return engQuimMig(migrateDB(d));")
 rep("  return engQuimMig(migrateDB(JSON.parse(JSON.stringify(SEED_DB))));", "  return engQuimMig(migrateDB(JSON.parse(window.EARL_BP_SEED)));")

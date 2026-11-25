@@ -1,6 +1,6 @@
-# EARL — Forecast de Receita (antes "EARL Engenharia", avulso)
+# EARL — Forecast (antes "EARL Engenharia", avulso)
 
-A Engenharia do EARL separada do resto do sistema, agora chamada **EARL Forecast de Receita** (e16), para usar **sem servidor, sem login e sem internet**: é só abrir o arquivo `EARL_Engenharia.html` no Chrome ou no Edge. Ele abre direto na Engenharia, com todos os contratos (Nordeste e Sudeste juntos).
+A Engenharia do EARL separada do resto do sistema, agora chamada **EARL Forecast** (e16), para usar **sem servidor, sem login e sem internet**: é só abrir o arquivo `EARL_Engenharia.html` no Chrome ou no Edge. Ele abre direto na Engenharia, com todos os contratos (Nordeste e Sudeste juntos).
 
 ## O que tem
 
@@ -98,18 +98,23 @@ A Engenharia do EARL separada do resto do sistema, agora chamada **EARL Forecast
 - **Exportações:** "Consumo de produtos químicos", "Casing equipment" e "Pessoal" ganharam **Contingência (linha)** e **Risco da linha (%)**; a operação já tinha Contingência e Risco (%). O Painel de Compras aplica o risco da linha.
 - **Cards** da aba "Consumo e receita" com profundidade, como os do Gerencial g16.
 
-### e16 (25/11/2026) — Forecast de Receita: abas Indicadores e Contratos
+### e16 (25/11/2026) — Forecast: abas Indicadores e Contratos
 
 Pedido do Hugo: "Vamos trocar o nome de engenharia para forecast de receita. Crie uma aba para indicadores e uma aba
 para os contratos. Assim a gente pode acabar com esse botão de exportar para o arquivo do gerencial. Vão ter várias
 pessoas trabalhando em diferentes contratos: elas exportam os dados, eu importo todos os contratos no meu aplicativo e
 vejo todos os indicadores ali de uma vez."
+Logo depois (mesmo dia): "Ao invés de escrever forecast de receita, deixa o título somente como forecast, porque a
+partir daí eu também quero tirar consumo de produto químico, consumo de casing equipment, o scheduling do pessoal …
+além da receita. Isso daí vai para um outro arquivo." Por isso o nome é só **EARL Forecast**: do mesmo arquivo saem a
+receita (aba Indicadores) e, pelas planilhas exportadas ("⬇ Exportar planilhas"), o consumo de químicos, de casing e o
+pessoal, que vão para outros arquivos (o Painel de Compras já lê o consumo de químicos e o inventário).
 
-- **Nome:** "EARL Forecast de Receita" no título da página, na faixa vermelha, na trilha, no título da página inicial
-  (`patch_engenharia.py`) e nos arquivos dos contratos reais (`EARL — Forecast de Receita (PA)`). O nome dos arquivos
+- **Nome:** "EARL Forecast" no título da página, na faixa vermelha, na trilha, no título da página inicial
+  (`patch_engenharia.py`) e nos arquivos dos contratos reais (`EARL — Forecast (PA)`). O nome dos arquivos
   no repositório, o prefixo do armazenamento (`earleng…`) e os tipos das planilhas (`EARL-Eng-…`, lidos pelo Painel de
   Compras) **não mudaram**, para não perder dados nem quebrar a leitura nas outras ferramentas. A exportação agora se
-  chama `EARL_Forecast_dados_<data>.json` (campo `app: 'EARL Forecast de Receita'`).
+  chama `EARL_Forecast_dados_<data>.json` (campo `app: 'EARL Forecast'`).
 - **Página inicial com duas abas** (`renderEngHomeTabs` em `eng_contratos.js`, CSS `.fr-tabs`/`.fr-tab`):
   - **📊 Indicadores** (`renderEngIndicadores`): o Gerencial embutido (`ENG_GER_HTML`, iframe `.ec-ger-frame`), com
     todos os contratos ativos deste arquivo. Agora com as abas do Gerencial (Receita e margem, Comparar registros, Por
@@ -335,4 +340,4 @@ node contratos_reais/e2e_contratos_reais.js <pasta das planilhas> <pasta dos HTM
     - apagar com operações: só com APAGAR, levando as operações e o handover;
     - os contratos apagados não voltam ao reabrir.
 - **A seção Receita e margem é o `../gerencial/gerencial.html`**, embutido pelo patch (`ENG_GER_HTML`, num iframe, no modo embutido do Gerencial). Mudou o Gerencial? Gere de novo o `EARL_Engenharia.html`.
-- Versão: `EARL_VERSION = 'EARL Forecast de Receita e16 (base v115)'`. O teste do fluxo completo com o Gerencial está em `../gerencial/tests/e2e_gerencial.js`.
+- Versão: `EARL_VERSION = 'EARL Forecast e16 (base v115)'`. O teste do fluxo completo com o Gerencial está em `../gerencial/tests/e2e_gerencial.js`.

@@ -1,4 +1,4 @@
-// Capturas das telas do walkthrough (EARL Forecast de Receita) com os dados de demonstração do demo.js.
+// Capturas das telas do walkthrough (EARL Forecast) com os dados de demonstração do demo.js.
 // Uso: node capturar.js [passos separados por vírgula] [EARL_Engenharia.html]  — sem passos, captura tudo.
 // Rode o passo 'consumo' separado (depois do 'handover' a faixa verde do e-mail fica na tela):
 //   node capturar.js inicio,cards,matriz,logo,contratos,plano,novaop,handover,bancos,inventario,arquivos && node capturar.js consumo

@@ -7,7 +7,7 @@ const os = require('os');
 const path = require('path');
 const [PASTA, NA = 'PA', NB = 'BDII'] = process.argv.slice(2);
 if (!PASTA) { console.error('uso: node contratos_reais/e2e_importar.js <pasta dos HTML> [A B]'); process.exit(2); }
-const acha = n => fs.readdirSync(PASTA).filter(f => new RegExp('^EARL_(Engenharia|Forecast_Receita)_' + n + '(_V\\d+)?\\.html$').test(f)).sort().map(f => path.join(PASTA, f)).pop();
+const acha = n => fs.readdirSync(PASTA).filter(f => new RegExp('^EARL_(Engenharia|Forecast)_' + n + '(_V\\d+)?\\.html$').test(f)).sort().map(f => path.join(PASTA, f)).pop();
 const TMP = fs.mkdtempSync(path.join(os.tmpdir(), 'earl-imp-'));
 let ok = 0, falhas = 0;
 const conf = (c, msg, extra) => { if (c) { ok++; console.log('  ✓ ' + msg); } else { falhas++; console.log('  ✗ ' + msg + (extra !== undefined ? ' → ' + JSON.stringify(extra).slice(0, 500) : '')); } };

@@ -1,4 +1,4 @@
-// e16 (pedido do Hugo, 25/11/2026): o EARL Engenharia passa a se chamar "Forecast de Receita". A página inicial tem
+// e16 (pedido do Hugo, 25/11/2026): o EARL Engenharia passa a se chamar "Forecast". A página inicial tem
 // duas abas: 📊 Indicadores (o Gerencial embutido, com todos os contratos do arquivo) e 📁 Contratos (onde se alteram
 // as operações). Sai o botão "Arquivo do gerencial": cada pessoa usa "⬇ Exportar dados" e o Hugo importa todos os
 // contratos no arquivo dele ("⬆ Importar dados") e vê os indicadores de todos de uma vez.
@@ -93,17 +93,17 @@ const importar = async (p, arq) => {
   };
   const arqAna = await pessoa('Ana', 'ct_demo_tk', 'ct_ana', 'Contrato da Ana');
   const jAna = JSON.parse(fs.readFileSync(arqAna, 'utf8'));
-  conf(/^Ana_EARL_Forecast_dados_\d{4}-\d{2}-\d{2}_\d{2}h\d{2}\.json$/.test(path.basename(arqAna)) && jAna.app === 'EARL Forecast de Receita', 'exportação com o nome novo (EARL_Forecast_dados_….json, app “EARL Forecast de Receita”)', {nome: path.basename(arqAna), app: jAna.app});
+  conf(/^Ana_EARL_Forecast_dados_\d{4}-\d{2}-\d{2}_\d{2}h\d{2}\.json$/.test(path.basename(arqAna)) && jAna.app === 'EARL Forecast', 'exportação com o nome novo (EARL_Forecast_dados_….json, app “EARL Forecast”)', {nome: path.basename(arqAna), app: jAna.app});
   const arqBruno = await pessoa('Bruno', 'ct_demo_bp', 'ct_bruno', 'Contrato do Bruno');
 
   /* ---------------------------------------------------------------- 2. o arquivo do Hugo */
-  console.log('\n2. O arquivo do Hugo: abre no Forecast de Receita, aba Indicadores');
+  console.log('\n2. O arquivo do Hugo: abre no Forecast, aba Indicadores');
   const H = await abrir(ARQ, {hoje: HOJE, aba: ''});
   const ph = H.page;
   await pronto(ph);
-  conf(await ph.title() === 'EARL — Forecast de Receita', 'título “EARL — Forecast de Receita”', await ph.title());
+  conf(await ph.title() === 'EARL — Forecast', 'título “EARL — Forecast”', await ph.title());
   const topo = await ph.evaluate(() => ({h1: (document.querySelector('h1') || {}).textContent, versao: window.EARL_VERSION, corpo: document.body.innerText.slice(0, 600)}));
-  conf(/Forecast de Receita/.test(topo.h1 || '') && /Forecast de Receita e16/.test(topo.versao) && !/Engenharia/.test(topo.corpo), 'nome novo no cabeçalho, no título da página e na versão (sem “Engenharia” na tela)', topo);
+  conf(/Forecast/.test(topo.h1 || '') && !/Receita/.test(topo.h1 || '') && /Forecast e16/.test(topo.versao) && !/Engenharia/.test(topo.corpo), 'nome novo no cabeçalho, no título da página e na versão (sem “Engenharia” na tela)', topo);
   conf(await ph.locator('.fr-tab-ind.on').count() === 1 && await ph.locator('.ec-ger-frame').count() === 1 && !(await ph.locator('.eng2-card').count()), 'abre na aba 📊 Indicadores (sem os cartões dos contratos)');
   await montar(ph);
   await pronto(ph);
