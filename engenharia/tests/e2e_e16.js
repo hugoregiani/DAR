@@ -103,7 +103,7 @@ const importar = async (p, arq) => {
   await pronto(ph);
   conf(await ph.title() === 'EARL — Forecast', 'título “EARL — Forecast”', await ph.title());
   const topo = await ph.evaluate(() => ({h1: (document.querySelector('h1') || {}).textContent, versao: window.EARL_VERSION, corpo: document.body.innerText.slice(0, 600)}));
-  conf(/Forecast/.test(topo.h1 || '') && !/Receita/.test(topo.h1 || '') && /Forecast e16/.test(topo.versao) && !/Engenharia/.test(topo.corpo), 'nome novo no cabeçalho, no título da página e na versão (sem “Engenharia” na tela)', topo);
+  conf(/Forecast/.test(topo.h1 || '') && !/Receita/.test(topo.h1 || '') && /Forecast e(1[6-9]|[2-9][0-9])/.test(topo.versao) && !/Engenharia/.test(topo.corpo), 'nome novo no cabeçalho, no título da página e na versão (sem “Engenharia” na tela)', topo);
   conf(await ph.locator('.fr-tab-ind.on').count() === 1 && await ph.locator('.ec-ger-frame').count() === 1 && !(await ph.locator('.eng2-card').count()), 'abre na aba 📊 Indicadores (sem os cartões dos contratos)');
   await montar(ph);
   await pronto(ph);
