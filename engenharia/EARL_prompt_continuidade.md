@@ -646,7 +646,12 @@ Pedidos do Hugo (12/11/2026): "No envio do email do Handover preciso que inclua 
   - passo 6 (cor da sonda, receita/COGS, pílulas), passo 7 (duplicar o poço), passo 8 (receita/COGS na janela);
   - passo 12 "Concluir a operação" (telas `24_concluir.jpg` e `25_concluir_consumo.jpg`; `capturar.js` passo `concluir`).
 - **Contratos reais V05:** `$S/ctr/gerar_todos10.sh` → `$S/ctr/out10`, com `--compat` dos arquivos V04 (`EARL_Forecast_<NOME>_V04.html`).
-- **Testes (26/11/2026):** em andamento (os resultados entram no próximo commit).
+- **Testes (26/11/2026):** todos sem falha.
+  - Engenharia: 62, 78, 36, 12, 54, 23, 37, **e12 50**, 18, 26, **e16 29**, **e17 42**.
+  - e12 e e16 falharam na 1ª rodada por causa dos testes, não do app: com as colunas Receita/COGS o meio do título "Poço" caiu no ▾ (o teste agora clica no nome); e o e16 procurava a versão "e16". Ajustados e rodados de novo: 50 e 29.
+  - Gerencial: 62, 59, 71, 59, 27. BP: 58.
+  - Contratos reais: 135; `e2e_atualizacao` V04→V05 42; `e2e_importar` PA→BDII 9, BP→DC 9.
+  - `e2e_seguranca`: 70. ClamAV: 0 vírus nos 9 arquivos entregues.
 
 ### e16 + Gerencial g20 — "Forecast", abas Indicadores e Contratos — entrega _V04 (25/11/2026)
 
