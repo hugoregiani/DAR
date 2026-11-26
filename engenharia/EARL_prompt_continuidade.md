@@ -4,7 +4,20 @@
 
 > **Regra de entrega (pedido do usuário, 05/11/2026):** sempre que houver alteração em qualquer arquivo (EARL, EARL Engenharia, EARL Gerencial, testes), **enviar junto este prompt de continuidade atualizado** — com o que foi feito, o que está pendente e como continuar — e commitá-lo junto com a alteração. Antes de entregar, rodar os testes (os novos e todos os anteriores) e dizer o resultado.
 >
-> **Última atualização:** 25/11/2026 — **entrega _V04: EARL Forecast e16 + Gerencial g20**. O "EARL Engenharia" passou a se chamar **EARL Forecast**. A página inicial tem duas abas: **📊 Indicadores** (o Gerencial embutido, com todos os contratos do arquivo, agora com as abas do Gerencial, ⬇ Excel consolidado, 📌 Registrar e 📤 Compartilhar) e **📁 Contratos** (os cards, onde se alteram as operações). **Saiu o botão "Arquivo do gerencial"**: cada pessoa usa "⬇ Exportar dados" e o Hugo usa "⬆ Importar dados" no arquivo dele e vê todos os contratos nos indicadores. O `EARL_Gerencial.html` separado não é mais entregue. Arquivos entregues com o nome novo: `EARL_Forecast_V04.html`, `EARL_Forecast_<NOME>_V04.html`, `EARL_Forecast_passo_a_passo_V04.pdf`. Teste novo: `tests/e2e_e16.js`. Ver "e16" em 4-E. **Em andamento (parado):** narração e versão mais rápida do vídeo tutorial; ao regravar, usar o nome novo e as abas Indicadores/Contratos (os vídeos atuais ainda mostram "Engenharia"). **Pendente:** a planilha do banco de químicos/casing não chegou.
+> **Última atualização:** 26/11/2026 — **entrega _V05: EARL Forecast e17**:
+> - **✓ Concluir operação:** pergunta se cada contingência foi usada; não fecha com item ainda em contingência. Depois confirma o consumo, já preenchido com o previsto. A operação fica preta no Gantt, e "↺ Reabrir" desfaz.
+> - **Pílulas de filtro:** Previstas/Concluídas/Atrasadas · Contingência/Com risco/Risco 100% · Handover enviado/Sem handover.
+> - **Receita e COGS (US$) de cada operação** no Gantt, no Calendário e na Lista.
+> - **Janela da operação:** receita, COGS e margem ao vivo, com a contingência e o risco aplicados (× (1 − risco)).
+> - **Duplicar:** só a operação ou o poço inteiro.
+> - **Filtro de sonda:** só as sondas com operação.
+> - **Cor das linhas de cada sonda no Gantt.**
+> - **Tipo "Perfuração".**
+> - Arquivos `EARL_Forecast_…_V05`. Teste novo: `tests/e2e_e17.js`. Ver "e17" em 4-E.
+> - **Em andamento (parado):** narração e versão mais rápida do vídeo tutorial; ao regravar, usar as telas novas (os vídeos ainda mostram "Engenharia").
+> - **Pendente:** a planilha do banco de químicos/casing não chegou.
+>
+> Antes, em 25/11/2026 — **entrega _V04: EARL Forecast e16 + Gerencial g20**. O "EARL Engenharia" passou a se chamar **EARL Forecast**. A página inicial tem duas abas: **📊 Indicadores** (o Gerencial embutido, com todos os contratos do arquivo, agora com as abas do Gerencial, ⬇ Excel consolidado, 📌 Registrar e 📤 Compartilhar) e **📁 Contratos** (os cards, onde se alteram as operações). **Saiu o botão "Arquivo do gerencial"**: cada pessoa usa "⬇ Exportar dados" e o Hugo usa "⬆ Importar dados" no arquivo dele e vê todos os contratos nos indicadores. O `EARL_Gerencial.html` separado não é mais entregue. Arquivos entregues com o nome novo: `EARL_Forecast_V04.html`, `EARL_Forecast_<NOME>_V04.html`, `EARL_Forecast_passo_a_passo_V04.pdf`. Teste novo: `tests/e2e_e16.js`. Ver "e16" em 4-E. **Em andamento (parado):** narração e versão mais rápida do vídeo tutorial; ao regravar, usar o nome novo e as abas Indicadores/Contratos (os vídeos atuais ainda mostram "Engenharia"). **Pendente:** a planilha do banco de químicos/casing não chegou.
 >
 > Antes, em 24/11/2026 — **entrega _V03: EARL Engenharia e15**. Exportar leva tudo; importar é **contrato por contrato** (o de mesmo nome é substituído, com as operações; o novo entra; os outros não mudam; o câmbio daqui não muda sem "usar o câmbio do arquivo"); **🗑 Apagar contrato** no topo do contrato, e no último contrato o arquivo fica em branco. Saiu o "Juntar". Testes novos: `tests/e2e_e15.js` e `contratos_reais/e2e_importar.js`. O PDF do passo a passo foi refeito (V03); o Gerencial não mudou (continua V02). Ver "e15" em 4-E. Antes, em 23/11: **segurança, V02** (e14/g19). **Em andamento (parado):** narração e versão mais rápida do vídeo tutorial; ao regravar, o topo do contrato já terá o botão "Apagar contrato". **Pendente:** a planilha do banco de químicos/casing não chegou.
 >
@@ -593,6 +606,47 @@ Pedidos do Hugo (12/11/2026): "No envio do email do Handover preciso que inclua 
   - Painel de Compras: `engenharia` 37, `invariantes` 64, `pedidos_enviados` 15, `regressao` 6, `reproduzir` ok.
   - Ajustes de expectativa nos testes antigos (mudanças pedidas): sonda "NS-32 - Norbe VIII" nos seletores, no assunto do e-mail e na matriz do Gerencial; coluna "Saldo na sonda" no e-mail; colunas novas nas exportações; versão g16.
 - **Pendências:** os textos novos ainda sem EN/ES; a tabela de câmbio não tem importação por planilha (é digitada); a "Frente" do PA ainda precisa de ajuste (a planilha fatura com outra regra).
+
+### e17 — concluir a operação, pílulas, receita/COGS nas telas, duplicar o poço, cor das sondas, Perfuração — entrega _V05 (26/11/2026)
+
+- **Pedidos (25–26/11):**
+  - filtro de sonda só com as sondas que têm operação;
+  - um lugar para marcar a operação como concluída, perguntando se as contingências foram usadas (não pode fechar com item em contingência);
+  - colorir as linhas de uma sonda no Gantt;
+  - receita e COGS de cada operação nos modos de visualização;
+  - pílulas de filtro (previstas, concluídas, contingência, risco…);
+  - receita e COGS na janela da operação, com a contingência e o risco (× (1 − risco); 100% não acontece);
+  - duplicar o poço inteiro;
+  - tipo "Perfuração".
+- **Código:** `engenharia/eng_e17.js` (incluído pelo patch depois do `eng_logo.js`), com os ajustes no `eng_contratos.js` (consumo em modo "concluir") e o bloco "e17" do `patch_engenharia.py`.
+- **Concluir** (`engConcBotoes`, `abrirEngConcluir`, `renderEngConc`):
+  - salva a operação (`savePlanned`);
+  - lista as contingências (a da operação e as das linhas de PPU, químicas, casing, pessoal e equipamentos) com "✓ Usou" e "✕ Não usou" (e "todas/nenhuma"); "Continuar" fica travado até responder tudo;
+  - grava: as usadas viram linhas normais (`cont: false`, sem `chance`); as não usadas saem; `contingencia: false`, `riscoRec: 0`, `risco: null`; Log "Contingências resolvidas para concluir";
+  - abre o consumo (`abrirEngCons(pj, {concluir: true})`, já com o previsto); salvar grava `ppuCons` + `concluida {em, por}` (`engComConclusao`, Log "Operação concluída").
+  - Concluída = `engConcluida(j)` = `concluida || ppuCons`. `pjCor` → 'concluida' (preto). "↺ Reabrir" (`engReabrir`) apaga `ppuCons` e `concluida`. Apagar o consumo também tira a conclusão.
+- **Pílulas** (`engRenderPilulas`):
+  - o estado `engPil` (localStorage `eng_pilulas_v1`) e `engPilOk`/`engPilFiltra` ficam no começo do App (patch, depois do `planF`), porque o `planBase` (useMemo, com `engPil` nas dependências) roda antes do código novo;
+  - grupos: situação (prev, conc, atras), marcas (cont, risco, fora), handover (hoS, hoN); dentro do grupo "ou", entre grupos "e";
+  - aparecem no Gantt, no Calendário e na Lista, com a contagem do escopo (contrato aberto ou os contratos do filtro).
+- **Receita/COGS por operação** (`engRC`, cache por `db` numa WeakMap):
+  - valor cheio, sem risco; realizado (ppuCons) ou previsto;
+  - Gantt: `engRcLinha` (3ª linha; a célula do Gantt passou a `minHeight: 38` + `alignSelf: 'stretch'`) e `engRcTit` (texto da barra);
+  - Calendário: `engRcCal`; Lista: `engRcTd` (colunas Receita e COGS) e o selo `engConcTag`.
+- **Janela da operação** (`engResumoOp`, entre o formulário e o rodapé): Receita, COGS e Margem ao vivo = Σ × (1 − risco da linha) × (1 − risco da operação); mostra o valor cheio e, se concluída, o realizado.
+- **Duplicar** (`engDuplicar`, `renderEngDup`):
+  - poço com mais de uma operação (mesmo poço e contrato, sem as canceladas) → "Só esta operação" (`duplicatePlanned`, como antes) ou "O poço inteiro";
+  - o poço inteiro pede o novo poço, a data da 1ª operação e a sonda (ou "a mesma de cada operação"); copia tudo com ids novos, deslocando as datas, sem consumo, handover, conclusão ou mobilização; Log "cópia do poço …".
+- **Filtro de sonda** (`engRigsFiltro`): as sondas das operações do contrato aberto ou dos contratos do filtro "Contrato" (sem os arquivados) e a sonda escolhida.
+- **Cor das sondas** (`engCoresSonda`, localStorage `eng_cores_sonda_v1`; `renderEngCorPop`, `renderEngCoresCss`):
+  - o nome da sonda no Gantt (que abria a página da sonda, inexistente no app avulso) abre a paleta;
+  - CSS por `.eng-gl[data-rig]` e `.eng-gj[data-rigrow]` (as linhas da operação ganharam `className: "eng-gj"` e `data-rigrow`).
+- **Perfuração:** em `TIPOS_OP` (VIDA opcional), `DUR_BY_TIPO` 3, `HORIZON_DAYS` 180, traduções EN/ES. O leitor das planilhas continua mapeando perfuração para "Outros" com a descrição.
+- **PDF V05:**
+  - passo 6 (cor da sonda, receita/COGS, pílulas), passo 7 (duplicar o poço), passo 8 (receita/COGS na janela);
+  - passo 12 "Concluir a operação" (telas `24_concluir.jpg` e `25_concluir_consumo.jpg`; `capturar.js` passo `concluir`).
+- **Contratos reais V05:** `$S/ctr/gerar_todos10.sh` → `$S/ctr/out10`, com `--compat` dos arquivos V04 (`EARL_Forecast_<NOME>_V04.html`).
+- **Testes (26/11/2026):** em andamento (os resultados entram no próximo commit).
 
 ### e16 + Gerencial g20 — "Forecast", abas Indicadores e Contratos — entrega _V04 (25/11/2026)
 

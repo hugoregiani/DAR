@@ -3789,6 +3789,37 @@ tr.ec-conc-falta td{background:#FFF8E6}
 .eng-cor-sw{width:100%;aspect-ratio:1;border-radius:8px;border:2px solid #fff;box-shadow:0 0 0 1px rgba(0,0,0,.15);cursor:pointer;padding:0}
 .eng-cor-sw.on{box-shadow:0 0 0 2px #2A2F30}
 .eng-rig-cor-b:hover{text-decoration-style:solid !important}
+/* e17: pílulas de filtro do plano */
+.eng-pils{display:flex;flex-wrap:wrap;align-items:center;gap:8px 16px;margin:10px 0 4px}
+.eng-pil-g{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.eng-pil-t{font-size:10.5px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--ink-3)}
+.eng-pil{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--line);background:#fff;border-radius:999px;padding:5px 12px;font:600 12px var(--fs,inherit);color:var(--ink);cursor:pointer}
+.eng-pil b{font-size:10.5px;font-weight:700;background:#ECEFF0;color:var(--ink-2);border-radius:999px;padding:1px 7px}
+.eng-pil:hover{border-color:#A8AFB5}
+.eng-pil.on{background:#2A2F30;color:#fff;border-color:#2A2F30}
+.eng-pil.on b{background:rgba(255,255,255,.22);color:#fff}
+.eng-pil-cont.on{background:#6B3FA0;border-color:#6B3FA0}
+.eng-pil-conc.on{background:#2A2F30}
+.eng-pil-atras.on,.eng-pil-fora.on{background:#CC0000;border-color:#CC0000}
+.eng-pil-limpar{background:transparent;border-style:dashed;color:var(--ink-2)}
+/* e17: receita e COGS na janela da operação */
+.eng-resumo-op{border-top:1px solid var(--line);background:#F7F8F9;padding:10px 22px 8px}
+.eng-ro-nums{display:flex;flex-wrap:wrap;gap:6px 22px;align-items:baseline}
+.eng-ro-nums span{font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-3);display:inline-flex;align-items:baseline;gap:8px}
+.eng-ro-nums b{font-size:16px;letter-spacing:0;text-transform:none;color:var(--ink);font-variant-numeric:tabular-nums}
+.eng-ro-nums .eng-ro-rec{color:#CC0000}
+.eng-ro-real b{font-size:13px;color:#304220}
+.eng-ro-sub{font-size:11px;color:var(--ink-3);margin-top:3px;line-height:1.4}
+/* e17: duplicar a operação ou o poço inteiro */
+.eng-dup-modal{width:720px;max-width:96vw;max-height:92vh;overflow:auto}
+.eng-dup-op{display:flex;gap:10px;align-items:flex-start;border:1px solid var(--line);border-radius:14px;padding:10px 12px;margin:0 0 8px;cursor:pointer}
+.eng-dup-op.on{border-color:#CC0000;background:#FFF7F7}
+.eng-dup-op span{display:flex;flex-direction:column;gap:2px}
+.eng-dup-op em{font-style:normal;font-size:12px;color:var(--ink-3)}
+.eng-dup-poco{margin:4px 0 6px}
+.eng-dup-tab{margin-bottom:10px}
+.eng-dup-flds{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px}
+@media(max-width:700px){.eng-dup-flds{grid-template-columns:1fr}}
 </style>
 </head>
 <body>
@@ -13487,11 +13518,13 @@ var PLAN_ABRE_ATRAS = 7,
   PLAN_ABRE_FRENTE = 45;
 var LBLW0 = 190;
 var DUR_BY_TIPO = {
-  'Cimentação primária': 3
+  'Cimentação primária': 3,
+  'Perfuração': 3
 };
 var durOfTipo = t => DUR_BY_TIPO[t] || 1;
 var HORIZON_DAYS = {
-  'Cimentação primária': 180
+  'Cimentação primária': 180,
+  'Perfuração': 180
 };
 var horizonOfTipo = t => HORIZON_DAYS[t] || 15;
 var isPrimaria = t => t === 'Cimentação primária';
@@ -28461,7 +28494,7 @@ var loadDB = () => {
   } catch (_) {}
   return engQuimMig(migrateDB(JSON.parse(JSON.stringify(SEED_DB))));
 };
-var EARL_VERSION = 'EARL Forecast e16 (base v115)';
+var EARL_VERSION = 'EARL Forecast e17 (base v115)';
 var fnSafe = v => String(v == null ? '' : v).replace(/[\\/]/g, '-').replace(/["*?<>|:]/g, '').replace(/\s+/g, ' ').trim();
 var sanitizeFileName = fnSafe;
 var finalizeDateStr = m => {
@@ -29479,6 +29512,10 @@ var TIPOS_OP = [{
   casing: false,
   vida: 'blocked',
   disp: true
+}, {
+  op: 'Perfuração',
+  casing: false,
+  vida: 'optional'
 }, {
   op: 'Outros',
   casing: false,
@@ -35377,6 +35414,7 @@ var I18N_EN = {
   'Sáb': 'Sat',
   'Bombeio': 'Pumping',
   'Squeeze': 'Squeeze',
+  'Perfuração': 'Drilling',
   'Top-job': 'Top-job',
   'Escala de': 'Roster for',
   '← dia anterior': '← previous day',
@@ -40407,6 +40445,7 @@ var I18N_ES = {
   'Sáb': 'Sáb',
   'Bombeio': 'Bombeo',
   'Squeeze': 'Squeeze',
+  'Perfuração': 'Perforación',
   'Top-job': 'Top-job',
   'Escala de': 'Turno de',
   '← dia anterior': '← día anterior',
@@ -46229,6 +46268,34 @@ function App() {
     cliente: '',
     tipo: '',
     status: ''
+  });
+  /* e17: pílulas de filtro do plano (eng_e17.js desenha). Grupos: situação (prev, conc, atras), marcas (cont, risco,
+     fora) e handover (hoS, hoN); dentro do grupo vale "ou", entre grupos "e". */
+  var [engPil, setEngPil] = useState(() => {
+    try {
+      var v = JSON.parse(localStorage.getItem('eng_pilulas_v1') || '[]');
+      return Array.isArray(v) ? v : [];
+    } catch (e) {
+      return [];
+    }
+  });
+  var engPilOk = (j, k) => {
+    var conc = !!(j && (j.concluida || j.ppuCons));
+    var linhas = ['ppuNeeds', 'chems', 'casingNeeds', 'peopleNeeds', 'equipNeeds'].reduce((a, kk) => a.concat(Array.isArray(j[kk]) ? j[kk] : []), []);
+    var rr = Math.max(0, Math.min(100, Number(j.riscoRec) || 0));
+    if (k === 'prev') return !conc;
+    if (k === 'conc') return conc;
+    if (k === 'atras') return !conc && String(pjEnd(j) || j.date || '') < todayStr();
+    if (k === 'cont') return !!j.contingencia || linhas.some(n => n && n.cont);
+    if (k === 'risco') return rr > 0 || linhas.some(n => n && n.cont && n.chance != null && n.chance !== '' && Number(n.chance) < 100);
+    if (k === 'fora') return rr >= 100;
+    if (k === 'hoS') return !!(j.handoverId || j.hoEmailEm);
+    if (k === 'hoN') return !(j.handoverId || j.hoEmailEm);
+    return true;
+  };
+  var engPilFiltra = (j, sel) => [['prev', 'conc', 'atras'], ['cont', 'risco', 'fora'], ['hoS', 'hoN']].every(g => {
+    var s = g.filter(k => sel.includes(k));
+    return !s.length || s.some(k => engPilOk(j, k));
   });
   var [planMF, setPlanMF] = useState({
     ct: [],
@@ -58018,8 +58085,9 @@ _Gerado por: ${user}_`;
     if (planF.cliente) l = l.filter(j => j.clienteName === planF.cliente);
     if (planF.tipo) l = l.filter(j => j.tipoOp === planF.tipo);
     if (planF.status) l = l.filter(j => (j.status || PJ_STATUS.PLAN) === planF.status);
+    if (engPil.length) l = l.filter(j => engPilFiltra(j, engPil)); // e17: pílulas
     return l;
-  }, [planJobs, planF]);
+  }, [planJobs, planF, engPil]);
   var baseDaSonda = rid => {
     var r = (db.rigs || []).find(x => x.id === rid);
     var b = String(r && r.base || '').trim();
@@ -60566,7 +60634,7 @@ _Gerado por: ${user}_`;
         style: {
           fontSize: 10
         },
-        onClick: () => duplicatePlanned(j)
+        onClick: () => engDuplicar(j)
       }, "Duplicar"), React.createElement("button", {
         className: "btn-o ec-btn-cons",
         style: {
@@ -61019,7 +61087,7 @@ _Gerado por: ${user}_`;
       }
     }, React.createElement("b", null, "Conflito de equipamento em ", new Set(conf.map(c => c.day)).size, " dia(s)."), ' ', conf.slice(0, 3).map((c, i) => React.createElement("span", {
       key: i
-    }, fmtD(c.day), ": precisa ", c.need, "\xD7 ", subtypeLabel(c.subtypeId), ", frota tem ", c.have, i < Math.min(conf.length, 3) - 1 ? ' · ' : '')), conf.length > 3 && React.createElement("span", null, " \xB7 +", conf.length - 3)), planView === 'gantt' && renderPlanGantt(), planView === 'cal' && renderPlanCal(), planView === 'list' && renderPlanList(), planView === 'ho' && renderPlanHandovers(), planView === 'rec' && renderEngReceita(), planView === 'inv' && renderEngInventario()));
+    }, fmtD(c.day), ": precisa ", c.need, "\xD7 ", subtypeLabel(c.subtypeId), ", frota tem ", c.have, i < Math.min(conf.length, 3) - 1 ? ' · ' : '')), conf.length > 3 && React.createElement("span", null, " \xB7 +", conf.length - 3)), engRenderPilulas(), planView === 'gantt' && renderPlanGantt(), planView === 'cal' && renderPlanCal(), planView === 'list' && renderPlanList(), planView === 'ho' && renderPlanHandovers(), planView === 'rec' && renderEngReceita(), planView === 'inv' && renderEngInventario()));
   };
   var renderPlanForm = () => {
     if (!planDraft) return null;
@@ -61805,13 +61873,11 @@ _Gerado por: ${user}_`;
       },
       title: "Abre a mesma tela da aba Opera\xE7\xF5es: equipe efetiva, status, equipamentos e documentos",
       onClick: () => abrirOperacaoDoPlanejado(d)
-    }, "\u25A4 Opera\xE7\xE3o completa"))), React.createElement("div", {
+    }, "\u25A4 Opera\xE7\xE3o completa"))), !tplMode && engResumoOp(d), React.createElement("div", {
       className: "eng-mf"
     }, !tplMode && d.id && React.createElement("button", {
       className: "btn-o",
-      onClick: () => {
-        duplicatePlanned(d);
-      }
+      onClick: () => engDuplicar(d)
     }, "Duplicar"), !tplMode && d.id && React.createElement("button", {
       className: "btn-o",
       title: "Tudo o que aconteceu com esta opera\xE7\xE3o",
@@ -69462,6 +69528,292 @@ _Gerado por: ${user}_`;
       },
       title: v ? (v.real ? 'Realizado (consumo lançado)' : 'Previsto') + ' — valor cheio, sem o risco' : ''
     }, v ? fmtUSD(k === 'rec' ? v.rec : v.cogs) : '—');
+  };
+
+  /* ---- 5. pílulas de filtro do plano (Gantt, Calendário e Lista; Visão geral e contrato) ----
+     O estado (engPil) e o teste de cada pílula (engPilOk/engPilFiltra) ficam no começo do App (patch), porque o
+     planBase (useMemo) roda antes deste código. Dentro de cada grupo vale "ou"; entre os grupos, "e". */
+  var ENG_PILULAS = [['sit', 'Situação', [['prev', 'Previstas'], ['conc', 'Concluídas'], ['atras', 'Atrasadas']]], ['marc', 'Marcas', [['cont', 'Contingência'], ['risco', 'Com risco'], ['fora', 'Risco 100%']]], ['ho', 'Handover', [['hoS', 'Handover enviado'], ['hoN', 'Sem handover']]]];
+  var engPilEscopo = () => (planJobs || []).filter(j => {
+    if (!j || j.status === PJ_STATUS.CANC) return false;
+    if (ctSel) return pjDoContrato(j, ctSel);
+    var c = ctDoJob(j);
+    if (c && c.archived) return false;
+    return !planMF.ct.length || planMF.ct.includes(c ? c.id : '__sem');
+  });
+  var engMudarPil = k => setEngPil(x => {
+    var o = k === null ? [] : x.includes(k) ? x.filter(y => y !== k) : [...x, k];
+    try {
+      localStorage.setItem('eng_pilulas_v1', JSON.stringify(o));
+    } catch (e) {}
+    return o;
+  });
+  var engRenderPilulas = () => {
+    if (!['gantt', 'cal', 'list'].includes(planView)) return null;
+    var esc = engPilEscopo();
+    return engH("div", {
+      className: "eng-pils"
+    }, ENG_PILULAS.map(([g, tit, ps]) => engH("div", {
+      key: g,
+      className: "eng-pil-g"
+    }, engH("span", {
+      className: "eng-pil-t"
+    }, tit), ps.map(([k, l]) => {
+      var n = esc.filter(j => engPilOk(j, k)).length;
+      var on = engPil.includes(k);
+      return engH("button", {
+        key: k,
+        type: "button",
+        className: 'eng-pil eng-pil-' + k + (on ? ' on' : ''),
+        "aria-pressed": on,
+        title: on ? 'Clique para tirar este filtro' : 'Mostrar só as operações: ' + l.toLowerCase(),
+        onClick: () => engMudarPil(k)
+      }, l, engH("b", null, n));
+    }))), engPil.length > 0 && engH("button", {
+      type: "button",
+      className: "eng-pil eng-pil-limpar",
+      onClick: () => engMudarPil(null)
+    }, "✕ Limpar"));
+  };
+
+  /* ---- 6. receita e COGS na janela da operação (ao vivo, com a contingência e o risco) ----
+     receita = Σ itens PPU × preço vigente na data × (1 − risco da linha) × (1 − risco da operação);
+     COGS = Σ químicas e casing × COGS unitário × (1 − risco da linha) × (1 − risco da operação).
+     Risco 100% = não acontece (conta 0); 0% = acontece (conta inteiro). */
+  var engResumoOp = d => {
+    if (!d || d.__tpl) return null;
+    var ct = d.contratoId ? (db.contratos || []).find(c => c.id === d.contratoId) : ctDoJob(d);
+    var idx = engRcCache.idx || (engRcCache.idx = engCogsIdx());
+    var data = d.date || todayStr();
+    var rOp = engRiscoNum(d.riscoRec);
+    var fOp = 1 - rOp / 100;
+    var recC = 0,
+      rec = 0,
+      semPreco = 0,
+      nCont = 0;
+    (d.ppuNeeds || []).forEach(n => {
+      if (!n || !n.ref) return;
+      var q = engNum(n.qty) || 0;
+      if (!q) return;
+      if (n.cont) nCont++;
+      var u = ct ? engUsdLinha(q, ctPreco(ct, n.ref, data), data) : null;
+      if (u == null) {
+        semPreco++;
+        return;
+      }
+      recC += u;
+      rec += u * (1 - engRiscoItem(n) / 100);
+    });
+    var cgC = 0,
+      cg = 0,
+      semCogs = 0;
+    (d.chems || []).concat(d.casingNeeds || []).forEach(m => {
+      if (!m || !(m.sap || m.name)) return;
+      var q = engNum(m.qty) || 0;
+      if (!q) return;
+      if (m.cont) nCont++;
+      var c = engCogsDe(idx, m);
+      var cu = c ? engNum(c.usd) : null;
+      if (cu == null) {
+        semCogs++;
+        return;
+      }
+      cgC += q * cu;
+      cg += q * cu * (1 - engRiscoItem(m) / 100);
+    });
+    rec *= fOp;
+    cg *= fOp;
+    var temRisco = rOp > 0 || nCont > 0;
+    var rv = d.ppuCons ? engRC(d) : null;
+    return engH("div", {
+      className: "eng-resumo-op"
+    }, engH("div", {
+      className: "eng-ro-nums"
+    }, engH("span", null, 'Receita', engH("b", {
+      className: "eng-ro-rec"
+    }, fmtUSD(rec))), engH("span", null, 'COGS', engH("b", {
+      className: "eng-ro-cogs"
+    }, fmtUSD(cg))), engH("span", null, 'Margem', engH("b", {
+      className: "eng-ro-mg"
+    }, fmtUSD(rec - cg))), rv && engH("span", {
+      className: "eng-ro-real"
+    }, 'Realizado', engH("b", null, fmtUSD(rv.rec) + ' · COGS ' + fmtUSD(rv.cogs)))), engH("div", {
+      className: "eng-ro-sub"
+    }, !ct ? 'Escolha o contrato para calcular a receita. ' : '', temRisco ? 'Com o risco: ' + [rOp > 0 ? 'operação ' + fmtNum(rOp) + '%' + (d.contingencia ? ' (contingência)' : '') : '', nCont ? nCont + ' linha(s) em contingência, cada uma com o seu risco' : ''].filter(Boolean).join(' e ') + ' — conta × (1 − risco). Valor cheio: receita ' + fmtUSD(recC) + ' · COGS ' + fmtUSD(cgC) + '.' : 'Itens previstos, sem risco (valor cheio).', semPreco ? ' ' + semPreco + ' item(ns) sem preço no contrato.' : '', semCogs ? ' ' + semCogs + ' material(is) sem COGS.' : ''));
+  };
+
+  /* ---- 7. duplicar: só a operação ou o poço inteiro ---- */
+  var [engDup, setEngDup] = useState(null);
+  var engNormPoco = w => String(w || '').trim().toUpperCase();
+  var engMesmoPoco = pj => {
+    var w = engNormPoco(pj && pj.well);
+    if (!w || !pj.id) return pj ? [pj] : [];
+    var ct = ctDoJob(pj);
+    return (db.plannedJobs || []).filter(j => j.status !== PJ_STATUS.CANC && engNormPoco(j.well) === w && (ctDoJob(j) || {}).id === (ct || {}).id).sort((a, b) => String(a.date).localeCompare(String(b.date)));
+  };
+  var engDuplicar = pj => {
+    if (!pj) return;
+    var l = engMesmoPoco(pj);
+    if (l.length <= 1) {
+      duplicatePlanned(pj);
+      return;
+    }
+    var fim = l.reduce((a, j) => pjEnd(j) > a ? pjEnd(j) : a, '');
+    setEngDup({
+      draft: pj,
+      ids: l.map(j => j.id),
+      modo: 'op',
+      poco: '',
+      data: dAdd(fim, 1),
+      rig: ''
+    });
+  };
+  var renderEngDup = () => {
+    if (!engDup) return null;
+    var l = engDup.ids.map(id => (db.plannedJobs || []).find(j => j.id === id)).filter(Boolean);
+    var pj = engDup.draft;
+    var fechar = () => setEngDup(null);
+    var set = (k, v) => setEngDup(x => ({
+      ...x,
+      [k]: v
+    }));
+    var pocoOk = !!String(engDup.poco || '').trim() && !!engDup.data;
+    var duplicarPoco = () => {
+      if (!pocoOk || !l.length) return;
+      var novoPoco = String(engDup.poco).trim();
+      var off = dDiff(l[0].date, engDup.data);
+      var agora = new Date().toISOString();
+      var rig = engDup.rig ? (db.rigs || []).find(r => r.id === engDup.rig) : null;
+      var novos = l.map(j => {
+        var o = JSON.parse(JSON.stringify(j));
+        ['ppuCons', 'concluida', 'handoverId', 'hoEmailEm', 'hoEmailVersao', 'mobId', 'releasedAt', 'releasedBy', 'devolvida'].forEach(k => {
+          delete o[k];
+        });
+        o.id = uid();
+        o.well = novoPoco;
+        o.date = dAdd(j.date, off);
+        o.baselineDate = o.date;
+        o.status = PJ_STATUS.PLAN;
+        if (rig) {
+          o.rigId = rig.id;
+          o.loc = regiaoDaBase(rig.base) || o.loc;
+        }
+        o.createdAt = agora;
+        o.updatedAt = agora;
+        o.createdBy = currentUser();
+        o.log = [{
+          em: agora,
+          por: currentUser() || '—',
+          acao: 'Operação criada pela engenharia (cópia do poço ' + (j.well || '—') + ')',
+          detalhe: (o.tipoOp || '') + ' · ' + fmtD(o.date)
+        }];
+        return o;
+      });
+      updateDB(x => ({
+        ...x,
+        plannedJobs: [...(x.plannedJobs || []), ...novos]
+      }), {
+        kind: 'Operação planejada',
+        action: 'Inclusão',
+        name: novoPoco + ' — ' + novos.length + ' operação(ões)',
+        user: currentUser() || '—',
+        detail: 'cópia do poço ' + (pj.well || '')
+      });
+      setEngDup(null);
+      setPlanDraft(null);
+      setOkMsg('Poço duplicado ✓ — ' + novos.length + ' operação(ões) em ' + novoPoco + ', a partir de ' + fmtD(engDup.data));
+      setTimeout(() => setOkMsg(''), 5000);
+    };
+    var rigsAt = (db.rigs || []).filter(r => r.active !== false).slice().sort((a, b) => String(rigFmt(a)).localeCompare(String(rigFmt(b)), 'pt'));
+    var opcao = (k, tit, sub) => engH("label", {
+      className: 'eng-dup-op' + (engDup.modo === k ? ' on' : '')
+    }, engH("input", {
+      type: "radio",
+      name: "eng-dup-modo",
+      className: 'eng-dup-' + k,
+      checked: engDup.modo === k,
+      onChange: () => set('modo', k)
+    }), engH("span", null, engH("b", null, tit), engH("em", null, sub)));
+    return engH("div", {
+      className: "overlay",
+      style: {
+        zIndex: 276
+      },
+      onClick: e => {
+        if (e.target === e.currentTarget) fechar();
+      }
+    }, engH("div", {
+      className: "modal ec-modal eng-dup-modal",
+      onClick: e => e.stopPropagation()
+    }, engH("div", {
+      className: "modal-title"
+    }, engH("span", null, "Duplicar"), engH("button", {
+      className: "modal-close",
+      onClick: fechar
+    }, "\xD7")), engH("div", {
+      className: "ec-conc-nota"
+    }, 'Esta operação é uma das ', engH("b", null, l.length + ' operações'), ' do poço ', engH("b", null, pj.well), '. O que você quer duplicar?'), opcao('op', 'Só esta operação', 'abre uma cópia (' + (tipoTxt(pj) || pj.tipoOp || '') + ') para você ajustar e salvar'), opcao('poco', 'O poço inteiro (' + l.length + ' operações)', 'cria um poço novo com as mesmas operações, na mesma sequência e com os mesmos recursos'), engDup.modo === 'poco' && engH("div", {
+      className: "eng-dup-poco"
+    }, engH("table", {
+      className: "db-table eng-dup-tab"
+    }, engH("thead", null, engH("tr", null, ['Data', 'Sonda', 'Operação'].map(h => engH("th", {
+      key: h
+    }, h)))), engH("tbody", null, l.map(j => engH("tr", {
+      key: j.id
+    }, engH("td", null, fmtD(j.date) + ' → ' + fmtD(dAdd(j.date, dDiff(l[0].date, engDup.data || l[0].date)))), engH("td", null, rigFmt(engDup.rig ? (db.rigs || []).find(r => r.id === engDup.rig) || {} : (db.rigs || []).find(r => r.id === j.rigId) || {}) || '—'), engH("td", null, tipoTxt(j) || j.tipoOp))))), engH("div", {
+      className: "eng-dup-flds"
+    }, engH("div", {
+      className: "fld"
+    }, engH("label", {
+      className: "lbl"
+    }, "Novo po\xE7o *"), engH("input", {
+      className: "ipt eng-dup-nome",
+      value: engDup.poco,
+      placeholder: "ex.: 7-ABL-60-RJS",
+      onChange: e => set('poco', e.target.value)
+    })), engH("div", {
+      className: "fld"
+    }, engH("label", {
+      className: "lbl"
+    }, "Data da 1\xAA opera\xE7\xE3o *"), engH("input", {
+      className: "ipt eng-dup-data",
+      type: "date",
+      value: engDup.data || '',
+      onChange: e => set('data', e.target.value)
+    })), engH("div", {
+      className: "fld"
+    }, engH("label", {
+      className: "lbl"
+    }, "Sonda"), engH("select", {
+      className: "sel eng-dup-rig",
+      value: engDup.rig,
+      onChange: e => set('rig', e.target.value)
+    }, engH("option", {
+      value: ""
+    }, "A mesma de cada opera\xE7\xE3o"), rigsAt.map(r => engH("option", {
+      key: r.id,
+      value: r.id
+    }, rigFmt(r))))))), engH("div", {
+      className: "ec-foot"
+    }, engDup.modo === 'poco' && !pocoOk && engH("em", {
+      className: "ec-conc-falta-txt"
+    }, "Informe o novo po\xE7o e a data."), engH("span", {
+      style: {
+        flex: 1
+      }
+    }), engH("button", {
+      className: "btn-o",
+      onClick: fechar
+    }, "Cancelar"), engH("button", {
+      className: "btn-r eng-dup-ok",
+      disabled: engDup.modo === 'poco' && !pocoOk,
+      onClick: () => {
+        if (engDup.modo === 'op') {
+          setEngDup(null);
+          duplicatePlanned(pj);
+        } else duplicarPoco();
+      }
+    }, engDup.modo === 'poco' ? 'Duplicar o poço (' + l.length + ' operações)' : 'Duplicar a operação'))));
   };
   var renderHandover = () => {
     var hd = hoDraft;
@@ -112891,7 +113243,7 @@ ${transferDraft.notes ? '<p><b>Observações:</b> ' + esc(transferDraft.notes) +
     style: {
       flex: 1
     }
-  }, okMsg)), renderMainTabs(), safeTab === 'home' && renderHome(), safeTab === 'mob' && !planAssumed && renderSupQueue(), safeTab === 'mob' && planAssumed && React.createElement(React.Fragment, null, renderPlanRef(), renderStepper(), step === 1 && renderStep1(), step === 2 && renderStep2(), step === 3 && renderStep3(), step === 4 && renderStepChem(), step === 5 && renderStep4(), step === 6 && renderStep5(), renderMobFooter()), safeTab === 'ops' && renderOps(), safeTab === 'plan' && renderPlanejamento(), safeTab === 'coord' && renderCoord(), safeTab === 'logi' && renderLogi(), safeTab === 'lab' && renderLab(), safeTab === 'pes' && React.createElement(React.Fragment, null, secBar('pes'), renderParteApp('pessoal')), safeTab === 'eqp' && React.createElement(React.Fragment, null, secBar('eqp'), renderParteApp('equipamentos')), safeTab === 'dar' && renderDarFor(null), safeTab === 'rig' && renderRigXray(), safeTab === 'sl' && React.createElement(React.Fragment, null, hubLocation !== 'brasil' && secBar('pes'), renderEscalas()), safeTab === 'pab' && React.createElement(React.Fragment, null, secBar('pes'), renderPesBordo(), renderPesDesForm(), renderEmbForm()), safeTab === 'bulk' && renderBulk(), safeTab === 'chem' && renderChem(), safeTab === 'fc' && renderForecast(), safeTab === 'ind' && renderIndicadores(), safeTab === 'pfl' && React.createElement(React.Fragment, null, hubLocation !== 'brasil' && secBar('pes'), renderPerfis()), safeTab === 'equip' && React.createElement(React.Fragment, null, secBar(hubLocation === 'brasil' ? 'eqpBr' : 'eqp'), renderEquipmentWithScroll()), safeTab === 'eqs' && React.createElement(React.Fragment, null, secBar(hubLocation === 'brasil' ? 'eqpBr' : 'eqp'), renderEqSondas()), safeTab === 'hi' && hiMob && React.createElement(React.Fragment, null, renderHIStepper(), hiStep === 6 && renderHIEquipe(), hiStep === 7 && renderHIEquip(), hiStep === 8 && renderHI6(), hiStep === 9 && renderHI7(), hiStep === 10 && renderHI8(), hiStep === 11 && renderHI9(), hiStep === 12 && renderHI10(), renderHIFooter()), safeTab === 'jl' && jlMob && renderJL(), safeTab === 'db' && adminUnlocked && renderDB(), safeTab === 'ana' && adminUnlocked && renderAnalytics(mobs.filter(mobNoRecorte)), safeTab === 'br' && adminUnlocked && renderBrasil(), renderAvisos(), renderPlanForm(), renderHandover(), renderHoReview(), renderCoordRev(), renderParteRev(), renderLogView(), renderEnvView(), renderEmbModal(), renderCiencia(), renderAmoView(), renderAmoSup(), renderAmoLog(), renderAmoLab(), renderAmoFoto(), renderAdicForm(), renderProcView(), safeTab !== 'rig' && renderExpForm(), safeTab !== 'rig' && renderAmoForm(), renderReleaseGate(), renderPlanCascade(), renderEngSondas(), renderEngContratos(), renderEngQuim(), renderEngCasDb(), renderEngEspaco(), renderEngCons(), renderEngConc(), renderEngCorPop(), renderEngCoresCss(), renderEngImpDados(), renderEngGer(), renderEngInvEd(), renderEngExp(), renderEngCambio(), renderEngLogo(), renderRigForm(), renderConfirmBox(), renderDiaPanel(), escalaPrompt && (() => {
+  }, okMsg)), renderMainTabs(), safeTab === 'home' && renderHome(), safeTab === 'mob' && !planAssumed && renderSupQueue(), safeTab === 'mob' && planAssumed && React.createElement(React.Fragment, null, renderPlanRef(), renderStepper(), step === 1 && renderStep1(), step === 2 && renderStep2(), step === 3 && renderStep3(), step === 4 && renderStepChem(), step === 5 && renderStep4(), step === 6 && renderStep5(), renderMobFooter()), safeTab === 'ops' && renderOps(), safeTab === 'plan' && renderPlanejamento(), safeTab === 'coord' && renderCoord(), safeTab === 'logi' && renderLogi(), safeTab === 'lab' && renderLab(), safeTab === 'pes' && React.createElement(React.Fragment, null, secBar('pes'), renderParteApp('pessoal')), safeTab === 'eqp' && React.createElement(React.Fragment, null, secBar('eqp'), renderParteApp('equipamentos')), safeTab === 'dar' && renderDarFor(null), safeTab === 'rig' && renderRigXray(), safeTab === 'sl' && React.createElement(React.Fragment, null, hubLocation !== 'brasil' && secBar('pes'), renderEscalas()), safeTab === 'pab' && React.createElement(React.Fragment, null, secBar('pes'), renderPesBordo(), renderPesDesForm(), renderEmbForm()), safeTab === 'bulk' && renderBulk(), safeTab === 'chem' && renderChem(), safeTab === 'fc' && renderForecast(), safeTab === 'ind' && renderIndicadores(), safeTab === 'pfl' && React.createElement(React.Fragment, null, hubLocation !== 'brasil' && secBar('pes'), renderPerfis()), safeTab === 'equip' && React.createElement(React.Fragment, null, secBar(hubLocation === 'brasil' ? 'eqpBr' : 'eqp'), renderEquipmentWithScroll()), safeTab === 'eqs' && React.createElement(React.Fragment, null, secBar(hubLocation === 'brasil' ? 'eqpBr' : 'eqp'), renderEqSondas()), safeTab === 'hi' && hiMob && React.createElement(React.Fragment, null, renderHIStepper(), hiStep === 6 && renderHIEquipe(), hiStep === 7 && renderHIEquip(), hiStep === 8 && renderHI6(), hiStep === 9 && renderHI7(), hiStep === 10 && renderHI8(), hiStep === 11 && renderHI9(), hiStep === 12 && renderHI10(), renderHIFooter()), safeTab === 'jl' && jlMob && renderJL(), safeTab === 'db' && adminUnlocked && renderDB(), safeTab === 'ana' && adminUnlocked && renderAnalytics(mobs.filter(mobNoRecorte)), safeTab === 'br' && adminUnlocked && renderBrasil(), renderAvisos(), renderPlanForm(), renderHandover(), renderHoReview(), renderCoordRev(), renderParteRev(), renderLogView(), renderEnvView(), renderEmbModal(), renderCiencia(), renderAmoView(), renderAmoSup(), renderAmoLog(), renderAmoLab(), renderAmoFoto(), renderAdicForm(), renderProcView(), safeTab !== 'rig' && renderExpForm(), safeTab !== 'rig' && renderAmoForm(), renderReleaseGate(), renderPlanCascade(), renderEngSondas(), renderEngContratos(), renderEngQuim(), renderEngCasDb(), renderEngEspaco(), renderEngCons(), renderEngConc(), renderEngDup(), renderEngCorPop(), renderEngCoresCss(), renderEngImpDados(), renderEngGer(), renderEngInvEd(), renderEngExp(), renderEngCambio(), renderEngLogo(), renderRigForm(), renderConfirmBox(), renderDiaPanel(), escalaPrompt && (() => {
     var e = escalaPrompt;
     var membros = (e.team.members || []).map(id => (db.people || []).find(p => p.id === id)).filter(Boolean);
     var aceitar = () => {

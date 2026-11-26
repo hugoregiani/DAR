@@ -40,6 +40,8 @@ Os testes `e2e_atualizacao.js` e `e2e_importar.js` acham os arquivos pelos dois 
 `EARL_Forecast_…`). Na página inicial, o `e2e_contratos_reais.js` abre a aba 📊 Indicadores para conferir a
 receita ano a ano e a aba 📁 Contratos para percorrer os contratos.
 
+**V05 (26/11/2026, e17):** gerados com `--compat <V04>/EARL_Forecast_<NOME>_V04.html` e entregues como `EARL_Forecast_<NOME>_V05.html`.
+
 Importar o contrato de um arquivo em outro (e15): `node contratos_reais/e2e_importar.js <pasta dos HTML> PA BDII`.
 O teste exporta do arquivo A e importa no B. Confere que:
 - o B fica com os contratos dele e os do A;

@@ -21,9 +21,9 @@ página inicial antigos**; serão gravados de novo junto com a narração.
 cd engenharia/walkthrough
 python3 preparar_imagens.py <EARL_Demo_walkthrough.pdf>        # foto e logos (não vão para o repositório)
 node capturar.js inicio,cards,matriz,logo,contratos,plano,novaop,handover,bancos,inventario,arquivos
-node capturar.js consumo
+node capturar.js consumo,concluir
 python3 gerar_deck.py                                          # textos e ordem dos slides
-node render.js EARL_Forecast_passo_a_passo_V04.pdf png # PDF (Chromium) e as prévias em prev/ (versão atual: V04, 25/11/2026)
+node render.js EARL_Forecast_passo_a_passo_V05.pdf png # PDF (Chromium) e as prévias em prev/ (versão atual: V05, 26/11/2026)
 ```
 
 Precisa do Playwright com o Chromium (como os testes) e de uma fonte compatível com Arial (Liberation Sans).

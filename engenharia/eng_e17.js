@@ -452,3 +452,289 @@
       title: v ? (v.real ? 'Realizado (consumo lançado)' : 'Previsto') + ' — valor cheio, sem o risco' : ''
     }, v ? fmtUSD(k === 'rec' ? v.rec : v.cogs) : '—');
   };
+
+  /* ---- 5. pílulas de filtro do plano (Gantt, Calendário e Lista; Visão geral e contrato) ----
+     O estado (engPil) e o teste de cada pílula (engPilOk/engPilFiltra) ficam no começo do App (patch), porque o
+     planBase (useMemo) roda antes deste código. Dentro de cada grupo vale "ou"; entre os grupos, "e". */
+  var ENG_PILULAS = [['sit', 'Situação', [['prev', 'Previstas'], ['conc', 'Concluídas'], ['atras', 'Atrasadas']]], ['marc', 'Marcas', [['cont', 'Contingência'], ['risco', 'Com risco'], ['fora', 'Risco 100%']]], ['ho', 'Handover', [['hoS', 'Handover enviado'], ['hoN', 'Sem handover']]]];
+  var engPilEscopo = () => (planJobs || []).filter(j => {
+    if (!j || j.status === PJ_STATUS.CANC) return false;
+    if (ctSel) return pjDoContrato(j, ctSel);
+    var c = ctDoJob(j);
+    if (c && c.archived) return false;
+    return !planMF.ct.length || planMF.ct.includes(c ? c.id : '__sem');
+  });
+  var engMudarPil = k => setEngPil(x => {
+    var o = k === null ? [] : x.includes(k) ? x.filter(y => y !== k) : [...x, k];
+    try {
+      localStorage.setItem('eng_pilulas_v1', JSON.stringify(o));
+    } catch (e) {}
+    return o;
+  });
+  var engRenderPilulas = () => {
+    if (!['gantt', 'cal', 'list'].includes(planView)) return null;
+    var esc = engPilEscopo();
+    return engH("div", {
+      className: "eng-pils"
+    }, ENG_PILULAS.map(([g, tit, ps]) => engH("div", {
+      key: g,
+      className: "eng-pil-g"
+    }, engH("span", {
+      className: "eng-pil-t"
+    }, tit), ps.map(([k, l]) => {
+      var n = esc.filter(j => engPilOk(j, k)).length;
+      var on = engPil.includes(k);
+      return engH("button", {
+        key: k,
+        type: "button",
+        className: 'eng-pil eng-pil-' + k + (on ? ' on' : ''),
+        "aria-pressed": on,
+        title: on ? 'Clique para tirar este filtro' : 'Mostrar só as operações: ' + l.toLowerCase(),
+        onClick: () => engMudarPil(k)
+      }, l, engH("b", null, n));
+    }))), engPil.length > 0 && engH("button", {
+      type: "button",
+      className: "eng-pil eng-pil-limpar",
+      onClick: () => engMudarPil(null)
+    }, "✕ Limpar"));
+  };
+
+  /* ---- 6. receita e COGS na janela da operação (ao vivo, com a contingência e o risco) ----
+     receita = Σ itens PPU × preço vigente na data × (1 − risco da linha) × (1 − risco da operação);
+     COGS = Σ químicas e casing × COGS unitário × (1 − risco da linha) × (1 − risco da operação).
+     Risco 100% = não acontece (conta 0); 0% = acontece (conta inteiro). */
+  var engResumoOp = d => {
+    if (!d || d.__tpl) return null;
+    var ct = d.contratoId ? (db.contratos || []).find(c => c.id === d.contratoId) : ctDoJob(d);
+    var idx = engRcCache.idx || (engRcCache.idx = engCogsIdx());
+    var data = d.date || todayStr();
+    var rOp = engRiscoNum(d.riscoRec);
+    var fOp = 1 - rOp / 100;
+    var recC = 0,
+      rec = 0,
+      semPreco = 0,
+      nCont = 0;
+    (d.ppuNeeds || []).forEach(n => {
+      if (!n || !n.ref) return;
+      var q = engNum(n.qty) || 0;
+      if (!q) return;
+      if (n.cont) nCont++;
+      var u = ct ? engUsdLinha(q, ctPreco(ct, n.ref, data), data) : null;
+      if (u == null) {
+        semPreco++;
+        return;
+      }
+      recC += u;
+      rec += u * (1 - engRiscoItem(n) / 100);
+    });
+    var cgC = 0,
+      cg = 0,
+      semCogs = 0;
+    (d.chems || []).concat(d.casingNeeds || []).forEach(m => {
+      if (!m || !(m.sap || m.name)) return;
+      var q = engNum(m.qty) || 0;
+      if (!q) return;
+      if (m.cont) nCont++;
+      var c = engCogsDe(idx, m);
+      var cu = c ? engNum(c.usd) : null;
+      if (cu == null) {
+        semCogs++;
+        return;
+      }
+      cgC += q * cu;
+      cg += q * cu * (1 - engRiscoItem(m) / 100);
+    });
+    rec *= fOp;
+    cg *= fOp;
+    var temRisco = rOp > 0 || nCont > 0;
+    var rv = d.ppuCons ? engRC(d) : null;
+    return engH("div", {
+      className: "eng-resumo-op"
+    }, engH("div", {
+      className: "eng-ro-nums"
+    }, engH("span", null, 'Receita', engH("b", {
+      className: "eng-ro-rec"
+    }, fmtUSD(rec))), engH("span", null, 'COGS', engH("b", {
+      className: "eng-ro-cogs"
+    }, fmtUSD(cg))), engH("span", null, 'Margem', engH("b", {
+      className: "eng-ro-mg"
+    }, fmtUSD(rec - cg))), rv && engH("span", {
+      className: "eng-ro-real"
+    }, 'Realizado', engH("b", null, fmtUSD(rv.rec) + ' · COGS ' + fmtUSD(rv.cogs)))), engH("div", {
+      className: "eng-ro-sub"
+    }, !ct ? 'Escolha o contrato para calcular a receita. ' : '', temRisco ? 'Com o risco: ' + [rOp > 0 ? 'operação ' + fmtNum(rOp) + '%' + (d.contingencia ? ' (contingência)' : '') : '', nCont ? nCont + ' linha(s) em contingência, cada uma com o seu risco' : ''].filter(Boolean).join(' e ') + ' — conta × (1 − risco). Valor cheio: receita ' + fmtUSD(recC) + ' · COGS ' + fmtUSD(cgC) + '.' : 'Itens previstos, sem risco (valor cheio).', semPreco ? ' ' + semPreco + ' item(ns) sem preço no contrato.' : '', semCogs ? ' ' + semCogs + ' material(is) sem COGS.' : ''));
+  };
+
+  /* ---- 7. duplicar: só a operação ou o poço inteiro ---- */
+  var [engDup, setEngDup] = useState(null);
+  var engNormPoco = w => String(w || '').trim().toUpperCase();
+  var engMesmoPoco = pj => {
+    var w = engNormPoco(pj && pj.well);
+    if (!w || !pj.id) return pj ? [pj] : [];
+    var ct = ctDoJob(pj);
+    return (db.plannedJobs || []).filter(j => j.status !== PJ_STATUS.CANC && engNormPoco(j.well) === w && (ctDoJob(j) || {}).id === (ct || {}).id).sort((a, b) => String(a.date).localeCompare(String(b.date)));
+  };
+  var engDuplicar = pj => {
+    if (!pj) return;
+    var l = engMesmoPoco(pj);
+    if (l.length <= 1) {
+      duplicatePlanned(pj);
+      return;
+    }
+    var fim = l.reduce((a, j) => pjEnd(j) > a ? pjEnd(j) : a, '');
+    setEngDup({
+      draft: pj,
+      ids: l.map(j => j.id),
+      modo: 'op',
+      poco: '',
+      data: dAdd(fim, 1),
+      rig: ''
+    });
+  };
+  var renderEngDup = () => {
+    if (!engDup) return null;
+    var l = engDup.ids.map(id => (db.plannedJobs || []).find(j => j.id === id)).filter(Boolean);
+    var pj = engDup.draft;
+    var fechar = () => setEngDup(null);
+    var set = (k, v) => setEngDup(x => ({
+      ...x,
+      [k]: v
+    }));
+    var pocoOk = !!String(engDup.poco || '').trim() && !!engDup.data;
+    var duplicarPoco = () => {
+      if (!pocoOk || !l.length) return;
+      var novoPoco = String(engDup.poco).trim();
+      var off = dDiff(l[0].date, engDup.data);
+      var agora = new Date().toISOString();
+      var rig = engDup.rig ? (db.rigs || []).find(r => r.id === engDup.rig) : null;
+      var novos = l.map(j => {
+        var o = JSON.parse(JSON.stringify(j));
+        ['ppuCons', 'concluida', 'handoverId', 'hoEmailEm', 'hoEmailVersao', 'mobId', 'releasedAt', 'releasedBy', 'devolvida'].forEach(k => {
+          delete o[k];
+        });
+        o.id = uid();
+        o.well = novoPoco;
+        o.date = dAdd(j.date, off);
+        o.baselineDate = o.date;
+        o.status = PJ_STATUS.PLAN;
+        if (rig) {
+          o.rigId = rig.id;
+          o.loc = regiaoDaBase(rig.base) || o.loc;
+        }
+        o.createdAt = agora;
+        o.updatedAt = agora;
+        o.createdBy = currentUser();
+        o.log = [{
+          em: agora,
+          por: currentUser() || '—',
+          acao: 'Operação criada pela engenharia (cópia do poço ' + (j.well || '—') + ')',
+          detalhe: (o.tipoOp || '') + ' · ' + fmtD(o.date)
+        }];
+        return o;
+      });
+      updateDB(x => ({
+        ...x,
+        plannedJobs: [...(x.plannedJobs || []), ...novos]
+      }), {
+        kind: 'Operação planejada',
+        action: 'Inclusão',
+        name: novoPoco + ' — ' + novos.length + ' operação(ões)',
+        user: currentUser() || '—',
+        detail: 'cópia do poço ' + (pj.well || '')
+      });
+      setEngDup(null);
+      setPlanDraft(null);
+      setOkMsg('Poço duplicado ✓ — ' + novos.length + ' operação(ões) em ' + novoPoco + ', a partir de ' + fmtD(engDup.data));
+      setTimeout(() => setOkMsg(''), 5000);
+    };
+    var rigsAt = (db.rigs || []).filter(r => r.active !== false).slice().sort((a, b) => String(rigFmt(a)).localeCompare(String(rigFmt(b)), 'pt'));
+    var opcao = (k, tit, sub) => engH("label", {
+      className: 'eng-dup-op' + (engDup.modo === k ? ' on' : '')
+    }, engH("input", {
+      type: "radio",
+      name: "eng-dup-modo",
+      className: 'eng-dup-' + k,
+      checked: engDup.modo === k,
+      onChange: () => set('modo', k)
+    }), engH("span", null, engH("b", null, tit), engH("em", null, sub)));
+    return engH("div", {
+      className: "overlay",
+      style: {
+        zIndex: 276
+      },
+      onClick: e => {
+        if (e.target === e.currentTarget) fechar();
+      }
+    }, engH("div", {
+      className: "modal ec-modal eng-dup-modal",
+      onClick: e => e.stopPropagation()
+    }, engH("div", {
+      className: "modal-title"
+    }, engH("span", null, "Duplicar"), engH("button", {
+      className: "modal-close",
+      onClick: fechar
+    }, "\xD7")), engH("div", {
+      className: "ec-conc-nota"
+    }, 'Esta operação é uma das ', engH("b", null, l.length + ' operações'), ' do poço ', engH("b", null, pj.well), '. O que você quer duplicar?'), opcao('op', 'Só esta operação', 'abre uma cópia (' + (tipoTxt(pj) || pj.tipoOp || '') + ') para você ajustar e salvar'), opcao('poco', 'O poço inteiro (' + l.length + ' operações)', 'cria um poço novo com as mesmas operações, na mesma sequência e com os mesmos recursos'), engDup.modo === 'poco' && engH("div", {
+      className: "eng-dup-poco"
+    }, engH("table", {
+      className: "db-table eng-dup-tab"
+    }, engH("thead", null, engH("tr", null, ['Data', 'Sonda', 'Operação'].map(h => engH("th", {
+      key: h
+    }, h)))), engH("tbody", null, l.map(j => engH("tr", {
+      key: j.id
+    }, engH("td", null, fmtD(j.date) + ' → ' + fmtD(dAdd(j.date, dDiff(l[0].date, engDup.data || l[0].date)))), engH("td", null, rigFmt(engDup.rig ? (db.rigs || []).find(r => r.id === engDup.rig) || {} : (db.rigs || []).find(r => r.id === j.rigId) || {}) || '—'), engH("td", null, tipoTxt(j) || j.tipoOp))))), engH("div", {
+      className: "eng-dup-flds"
+    }, engH("div", {
+      className: "fld"
+    }, engH("label", {
+      className: "lbl"
+    }, "Novo po\xE7o *"), engH("input", {
+      className: "ipt eng-dup-nome",
+      value: engDup.poco,
+      placeholder: "ex.: 7-ABL-60-RJS",
+      onChange: e => set('poco', e.target.value)
+    })), engH("div", {
+      className: "fld"
+    }, engH("label", {
+      className: "lbl"
+    }, "Data da 1\xAA opera\xE7\xE3o *"), engH("input", {
+      className: "ipt eng-dup-data",
+      type: "date",
+      value: engDup.data || '',
+      onChange: e => set('data', e.target.value)
+    })), engH("div", {
+      className: "fld"
+    }, engH("label", {
+      className: "lbl"
+    }, "Sonda"), engH("select", {
+      className: "sel eng-dup-rig",
+      value: engDup.rig,
+      onChange: e => set('rig', e.target.value)
+    }, engH("option", {
+      value: ""
+    }, "A mesma de cada opera\xE7\xE3o"), rigsAt.map(r => engH("option", {
+      key: r.id,
+      value: r.id
+    }, rigFmt(r))))))), engH("div", {
+      className: "ec-foot"
+    }, engDup.modo === 'poco' && !pocoOk && engH("em", {
+      className: "ec-conc-falta-txt"
+    }, "Informe o novo po\xE7o e a data."), engH("span", {
+      style: {
+        flex: 1
+      }
+    }), engH("button", {
+      className: "btn-o",
+      onClick: fechar
+    }, "Cancelar"), engH("button", {
+      className: "btn-r eng-dup-ok",
+      disabled: engDup.modo === 'poco' && !pocoOk,
+      onClick: () => {
+        if (engDup.modo === 'op') {
+          setEngDup(null);
+          duplicatePlanned(pj);
+        } else duplicarPoco();
+      }
+    }, engDup.modo === 'poco' ? 'Duplicar o poço (' + l.length + ' operações)' : 'Duplicar a operação'))));
+  };

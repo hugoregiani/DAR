@@ -192,14 +192,14 @@ secao(2, S2, 'Como a engenharia monta o plano e prevê os recursos de cada opera
 passo(6, S2, 'O plano por sonda', [
     'Cada barra é uma operação, na cor da etapa: roxo = contingência, preto = concluída. Embaixo do poço, a receita e o COGS (US$, valor cheio) da operação.',
     'Arraste a barra para mudar a data: as operações ligadas na mesma sonda acompanham. Clique no nome da sonda para escolher a cor das linhas dela.',
-    'Filtre por sonda (só as sondas com operação), tipo e situação no topo.'], '05_gantt.jpg')
+    'Filtre por sonda (só as sondas com operação), tipo e situação. As <b>pílulas</b> mostram só as previstas, concluídas, atrasadas, em contingência, com risco ou com/sem handover.'], '05_gantt.jpg')
 passo2(7, S2, 'Lista e calendário',
-       'A <b>Lista</b> mostra as operações por data, com a receita e o COGS (US$) de cada uma. Escolha o horizonte: 15, 30, 90, 180 dias ou <b>Todas</b>. Cada linha tem Editar, Duplicar, Σ Consumo e Handover.',
+       'A <b>Lista</b> mostra as operações por data, com a receita e o COGS (US$) de cada uma. Escolha o horizonte: 15, 30, 90, 180 dias ou <b>Todas</b>. Cada linha tem Editar, Duplicar (a operação ou o poço inteiro), Σ Consumo e Handover.',
        ('06_lista.jpg', 'Lista', 'as operações e os botões de cada uma'), ('07_calendario.jpg', 'Calendário', 'o mês de uma vez'))
 passo(8, S2, 'Nova operação', [
     'Sonda, poço, tipo, data e duração. Sales Order e Nº VIDA podem ficar para depois: só são exigidos para enviar o handover.',
     '<b>Vincular data à operação anterior</b>: se a anterior mudar, esta acompanha.',
-    '<b>Contingência</b>: marque se a operação pode ou não acontecer e informe o risco de não acontecer. 0% conta tudo; 100% fica fora da receita.'], '08_nova_op.jpg')
+    '<b>Contingência</b>: marque se a operação pode ou não acontecer e informe o risco de não acontecer. 0% conta tudo; 100% fica fora da receita. Embaixo da janela: a receita, o COGS e a margem da operação, já com a contingência e o risco.'], '08_nova_op.jpg')
 passo(9, S2, 'Recursos, contingência e risco', [
     'Itens PPU do contrato, químicas, casing equipment, pessoal e equipamentos, com a quantidade prevista.',
     'Cada linha também pode ser contingência, com o seu próprio risco: a receita e o COGS previstos contam × (1 − risco).',

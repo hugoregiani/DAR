@@ -98,6 +98,40 @@ A Engenharia do EARL separada do resto do sistema, agora chamada **EARL Forecast
 - **Exportações:** "Consumo de produtos químicos", "Casing equipment" e "Pessoal" ganharam **Contingência (linha)** e **Risco da linha (%)**; a operação já tinha Contingência e Risco (%). O Painel de Compras aplica o risco da linha.
 - **Cards** da aba "Consumo e receita" com profundidade, como os do Gerencial g16.
 
+### e17 (25–26/11/2026) — concluir a operação, pílulas, receita/COGS nas telas, duplicar o poço, cor das sondas
+
+Pedidos do Hugo (código novo em `eng_e17.js`; ligações no `patch_engenharia.py`, bloco "e17"):
+- **Filtro "Sonda"** (Visão geral e contrato): só as sondas que têm operação nos contratos escolhidos (no filtro
+  "Contrato" da Visão geral, ou o contrato aberto), em vez das 41 sondas do cadastro (`engRigsFiltro`).
+- **✓ Concluir operação** (janela da operação, ao lado do "Σ Consumo PPU"): salva a operação e
+  1. se houver contingência (a operação ou linhas de PPU, químicas, casing, pessoal, equipamentos), pergunta linha a
+     linha se foi usada (`renderEngConc`): **usou** = vira item normal; **não usou** = sai da operação. Não continua
+     enquanto faltar resposta ("não pode fechar a operação com itens de contingência"). A operação deixa de ser
+     contingência e o risco de não acontecer vai a 0% (ela aconteceu); fica no Log;
+  2. abre o consumo em modo "concluir" (`abrirEngCons(pj, {concluir: true})`), já preenchido com o previsto; ao
+     salvar, grava `ppuCons` e `concluida {em, por}` (`engComConclusao`).
+  - **Concluída = tem consumo lançado** (`engConcluida`): fica **preta** no Gantt (`pjCor` → 'concluida'), com o selo
+    "✓ Concluída" na Lista e na janela; nos Indicadores e nas planilhas já era "realizado/Concluído".
+  - **↺ Reabrir** apaga o consumo e a conclusão (as contingências resolvidas não voltam).
+- **Pílulas de filtro** (Gantt, Calendário e Lista; `engRenderPilulas`): Situação (Previstas, Concluídas, Atrasadas),
+  Marcas (Contingência, Com risco, Risco 100%) e Handover (enviado, sem). Dentro do grupo vale "ou"; entre grupos,
+  "e". Cada pílula mostra quantas operações tem; a escolha fica no navegador (`eng_pilulas_v1`). O estado e o teste
+  (`engPil`, `engPilOk`, `engPilFiltra`) ficam no começo do App (o `planBase` roda antes do código novo).
+- **Receita e COGS (US$) de cada operação**: valor cheio (sem o risco), realizado se tem consumo, senão previsto
+  (`engRC`): no Gantt (3ª linha embaixo do poço e no texto da barra), no Calendário e na Lista (colunas Receita e
+  COGS).
+- **Na janela da operação** (`engResumoOp`, entre o formulário e os botões): Receita, COGS e Margem ao vivo, conforme
+  os itens escolhidos: Σ × (1 − risco da linha em contingência) × (1 − risco da operação). 100% = não acontece (0);
+  0% = acontece (inteiro). Mostra também o valor cheio e, se concluída, o realizado.
+- **Duplicar** (janela e Lista): se o poço tem mais operações, pergunta "só esta operação" (a cópia de sempre) ou
+  **"o poço inteiro"**: todas as operações do mesmo poço (e contrato), num poço novo, a partir da data escolhida, na
+  mesma sequência, com os mesmos recursos, na mesma sonda ou numa escolhida; sem consumo, handover ou conclusão.
+- **Cor das linhas da sonda no Gantt**: clique no nome da sonda (por sonda / sonda contínua) e escolha a cor (10
+  cores ou "Sem cor"); fica neste navegador (`eng_cores_sonda_v1`), por sonda.
+- **Tipo "Perfuração"** na lista de tipos de operação (duração padrão 3 dias, horizonte 180, VIDA opcional). As
+  planilhas dos contratos reais continuam lendo perfuração como "Outros" com a descrição (não mudou o leitor).
+- **Teste:** `tests/e2e_e17.js` (42 verificações).
+
 ### e16 (25/11/2026) — Forecast: abas Indicadores e Contratos
 
 Pedido do Hugo: "Vamos trocar o nome de engenharia para forecast de receita. Crie uma aba para indicadores e uma aba
@@ -340,4 +374,4 @@ node contratos_reais/e2e_contratos_reais.js <pasta das planilhas> <pasta dos HTM
     - apagar com operações: só com APAGAR, levando as operações e o handover;
     - os contratos apagados não voltam ao reabrir.
 - **A seção Receita e margem é o `../gerencial/gerencial.html`**, embutido pelo patch (`ENG_GER_HTML`, num iframe, no modo embutido do Gerencial). Mudou o Gerencial? Gere de novo o `EARL_Engenharia.html`.
-- Versão: `EARL_VERSION = 'EARL Forecast e16 (base v115)'`. O teste do fluxo completo com o Gerencial está em `../gerencial/tests/e2e_gerencial.js`.
+- Versão: `EARL_VERSION = 'EARL Forecast e17 (base v115)'`. O teste do fluxo completo com o Gerencial está em `../gerencial/tests/e2e_gerencial.js`.

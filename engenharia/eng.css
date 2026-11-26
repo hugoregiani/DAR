@@ -367,3 +367,34 @@ tr.ec-conc-falta td{background:#FFF8E6}
 .eng-cor-sw{width:100%;aspect-ratio:1;border-radius:8px;border:2px solid #fff;box-shadow:0 0 0 1px rgba(0,0,0,.15);cursor:pointer;padding:0}
 .eng-cor-sw.on{box-shadow:0 0 0 2px #2A2F30}
 .eng-rig-cor-b:hover{text-decoration-style:solid !important}
+/* e17: pílulas de filtro do plano */
+.eng-pils{display:flex;flex-wrap:wrap;align-items:center;gap:8px 16px;margin:10px 0 4px}
+.eng-pil-g{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.eng-pil-t{font-size:10.5px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--ink-3)}
+.eng-pil{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--line);background:#fff;border-radius:999px;padding:5px 12px;font:600 12px var(--fs,inherit);color:var(--ink);cursor:pointer}
+.eng-pil b{font-size:10.5px;font-weight:700;background:#ECEFF0;color:var(--ink-2);border-radius:999px;padding:1px 7px}
+.eng-pil:hover{border-color:#A8AFB5}
+.eng-pil.on{background:#2A2F30;color:#fff;border-color:#2A2F30}
+.eng-pil.on b{background:rgba(255,255,255,.22);color:#fff}
+.eng-pil-cont.on{background:#6B3FA0;border-color:#6B3FA0}
+.eng-pil-conc.on{background:#2A2F30}
+.eng-pil-atras.on,.eng-pil-fora.on{background:#CC0000;border-color:#CC0000}
+.eng-pil-limpar{background:transparent;border-style:dashed;color:var(--ink-2)}
+/* e17: receita e COGS na janela da operação */
+.eng-resumo-op{border-top:1px solid var(--line);background:#F7F8F9;padding:10px 22px 8px}
+.eng-ro-nums{display:flex;flex-wrap:wrap;gap:6px 22px;align-items:baseline}
+.eng-ro-nums span{font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-3);display:inline-flex;align-items:baseline;gap:8px}
+.eng-ro-nums b{font-size:16px;letter-spacing:0;text-transform:none;color:var(--ink);font-variant-numeric:tabular-nums}
+.eng-ro-nums .eng-ro-rec{color:#CC0000}
+.eng-ro-real b{font-size:13px;color:#304220}
+.eng-ro-sub{font-size:11px;color:var(--ink-3);margin-top:3px;line-height:1.4}
+/* e17: duplicar a operação ou o poço inteiro */
+.eng-dup-modal{width:720px;max-width:96vw;max-height:92vh;overflow:auto}
+.eng-dup-op{display:flex;gap:10px;align-items:flex-start;border:1px solid var(--line);border-radius:14px;padding:10px 12px;margin:0 0 8px;cursor:pointer}
+.eng-dup-op.on{border-color:#CC0000;background:#FFF7F7}
+.eng-dup-op span{display:flex;flex-direction:column;gap:2px}
+.eng-dup-op em{font-style:normal;font-size:12px;color:var(--ink-3)}
+.eng-dup-poco{margin:4px 0 6px}
+.eng-dup-tab{margin-bottom:10px}
+.eng-dup-flds{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px}
+@media(max-width:700px){.eng-dup-flds{grid-template-columns:1fr}}

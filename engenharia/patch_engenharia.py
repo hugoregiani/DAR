@@ -748,6 +748,100 @@ rep("""'Contingência · risco ' + (j.riscoRec || 0) + '%')), React.createElemen
         className: "actions",""")
 rep("pjBadge(j.status), hoEmailTag(j), engConsTag(j),", "pjBadge(j.status), hoEmailTag(j), engConcTag(j), engConsTag(j),")
 
+# e17 (2ª parte, 26/11/2026): pílulas de filtro, receita/COGS na janela da operação, duplicar o poço inteiro, Perfuração.
+# Pílulas: o estado e o teste ficam no começo do App, porque o planBase (useMemo) roda antes do código novo.
+rep("""  var [planF, setPlanF] = useState({
+    rig: '',
+    cliente: '',
+    tipo: '',
+    status: ''
+  });""", """  var [planF, setPlanF] = useState({
+    rig: '',
+    cliente: '',
+    tipo: '',
+    status: ''
+  });
+  /* e17: pílulas de filtro do plano (eng_e17.js desenha). Grupos: situação (prev, conc, atras), marcas (cont, risco,
+     fora) e handover (hoS, hoN); dentro do grupo vale "ou", entre grupos "e". */
+  var [engPil, setEngPil] = useState(() => {
+    try {
+      var v = JSON.parse(localStorage.getItem('eng_pilulas_v1') || '[]');
+      return Array.isArray(v) ? v : [];
+    } catch (e) {
+      return [];
+    }
+  });
+  var engPilOk = (j, k) => {
+    var conc = !!(j && (j.concluida || j.ppuCons));
+    var linhas = ['ppuNeeds', 'chems', 'casingNeeds', 'peopleNeeds', 'equipNeeds'].reduce((a, kk) => a.concat(Array.isArray(j[kk]) ? j[kk] : []), []);
+    var rr = Math.max(0, Math.min(100, Number(j.riscoRec) || 0));
+    if (k === 'prev') return !conc;
+    if (k === 'conc') return conc;
+    if (k === 'atras') return !conc && String(pjEnd(j) || j.date || '') < todayStr();
+    if (k === 'cont') return !!j.contingencia || linhas.some(n => n && n.cont);
+    if (k === 'risco') return rr > 0 || linhas.some(n => n && n.cont && n.chance != null && n.chance !== '' && Number(n.chance) < 100);
+    if (k === 'fora') return rr >= 100;
+    if (k === 'hoS') return !!(j.handoverId || j.hoEmailEm);
+    if (k === 'hoN') return !(j.handoverId || j.hoEmailEm);
+    return true;
+  };
+  var engPilFiltra = (j, sel) => [['prev', 'conc', 'atras'], ['cont', 'risco', 'fora'], ['hoS', 'hoN']].every(g => {
+    var s = g.filter(k => sel.includes(k));
+    return !s.length || s.some(k => engPilOk(j, k));
+  });""")
+rep("""    if (planF.status) l = l.filter(j => (j.status || PJ_STATUS.PLAN) === planF.status);
+    return l;
+  }, [planJobs, planF]);""", """    if (planF.status) l = l.filter(j => (j.status || PJ_STATUS.PLAN) === planF.status);
+    if (engPil.length) l = l.filter(j => engPilFiltra(j, engPil)); // e17: pílulas
+    return l;
+  }, [planJobs, planF, engPil]);""")
+rep("planView === 'gantt' && renderPlanGantt(), planView === 'cal' && renderPlanCal(),", "engRenderPilulas(), planView === 'gantt' && renderPlanGantt(), planView === 'cal' && renderPlanCal(),")
+# janela da operação: receita e COGS ao vivo (com a contingência e o risco), entre o formulário e os botões
+rep(r"""    }, "\u25A4 Opera\xE7\xE3o completa"))), React.createElement("div", {
+      className: "eng-mf"
+    }""", r"""    }, "\u25A4 Opera\xE7\xE3o completa"))), !tplMode && engResumoOp(d), React.createElement("div", {
+      className: "eng-mf"
+    }""")
+# duplicar: só a operação ou o poço inteiro
+rep("""      onClick: () => {
+        duplicatePlanned(d);
+      }""", """      onClick: () => engDuplicar(d)""")
+rep("onClick: () => duplicatePlanned(j)", "onClick: () => engDuplicar(j)")
+rep("renderEngConc(), renderEngCorPop(),", "renderEngConc(), renderEngDup(), renderEngCorPop(),")
+# tipo de operação "Perfuração" (antes de "Outros")
+rep("""}, {
+  op: 'Outros',
+  casing: false,
+  vida: 'optional',
+  outros: true
+}];""", """}, {
+  op: 'Perfuração',
+  casing: false,
+  vida: 'optional'
+}, {
+  op: 'Outros',
+  casing: false,
+  vida: 'optional',
+  outros: true
+}];""")
+rep("""var DUR_BY_TIPO = {
+  'Cimentação primária': 3
+};""", """var DUR_BY_TIPO = {
+  'Cimentação primária': 3,
+  'Perfuração': 3
+};""")
+rep("""var HORIZON_DAYS = {
+  'Cimentação primária': 180
+};""", """var HORIZON_DAYS = {
+  'Cimentação primária': 180,
+  'Perfuração': 180
+};""")
+_i = s.find("  'Top-job': 'Top-job',\n")
+_j = s.find("  'Top-job': 'Top-job',\n", _i + 1)
+assert _i > 0 and _j > _i and s.find("  'Top-job': 'Top-job',\n", _j + 1) < 0, 'Top-job nas traduções'
+s = s[:_j] + "  'Perfuração': 'Perforación',\n" + s[_j:]
+s = s[:_i] + "  'Perfuração': 'Drilling',\n" + s[_i:]
+
 # e12: filtro e ordem em todas as tabelas (script avulso, fora do React), no fim do <body>
 tf = open(os.path.join(AQUI, 'eng_tabelas.js'), encoding='utf-8').read()
 assert '</script' not in tf.lower()

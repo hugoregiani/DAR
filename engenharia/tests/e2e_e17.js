@@ -173,6 +173,107 @@ const corBarra = (p, id) => p.evaluate(i => { const b = document.querySelector('
   const j5 = await job(p, semCont.id);
   conf(!j5.ppuCons && !j5.concluida, 'cancelar: a operação não fica concluída');
 
+  /* ---------------------------------------------------------------- 5. pílulas de filtro */
+  console.log('5. Pílulas de filtro (Visão geral)');
+  await p.click('.nav-back-btn').catch(() => {});
+  await p.click('.fr-tab-cts').catch(() => {});
+  await p.click('.eng2-card.eng2-hero');
+  await p.click('.db-tab:has-text("Lista")');
+  await p.click('.eng-lista-todas').catch(() => {});
+  await p.waitForSelector('.eng-pils');
+  const nomesPil = await p.$$eval('.eng-pil', l => l.map(b => b.textContent));
+  conf(['Previstas', 'Concluídas', 'Atrasadas', 'Contingência', 'Com risco', 'Risco 100%', 'Handover enviado', 'Sem handover'].every(n => nomesPil.some(t => t.indexOf(n) === 0)), 'pílulas: Previstas, Concluídas, Atrasadas, Contingência, Com risco, Risco 100%, Handover enviado, Sem handover', nomesPil);
+  const nLinhas = () => p.$$eval('table.db-table tbody tr', l => l.filter(tr => tr.querySelector('input[type=date]')).length);
+  const esp = await p.evaluate(() => { const d = loadDB(); const at = new Set(d.contratos.filter(c => !c.archived).map(c => c.id)); const ops = d.plannedJobs.filter(j => at.has(j.contratoId) && j.status !== 'CANCELADA'); const lin = j => ['ppuNeeds', 'chems', 'casingNeeds', 'peopleNeeds', 'equipNeeds'].reduce((a, k) => a.concat(j[k] || []), []); const cont = j => !!j.contingencia || lin(j).some(n => n && n.cont); const conc = j => !!(j.concluida || j.ppuCons); return {tot: ops.length, cont: ops.filter(cont).length, contPrev: ops.filter(j => cont(j) && !conc(j)).length, contOuConc: ops.filter(j => cont(j) || conc(j)).length}; });
+  const tot0 = await nLinhas();
+  await p.click('.eng-pil-cont');
+  const nCont = await nLinhas();
+  const bCont = await p.textContent('.eng-pil-cont b');
+  conf(nCont === esp.cont && Number(bCont) === esp.cont && tot0 === esp.tot, 'Contingência: só as ' + esp.cont + ' operações em contingência (o número da pílula confere)', {tot0, nCont, bCont, esp});
+  await p.click('.eng-pil-conc');
+  await p.click('.eng-pil-cont'); // tira contingência: fica só "Concluídas"
+  await p.click('.eng-pil-cont'); // contingência + concluídas (grupos diferentes: "e")
+  const nAnd = await nLinhas();
+  const espAnd = await p.evaluate(() => { const d = loadDB(); const at = new Set(d.contratos.filter(c => !c.archived).map(c => c.id)); return d.plannedJobs.filter(j => at.has(j.contratoId) && (j.concluida || j.ppuCons) && (j.contingencia || ['ppuNeeds', 'chems', 'casingNeeds', 'peopleNeeds', 'equipNeeds'].some(k => (j[k] || []).some(n => n && n.cont)))).length; });
+  conf(nAnd === espAnd, 'Concluídas + Contingência (grupos diferentes valem juntos): ' + espAnd, nAnd);
+  await p.click('.eng-pil-conc');
+  await p.click('.eng-pil-prev');
+  conf(await nLinhas() === esp.contPrev, 'Previstas + Contingência: ' + esp.contPrev, await nLinhas());
+  await p.reload(); await p.waitForSelector('.eng-tools', {timeout: 90000}); await p.waitForTimeout(800);
+  await p.click('.eng2-card.eng2-hero').catch(() => {});
+  await p.click('.db-tab:has-text("Lista")').catch(() => {});
+  await p.waitForSelector('.eng-pils');
+  conf(await p.locator('.eng-pil.on').count() === 2, 'as pílulas escolhidas continuam depois de reabrir');
+  await p.click('.eng-pil-limpar');
+  await p.click('.eng-lista-todas').catch(() => {});
+  conf(await nLinhas() === esp.tot && !(await p.locator('.eng-pil.on').count()), '“✕ Limpar” volta a mostrar todas');
+
+  /* ---------------------------------------------------------------- 6. receita e COGS na janela da operação */
+  console.log('6. Receita e COGS na janela da operação');
+  const o5 = await p.evaluate(() => { const j = loadDB().plannedJobs.find(x => x.id === 'dm05'); const o = window.engGerDados().pacote.operacoes.find(x => x.id === 'dm05'); return {well: j.well, rr: j.riscoRec, rec: o.previsto.receita.usd, cogs: o.previsto.cogs.usd}; });
+  await p.click('tr:has-text("' + o5.well + '") button:has-text("Editar")');
+  await p.waitForSelector('.eng-modal .eng-resumo-op');
+  const ro = async () => ({rec: valor(await p.textContent('.eng-ro-rec')), cogs: valor(await p.textContent('.eng-ro-cogs')), sub: await p.textContent('.eng-ro-sub')});
+  let r1 = await ro();
+  conf(perto(r1.rec, o5.rec * (1 - o5.rr / 100)) && perto(r1.cogs, o5.cogs * (1 - o5.rr / 100)) && /operação 30% \(contingência\)/.test(r1.sub), 'contingência com risco 30%: receita e COGS × 0,7 (' + r1.rec.toFixed(2) + ' e ' + r1.cogs.toFixed(2) + ')', {r1, o5});
+  await p.fill('.eng-modal .ec-cont-risco-in', '100');
+  r1 = await ro();
+  conf(r1.rec === 0 && r1.cogs === 0, 'risco 100% (não acontece): receita e COGS zero', r1);
+  await p.fill('.eng-modal .ec-cont-risco-in', '0');
+  r1 = await ro();
+  conf(perto(r1.rec, o5.rec) && perto(r1.cogs, o5.cogs), 'risco 0% (acontece): o valor inteiro', r1);
+  await p.click('.eng-modal button:has-text("Cancelar")');
+  const t22 = await p.evaluate(() => { const d = loadDB(); const at = new Set(d.contratos.filter(c => !c.archived).map(c => c.id)); const j = d.plannedJobs.find(x => at.has(x.contratoId) && x.well && !x.ppuCons && !x.contingencia && !(Number(x.riscoRec) > 0) && (x.ppuNeeds || []).length >= 2 && d.plannedJobs.filter(y => y.well === x.well).length === 1); return {id: j.id, well: j.well}; });
+  // uma linha PPU em contingência com risco 25%: entra × 0,75 (direto no banco, como se tivesse sido marcada na tela)
+  await p.evaluate(id => { const d = loadDB(); const j = d.plannedJobs.find(x => x.id === id); j.ppuNeeds[0] = {...j.ppuNeeds[0], cont: true, chance: 75}; saveDB(d); }, t22.id);
+  await p.reload(); await p.waitForSelector('.eng-tools', {timeout: 90000}); await p.waitForTimeout(600);
+  await p.click('.eng2-card.eng2-hero').catch(() => {});
+  await p.click('.db-tab:has-text("Lista")').catch(() => {});
+  await p.click('.eng-lista-todas').catch(() => {});
+  const l22 = await p.evaluate(id => { const o = window.engGerDados().pacote.operacoes.find(x => x.id === id); return o.previsto.ppu.map(x => ({v: x.valorUsd, r: x.risco || 0})); }, t22.id);
+  const esp22 = l22.reduce((a, x) => a + x.v * (1 - x.r / 100), 0);
+  await p.locator('table.db-table tbody tr', {hasText: t22.well}).first().locator('button', {hasText: 'Editar'}).click();
+  await p.waitForSelector('.eng-modal .eng-resumo-op');
+  r1 = await ro();
+  conf(perto(r1.rec, esp22) && l22[0].r === 25 && /1 linha\(s\) em contingência/.test(r1.sub), 'item PPU em contingência (risco 25%): entra × 0,75 na soma (' + r1.rec.toFixed(2) + ')', {r1, esp22, l22});
+  await p.click('.eng-modal button:has-text("Cancelar")');
+
+  /* ---------------------------------------------------------------- 7. duplicar */
+  console.log('7. Duplicar: só a operação ou o poço inteiro');
+  const poco = await p.evaluate(() => { const d = loadDB(); const c = {}; d.plannedJobs.forEach(j => { if (j.well) c[j.well] = (c[j.well] || []).concat(j.id); }); const w = Object.keys(c).find(k => c[k].length >= 2); return {well: w, ids: c[w], ops: c[w].map(id => { const j = d.plannedJobs.find(x => x.id === id); return {id, date: j.date, tipo: j.tipoOp, n: (j.ppuNeeds || []).length}; })}; });
+  await p.locator('table.db-table tbody tr', {hasText: poco.well}).first().locator('button', {hasText: 'Editar'}).click();
+  await p.waitForSelector('.eng-modal .eng-mf');
+  await p.click('.eng-modal .eng-mf button:text-is("Duplicar")');
+  await p.waitForSelector('.eng-dup-modal');
+  conf(new RegExp('uma das ' + poco.ids.length + ' operações do poço').test(await p.innerText('.eng-dup-modal')), 'pergunta: só esta operação ou o poço inteiro (' + poco.ids.length + ' operações de ' + poco.well + ')');
+  await p.click('.eng-dup-ok');
+  await p.waitForTimeout(400);
+  const copia = await p.evaluate(() => { const i = document.querySelector('.eng-modal .fld input[placeholder], .eng-modal input'); return document.querySelector('.eng-modal') ? document.querySelector('.eng-modal').innerText.slice(0, 120) : ''; });
+  conf(/NOVA OPERA|Nova opera/i.test(copia) && !(await p.locator('.eng-dup-modal').count()), '“Só esta operação”: abre a cópia para ajustar e salvar (como antes)', copia);
+  await p.click('.eng-modal button:has-text("Cancelar")');
+  const antesN = await p.evaluate(() => loadDB().plannedJobs.length);
+  await p.locator('table.db-table tbody tr', {hasText: poco.well}).first().locator('button', {hasText: 'Duplicar'}).click();
+  await p.waitForSelector('.eng-dup-modal');
+  await p.check('.eng-dup-poco');
+  conf(await p.isDisabled('.eng-dup-ok'), 'poço inteiro: pede o nome do novo poço');
+  await p.fill('.eng-dup-nome', 'NOVO-POCO-E17');
+  await p.fill('.eng-dup-data', '2027-03-01');
+  await p.click('.eng-dup-ok');
+  await p.waitForTimeout(500);
+  const dup = await p.evaluate(w => { const d = loadDB(); return d.plannedJobs.filter(j => j.well === 'NOVO-POCO-E17').sort((a, b) => a.date.localeCompare(b.date)).map(j => ({id: j.id, date: j.date, tipo: j.tipoOp, n: (j.ppuNeeds || []).length, cons: !!j.ppuCons, ho: !!(j.handoverId || j.hoEmailEm), log: (j.log || []).map(l => l.acao).join('|')})); }, poco.well);
+  const orig = poco.ops.slice().sort((a, b) => a.date.localeCompare(b.date));
+  const dias = (a, b) => Math.round((new Date(b) - new Date(a)) / 864e5);
+  conf(dup.length === orig.length && (await p.evaluate(() => loadDB().plannedJobs.length)) === antesN + orig.length && dup[0].date === '2027-03-01' && dup.every((x, i) => x.tipo === orig[i].tipo && x.n === orig[i].n && !x.cons && !x.ho && dias(dup[0].date, x.date) === dias(orig[0].date, orig[i].date)), 'poço inteiro: ' + orig.length + ' operações novas em NOVO-POCO-E17, desde 01/03/2027, mesma sequência e recursos, sem consumo nem handover', {dup, orig});
+  conf(dup.every(x => /cópia do poço/.test(x.log)), 'o Log das cópias diz de qual poço vieram');
+
+  /* ---------------------------------------------------------------- 8. Perfuração */
+  console.log('8. Tipo de operação "Perfuração"');
+  await p.click('button:has-text("+ Nova operação")');
+  await p.waitForSelector('.eng-modal');
+  const tipos = await p.locator('.eng-modal .fld', {has: p.locator('label', {hasText: 'Tipo de operação'})}).first().locator('select option').allTextContents();
+  conf(tipos.includes('Perfuração'), 'a lista de tipos de operação tem "Perfuração"', tipos);
+  await p.click('.eng-modal button:has-text("Cancelar")');
+
   conf(!E.errs.length, 'nenhum erro de JavaScript', E.errs.slice(0, 3));
   await E.browser.close();
   console.log('\n%d ok, %d falha(s)', ok, falhas);
