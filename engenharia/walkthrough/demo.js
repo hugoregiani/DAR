@@ -27,7 +27,7 @@ const montar = async page => {
     const TK = copia('ct_takatsugu_j', 'ct_demo_tk', 'Takatsugu J', 'TKJ-0000-DEMO', 8, 'usd', [900, 14000]);
     d.contratos.push(PA, BP, TK);
     const QS = d.quimicos;
-    QS.forEach(q => { if (typeof q.usd === 'number') q.usd = Math.round(q.usd * (0.8 + rnd() * 0.4) * 100) / 100; q.atualizadoEm = '2026-11-03T12:00:00.000Z'; });
+    QS.forEach(q => { if (typeof q.usd === 'number' && String(q.sap) !== '100003685') q.usd = Math.round(q.usd * (0.8 + rnd() * 0.4) * 100) / 100; q.atualizadoEm = '2026-11-03T12:00:00.000Z'; });
     d.casingEquip.forEach(c => { c.usd = preco(120, 4800); c.atualizadoEm = '2026-11-03T12:00:00.000Z'; c.id = c.id || 'ce_' + c.sap; });
     d.casDbV1 = ag; d.cogsItens = [];
     d.quimHist = [...(d.quimHist || []), {id: 'qh_dm', em: '2026-11-03T12:00:00.000Z', por: 'Ana Ribeiro', origem: 'planilha', arquivo: 'Banco_Quimicos_Nov2026.xlsx', novos: 0, alterados: 52, removidos: 0, total: QS.length}];

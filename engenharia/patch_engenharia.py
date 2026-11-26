@@ -105,7 +105,7 @@ assert i > 0
 s = s[:i] + css + s[i:]
 
 # ---------------------------------------------------------------- app (código compilado)
-rep("var EARL_VERSION = 'EARL v115';", "var EARL_VERSION = 'EARL Forecast e17 (base v115)';")
+rep("var EARL_VERSION = 'EARL v115';", "var EARL_VERSION = 'EARL Forecast e18 (base v115)';")
 rep("var HO_ST = {\n  pendente: {", "var HO_ST = {\n  email: {\n    label: 'Enviado por e-mail',\n    c: '#304220',\n    bg: '#F1F5EC',\n    brd: '#D9E4CC'\n  },\n  pendente: {")
 # quem gera o e-mail assina os registros (sem login)
 rep("  var currentUser = () => authUser && authUser.email || sbUser || '';",
@@ -275,7 +275,7 @@ rep(r'Toda sonda ganha a sua p\xE1gina no app Sondas, com o invent\xE1rio a bord
 
 # Contratos: aba "Consumo e receita", consumo de PPU na operação e na Lista
 rep("[['gantt', 'Gantt'], ['cal', 'Calendário'], ['list', 'Lista'], ['ho', 'Handovers']]",
-    "[['gantt', 'Gantt'], ['cal', 'Calendário'], ['list', 'Lista'], ['ho', 'Handovers'], ['rec', 'Consumo e receita'], ['inv', 'Inventário das sondas']]")
+    "[['gantt', 'Gantt'], ['cal', 'Calendário'], ['list', 'Lista'], ['ho', 'Handovers'], ['inv', 'Inventário das sondas']]") # e18: sem a pílula "Consumo e receita" (a receita está nos Indicadores)
 rep("planView === 'ho' && renderPlanHandovers()));", "planView === 'ho' && renderPlanHandovers(), planView === 'rec' && renderEngReceita(), planView === 'inv' && renderEngInventario()));")
 rep('''      onClick: () => setLogView(d.id)
     }, "\\u2630 Log"),''', '''      onClick: () => setLogView(d.id)
@@ -517,6 +517,44 @@ var engQuimMig = d => {
         }];
       }
       d.quimBaseV1 = new Date().toISOString();
+    }
+  } catch (e) {}
+  /* e18 (pedido do Hugo, 26/11/2026): COGS do Cimento Classe G (SAP 100003685) = US$ 7,77/sk em todos os arquivos.
+     Corrige uma vez em cada arquivo (flag cogsCimentoGV1 {em, de, para}); depois, quem mudar o valor no banco de
+     químicos fica com o seu. Entra no histórico do banco de químicos. */
+  try {
+    if (d && !d.cogsCimentoGV1) {
+      var agoraCg = new Date().toISOString();
+      d.quimicos = Array.isArray(d.quimicos) ? d.quimicos : [];
+      var cg = d.quimicos.find(q => q && String(q.sap).trim() === '100003685');
+      var deCg = cg ? cg.usd : null;
+      if (!cg) d.quimicos.push({
+        id: 'q_100003685',
+        sap: '100003685',
+        nome: 'CIMENTO CLASS G',
+        unid: 'SK',
+        usd: 7.77,
+        atualizadoEm: agoraCg
+      });else if (Number(cg.usd) !== 7.77) {
+        cg.usd = 7.77;
+        cg.atualizadoEm = agoraCg;
+      }
+      if (Number(deCg) !== 7.77) d.quimHist = [...(Array.isArray(d.quimHist) ? d.quimHist : []), {
+        id: 'qh_e18_cimento_g',
+        em: agoraCg,
+        por: '',
+        origem: 'correção',
+        arquivo: 'Correção do COGS do Cimento Classe G (SAP 100003685): ' + (deCg == null ? '' : 'US$ ' + deCg + ' → ') + 'US$ 7,77/sk',
+        novos: deCg == null ? 1 : 0,
+        alterados: deCg == null ? 0 : 1,
+        removidos: 0,
+        total: d.quimicos.length
+      }];
+      d.cogsCimentoGV1 = {
+        em: agoraCg,
+        de: deCg,
+        para: 7.77
+      };
     }
   } catch (e) {}
   /* e10: operação em contingência: o risco de não acontecer é o riscoRec; a chance de acontecer (campo risco, usado no
@@ -841,6 +879,22 @@ _j = s.find("  'Top-job': 'Top-job',\n", _i + 1)
 assert _i > 0 and _j > _i and s.find("  'Top-job': 'Top-job',\n", _j + 1) < 0, 'Top-job nas traduções'
 s = s[:_j] + "  'Perfuração': 'Perforación',\n" + s[_j:]
 s = s[:_i] + "  'Perfuração': 'Drilling',\n" + s[_i:]
+
+# e18 (pedido do Hugo, 26/11/2026): operação nova com data passada; a janela da operação só fecha pelos botões
+rep("""    var ok = tplMode ? !!d.tipoOp : !!((d.rigId || ehDisp) && d.tipoOp && d.date && (!d.salesOrder || soValida(d.salesOrder)) && !(!d.id && d.date < todayStr()) && """,
+    """    var ok = tplMode ? !!d.tipoOp : !!((d.rigId || ehDisp) && d.tipoOp && d.date && (!d.salesOrder || soValida(d.salesOrder)) && """)
+rep("""      className: 'ipt' + (dataRetro ? ' ipt-err-hal' : ''),
+      type: "date",
+      min: !d.id ? todayStr() : undefined,""", """      className: 'ipt',
+      type: "date",""")
+rep(r"""    }), dataRetro && React.createElement("div", {
+      className: "fld-err"
+    }, "Data retroativa: a opera\xE7\xE3o nova come\xE7a hoje ou depois."))), React.createElement("div", {""", r"""    }), dataRetro && React.createElement("div", {
+      className: "fld-hint eng-retro"
+    }, "Data no passado: se a opera\xE7\xE3o j\xE1 aconteceu, depois de salvar use “✓ Concluir opera\xE7\xE3o”."))), React.createElement("div", {""")
+rep("""      onClick: e => {
+        if (e.target.className === 'overlay') setPlanDraft(null);
+      }""", """      onClick: e => {} // e18: a janela da operação só fecha pelos botões""")
 
 # e12: filtro e ordem em todas as tabelas (script avulso, fora do React), no fim do <body>
 tf = open(os.path.join(AQUI, 'eng_tabelas.js'), encoding='utf-8').read()

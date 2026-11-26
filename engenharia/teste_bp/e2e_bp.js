@@ -37,16 +37,21 @@ const usd = v => 'US$ ' + v.toLocaleString('pt-BR', {minimumFractionDigits: 2, m
     const lin = r => F.find(x => String(x[5] || '').trim().toLowerCase() === r.toLowerCase());
     const st = lin('Status'), dt = lin('Data da Operação');
     const n = v => typeof v === 'number' ? v : 0;
+    // e18: o COGS do Cimento Classe G (SAP 100003685) passou a US$ 7,77/sk em todos os arquivos (pedido do Hugo):
+    // o esperado é o da planilha com o cimento a US$ 7,77
+    const cim = F.find(x => x && String(x[0] == null ? '' : x[0]).trim() === '100003685');
+    const custoCim = cim ? n(cim[5]) : 0;
     const ops = [];
     for (let c = 6; c < st.length; c++) {
       if (!st[c]) continue;
       const d = XLSX.SSF.parse_date_code(dt[c]);
+      const dC = cim && custoCim ? n(cim[c]) * (custoCim - 7.77) : 0, rk = Math.min(1, n(lin('Risco')[c]));
       ops.push({
         status: String(st[c]).trim(), desc: String(lin('Operação/Descrição')[c] || '').trim(),
         data: d.y + '-' + String(d.m).padStart(2, '0') + '-' + String(d.d).padStart(2, '0'),
         risco: n(lin('Risco')[c]), hc: n(lin('HC')[c]),
         receita: n(lin('Total receita')[c]), receitaFinal: n(lin('RECEITA FINAL')[c]),
-        cogs: n(lin('Total Cogs Químicos')[c]), cogsFinal: n(lin('COGS FINAL')[c])
+        cogs: n(lin('Total Cogs Químicos')[c]) - dC, cogsFinal: n(lin('COGS FINAL')[c]) - dC * (1 - rk), cimento: custoCim
       });
     }
     return ops;
@@ -147,7 +152,7 @@ const usd = v => 'US$ ' + v.toLocaleString('pt-BR', {minimumFractionDigits: 2, m
   console.log('Contrato BP: lista, consumo e receita');
   await p.click('.fr-tab-cts');
   await p.click('.eng2-card:has-text("BP — Macaé")');
-  await p.click('.db-tab:has-text("Consumo e receita")');
+  await p.evaluate(() => window.engPlanView('rec'));
   await p.waitForSelector('.ec-kpi-usd');
   await foto(p, 'bp3_receita_contrato');
   conf(perto(valor(await txt(p, '.ec-kpi-usd b')), T.recR), 'aba Consumo e receita do BP: ' + usd(T.recR) + ' realizados', await txt(p, '.ec-kpi-usd b'));

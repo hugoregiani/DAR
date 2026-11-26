@@ -42,8 +42,12 @@ function totaisPlanilha(b64) {
   const add = (a, r, c) => { const x = o.anos[a] = o.anos[a] || {rec: 0, cogs: 0}; x.rec += r; x.cogs += c; o.rec += r; o.cogs += c; };
   const lin = rot => F.find(r => r && t(r[5]).toLowerCase() === rot.toLowerCase());
   if (lin('Status')) {
-    const st = lin('Status'), dt = lin('Data da Operação'), rf = lin('RECEITA FINAL'), cf = lin('COGS FINAL');
-    for (let c = 6; c < st.length; c++) if (t(st[c])) { o.ops++; if (/^conclu/i.test(t(st[c]))) o.concl++; add(ano(dt[c]), n(rf[c]), n(cf[c])); }
+    const st = lin('Status'), dt = lin('Data da Operação'), rf = lin('RECEITA FINAL'), cf = lin('COGS FINAL'), rk = lin('Risco') || [];
+    // e18: o COGS do Cimento Classe G (SAP 100003685) passou a US$ 7,77/sk em todos os arquivos (pedido do Hugo): o
+    // esperado é o da planilha com o cimento a US$ 7,77 (diferença × (1 − risco) no COGS FINAL)
+    const cim = F.find(r => r && t(r[0]) === '100003685'), custoCim = cim ? n(cim[5]) : 0;
+    o.cimento = custoCim;
+    for (let c = 6; c < st.length; c++) if (t(st[c])) { o.ops++; if (/^conclu/i.test(t(st[c]))) o.concl++; const dC = cim && custoCim ? n(cim[c]) * (custoCim - 7.77) * (1 - Math.min(1, n(rk[c]))) : 0; add(ano(dt[c]), n(rf[c]), n(cf[c]) - dC); }
     const iP = F.findIndex(r => r && /^nome do contrato/i.test(t(r[0])));
     o.contratos = [t(F[iP + 1][0])];
   } else {
@@ -130,7 +134,7 @@ function totaisPlanilha(b64) {
       await p.waitForSelector('.eng2-ctbar');
       const n = await p.locator('.db-tab').count();
       for (let i = 0; i < n; i++) { await p.locator('.db-tab').nth(i).click(); await p.waitForTimeout(120); abas++; }
-      await p.click('.db-tab:has-text("Consumo e receita")');
+      await p.evaluate(() => window.engPlanView('rec'));
       const b = p.locator('.ec-ops button:has-text("Σ Consumo")').first();
       if (await b.count()) { await b.click(); await p.waitForSelector('.ec-cons-modal'); consumos++; await p.click('.ec-cons-modal .modal-close'); }
       await p.click('.db-tab:has-text("Lista")');

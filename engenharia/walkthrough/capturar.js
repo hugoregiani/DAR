@@ -178,21 +178,27 @@ const SO = (process.argv[2] || '').split(',').filter(Boolean);
     await aba('cts');
     await page.click('.eng2-card:has-text("P&A")');
     await page.waitForTimeout(800);
-    await page.click('.db-tab:has-text("Consumo e receita")');
-    await page.waitForTimeout(1200);
-    await shot('12_consumo_receita');
-    await page.evaluate(() => { const t = document.querySelector('.ec-ops'); t.scrollIntoView({block: 'start'}); window.scrollBy(0, -140); });
-    await page.click('.ec-ops thead th:nth-child(2) .etf-b');
+    await page.click('.db-tab:has-text("Lista")');
+    await page.click('.eng-lista-todas').catch(() => {});
+    await page.waitForTimeout(600);
+    // e18: sem a pílula "Consumo e receita": a receita e o COGS ficam na janela da operação, na Lista e nos Indicadores
+    await page.locator('table.db-table tbody tr', {hasText: '7-MRL-12-RJS'}).locator('button', {hasText: 'Editar'}).click();
+    await page.waitForSelector('.eng-modal .eng-resumo-op');
+    await page.waitForTimeout(500);
+    await shot('12_resumo_op');
+    await page.click('.eng-modal button:has-text("Cancelar")');
+    await page.waitForTimeout(300);
+    await page.click('table.db-table thead th:nth-child(2) .etf-b');
     await page.waitForSelector('#etfPop');
     await shot('19_filtro');
     await page.keyboard.press('Escape');
-    await page.locator('.ec-ops tbody tr', {hasText: '7-MRL-12-RJS'}).locator('button', {hasText: 'Consumo'}).click();
+    await page.locator('table.db-table tbody tr', {hasText: '7-MRL-12-RJS'}).locator('button', {hasText: 'Consumo'}).click();
     await page.waitForSelector('.ec-cons');
     await page.waitForTimeout(600);
     await shot('13_lancar_consumo');
+    await page.click('.ec-cons-modal button:has-text("Cancelar")');
     await inicio();
   });
-  // e17: concluir a operação (as contingências são respondidas antes)
   await passo('concluir', async () => {
     await page.evaluate(() => { const d = loadDB(); const j = d.plannedJobs.find(x => x.id === 'dm14'); j.ppuNeeds = (j.ppuNeeds || []).map((n, i) => i === 0 ? {...n, cont: true, chance: 40} : n); j.chems = (j.chems || []).map((n, i) => i === 0 ? {...n, cont: true, chance: 50} : n); saveDB(d); });
     await page.reload(); await page.waitForSelector('.eng-tools', {timeout: 60000}); await page.waitForTimeout(800);

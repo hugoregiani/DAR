@@ -216,9 +216,7 @@
       style: {
         zIndex: 274
       },
-      onClick: e => {
-        if (e.target === e.currentTarget) fechar();
-      }
+      onClick: e => {} // e18: só fecha pelos botões
     }, engH("div", {
       className: "modal ec-modal ec-conc-modal",
       onClick: e => e.stopPropagation()
@@ -662,9 +660,7 @@
       style: {
         zIndex: 276
       },
-      onClick: e => {
-        if (e.target === e.currentTarget) fechar();
-      }
+      onClick: e => {} // e18: só fecha pelos botões
     }, engH("div", {
       className: "modal ec-modal eng-dup-modal",
       onClick: e => e.stopPropagation()
@@ -738,3 +734,6 @@
       }
     }, engDup.modo === 'poco' ? 'Duplicar o poço (' + l.length + ' operações)' : 'Duplicar a operação'))));
   };
+
+  /* e18: a pílula "Consumo e receita" saiu das abas do plano; a tela continua para os testes e para quem precisar */
+  window.engPlanView = v => setPlanView(v);

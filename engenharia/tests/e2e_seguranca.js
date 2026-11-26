@@ -67,7 +67,7 @@ function estatico(arq, completo) {
   const baixar = async (acao) => { const d = p.waitForEvent('download', {timeout: 20000}); await acao(); const x = await d; const f = path.join(TMP, x.suggestedFilename()); await x.saveAs(f); return f; };
   await p.locator('.eng2-card', {hasText: 'P&A'}).first().click();
   await p.waitForSelector('.eng2-ctbar');
-  for (const aba of ['Calendário', 'Lista', 'Consumo e receita', 'Inventário das sondas', 'Lista']) { await p.locator('.db-tab', {hasText: aba}).first().click(); await p.waitForTimeout(400); }
+  for (const aba of ['Calendário', 'Lista', 'Consumo e receita', 'Inventário das sondas', 'Lista']) { if (aba === 'Consumo e receita') await p.evaluate(() => window.engPlanView('rec')); else await p.locator('.db-tab', {hasText: aba}).first().click(); // e18: a tela não tem mais a pílula await p.waitForTimeout(400); }
   const t = p.locator('.eng-lista-todas'); if (await t.count()) await t.click();
   await p.locator('table.db-table tbody tr', {hasText: '7-ABL-40-RJS'}).first().locator('button', {hasText: 'Handover'}).click();
   const cont = p.locator('button:has-text("Continuar →")'); await p.waitForTimeout(400); if (await cont.count()) await cont.first().click();
@@ -139,7 +139,7 @@ function estatico(arq, completo) {
   const xss = async pg => pg.evaluate(() => [window].concat(Array.from(window.frames)).reduce((a, w) => { try { return a + (w.__xss || 0); } catch (e) { return a; } }, 0));
   await p.locator('.eng2-card', {hasText: 'P&A'}).first().click();
   await p.waitForSelector('.eng2-ctbar');
-  for (const aba of ['Gantt', 'Calendário', 'Lista', 'Handovers', 'Consumo e receita', 'Inventário das sondas', 'Lista']) { await p.locator('.db-tab', {hasText: aba}).first().click(); await p.waitForTimeout(500); }
+  for (const aba of ['Gantt', 'Calendário', 'Lista', 'Handovers', 'Consumo e receita', 'Inventário das sondas', 'Lista']) { if (aba === 'Consumo e receita') await p.evaluate(() => window.engPlanView('rec')); else await p.locator('.db-tab', {hasText: aba}).first().click(); // e18: a tela não tem mais a pílula await p.waitForTimeout(500); }
   const t2 = p.locator('.eng-lista-todas'); if (await t2.count()) await t2.click();
   const corpo = await p.textContent('body');
   conf(corpo.includes('onerror="window.__xss'), 'o texto malicioso aparece como texto na tela (não vira código)');

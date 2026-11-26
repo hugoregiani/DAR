@@ -147,6 +147,7 @@ function montarBanco({b64, arquivo, nome}) {
     }
   }
   d.quimBaseV1 = d.quimBaseV1 || agora;
+  delete d.cogsCimentoGV1; // e18: o app corrige o COGS do Cimento Classe G (US$ 7,77/sk) ao abrir, depois dos químicos da planilha
   // e12: casing no banco de casing equipment; em Custos (COGS) só o casing sem SAP e os ajustes
   d.cogsItens = casingParaBanco(d, M.casing, arquivo, agora).map((m, i) => ({id: 'cg_' + slugArq + '_' + (i + 1), sap: m.sap, nome: m.nome, unid: m.unid, usd: m.usd, brl: null, atualizadoEm: agora}));
   const ajUsados = new Set();
@@ -233,6 +234,10 @@ function conferir(alvo) {
   const r4 = v => Math.round(v * 10000) / 10000;
   const dif = [];
   let tRec = 0, tCogs = 0, tRecPl = 0, tCogsPl = 0, n = 0;
+  // e18: o app corrige o COGS do Cimento Classe G (SAP 100003685) para US$ 7,77/sk ao abrir; o esperado é o da planilha
+  // com o cimento a US$ 7,77 (de = o valor que estava no banco de químicos, vindo da planilha)
+  const cim = (loadDB() || {}).cogsCimentoGV1 || {};
+  const deCim = Number(cim.de);
   pac.operacoes.forEach(o => {
     const a = alvo[o.id];
     if (!a) return;
@@ -240,12 +245,15 @@ function conferir(alvo) {
     const f = o.risco >= 100 ? 0 : 1 - o.risco / 100;
     const rec = (o.realizado ? o.receita.usd : o.previsto.receita.usd) * f;
     const cogs = (o.realizado ? o.realizado.cogs.usd : o.previsto.cogs.usd) * f;
-    tRec += rec; tCogs += cogs; tRecPl += a.rf; tCogsPl += a.cf;
-    if (Math.abs(rec - a.rf) > 0.05 || Math.abs(cogs - a.cf) > 0.05) dif.push({id: o.id, data: o.data, desc: a.desc, rec: r4(rec), rf: r4(a.rf), cogs: r4(cogs), cf: r4(a.cf)});
+    const lq = (o.realizado ? o.realizado.quimicas : o.previsto.quimicas) || [];
+    const dC = isFinite(deCim) && cim.de != null && deCim !== 7.77 ? lq.filter(m => String(m.sap) === '100003685').reduce((s2, m) => s2 + m.qtd * (deCim - 7.77) * (m.risco > 0 ? 1 - Math.min(100, m.risco) / 100 : 1), 0) * f : 0;
+    const cf = a.cf - dC;
+    tRec += rec; tCogs += cogs; tRecPl += a.rf; tCogsPl += cf;
+    if (Math.abs(rec - a.rf) > 0.05 || Math.abs(cogs - cf) > 0.05) dif.push({id: o.id, data: o.data, desc: a.desc, rec: r4(rec), rf: r4(a.rf), cogs: r4(cogs), cf: r4(cf)});
   });
   const porCt = {};
   pac.operacoes.forEach(o => { const a = alvo[o.id]; if (a) porCt[a.contrato] = (porCt[a.contrato] || 0) + 1; });
-  return {conferidas: n, noPacote: pac.operacoes.length, contratosNoPacote: pac.contratos.length, receitaApp: r4(tRec), receitaPlanilha: r4(tRecPl), cogsApp: r4(tCogs), cogsPlanilha: r4(tCogsPl), diferencas: dif.slice(0, 20), nDiferencas: dif.length, porCt};
+  return {conferidas: n, noPacote: pac.operacoes.length, contratosNoPacote: pac.contratos.length, receitaApp: r4(tRec), receitaPlanilha: r4(tRecPl), cogsApp: r4(tCogs), cogsPlanilha: r4(tCogsPl), diferencas: dif.slice(0, 20), nDiferencas: dif.length, porCt, cimentoG: cim.de != null ? {planilha: cim.de, app: 7.77} : null};
 }
 
 /* --------- embute o banco no HTML (mesma ideia do teste BP: armazenamento e etiqueta próprios) --------- */

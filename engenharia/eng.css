@@ -398,3 +398,5 @@ tr.ec-conc-falta td{background:#FFF8E6}
 .eng-dup-tab{margin-bottom:10px}
 .eng-dup-flds{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px}
 @media(max-width:700px){.eng-dup-flds{grid-template-columns:1fr}}
+/* e18: data no passado (só um aviso) */
+.fld-hint.eng-retro{font-size:11.5px;color:#6B4E0E;background:#FBF4E4;border:1px solid #EEDDB4;border-radius:8px;padding:5px 9px;margin-top:5px}

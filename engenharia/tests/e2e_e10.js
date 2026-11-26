@@ -159,7 +159,7 @@ const RIG = 'hg_rig_11_norbeviii';
   conf(perto(valor(await fg.textContent('.k-rec-usd b')), 0 + 800 + 212 + 106), 'Receita e margem 2026: A fora (risco 100%) + 1.012 + 106 = US$ 1.118', await fg.textContent('.k-rec-usd b'));
   await page.click('.fr-tab-cts');
   await page.click('.eng2-card:has-text("P&A — Macaé")');
-  await page.click('.db-tab:has-text("Consumo e receita")');
+  await page.evaluate(() => window.engPlanView('rec'));
   await page.waitForSelector('.ec-kpi-usd');
   conf(perto(valor(await page.innerText('.ec-kpi-usd b')), 106) && /câmbio do mês/.test(await page.innerText('.ec-kpi-usd em')) && await page.innerText('.ec-kpi-brl b') === 'R$ 530,00', 'Consumo e receita: R$ 530,00 e US$ 106,00 (R$ pelo câmbio do mês)', [await page.innerText('.ec-kpi-usd'), await page.innerText('.ec-kpi-brl b')]);
   { const bk = await page.evaluate(() => { const c = getComputedStyle(document.querySelector('.ec-kpi-brl')); return {bt: c.borderTopColor, btw: c.borderTopWidth, sh: c.boxShadow}; });

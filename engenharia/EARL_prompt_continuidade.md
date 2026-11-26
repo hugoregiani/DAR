@@ -4,7 +4,15 @@
 
 > **Regra de entrega (pedido do usuário, 05/11/2026):** sempre que houver alteração em qualquer arquivo (EARL, EARL Engenharia, EARL Gerencial, testes), **enviar junto este prompt de continuidade atualizado** — com o que foi feito, o que está pendente e como continuar — e commitá-lo junto com a alteração. Antes de entregar, rodar os testes (os novos e todos os anteriores) e dizer o resultado.
 >
-> **Última atualização:** 26/11/2026 — **entrega _V05: EARL Forecast e17**:
+> **Última atualização:** 26/11/2026 — **entrega _V06: EARL Forecast e18**:
+> - Operação nova com data anterior a hoje (só um aviso).
+> - A janela da operação, e as que abrem a partir dela, só fecham pelos botões.
+> - **COGS do Cimento Classe G (SAP 100003685) = US$ 7,77/sk em todos os arquivos** (correção única ao abrir, no histórico do banco de químicos).
+> - Saiu a pílula "Consumo e receita".
+> - Arquivos `EARL_Forecast_…_V06`. Teste novo: `tests/e2e_e18.js`. Ver "e18" em 4-E.
+> - **Em andamento (parado):** narração do vídeo tutorial. O `walkthrough/tutorial/gravar_tutorial.js` ainda usa a pílula "Consumo e receita" e precisa ser ajustado ao regravar.
+>
+> Antes, em 26/11/2026 — **entrega _V05: EARL Forecast e17**:
 > - **✓ Concluir operação:** pergunta se cada contingência foi usada; não fecha com item ainda em contingência. Depois confirma o consumo, já preenchido com o previsto. A operação fica preta no Gantt, e "↺ Reabrir" desfaz.
 > - **Pílulas de filtro:** Previstas/Concluídas/Atrasadas · Contingência/Com risco/Risco 100% · Handover enviado/Sem handover.
 > - **Receita e COGS (US$) de cada operação** no Gantt, no Calendário e na Lista.
@@ -606,6 +614,26 @@ Pedidos do Hugo (12/11/2026): "No envio do email do Handover preciso que inclua 
   - Painel de Compras: `engenharia` 37, `invariantes` 64, `pedidos_enviados` 15, `regressao` 6, `reproduzir` ok.
   - Ajustes de expectativa nos testes antigos (mudanças pedidas): sonda "NS-32 - Norbe VIII" nos seletores, no assunto do e-mail e na matriz do Gerencial; coluna "Saldo na sonda" no e-mail; colunas novas nas exportações; versão g16.
 - **Pendências:** os textos novos ainda sem EN/ES; a tabela de câmbio não tem importação por planilha (é digitada); a "Frente" do PA ainda precisa de ajuste (a planilha fatura com outra regra).
+
+### e18 — data passada, janela só fecha pelos botões, Cimento G a US$ 7,77/sk, sem "Consumo e receita" — entrega _V06 (26/11/2026)
+
+- **Pedidos:**
+  - permitir criar a operação com data anterior à atual;
+  - a janela da operação não fecha ao clicar fora, só pelos botões;
+  - corrigir o COGS do Cimento G (100003685) para US$ 7,77/sk em todos os arquivos;
+  - remover a pílula "Consumo e receita" de dentro dos contratos.
+- **Data passada** (patch, bloco e18): saíram o `min` do campo e a condição `!(!d.id && d.date < todayStr())` do botão Salvar. O aviso `.eng-retro` sugere concluir depois.
+- **Janela:** o `onClick` do fundo da janela da operação não fecha mais. As janelas de consumo (`eng_contratos.js`), concluir e duplicar (`eng_e17.js`) também não.
+- **Cimento G:**
+  - `quimicos_base.json` passou a 7,77;
+  - em `engQuimMig`, uma correção única com a flag `cogsCimentoGV1 {em, de, para}`: põe 7,77, ou inclui o cimento se ele faltar, e grava `quimHist` "qh_e18_cimento_g";
+  - no `gerar_html.js`, `delete d.cogsCimentoGV1` depois de pôr os químicos da planilha (a correção acontece ao abrir), e a conferência espera a planilha com o cimento a 7,77 (campo `cimentoG` no relatório);
+  - `demo.js` não sorteia o cimento;
+  - testes `e2e_bp`/`e2e_contratos_reais`: o esperado é COGS planilha − qtd × (custo da planilha − 7,77) × (1 − risco).
+- **"Consumo e receita":** saiu de `[['gantt'…]]` (abas do plano); a tela fica para os testes (`window.engPlanView('rec')`). Os testes que clicavam na pílula usam essa função.
+- **PDF V06:** passo 13 "Receita e COGS da operação" (tela `12_resumo_op.jpg`). O filtro e o consumo são capturados a partir da Lista.
+- **Contratos reais V06:** `$S/ctr/gerar_todos11.sh` → `$S/ctr/out11`, `--compat` dos V05. Cimento no banco de químicos de cada arquivo antes da correção: PA, BW, BD II, Shell e BP a 13,15 (das planilhas); CE com a base (já 7,77); DC sem o cimento (entra a 7,77).
+- **Testes (26/11/2026):** em andamento (os resultados entram no próximo commit).
 
 ### e17 — concluir a operação, pílulas, receita/COGS nas telas, duplicar o poço, cor das sondas, Perfuração — entrega _V05 (26/11/2026)
 

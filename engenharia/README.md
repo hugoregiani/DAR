@@ -98,6 +98,27 @@ A Engenharia do EARL separada do resto do sistema, agora chamada **EARL Forecast
 - **Exportações:** "Consumo de produtos químicos", "Casing equipment" e "Pessoal" ganharam **Contingência (linha)** e **Risco da linha (%)**; a operação já tinha Contingência e Risco (%). O Painel de Compras aplica o risco da linha.
 - **Cards** da aba "Consumo e receita" com profundidade, como os do Gerencial g16.
 
+### e18 (26/11/2026) — data passada, janela que só fecha pelos botões, Cimento G a US$ 7,77/sk, sem "Consumo e receita"
+
+Pedidos do Hugo:
+- **Operação nova com data anterior a hoje:** saiu o bloqueio (`min` do campo e a condição do botão Salvar). Aparece
+  só um aviso: "Data no passado: se a operação já aconteceu, depois de salvar use “✓ Concluir operação”".
+- **A janela da operação só fecha pelos botões** (Cancelar/Fechar/×), não ao clicar fora. As janelas que abrem a
+  partir dela (consumo, concluir, duplicar) também.
+- **COGS do Cimento Classe G (SAP 100003685) = US$ 7,77/sk em todos os arquivos:**
+  - a base (`quimicos_base.json`) passou de 13,15 para 7,77;
+  - ao abrir, o `engQuimMig` corrige uma vez o banco de químicos do arquivo (flag `cogsCimentoGV1 {em, de, para}`;
+    sem o cimento no banco, ele entra) e registra no histórico ("Correção do COGS do Cimento Classe G");
+  - um valor mudado depois pela pessoa fica como ela deixou;
+  - vale para o arquivo geral, os contratos reais (o `gerar_html.js` deixa a correção para a abertura, depois dos
+    químicos da planilha) e o teste BP. A demonstração (`walkthrough/demo.js`) não sorteia o custo do cimento;
+  - o COGS das operações com cimento cai: qtd × (custo antigo − 7,77). Os testes que comparam com a planilha
+    (`e2e_bp`, `e2e_contratos_reais` e a conferência do `gerar_html.js`) esperam a planilha com o cimento a 7,77.
+    Ex.: BP 13,15 → 7,77.
+- **Sem a pílula "Consumo e receita"** no contrato e na Visão geral (a receita fica nos Indicadores, na Lista e na
+  janela da operação). A tela continua no código: `window.engPlanView('rec')` (usada pelos testes).
+- **Teste:** `tests/e2e_e18.js` (15).
+
 ### e17 (25–26/11/2026) — concluir a operação, pílulas, receita/COGS nas telas, duplicar o poço, cor das sondas
 
 Pedidos do Hugo (código novo em `eng_e17.js`; ligações no `patch_engenharia.py`, bloco "e17"):
@@ -374,4 +395,4 @@ node contratos_reais/e2e_contratos_reais.js <pasta das planilhas> <pasta dos HTM
     - apagar com operações: só com APAGAR, levando as operações e o handover;
     - os contratos apagados não voltam ao reabrir.
 - **A seção Receita e margem é o `../gerencial/gerencial.html`**, embutido pelo patch (`ENG_GER_HTML`, num iframe, no modo embutido do Gerencial). Mudou o Gerencial? Gere de novo o `EARL_Engenharia.html`.
-- Versão: `EARL_VERSION = 'EARL Forecast e17 (base v115)'`. O teste do fluxo completo com o Gerencial está em `../gerencial/tests/e2e_gerencial.js`.
+- Versão: `EARL_VERSION = 'EARL Forecast e18 (base v115)'`. O teste do fluxo completo com o Gerencial está em `../gerencial/tests/e2e_gerencial.js`.

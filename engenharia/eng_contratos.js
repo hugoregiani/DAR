@@ -1742,9 +1742,7 @@
       style: {
         zIndex: 275
       },
-      onClick: e => {
-        if (e.target === e.currentTarget) fechar();
-      }
+      onClick: e => {} // e18: só fecha pelos botões
     }, engH("div", {
       className: "modal ec-modal ec-cons-modal",
       onClick: e => e.stopPropagation()

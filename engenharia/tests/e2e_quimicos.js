@@ -43,7 +43,7 @@ const valorDe = (page, sap) => linha(page, sap).locator('input.ec-q-usd').inputV
   await page.waitForSelector('.ec-quim-tab');
   conf(await page.locator('.ec-quim-tab tbody tr').count() === 60 && /60 produto/.test(await txt(page, '.ec-quim-info')), '60 produtos da tabela Químicos da aba Forecast');
   conf(/Base inicial — Contrato_BP_Teste_EARL\.xlsx — aba Forecast/.test(await txt(page, '.ec-quim-info')), 'origem da base aparece na última atualização', await txt(page, '.ec-quim-info'));
-  conf(await linha(page, '100003685').locator('.ec-q-nome').inputValue() === 'CIMENTO CLASS G' && await linha(page, '100003685').locator('.ec-q-unid').inputValue() === 'SK' && await valorDe(page, '100003685') === '13,15', 'CIMENTO CLASS G · SK · US$ 13,15');
+  conf(await linha(page, '100003685').locator('.ec-q-nome').inputValue() === 'CIMENTO CLASS G' && await linha(page, '100003685').locator('.ec-q-unid').inputValue() === 'SK' && await valorDe(page, '100003685') === '7,77', 'CIMENTO CLASS G · SK · US$ 7,77 (e18: COGS corrigido)');
   conf(await valorDe(page, '213257') === '267,3333', 'valor com muitas casas aparece com 4 decimais (BARITA 267,3333)');
   conf(await linha(page, '100003685').locator('.ec-q-sap').getAttribute('readonly') !== null, 'SAP de produto salvo não se edita');
   const av = await page.$$eval('.ec-quim-tab tbody tr', rs => Object.fromEntries(rs.filter(r => r.querySelector('.ec-quim-aviso')).map(r => [r.dataset.sap, [...r.querySelectorAll('.ec-quim-aviso')].map(x => x.textContent.replace('⚠ ', '')).join(' | ')])));
@@ -61,7 +61,7 @@ const valorDe = (page, sap) => linha(page, sap).locator('input.ec-q-usd').inputV
   const lida = await page.evaluate(b64 => { const w = XLSX.read(b64, {type: 'base64'}); return {abas: w.SheetNames, l: XLSX.utils.sheet_to_json(w.Sheets[w.SheetNames[0]], {header: 1, raw: true})}; }, fs.readFileSync(pl.path).toString('base64'));
   const cim = lida.l.find(r => r[0] === 100003685);
   conf(pl.nome === 'Banco_Quimicos_EARL_2026-11-02.xlsx' && lida.abas[0] === 'Químicos' && lida.l[0].join('|') === 'SAP|Descrição|Unidade|Valor US$|Atualizado em' && lida.l.length === 61, 'planilha: aba Químicos com SAP, Descrição, Unidade, Valor US$, Atualizado em e 60 linhas', {nome: pl.nome, cab: lida.l[0], n: lida.l.length});
-  conf(cim && cim[3] === 13.15 && Math.abs(lida.l.find(r => r[0] === 213257)[3] - 267.3333333333333) < 1e-9 && lida.l.some(r => r[0] === 'XXX'), 'valores com a precisão toda; SAP numérico como número e “XXX” como texto');
+  conf(cim && cim[3] === 7.77 && Math.abs(lida.l.find(r => r[0] === 213257)[3] - 267.3333333333333) < 1e-9 && lida.l.some(r => r[0] === 'XXX'), 'valores com a precisão toda; SAP numérico como número e “XXX” como texto');
 
   console.log('COGS da operação vem do banco');
   await page.click('.ec-quim-modal .modal-close');
@@ -82,7 +82,7 @@ const valorDe = (page, sap) => linha(page, sap).locator('input.ec-q-usd').inputV
   await abrirCons();
   await page.selectOption('.ec-add-quim', '100003685');
   await page.fill('.ec-q-quim', '10');
-  conf(await txt(page, '.ec-res-cogs') === 'US$ 131,50', 'consumo: 10 sk de Cimento Classe G × US$ 13,15 = US$ 131,50', await txt(page, '.ec-res-cogs'));
+  conf(await txt(page, '.ec-res-cogs') === 'US$ 77,70', 'consumo: 10 sk de Cimento Classe G × US$ 7,77 = US$ 77,70', await txt(page, '.ec-res-cogs'));
   await page.click('.ec-cons-ok');
   await page.waitForTimeout(300);
 
@@ -109,7 +109,7 @@ const valorDe = (page, sap) => linha(page, sap).locator('input.ec-q-usd').inputV
   conf(c['ec-qp-novos'] === 1 && c['ec-qp-valor'] === 2 && c['ec-qp-texto'] === 1 && c['ec-qp-so'] === 1 && c['ec-qp-iguais'] === 56, 'prévia: 1 novo, 2 com valor alterado, 1 com descrição alterada, 56 sem mudança, 1 só no banco', c);
   conf(/aba “Químicos”, cabeçalho na linha 1 · 60 produto\(s\) lido\(s\)/.test(await txt(page, '.ec-quim-plan .hm-sum')), 'prévia mostra a aba e o cabeçalho achados', await txt(page, '.ec-quim-plan .hm-sum'));
   const vtab = await txt(page, '.ec-qp-tab-valor tbody');
-  conf(/100003685 CIMENTO CLASS G SK US\$ 13,15 US\$ 14,00 \+6,46%/.test(vtab) && /100003653 CFR-3 LB US\$ 1,41 US\$ 1,50/.test(vtab), 'valor alterado: antes, depois e variação (+6,46%)', vtab);
+  conf(/100003685 CIMENTO CLASS G SK US\$ 7,77 US\$ 14,00 \+80,18%/.test(vtab) && /100003653 CFR-3 LB US\$ 1,41 US\$ 1,50/.test(vtab), 'valor alterado: antes, depois e variação (+80,18%)', vtab);
   conf(/1 linha\(s\) sem SAP ignorada\(s\): linha 63 \(SEM CODIGO\)/.test(await txt(page, '.ec-qp-aviso')) && /SAP repetido na planilha \(vale a última linha\): 100003653/.test(await txt(page, '.ec-qp-aviso')), 'avisa a linha sem SAP e o SAP repetido', await txt(page, '.ec-qp-aviso'));
   conf(/212324BARAZAN DBAGUS\$ 85,93continua/.test(await page.$eval('.ec-qp-tab-so tbody', e => e.textContent)) && await page.$eval('.ec-qp-tab-so', e => !e.closest('details').open), '“Atualizar e acrescentar”: o produto que não está na planilha continua (lista recolhida)');
   await page.fill('.ec-qp-por', 'Eng Teste');
