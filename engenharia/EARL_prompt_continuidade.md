@@ -633,7 +633,12 @@ Pedidos do Hugo (12/11/2026): "No envio do email do Handover preciso que inclua 
 - **"Consumo e receita":** saiu de `[['gantt'…]]` (abas do plano); a tela fica para os testes (`window.engPlanView('rec')`). Os testes que clicavam na pílula usam essa função.
 - **PDF V06:** passo 13 "Receita e COGS da operação" (tela `12_resumo_op.jpg`). O filtro e o consumo são capturados a partir da Lista.
 - **Contratos reais V06:** `$S/ctr/gerar_todos11.sh` → `$S/ctr/out11`, `--compat` dos V05. Cimento no banco de químicos de cada arquivo antes da correção: PA, BW, BD II, Shell e BP a 13,15 (das planilhas); CE com a base (já 7,77); DC sem o cimento (entra a 7,77).
-- **Testes (26/11/2026):** em andamento (os resultados entram no próximo commit).
+- **Testes (26/11/2026):** todos sem falha.
+  - Engenharia: 62, 78, **quimicos 36** (base do cimento 7,77), 12, 54, 23, 37, 50, 18, 26, 29, 42, **e18 15**.
+  - Gerencial: 62, 59, 71, 59, 27. BP: 58 (COGS = planilha com o cimento a 7,77).
+  - Contratos reais: 135; `e2e_atualizacao` V05→V06 42; `e2e_importar` PA→BDII 9, BP→DC 9.
+  - `e2e_seguranca`: 70. Na suíte ele não rodou na 1ª vez: o comentário "// e18" fechava a linha do laço. Corrigido para `/* */` e rodado de novo: 70.
+  - ClamAV: 0 vírus nos 9 arquivos entregues.
 
 ### e17 — concluir a operação, pílulas, receita/COGS nas telas, duplicar o poço, cor das sondas, Perfuração — entrega _V05 (26/11/2026)
 
