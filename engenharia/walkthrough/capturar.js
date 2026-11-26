@@ -1,7 +1,7 @@
 // Capturas das telas do walkthrough (EARL Forecast) com os dados de demonstração do demo.js.
 // Uso: node capturar.js [passos separados por vírgula] [EARL_Engenharia.html]  — sem passos, captura tudo.
 // Rode o passo 'consumo' separado (depois do 'handover' a faixa verde do e-mail fica na tela):
-//   node capturar.js inicio,cards,matriz,logo,contratos,plano,novaop,handover,bancos,inventario,arquivos && node capturar.js consumo
+//   node capturar.js inicio,cards,matriz,logo,contratos,plano,novaop,handover,bancos,inventario,arquivos && node capturar.js consumo,concluir
 const {chromium} = require('playwright');
 const path = require('path');
 const fs = require('fs');
@@ -80,6 +80,10 @@ const SO = (process.argv[2] || '').split(',').filter(Boolean);
     await aba('cts');
     await page.click('.eng2-card:has-text("P&A")');
     await page.waitForTimeout(1500);
+    // e17: a cor das linhas de uma sonda (clique no nome da sonda)
+    await page.click('.eng-gl .eng-rig-cor-b');
+    await page.click('.eng-cor-sw[data-cor="#2E86DE"]');
+    await page.waitForTimeout(300);
     await shot('05_gantt');
     await page.click('.db-tab:has-text("Lista")');
     await page.click('.eng-lista-todas').catch(() => {});
@@ -186,6 +190,30 @@ const SO = (process.argv[2] || '').split(',').filter(Boolean);
     await page.waitForSelector('.ec-cons');
     await page.waitForTimeout(600);
     await shot('13_lancar_consumo');
+    await inicio();
+  });
+  // e17: concluir a operação (as contingências são respondidas antes)
+  await passo('concluir', async () => {
+    await page.evaluate(() => { const d = loadDB(); const j = d.plannedJobs.find(x => x.id === 'dm14'); j.ppuNeeds = (j.ppuNeeds || []).map((n, i) => i === 0 ? {...n, cont: true, chance: 40} : n); j.chems = (j.chems || []).map((n, i) => i === 0 ? {...n, cont: true, chance: 50} : n); saveDB(d); });
+    await page.reload(); await page.waitForSelector('.eng-tools', {timeout: 60000}); await page.waitForTimeout(800);
+    await aba('cts');
+    await page.click('.eng2-card:has-text("BP — Macaé")');
+    await page.waitForTimeout(800);
+    await page.click('.db-tab:has-text("Lista")');
+    await page.click('.eng-lista-todas').catch(() => {});
+    const w = await page.evaluate(() => loadDB().plannedJobs.find(x => x.id === 'dm14').well);
+    await page.locator('table.db-table tbody tr', {hasText: w}).locator('button', {hasText: 'Editar'}).click();
+    await page.waitForSelector('.eng-modal .eng-concluir');
+    await page.click('.eng-modal .eng-concluir');
+    await page.waitForSelector('.ec-conc-modal');
+    await page.locator('.ec-conc-tab tbody tr', {hasText: 'Item PPU'}).locator('.ec-conc-sim').click();
+    await page.locator('.ec-conc-tab tbody tr', {hasText: 'Química'}).locator('.ec-conc-nao').click();
+    await shot('24_concluir');
+    await page.click('.ec-conc-ok');
+    await page.waitForSelector('.ec-cons-modal');
+    await page.waitForTimeout(500);
+    await shot('25_concluir_consumo');
+    await page.click('.ec-cons-modal button:has-text("Cancelar")');
     await inicio();
   });
   await passo('bancos', async () => {

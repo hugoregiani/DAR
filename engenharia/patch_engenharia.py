@@ -105,7 +105,7 @@ assert i > 0
 s = s[:i] + css + s[i:]
 
 # ---------------------------------------------------------------- app (código compilado)
-rep("var EARL_VERSION = 'EARL v115';", "var EARL_VERSION = 'EARL Forecast e16 (base v115)';")
+rep("var EARL_VERSION = 'EARL v115';", "var EARL_VERSION = 'EARL Forecast e17 (base v115)';")
 rep("var HO_ST = {\n  pendente: {", "var HO_ST = {\n  email: {\n    label: 'Enviado por e-mail',\n    c: '#304220',\n    bg: '#F1F5EC',\n    brd: '#D9E4CC'\n  },\n  pendente: {")
 # quem gera o e-mail assina os registros (sem login)
 rep("  var currentUser = () => authUser && authUser.email || sbUser || '';",
@@ -606,7 +606,7 @@ rep("      if (d.people && d.people.length > 0) return migrateDB(d);", "      if
 rep("  return migrateDB(JSON.parse(JSON.stringify(SEED_DB)));", "  return engQuimMig(migrateDB(JSON.parse(JSON.stringify(SEED_DB))));")
 
 # Código novo (antes de renderHandover) e janelas novas na árvore
-novo = open(os.path.join(AQUI, 'eng_app.js'), encoding='utf-8').read() + '\n' + open(os.path.join(AQUI, 'eng_contratos.js'), encoding='utf-8').read() + '\n' + open(os.path.join(AQUI, 'eng_quimicos.js'), encoding='utf-8').read() + '\n' + open(os.path.join(AQUI, 'eng_inventario.js'), encoding='utf-8').read() + '\n' + open(os.path.join(AQUI, 'eng_cambio.js'), encoding='utf-8').read() + '\n' + open(os.path.join(AQUI, 'eng_logo.js'), encoding='utf-8').read()
+novo = open(os.path.join(AQUI, 'eng_app.js'), encoding='utf-8').read() + '\n' + open(os.path.join(AQUI, 'eng_contratos.js'), encoding='utf-8').read() + '\n' + open(os.path.join(AQUI, 'eng_quimicos.js'), encoding='utf-8').read() + '\n' + open(os.path.join(AQUI, 'eng_inventario.js'), encoding='utf-8').read() + '\n' + open(os.path.join(AQUI, 'eng_cambio.js'), encoding='utf-8').read() + '\n' + open(os.path.join(AQUI, 'eng_logo.js'), encoding='utf-8').read() + '\n' + open(os.path.join(AQUI, 'eng_e17.js'), encoding='utf-8').read()
 rep("  var renderHandover = () => {\n", novo.rstrip('\n') + "\n  var renderHandover = () => {\n")
 rep("renderRigForm(), renderConfirmBox(),", "renderEngSondas(), renderEngContratos(), renderEngQuim(), renderEngCasDb(), renderEngEspaco(), renderEngCons(), renderEngImpDados(), renderEngGer(), renderEngInvEd(), renderEngExp(), renderEngCambio(), renderEngLogo(), renderRigForm(), renderConfirmBox(),")
 # sonda salva com data de alteração (para o "juntar" da importação ficar com a mais recente)
@@ -672,6 +672,81 @@ rep(r"""    }, "\u21C4 Trocar contrato")), React.createElement("div", {
     }, "\uD83D\uDDD1 Apagar contrato")), React.createElement("div", {
       className: "toolbar"
     }""")
+
+# e17 (pedido do Hugo, 25/11/2026): eng_e17.js — filtro de sonda só com as sondas que têm operação; "✓ Concluir
+# operação" (contingências respondidas antes); cor das linhas de cada sonda no Gantt; receita e COGS de cada operação
+# (US$, valor cheio) no Gantt, no Calendário e na Lista.
+rep("renderEngCons(), renderEngImpDados(),", "renderEngCons(), renderEngConc(), renderEngCorPop(), renderEngCoresCss(), renderEngImpDados(),")
+rep('}, "Sonda (todas)"), (db.rigs || []).filter(r => r.active !== false).map(r => React.createElement("option", {',
+    '}, "Sonda (todas)"), engRigsFiltro().map(r => React.createElement("option", {')
+rep("""    if (pj.contingencia) return 'contingencia';
+    if (pj.status === PJ_STATUS.COORD) return 'coordenacao';""", """    if (engConcluida(pj)) return 'concluida'; // e17: concluída (consumo lançado) fica preta no Gantt
+    if (pj.contingencia) return 'contingencia';
+    if (pj.status === PJ_STATUS.COORD) return 'coordenacao';""")
+rep(r"""      onClick: () => abrirEngCons(d)
+    }, "\u03A3 Consumo PPU"),""", r"""      onClick: () => abrirEngCons(d)
+    }, "\u03A3 Consumo PPU"), !tplMode && d.id && engConcBotoes(d, travado, savePlanned),""")
+# Gantt: o nome da sonda escolhe a cor das linhas (no app avulso não há a página da sonda)
+rep("""        title: rid ? 'Abrir a página da sonda' : '',
+        onClick: () => {
+          if (rid) {
+            setRigSel(rid);
+            setRigTab('ficha');
+            setMainTab('rig');
+          }
+        }""", """        title: rid ? 'Escolher a cor das linhas desta sonda' : '',
+        className: rid ? 'eng-rig-cor-b' : '',
+        onClick: e => engAbrirCor(rid, e)""", 2)
+rep(r"""      return React.createElement("div", {
+        key: j.id,
+        style: {
+          display: 'flex',
+          borderTop: '1px solid var(--line)'
+        }
+      }, React.createElement("div", {
+        onClick: () => setPlanDraft({
+          ...j
+        }),
+        title: "Abrir a opera\xE7\xE3o",""", r"""      return React.createElement("div", {
+        key: j.id,
+        className: "eng-gj",
+        "data-rigrow": j.rigId || '',
+        style: {
+          display: 'flex',
+          borderTop: '1px solid var(--line)'
+        }
+      }, React.createElement("div", {
+        onClick: () => setPlanDraft({
+          ...j
+        }),
+        title: "Abrir a opera\xE7\xE3o",""")
+rep(r"""}, j.well || '—', " \xB7 ", tipoTxt(j))) : React.createElement(React.Fragment, null, React.createElement("div", {""",
+    r"""}, j.well || '—', " \xB7 ", tipoTxt(j)), engRcLinha(j)) : React.createElement(React.Fragment, null, React.createElement("div", {""")
+rep("""      }, j.well || '—'))), React.createElement("div", {
+        style: {
+          width: W,
+          flexShrink: 0,
+          position: 'relative',
+          height: 38,""", """      }, j.well || '—'), engRcLinha(j))), React.createElement("div", {
+        style: {
+          width: W,
+          flexShrink: 0,
+          position: 'relative',
+          minHeight: 38,
+          alignSelf: 'stretch',""")
+rep("${cobTit(j)}", "${cobTit(j)}${engRcTit(j)}", 2)
+rep("title: `${j.tipoOp} · ${j.well || '—'}` + (mj ? ' — ▤ abre a operação completa' : ''),",
+    "title: `${j.tipoOp} · ${j.well || '—'}` + (mj ? ' — ▤ abre a operação completa' : '') + engRcTit(j),")
+rep(r"""}, (rigById[j.rigId] || {}).name || '', " \xB7 ", j.well || j.tipoOp), mj && React.createElement("span", {""",
+    r"""}, (rigById[j.rigId] || {}).name || '', " \xB7 ", j.well || j.tipoOp, engRcCal(j)), mj && React.createElement("span", {""")
+# Lista: receita e COGS (US$) e "✓ Concluída"
+rep("""React.createElement("th", null, "Cliente / contrato"), React.createElement("th", null, "Status"), React.createElement("th", null))), React.createElement("tbody", null, list.map(j => {
+      var slip = pjSlip(j);""", """React.createElement("th", null, "Cliente / contrato"), React.createElement("th", null, "Status"), React.createElement("th", null, "Receita (US$)"), React.createElement("th", null, "COGS (US$)"), React.createElement("th", null))), React.createElement("tbody", null, list.map(j => {
+      var slip = pjSlip(j);""")
+rep("""'Contingência · risco ' + (j.riscoRec || 0) + '%')), React.createElement("td", {
+        className: "actions",""", """'Contingência · risco ' + (j.riscoRec || 0) + '%')), engRcTd(j, 'rec'), engRcTd(j, 'cogs'), React.createElement("td", {
+        className: "actions",""")
+rep("pjBadge(j.status), hoEmailTag(j), engConsTag(j),", "pjBadge(j.status), hoEmailTag(j), engConcTag(j), engConsTag(j),")
 
 # e12: filtro e ordem em todas as tabelas (script avulso, fora do React), no fim do <body>
 tf = open(os.path.join(AQUI, 'eng_tabelas.js'), encoding='utf-8').read()

@@ -342,3 +342,28 @@ caption.etf-cap span{margin-right:10px}
 .fr-ind-ajuda{font-size:12.5px;color:var(--ink-2,#4D545A);margin:0 2px 10px;line-height:1.45}
 .fr-ind .ec-ger-frame{display:block;width:100%;border:0;min-height:420px}
 @media (max-width:760px){.fr-tab{min-width:0;flex:1 1 140px}}
+
+/* e17: receita e COGS da operação (Gantt, Calendário, Lista), concluir a operação e cor das linhas da sonda */
+.eng-rc{font-size:9.5px;color:var(--ink-3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:1px;font-variant-numeric:tabular-nums;line-height:1.2}
+.eng-rc i{font-style:normal;opacity:.75}
+.eng-rc-real{color:#304220;font-weight:600}
+.eng-rc-cal{display:block;font-weight:600;font-size:8.5px;opacity:.92;line-height:1.15}
+.eng-rc-td{font-variant-numeric:tabular-nums}
+.ec-tag.ec-tag-conc{background:#2A2F30;color:#fff;border-color:#2A2F30}
+.eng-conc-chip{align-self:center;margin:0 2px}
+.ec-conc-modal{width:840px;max-width:96vw;max-height:92vh;overflow:auto}
+.ec-conc-nota{margin:8px 0 10px;font-size:12.5px;color:var(--ink-2);line-height:1.45}
+.ec-conc-op{margin-bottom:10px}
+.ec-conc-todos{display:flex;gap:8px;margin:0 0 8px}
+.ec-conc-tab td{vertical-align:middle}
+.ec-conc-sim,.ec-conc-nao{font-size:11px;padding:4px 10px;margin-right:4px}
+.ec-conc-tab .btn-o.ec-conc-sim.on,.ec-conc-tab .btn-o.ec-conc-sim.on:hover{background:#304220 !important;color:#fff !important;border-color:#304220 !important}
+.ec-conc-tab .btn-o.ec-conc-nao.on,.ec-conc-tab .btn-o.ec-conc-nao.on:hover{background:#CC0000 !important;color:#fff !important;border-color:#CC0000 !important}
+tr.ec-conc-falta td{background:#FFF8E6}
+.ec-conc-falta-txt{color:#8A3B1B;font-size:12px}
+.eng-cor-overlay{position:fixed;inset:0;z-index:290}
+.eng-cor-pop{position:fixed;background:#fff;border:1px solid var(--line);border-radius:14px;box-shadow:0 10px 30px rgba(0,0,0,.18);padding:12px 12px 10px;width:250px;display:flex;flex-direction:column;gap:10px;font-size:12px}
+.eng-cor-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:8px}
+.eng-cor-sw{width:100%;aspect-ratio:1;border-radius:8px;border:2px solid #fff;box-shadow:0 0 0 1px rgba(0,0,0,.15);cursor:pointer;padding:0}
+.eng-cor-sw.on{box-shadow:0 0 0 2px #2A2F30}
+.eng-rig-cor-b:hover{text-decoration-style:solid !important}

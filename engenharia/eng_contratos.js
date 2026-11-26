@@ -1421,18 +1421,34 @@
       return true;
     });
   };
-  var abrirEngCons = pj0 => {
+  /* e17: opts.concluir = "✓ Concluir operação" (eng_e17.js): usa a operação recebida (já com as contingências
+     resolvidas), vem preenchido com o previsto e, ao salvar, a operação fica concluída */
+  var abrirEngCons = (pj0, opts) => {
     if (!pj0) return;
-    var pj = (db.plannedJobs || []).find(j => j.id === pj0.id) || pj0;
+    var concluir = !!(opts && opts.concluir);
+    var pj = concluir ? pj0 : (db.plannedJobs || []).find(j => j.id === pj0.id) || pj0;
     var c = pj.ppuCons || {};
+    var soma = (l, k) => {
+      var o = {};
+      (l || []).forEach(n => {
+        var kk = k(n);
+        if (kk) o[kk] = (o[kk] || 0) + (engNum(n.qty) || 0);
+      });
+      return o;
+    };
+    var pP = soma(pj.ppuNeeds, n => n.ref),
+      pQ = engPrevMat(pj.chems),
+      pC = engPrevMat(pj.casingNeeds),
+      pPe = soma(pj.peopleNeeds, n => n.funcao);
+    var ini = v => concluir && v ? engNumTxt(v) : '';
     var linhas = (c.linhas || []).length ? engUniq(c.linhas, l => l.ref).map(l => ({
       ref: l.ref,
       qty: engNumTxt(l.qty)
     })) : engUniq(pj.ppuNeeds, n => n.ref).map(n => ({
       ref: n.ref,
-      qty: ''
+      qty: ini(pP[n.ref])
     }));
-    var mat = (salvo, prev) => (salvo || []).length ? engUniq(salvo, engKeyMat).map(x => ({
+    var mat = (salvo, prev, pm) => (salvo || []).length ? engUniq(salvo, engKeyMat).map(x => ({
       sap: x.sap || '',
       name: x.name || '',
       unit: x.unit || '',
@@ -1441,7 +1457,7 @@
       sap: x.sap || '',
       name: x.name || x.sap || '',
       unit: x.unit || '',
-      qty: ''
+      qty: ini(pm[engKeyMat(x)])
     }));
     var pes = (c.pes || []).length ? c.pes.map(p => ({
       funcao: p.funcao,
@@ -1449,16 +1465,17 @@
       dias: engNumTxt(p.dias)
     })) : engUniq(pj.peopleNeeds, n => n.funcao).map(n => ({
       funcao: n.funcao,
-      pessoas: '',
-      dias: ''
+      pessoas: ini(pPe[n.funcao]),
+      dias: concluir ? engNumTxt(Number(pj.durationDays) || 1) : ''
     }));
     setEngCons({
       pjId: pj.id,
       data: c.data || pj.date || todayStr(),
       linhas,
-      quim: mat(c.quim, pj.chems),
-      cas: mat(c.cas, pj.casingNeeds),
-      pes
+      quim: mat(c.quim, pj.chems, pQ),
+      cas: mat(c.cas, pj.casingNeeds, pC),
+      pes,
+      concluir
     });
   };
   var renderEngCons = () => {
@@ -1604,10 +1621,10 @@
     var gravar = reg => {
       updateDB(d => ({
         ...d,
-        plannedJobs: comLog((d.plannedJobs || []).map(j => j.id === pj.id ? {
+        plannedJobs: comLog((d.plannedJobs || []).map(j => j.id === pj.id ? engComConclusao({
           ...j,
           ppuCons: reg
-        } : j), [pj.id], logE(reg ? pj.ppuCons ? 'Consumo da operação alterado' : 'Consumo da operação lançado' : 'Consumo da operação apagado', {
+        }, reg, engCons.concluir) : j), [pj.id], logE(reg && engCons.concluir ? 'Operação concluída (consumo confirmado)' : reg ? pj.ppuCons ? 'Consumo da operação alterado' : 'Consumo da operação lançado' : 'Consumo da operação apagado', {
           detalhe: reg ? resumo(reg) : ''
         }))
       }), {
@@ -1617,12 +1634,12 @@
         user: currentUser() || '—',
         detail: reg ? resumo(reg) : ''
       });
-      setPlanDraft(x => x && x.id === pj.id ? {
+      setPlanDraft(x => x && x.id === pj.id ? engComConclusao({
         ...x,
         ppuCons: reg
-      } : x);
+      }, reg, engCons.concluir) : x);
       setEngCons(null);
-      setOkMsg(reg ? 'Consumo salvo ✓ — ' + fmtBRL(tB) + ' · ' + fmtUSD(tU) : 'Consumo apagado ✓');
+      setOkMsg(reg && engCons.concluir ? 'Operação concluída ✓ — ' + fmtUSD(tU) : reg ? 'Consumo salvo ✓ — ' + fmtBRL(tB) + ' · ' + fmtUSD(tU) : 'Consumo apagado ✓');
       setTimeout(() => setOkMsg(''), 4000);
     };
     var salvar = () => {
@@ -1653,7 +1670,7 @@
         em: new Date().toISOString(),
         por: currentUser() || ''
       };
-      gravar(linhas.length || reg.quim.length || reg.cas.length || pes.length ? reg : null);
+      gravar(linhas.length || reg.quim.length || reg.cas.length || pes.length || engCons.concluir ? reg : null);
     };
     var disponiveis = itens.filter(i => !engCons.linhas.some(l => l.ref === i.ref));
     var semLinhas = (n, txt) => engH("tr", null, engH("td", {
@@ -1733,12 +1750,14 @@
       onClick: e => e.stopPropagation()
     }, engH("div", {
       className: "modal-title"
-    }, engH("span", null, 'Σ Consumo da operação — ' + (pj.well || 'poço a definir') + ' · ' + (tipoTxt(pj) || pj.tipoOp || '')), engH("button", {
+    }, engH("span", null, (engCons.concluir ? '✓ Concluir a operação — ' : 'Σ Consumo da operação — ') + (pj.well || 'poço a definir') + ' · ' + (tipoTxt(pj) || pj.tipoOp || '')), engH("button", {
       className: "modal-close",
       onClick: fechar
     }, "\xD7")), engH("div", {
       className: "ec-cons-id"
-    }, [rigFmt(rig), pj.date ? 'planejada para ' + fmtD(pj.date) : '', ct ? ct.name + (ct.numero && ct.numero !== ct.name ? ' · ' + ct.numero : '') : '', pj.salesOrder ? 'SO ' + pj.salesOrder : ''].filter(Boolean).join(' · ')), !ct ? engH("div", {
+    }, [rigFmt(rig), pj.date ? 'planejada para ' + fmtD(pj.date) : '', ct ? ct.name + (ct.numero && ct.numero !== ct.name ? ' · ' + ct.numero : '') : '', pj.salesOrder ? 'SO ' + pj.salesOrder : ''].filter(Boolean).join(' · ')), engCons.concluir && engH("div", {
+      className: "ec-conc-nota"
+    }, "Confira o que foi usado na opera\xE7\xE3o (j\xE1 vem com o previsto) e clique em \u201C\u2713 Concluir opera\xE7\xE3o\u201D. A receita e o COGS passam a ser realizados."), !ct ? engH("div", {
       className: "ec-aviso"
     }, "Esta opera\xE7\xE3o n\xE3o est\xE1 ligada a um contrato — abra a opera\xE7\xE3o e escolha o contrato.") : engH(React.Fragment, null, engH("div", {
       className: "ec-bar"
@@ -1918,7 +1937,7 @@
       className: "btn-r ec-cons-ok",
       disabled: !ct || !engCons.data,
       onClick: salvar
-    }, nTot ? 'Salvar consumo (' + nTot + ' linha(s))' : 'Salvar consumo'))));
+    }, engCons.concluir ? '\u2713 Concluir opera\xE7\xE3o' + (nTot ? ' (' + nTot + ' linha(s))' : '') : nTot ? 'Salvar consumo (' + nTot + ' linha(s))' : 'Salvar consumo'))));
   };
 
   /* ---------------- aba "Consumo e receita" ---------------- */

@@ -3764,6 +3764,31 @@ caption.etf-cap span{margin-right:10px}
 .fr-ind-ajuda{font-size:12.5px;color:var(--ink-2,#4D545A);margin:0 2px 10px;line-height:1.45}
 .fr-ind .ec-ger-frame{display:block;width:100%;border:0;min-height:420px}
 @media (max-width:760px){.fr-tab{min-width:0;flex:1 1 140px}}
+
+/* e17: receita e COGS da operação (Gantt, Calendário, Lista), concluir a operação e cor das linhas da sonda */
+.eng-rc{font-size:9.5px;color:var(--ink-3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:1px;font-variant-numeric:tabular-nums;line-height:1.2}
+.eng-rc i{font-style:normal;opacity:.75}
+.eng-rc-real{color:#304220;font-weight:600}
+.eng-rc-cal{display:block;font-weight:600;font-size:8.5px;opacity:.92;line-height:1.15}
+.eng-rc-td{font-variant-numeric:tabular-nums}
+.ec-tag.ec-tag-conc{background:#2A2F30;color:#fff;border-color:#2A2F30}
+.eng-conc-chip{align-self:center;margin:0 2px}
+.ec-conc-modal{width:840px;max-width:96vw;max-height:92vh;overflow:auto}
+.ec-conc-nota{margin:8px 0 10px;font-size:12.5px;color:var(--ink-2);line-height:1.45}
+.ec-conc-op{margin-bottom:10px}
+.ec-conc-todos{display:flex;gap:8px;margin:0 0 8px}
+.ec-conc-tab td{vertical-align:middle}
+.ec-conc-sim,.ec-conc-nao{font-size:11px;padding:4px 10px;margin-right:4px}
+.ec-conc-tab .btn-o.ec-conc-sim.on,.ec-conc-tab .btn-o.ec-conc-sim.on:hover{background:#304220 !important;color:#fff !important;border-color:#304220 !important}
+.ec-conc-tab .btn-o.ec-conc-nao.on,.ec-conc-tab .btn-o.ec-conc-nao.on:hover{background:#CC0000 !important;color:#fff !important;border-color:#CC0000 !important}
+tr.ec-conc-falta td{background:#FFF8E6}
+.ec-conc-falta-txt{color:#8A3B1B;font-size:12px}
+.eng-cor-overlay{position:fixed;inset:0;z-index:290}
+.eng-cor-pop{position:fixed;background:#fff;border:1px solid var(--line);border-radius:14px;box-shadow:0 10px 30px rgba(0,0,0,.18);padding:12px 12px 10px;width:250px;display:flex;flex-direction:column;gap:10px;font-size:12px}
+.eng-cor-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:8px}
+.eng-cor-sw{width:100%;aspect-ratio:1;border-radius:8px;border:2px solid #fff;box-shadow:0 0 0 1px rgba(0,0,0,.15);cursor:pointer;padding:0}
+.eng-cor-sw.on{box-shadow:0 0 0 2px #2A2F30}
+.eng-rig-cor-b:hover{text-decoration-style:solid !important}
 </style>
 </head>
 <body>
@@ -59231,6 +59256,7 @@ _Gerado por: ${user}_`;
       if (mob.status === OP_ST_FIN || mob.hiData) return 'finalizada';
       return 'andamento';
     }
+    if (engConcluida(pj)) return 'concluida'; // e17: concluída (consumo lançado) fica preta no Gantt
     if (pj.contingencia) return 'contingencia';
     if (pj.status === PJ_STATUS.COORD) return 'coordenacao';
     if (pj.status === PJ_STATUS.MOB) return 'mobilizacao';
@@ -59453,6 +59479,8 @@ _Gerado por: ${user}_`;
       var rigNome = (rigById[j.rigId] || {}).name || j.rigId || '—';
       return React.createElement("div", {
         key: j.id,
+        className: "eng-gj",
+        "data-rigrow": j.rigId || '',
         style: {
           display: 'flex',
           borderTop: '1px solid var(--line)'
@@ -59510,7 +59538,7 @@ _Gerado por: ${user}_`;
           textOverflow: 'ellipsis',
           whiteSpace: 'nowrap'
         }
-      }, j.well || '—', " \xB7 ", tipoTxt(j))) : React.createElement(React.Fragment, null, React.createElement("div", {
+      }, j.well || '—', " \xB7 ", tipoTxt(j)), engRcLinha(j)) : React.createElement(React.Fragment, null, React.createElement("div", {
         style: {
           fontSize: 11.5,
           fontWeight: 600,
@@ -59526,12 +59554,13 @@ _Gerado por: ${user}_`;
           color: 'var(--ink-3)',
           fontFamily: 'var(--fm)'
         }
-      }, j.well || '—'))), React.createElement("div", {
+      }, j.well || '—'), engRcLinha(j))), React.createElement("div", {
         style: {
           width: W,
           flexShrink: 0,
           position: 'relative',
-          height: 38,
+          minHeight: 38,
+          alignSelf: 'stretch',
           overflow: 'hidden',
           ...gridBg
         }
@@ -59566,7 +59595,7 @@ _Gerado por: ${user}_`;
         onPointerDown: e => iniciaArraste(e, j, 'move'),
         "data-pj": j.id,
         className: 'gp' + (arr ? ' gp-arr' : ''),
-        title: `${j.tipoOp} · ${j.well || '—'} · ${fmtD(j.date)} · ${tExp(cor.label)}${j.contingencia ? ` · risco ${j.riscoRec || 0}%` : ''}${slip > 0 ? ` (atrasou ${slip}d)` : ''}${cobTit(j)}${mov ? ' — arraste para mudar a data; puxe as pontas para mudar a duração' : ''}`,
+        title: `${j.tipoOp} · ${j.well || '—'} · ${fmtD(j.date)} · ${tExp(cor.label)}${j.contingencia ? ` · risco ${j.riscoRec || 0}%` : ''}${slip > 0 ? ` (atrasou ${slip}d)` : ''}${cobTit(j)}${engRcTit(j)}${mov ? ' — arraste para mudar a data; puxe as pontas para mudar a duração' : ''}`,
         style: {
           position: 'absolute',
           left,
@@ -59686,14 +59715,9 @@ _Gerado por: ${user}_`;
           textDecoration: rid ? 'underline' : 'none',
           textDecorationStyle: 'dotted'
         },
-        title: rid ? 'Abrir a página da sonda' : '',
-        onClick: () => {
-          if (rid) {
-            setRigSel(rid);
-            setRigTab('ficha');
-            setMainTab('rig');
-          }
-        }
+        title: rid ? 'Escolher a cor das linhas desta sonda' : '',
+        className: rid ? 'eng-rig-cor-b' : '',
+        onClick: e => engAbrirCor(rid, e)
       }, rig.name || rid), React.createElement("div", {
         style: {
           fontSize: 9.5,
@@ -59744,7 +59768,7 @@ _Gerado por: ${user}_`;
           onPointerDown: e => iniciaArraste(e, j, 'move'),
           "data-pj": j.id,
           className: 'gp' + (arr ? ' gp-arr' : ''),
-          title: `${j.well || '—'} · ${j.tipoOp} · ${fmtD(j.date)} → ${fmtD(pjEnd(j))} · ${tExp(cor.label)}${j.contingencia ? ` · risco ${j.riscoRec || 0}%` : ''}${cobTit(j)}${mov ? ' — arraste para mudar a data; puxe as pontas para mudar a duração' : ''}`,
+          title: `${j.well || '—'} · ${j.tipoOp} · ${fmtD(j.date)} → ${fmtD(pjEnd(j))} · ${tExp(cor.label)}${j.contingencia ? ` · risco ${j.riscoRec || 0}%` : ''}${cobTit(j)}${engRcTit(j)}${mov ? ' — arraste para mudar a data; puxe as pontas para mudar a duração' : ''}`,
           style: {
             position: 'absolute',
             left: L,
@@ -60222,14 +60246,9 @@ _Gerado por: ${user}_`;
           textDecoration: rid ? 'underline' : 'none',
           textDecorationStyle: 'dotted'
         },
-        title: rid ? 'Abrir a página da sonda' : '',
-        onClick: () => {
-          if (rid) {
-            setRigSel(rid);
-            setRigTab('ficha');
-            setMainTab('rig');
-          }
-        }
+        title: rid ? 'Escolher a cor das linhas desta sonda' : '',
+        className: rid ? 'eng-rig-cor-b' : '',
+        onClick: e => engAbrirCor(rid, e)
       }, rig.name || rid), React.createElement("button", {
         className: "ana-xls",
         title: "Nova opera\xE7\xE3o nesta sonda",
@@ -60357,7 +60376,7 @@ _Gerado por: ${user}_`;
         onClick: () => setPlanDraft({
           ...j
         }),
-        title: `${j.tipoOp} · ${j.well || '—'}` + (mj ? ' — ▤ abre a operação completa' : ''),
+        title: `${j.tipoOp} · ${j.well || '—'}` + (mj ? ' — ▤ abre a operação completa' : '') + engRcTit(j),
         style: {
           fontSize: 9.5,
           padding: '2px 5px',
@@ -60378,7 +60397,7 @@ _Gerado por: ${user}_`;
           overflow: 'hidden',
           textOverflow: 'ellipsis'
         }
-      }, (rigById[j.rigId] || {}).name || '', " \xB7 ", j.well || j.tipoOp), mj && React.createElement("span", {
+      }, (rigById[j.rigId] || {}).name || '', " \xB7 ", j.well || j.tipoOp, engRcCal(j)), mj && React.createElement("span", {
         onClick: e => {
           e.stopPropagation();
           abrirOperacaoDoPlanejado(j);
@@ -60467,7 +60486,7 @@ _Gerado por: ${user}_`;
       className: "tbl-scroll"
     }, React.createElement("table", {
       className: "db-table"
-    }, React.createElement("thead", null, React.createElement("tr", null, React.createElement("th", null, "Data"), React.createElement("th", null, "Sonda"), React.createElement("th", null, "Po\xE7o"), React.createElement("th", null, "Tipo"), React.createElement("th", null, "Dur."), React.createElement("th", null, "Cliente / contrato"), React.createElement("th", null, "Status"), React.createElement("th", null))), React.createElement("tbody", null, list.map(j => {
+    }, React.createElement("thead", null, React.createElement("tr", null, React.createElement("th", null, "Data"), React.createElement("th", null, "Sonda"), React.createElement("th", null, "Po\xE7o"), React.createElement("th", null, "Tipo"), React.createElement("th", null, "Dur."), React.createElement("th", null, "Cliente / contrato"), React.createElement("th", null, "Status"), React.createElement("th", null, "Receita (US$)"), React.createElement("th", null, "COGS (US$)"), React.createElement("th", null))), React.createElement("tbody", null, list.map(j => {
       var slip = pjSlip(j);
       var fora = dDiff(hoje, j.date) > horizonOfTipo(j.tipoOp);
       return React.createElement("tr", {
@@ -60519,9 +60538,9 @@ _Gerado por: ${user}_`;
           color: 'var(--ink-3)',
           fontFamily: 'var(--fm)'
         }
-      }, (ctDoJob(j) || {}).name || j.contratoLabel)), React.createElement("td", null, pjBadge(j.status), hoEmailTag(j), engConsTag(j), engRiscoTag(j), j.contingencia && React.createElement("div", {
+      }, (ctDoJob(j) || {}).name || j.contratoLabel)), React.createElement("td", null, pjBadge(j.status), hoEmailTag(j), engConcTag(j), engConsTag(j), engRiscoTag(j), j.contingencia && React.createElement("div", {
         className: "eng-cont-pill"
-      }, 'Contingência · risco ' + (j.riscoRec || 0) + '%')), React.createElement("td", {
+      }, 'Contingência · risco ' + (j.riscoRec || 0) + '%')), engRcTd(j, 'rec'), engRcTd(j, 'cogs'), React.createElement("td", {
         className: "actions",
         style: {
           whiteSpace: 'nowrap'
@@ -60863,7 +60882,7 @@ _Gerado por: ${user}_`;
       }))
     }, React.createElement("option", {
       value: ""
-    }, "Sonda (todas)"), (db.rigs || []).filter(r => r.active !== false).map(r => React.createElement("option", {
+    }, "Sonda (todas)"), engRigsFiltro().map(r => React.createElement("option", {
       key: r.id,
       value: r.id
     }, rigFmt(r)))), React.createElement("select", {
@@ -61801,7 +61820,7 @@ _Gerado por: ${user}_`;
       className: "btn-o ec-btn-cons",
       title: "Lan\xE7ar o consumo de PPU desta opera\xE7\xE3o (baixa o saldo do contrato e gera a receita)",
       onClick: () => abrirEngCons(d)
-    }, "\u03A3 Consumo PPU"), !tplMode && React.createElement("button", {
+    }, "\u03A3 Consumo PPU"), !tplMode && d.id && engConcBotoes(d, travado, savePlanned), !tplMode && React.createElement("button", {
       className: "btn-o",
       title: "Guarda esta configura\xE7\xE3o com um nome, para reaproveitar em outras opera\xE7\xF5es",
       onClick: () => setTplAsk({
@@ -64793,18 +64812,34 @@ _Gerado por: ${user}_`;
       return true;
     });
   };
-  var abrirEngCons = pj0 => {
+  /* e17: opts.concluir = "✓ Concluir operação" (eng_e17.js): usa a operação recebida (já com as contingências
+     resolvidas), vem preenchido com o previsto e, ao salvar, a operação fica concluída */
+  var abrirEngCons = (pj0, opts) => {
     if (!pj0) return;
-    var pj = (db.plannedJobs || []).find(j => j.id === pj0.id) || pj0;
+    var concluir = !!(opts && opts.concluir);
+    var pj = concluir ? pj0 : (db.plannedJobs || []).find(j => j.id === pj0.id) || pj0;
     var c = pj.ppuCons || {};
+    var soma = (l, k) => {
+      var o = {};
+      (l || []).forEach(n => {
+        var kk = k(n);
+        if (kk) o[kk] = (o[kk] || 0) + (engNum(n.qty) || 0);
+      });
+      return o;
+    };
+    var pP = soma(pj.ppuNeeds, n => n.ref),
+      pQ = engPrevMat(pj.chems),
+      pC = engPrevMat(pj.casingNeeds),
+      pPe = soma(pj.peopleNeeds, n => n.funcao);
+    var ini = v => concluir && v ? engNumTxt(v) : '';
     var linhas = (c.linhas || []).length ? engUniq(c.linhas, l => l.ref).map(l => ({
       ref: l.ref,
       qty: engNumTxt(l.qty)
     })) : engUniq(pj.ppuNeeds, n => n.ref).map(n => ({
       ref: n.ref,
-      qty: ''
+      qty: ini(pP[n.ref])
     }));
-    var mat = (salvo, prev) => (salvo || []).length ? engUniq(salvo, engKeyMat).map(x => ({
+    var mat = (salvo, prev, pm) => (salvo || []).length ? engUniq(salvo, engKeyMat).map(x => ({
       sap: x.sap || '',
       name: x.name || '',
       unit: x.unit || '',
@@ -64813,7 +64848,7 @@ _Gerado por: ${user}_`;
       sap: x.sap || '',
       name: x.name || x.sap || '',
       unit: x.unit || '',
-      qty: ''
+      qty: ini(pm[engKeyMat(x)])
     }));
     var pes = (c.pes || []).length ? c.pes.map(p => ({
       funcao: p.funcao,
@@ -64821,16 +64856,17 @@ _Gerado por: ${user}_`;
       dias: engNumTxt(p.dias)
     })) : engUniq(pj.peopleNeeds, n => n.funcao).map(n => ({
       funcao: n.funcao,
-      pessoas: '',
-      dias: ''
+      pessoas: ini(pPe[n.funcao]),
+      dias: concluir ? engNumTxt(Number(pj.durationDays) || 1) : ''
     }));
     setEngCons({
       pjId: pj.id,
       data: c.data || pj.date || todayStr(),
       linhas,
-      quim: mat(c.quim, pj.chems),
-      cas: mat(c.cas, pj.casingNeeds),
-      pes
+      quim: mat(c.quim, pj.chems, pQ),
+      cas: mat(c.cas, pj.casingNeeds, pC),
+      pes,
+      concluir
     });
   };
   var renderEngCons = () => {
@@ -64976,10 +65012,10 @@ _Gerado por: ${user}_`;
     var gravar = reg => {
       updateDB(d => ({
         ...d,
-        plannedJobs: comLog((d.plannedJobs || []).map(j => j.id === pj.id ? {
+        plannedJobs: comLog((d.plannedJobs || []).map(j => j.id === pj.id ? engComConclusao({
           ...j,
           ppuCons: reg
-        } : j), [pj.id], logE(reg ? pj.ppuCons ? 'Consumo da operação alterado' : 'Consumo da operação lançado' : 'Consumo da operação apagado', {
+        }, reg, engCons.concluir) : j), [pj.id], logE(reg && engCons.concluir ? 'Operação concluída (consumo confirmado)' : reg ? pj.ppuCons ? 'Consumo da operação alterado' : 'Consumo da operação lançado' : 'Consumo da operação apagado', {
           detalhe: reg ? resumo(reg) : ''
         }))
       }), {
@@ -64989,12 +65025,12 @@ _Gerado por: ${user}_`;
         user: currentUser() || '—',
         detail: reg ? resumo(reg) : ''
       });
-      setPlanDraft(x => x && x.id === pj.id ? {
+      setPlanDraft(x => x && x.id === pj.id ? engComConclusao({
         ...x,
         ppuCons: reg
-      } : x);
+      }, reg, engCons.concluir) : x);
       setEngCons(null);
-      setOkMsg(reg ? 'Consumo salvo ✓ — ' + fmtBRL(tB) + ' · ' + fmtUSD(tU) : 'Consumo apagado ✓');
+      setOkMsg(reg && engCons.concluir ? 'Operação concluída ✓ — ' + fmtUSD(tU) : reg ? 'Consumo salvo ✓ — ' + fmtBRL(tB) + ' · ' + fmtUSD(tU) : 'Consumo apagado ✓');
       setTimeout(() => setOkMsg(''), 4000);
     };
     var salvar = () => {
@@ -65025,7 +65061,7 @@ _Gerado por: ${user}_`;
         em: new Date().toISOString(),
         por: currentUser() || ''
       };
-      gravar(linhas.length || reg.quim.length || reg.cas.length || pes.length ? reg : null);
+      gravar(linhas.length || reg.quim.length || reg.cas.length || pes.length || engCons.concluir ? reg : null);
     };
     var disponiveis = itens.filter(i => !engCons.linhas.some(l => l.ref === i.ref));
     var semLinhas = (n, txt) => engH("tr", null, engH("td", {
@@ -65105,12 +65141,14 @@ _Gerado por: ${user}_`;
       onClick: e => e.stopPropagation()
     }, engH("div", {
       className: "modal-title"
-    }, engH("span", null, 'Σ Consumo da operação — ' + (pj.well || 'poço a definir') + ' · ' + (tipoTxt(pj) || pj.tipoOp || '')), engH("button", {
+    }, engH("span", null, (engCons.concluir ? '✓ Concluir a operação — ' : 'Σ Consumo da operação — ') + (pj.well || 'poço a definir') + ' · ' + (tipoTxt(pj) || pj.tipoOp || '')), engH("button", {
       className: "modal-close",
       onClick: fechar
     }, "\xD7")), engH("div", {
       className: "ec-cons-id"
-    }, [rigFmt(rig), pj.date ? 'planejada para ' + fmtD(pj.date) : '', ct ? ct.name + (ct.numero && ct.numero !== ct.name ? ' · ' + ct.numero : '') : '', pj.salesOrder ? 'SO ' + pj.salesOrder : ''].filter(Boolean).join(' · ')), !ct ? engH("div", {
+    }, [rigFmt(rig), pj.date ? 'planejada para ' + fmtD(pj.date) : '', ct ? ct.name + (ct.numero && ct.numero !== ct.name ? ' · ' + ct.numero : '') : '', pj.salesOrder ? 'SO ' + pj.salesOrder : ''].filter(Boolean).join(' · ')), engCons.concluir && engH("div", {
+      className: "ec-conc-nota"
+    }, "Confira o que foi usado na opera\xE7\xE3o (j\xE1 vem com o previsto) e clique em \u201C\u2713 Concluir opera\xE7\xE3o\u201D. A receita e o COGS passam a ser realizados."), !ct ? engH("div", {
       className: "ec-aviso"
     }, "Esta opera\xE7\xE3o n\xE3o est\xE1 ligada a um contrato — abra a opera\xE7\xE3o e escolha o contrato.") : engH(React.Fragment, null, engH("div", {
       className: "ec-bar"
@@ -65290,7 +65328,7 @@ _Gerado por: ${user}_`;
       className: "btn-r ec-cons-ok",
       disabled: !ct || !engCons.data,
       onClick: salvar
-    }, nTot ? 'Salvar consumo (' + nTot + ' linha(s))' : 'Salvar consumo'))));
+    }, engCons.concluir ? '\u2713 Concluir opera\xE7\xE3o' + (nTot ? ' (' + nTot + ' linha(s))' : '') : nTot ? 'Salvar consumo (' + nTot + ' linha(s))' : 'Salvar consumo'))));
   };
 
   /* ---------------- aba "Consumo e receita" ---------------- */
@@ -68970,6 +69008,461 @@ _Gerado por: ${user}_`;
     })));
   };
   /* ============ fim LOGO DO CLIENTE (e13) ============ */
+
+  /* ================= e17 (pedido do Hugo, 25/11/2026) =================
+     1. Filtro "Sonda" (Visão geral e contrato): só as sondas com operação nos contratos escolhidos.
+     2. "✓ Concluir operação" na janela da operação: antes, cada item em contingência precisa ser respondido
+        ("usou" fica como item normal; "não usou" sai da operação). A operação deixa de ser contingência e o risco de
+        não acontecer vai a 0% (ela aconteceu). Depois, a tela do consumo (já com o previsto) confirma o que foi usado
+        e a operação fica concluída (ppuCons + concluida {em, por}). "↺ Reabrir" apaga o consumo e a conclusão.
+        Concluída = tem consumo lançado (como já era para os Indicadores e as planilhas); no Gantt fica preta.
+     3. Cor das linhas de uma sonda no Gantt: clique no nome da sonda e escolha a cor (fica neste navegador).
+     4. Receita e COGS (US$, valor cheio da operação, sem o risco) no Gantt, no Calendário e na Lista. */
+
+  /* ---- 1. sondas do filtro ---- */
+  var engRigsFiltro = () => {
+    var ids = new Set();
+    (planJobs || []).forEach(j => {
+      if (!j || !j.rigId || j.status === PJ_STATUS.CANC) return;
+      if (ctSel) {
+        if (!pjDoContrato(j, ctSel)) return;
+      } else {
+        var c = ctDoJob(j);
+        if (c && c.archived) return;
+        if (planMF.ct.length && !planMF.ct.includes(c ? c.id : '__sem')) return;
+      }
+      ids.add(j.rigId);
+    });
+    if (planF.rig) ids.add(planF.rig); // a sonda escolhida continua na lista
+    return (db.rigs || []).filter(r => ids.has(r.id)).sort((a, b) => String(rigFmt(a)).localeCompare(String(rigFmt(b)), 'pt'));
+  };
+
+  /* ---- 2. concluir a operação ---- */
+  var engConcluida = j => !!(j && (j.concluida || j.ppuCons));
+  var engComConclusao = (j, reg, concluir) => {
+    var o = {
+      ...j
+    };
+    if (!reg) delete o.concluida;else if (concluir) o.concluida = {
+      em: new Date().toISOString(),
+      por: (db.hoMail || {}).nome || currentUser() || ''
+    };
+    return o;
+  };
+  var ENG_CONT_LISTAS = [['ppuNeeds', 'Item PPU'], ['chems', 'Química'], ['casingNeeds', 'Casing'], ['peopleNeeds', 'Pessoal'], ['equipNeeds', 'Equipamento']];
+  var engContItens = j => {
+    var o = [];
+    ENG_CONT_LISTAS.forEach(([k, tipo]) => (j && Array.isArray(j[k]) ? j[k] : []).forEach((n, i) => {
+      if (!n || !n.cont) return;
+      var nome = k === 'ppuNeeds' ? [n.ref, n.desc].filter(Boolean).join(' — ') : k === 'peopleNeeds' ? n.funcao : k === 'equipNeeds' ? subtypeLabel(n.subtypeId) : n.name || n.sap;
+      o.push({
+        key: k + ':' + i,
+        k,
+        i,
+        tipo,
+        nome: nome || '—',
+        qty: n.qty,
+        unit: n.unit || '',
+        risco: engRiscoItem(n)
+      });
+    }));
+    return o;
+  };
+  var [engConc, setEngConc] = useState(null);
+  var abrirEngConcluir = d => {
+    if (!d || !d.id) return;
+    var pj = d;
+    setPlanDraft(null);
+    if (!engContItens(pj).length && !pj.contingencia && !(Number(pj.riscoRec) > 0)) {
+      abrirEngCons(pj, {
+        concluir: true
+      });
+      return;
+    }
+    setEngConc({
+      pjId: pj.id,
+      resp: {}
+    });
+  };
+  var engReabrir = d => askConfirm({
+    title: 'Reabrir a operação',
+    okLabel: 'Reabrir',
+    danger: true,
+    msg: engH("span", null, "Reabrir ", engH("b", null, d.well || '—', " \xB7 ", tipoTxt(d) || d.tipoOp), "?"),
+    hint: 'O consumo lançado é apagado: a receita e o COGS voltam a ser previstos. As contingências já resolvidas não voltam.',
+    onOk: () => {
+      updateDB(x => ({
+        ...x,
+        plannedJobs: comLog((x.plannedJobs || []).map(j => {
+          if (j.id !== d.id) return j;
+          var o = {
+            ...j
+          };
+          delete o.ppuCons;
+          delete o.concluida;
+          return o;
+        }), [d.id], logE('Operação reaberta (consumo apagado)'))
+      }), {
+        kind: 'Operação',
+        action: 'Alteração',
+        name: (d.well || '') + ' · ' + (d.tipoOp || ''),
+        user: currentUser() || '—',
+        detail: 'Reaberta'
+      });
+      setPlanDraft(x => {
+        if (!x || x.id !== d.id) return x;
+        var o = {
+          ...x
+        };
+        delete o.ppuCons;
+        delete o.concluida;
+        return o;
+      });
+      setOkMsg('Operação reaberta ✓');
+      setTimeout(() => setOkMsg(''), 4000);
+    }
+  });
+  // botões da janela da operação (no rodapé, ao lado do "Σ Consumo PPU")
+  var engConcBotoes = (d, travado, salvar) => {
+    if (!d || !d.id || d.__tpl) return null;
+    if (engConcluida(d)) return engH(React.Fragment, null, engH("span", {
+      className: "ec-tag ec-tag-conc eng-conc-chip",
+      title: d.concluida ? 'Concluída em ' + fmtDH(d.concluida.em) + (d.concluida.por ? ' por ' + d.concluida.por : '') : 'Consumo lançado'
+    }, "\u2713 Conclu\xEDda"), engH("button", {
+      className: "btn-o eng-reabrir",
+      title: "Volta a opera\xE7\xE3o para prevista (apaga o consumo lan\xE7ado)",
+      onClick: () => engReabrir(d)
+    }, "\u21BA Reabrir"));
+    return engH("button", {
+      className: "btn-g eng-concluir",
+      title: "Marca a opera\xE7\xE3o como conclu\xEDda: pergunta se as conting\xEAncias foram usadas e confirma o consumo",
+      onClick: () => {
+        var salvo = travado ? d : salvar(d);
+        if (salvo) abrirEngConcluir(salvo);
+      }
+    }, "\u2713 Concluir opera\xE7\xE3o");
+  };
+  var engConcTag = j => engConcluida(j) ? engH("span", {
+    className: "ec-tag ec-tag-conc",
+    title: j.concluida ? 'Concluída em ' + fmtDH(j.concluida.em) + (j.concluida.por ? ' por ' + j.concluida.por : '') : 'Consumo lançado'
+  }, "\u2713 Conclu\xEDda") : null;
+  var renderEngConc = () => {
+    if (!engConc) return null;
+    var pj = (db.plannedJobs || []).find(j => j.id === engConc.pjId);
+    if (!pj) return null;
+    var itens = engContItens(pj);
+    var resp = engConc.resp || {};
+    var falta = itens.filter(x => !resp[x.key]).length;
+    var rr = Number(pj.riscoRec) || 0;
+    var rig = (db.rigs || []).find(r => r.id === pj.rigId) || {};
+    var ct = ctDoJob(pj);
+    var fechar = () => setEngConc(null);
+    var marcar = (k, v) => setEngConc(x => ({
+      ...x,
+      resp: {
+        ...x.resp,
+        [k]: v
+      }
+    }));
+    var todos = v => setEngConc(x => {
+      var r = {
+        ...x.resp
+      };
+      itens.forEach(it => {
+        r[it.key] = v;
+      });
+      return {
+        ...x,
+        resp: r
+      };
+    });
+    var continuar = () => {
+      if (falta) return;
+      var usados = [],
+        tirados = [];
+      var novo = {
+        ...pj
+      };
+      ENG_CONT_LISTAS.forEach(([k]) => {
+        if (!Array.isArray(pj[k])) return;
+        novo[k] = pj[k].map((n, i) => {
+          if (!n || !n.cont) return n;
+          var it = itens.find(x => x.key === k + ':' + i);
+          if (resp[k + ':' + i] === 'nao') {
+            tirados.push(it);
+            return null;
+          }
+          usados.push(it);
+          var m = {
+            ...n,
+            cont: false
+          };
+          delete m.chance;
+          return m;
+        }).filter(Boolean);
+      });
+      novo.contingencia = false;
+      novo.riscoRec = 0;
+      novo.risco = null;
+      var det = [usados.length ? 'usadas: ' + usados.map(x => x.nome).join(', ') : '', tirados.length ? 'não usadas (saíram): ' + tirados.map(x => x.nome).join(', ') : '', pj.contingencia ? 'deixou de ser operação em contingência' : '', rr > 0 ? 'risco de não acontecer ' + rr + '% → 0%' : ''].filter(Boolean).join(' · ');
+      updateDB(x => ({
+        ...x,
+        plannedJobs: comLog((x.plannedJobs || []).map(j => j.id === pj.id ? novo : j), [pj.id], logE('Contingências resolvidas para concluir', {
+          detalhe: det
+        }))
+      }), {
+        kind: 'Operação',
+        action: 'Alteração',
+        name: (rigFmt(rig) || '—') + ' — ' + (pj.well || tipoTxt(pj) || ''),
+        user: currentUser() || '—',
+        detail: det
+      });
+      setEngConc(null);
+      abrirEngCons(novo, {
+        concluir: true
+      });
+    };
+    return engH("div", {
+      className: "overlay",
+      style: {
+        zIndex: 274
+      },
+      onClick: e => {
+        if (e.target === e.currentTarget) fechar();
+      }
+    }, engH("div", {
+      className: "modal ec-modal ec-conc-modal",
+      onClick: e => e.stopPropagation()
+    }, engH("div", {
+      className: "modal-title"
+    }, engH("span", null, '✓ Concluir a operação — ' + (pj.well || 'poço a definir') + ' · ' + (tipoTxt(pj) || pj.tipoOp || '')), engH("button", {
+      className: "modal-close",
+      onClick: fechar
+    }, "\xD7")), engH("div", {
+      className: "ec-cons-id"
+    }, [rigFmt(rig), pj.date ? fmtD(pj.date) : '', ct ? ct.name : ''].filter(Boolean).join(' · ')), engH("div", {
+      className: "ec-conc-nota"
+    }, itens.length ? 'Antes de concluir, diga se cada item em contingência foi usado. A operação não pode ser concluída com itens ainda em contingência: os usados ficam como itens normais; os não usados saem da operação.' : 'Nenhum item em contingência.'), pj.contingencia ? engH("div", {
+      className: "ec-aviso ec-conc-op"
+    }, 'Esta operação está em contingência (risco ' + fmtNum(rr) + '% de não acontecer). Ao concluir, ela deixa de ser contingência e entra inteira na receita e no COGS (risco 0%).') : rr > 0 ? engH("div", {
+      className: "ec-aviso ec-conc-op"
+    }, 'Risco de não acontecer: ' + fmtNum(rr) + '% → 0% (a operação aconteceu).') : null, itens.length > 0 && engH("div", {
+      className: "ec-conc-todos"
+    }, engH("button", {
+      className: "btn-o ec-conc-todos-sim",
+      onClick: () => todos('sim')
+    }, "Todas foram usadas"), engH("button", {
+      className: "btn-o ec-conc-todos-nao",
+      onClick: () => todos('nao')
+    }, "Nenhuma foi usada")), itens.length > 0 && engH("div", {
+      className: "tbl-scroll"
+    }, engH("table", {
+      className: "db-table ec-conc-tab"
+    }, engH("thead", null, engH("tr", null, ['Tipo', 'Item', 'Qtd.', 'Risco', 'Foi usada?'].map(h => engH("th", {
+      key: h
+    }, h)))), engH("tbody", null, itens.map(it => engH("tr", {
+      key: it.key,
+      className: resp[it.key] ? '' : 'ec-conc-falta'
+    }, engH("td", null, it.tipo), engH("td", null, it.nome), engH("td", {
+      style: {
+        whiteSpace: 'nowrap'
+      }
+    }, it.qty != null && it.qty !== '' ? fmtNum(engNum(it.qty) || 0) + (it.unit ? ' ' + it.unit : '') : '—'), engH("td", null, fmtNum(it.risco) + '%'), engH("td", {
+      style: {
+        whiteSpace: 'nowrap'
+      }
+    }, engH("button", {
+      className: 'btn-o ec-conc-sim' + (resp[it.key] === 'sim' ? ' on' : ''),
+      onClick: () => marcar(it.key, 'sim')
+    }, "\u2713 Usou"), engH("button", {
+      className: 'btn-o ec-conc-nao' + (resp[it.key] === 'nao' ? ' on' : ''),
+      onClick: () => marcar(it.key, 'nao')
+    }, "\u2715 N\xE3o usou"))))))), engH("div", {
+      className: "ec-foot"
+    }, falta > 0 && engH("em", {
+      className: "ec-conc-falta-txt"
+    }, 'Falta responder ' + falta + ' item(ns).'), engH("span", {
+      style: {
+        flex: 1
+      }
+    }), engH("button", {
+      className: "btn-o",
+      onClick: fechar
+    }, "Cancelar"), engH("button", {
+      className: "btn-r ec-conc-ok",
+      disabled: falta > 0,
+      onClick: continuar
+    }, "Continuar \u2192 confirmar o consumo"))));
+  };
+
+  /* ---- 3. cor das linhas de cada sonda no Gantt (neste navegador) ---- */
+  var ENG_CORES_SONDA = [['#CC0000', 'Vermelho'], ['#E67E22', 'Laranja'], ['#F1C40F', 'Amarelo'], ['#27AE60', 'Verde'], ['#16A085', 'Verde-água'], ['#2E86DE', 'Azul'], ['#6B3FA0', 'Roxo'], ['#E84393', 'Rosa'], ['#8D6E63', 'Marrom'], ['#6D757A', 'Cinza']];
+  var [engCoresSonda, setEngCoresSonda] = useState(() => {
+    try {
+      var v = JSON.parse(localStorage.getItem('eng_cores_sonda_v1') || '{}');
+      return v && typeof v === 'object' ? v : {};
+    } catch (e) {
+      return {};
+    }
+  });
+  var [engCorPop, setEngCorPop] = useState(null);
+  var engMudarCor = (rid, cor) => {
+    setEngCoresSonda(x => {
+      var o = {
+        ...x
+      };
+      if (cor) o[rid] = cor;else delete o[rid];
+      try {
+        localStorage.setItem('eng_cores_sonda_v1', JSON.stringify(o));
+      } catch (e) {}
+      return o;
+    });
+    setEngCorPop(null);
+  };
+  var engAbrirCor = (rid, e) => {
+    if (!rid) return;
+    var r = e && e.currentTarget ? e.currentTarget.getBoundingClientRect() : {
+      left: 40,
+      bottom: 120
+    };
+    setEngCorPop({
+      rid,
+      x: Math.min(r.left, window.innerWidth - 270),
+      y: Math.min(r.bottom + 6, window.innerHeight - 170)
+    });
+  };
+  var engCorRgba = (hex, a) => {
+    var m = /^#?([0-9a-f]{6})$/i.exec(String(hex || ''));
+    if (!m) return 'transparent';
+    var n = parseInt(m[1], 16);
+    return 'rgba(' + (n >> 16 & 255) + ',' + (n >> 8 & 255) + ',' + (n & 255) + ',' + a + ')';
+  };
+  // as regras de cor (linhas da sonda nos modos "Por sonda" e "Sonda contínua"; linhas da operação no "Por data")
+  var renderEngCoresCss = () => {
+    var ids = Object.keys(engCoresSonda || {}).filter(id => /^#[0-9a-f]{6}$/i.test(engCoresSonda[id]));
+    if (!ids.length) return null;
+    var q = id => String(id).replace(/["\\]/g, '\\$&');
+    var css = ids.map(id => {
+      var c = engCoresSonda[id],
+        fundo = engCorRgba(c, .16),
+        rot = engCorRgba(c, .34);
+      var g = '.eng-gl[data-rig="' + q(id) + '"]',
+        r = '.eng-gj[data-rigrow="' + q(id) + '"]';
+      // linhas (e as células da linha, no modo "Sonda contínua") com a cor clara; a coluna do nome (fixa) mais forte
+      return [g + ' > div, ' + r + '{background-color:' + fundo + ' !important}', g + ' div[style*="sticky"], ' + r + ' > div[style*="sticky"]{background-color:' + rot + ' !important;box-shadow:inset 4px 0 0 ' + c + '}'].join('\n');
+    }).join('\n');
+    return engH("style", {
+      id: "eng-cores-sonda"
+    }, css);
+  };
+  var renderEngCorPop = () => {
+    if (!engCorPop) return null;
+    var rig = (db.rigs || []).find(r => r.id === engCorPop.rid) || {};
+    var atual = engCoresSonda[engCorPop.rid] || '';
+    return engH("div", {
+      className: "eng-cor-overlay",
+      onClick: () => setEngCorPop(null)
+    }, engH("div", {
+      className: "eng-cor-pop",
+      style: {
+        left: engCorPop.x,
+        top: engCorPop.y
+      },
+      onClick: e => e.stopPropagation()
+    }, engH("b", null, "Cor das linhas \u2014 ", rigFmt(rig) || rig.name || ''), engH("div", {
+      className: "eng-cor-grid"
+    }, ENG_CORES_SONDA.map(([c, nome]) => engH("button", {
+      key: c,
+      type: "button",
+      className: 'eng-cor-sw' + (atual === c ? ' on' : ''),
+      "data-cor": c,
+      title: nome,
+      style: {
+        background: c
+      },
+      onClick: () => engMudarCor(engCorPop.rid, c)
+    }))), engH("button", {
+      type: "button",
+      className: "btn-o eng-cor-tirar",
+      disabled: !atual,
+      onClick: () => engMudarCor(engCorPop.rid, '')
+    }, "Sem cor")));
+  };
+
+  /* ---- 4. receita e COGS da operação (US$, valor cheio, sem o risco) ---- */
+  var engRcCache = useMemo(() => ({
+    idx: null,
+    m: new WeakMap()
+  }), [db]);
+  var engRC = j => {
+    if (!j) return null;
+    var C = engRcCache;
+    var v = C.m.get(j);
+    if (v) return v;
+    if (!C.idx) C.idx = engCogsIdx();
+    var ct = ctDoJob(j);
+    var c = j.ppuCons;
+    var real = !!c;
+    var data = real ? c.data || j.date : j.date;
+    var rec = 0,
+      semPreco = 0;
+    (real ? c.linhas || [] : j.ppuNeeds || []).forEach(l => {
+      var q = engNum(l && l.qty) || 0;
+      if (!q || !l.ref) return;
+      var p = ct ? ctPreco(ct, l.ref, data) : {};
+      var u = engUsdLinha(q, p, data);
+      if (u != null) rec += u;else semPreco++;
+    });
+    var cg = engCogsSoma(C.idx, real ? (c.quim || []).concat(c.cas || []) : (j.chems || []).concat(j.casingNeeds || []));
+    v = {
+      rec,
+      cogs: cg.u,
+      real,
+      semPreco,
+      semCogs: cg.sem,
+      temCt: !!ct
+    };
+    C.m.set(j, v);
+    return v;
+  };
+  var engUsdCurto = v => {
+    var a = Math.abs(v || 0);
+    if (a >= 1e6) return 'US$ ' + fmtNum(Math.round(v / 1e4) / 100) + ' mi';
+    if (a >= 1e3) return 'US$ ' + fmtNum(Math.round(v / 100) / 10) + ' mil';
+    return 'US$ ' + fmtNum(Math.round(v || 0));
+  };
+  var engRcTit = j => {
+    var v = engRC(j);
+    if (!v) return '';
+    var rr = Number(j.riscoRec) || 0;
+    return ' · Receita ' + fmtUSD(v.rec) + ' · COGS ' + fmtUSD(v.cogs) + (v.real ? ' (realizado)' : ' (previsto)') + (rr > 0 ? ' · risco ' + rr + '% (nos indicadores entra ' + (100 - Math.min(100, rr)) + '%)' : '');
+  };
+  var engRcLinha = j => {
+    var v = engRC(j);
+    if (!v) return null;
+    return engH("div", {
+      className: 'eng-rc' + (v.real ? ' eng-rc-real' : ''),
+      title: 'Valor cheio da operação (sem o risco), ' + (v.real ? 'realizado (consumo lançado)' : 'previsto') + ': receita ' + fmtUSD(v.rec) + ' · COGS ' + fmtUSD(v.cogs) + (v.semPreco ? ' · ' + v.semPreco + ' item(ns) sem preço' : '')
+    }, engUsdCurto(v.rec), engH("i", null, " \xB7 COGS "), engUsdCurto(v.cogs).replace('US$ ', ''));
+  };
+  var engRcCal = j => {
+    var v = engRC(j);
+    if (!v) return null;
+    return engH("b", {
+      className: "eng-rc-cal"
+    }, engUsdCurto(v.rec), " \xB7 COGS ", engUsdCurto(v.cogs).replace('US$ ', ''));
+  };
+  var engRcTd = (j, k) => {
+    var v = engRC(j);
+    return engH("td", {
+      className: 'eng-rc-td eng-rc-' + k,
+      style: {
+        whiteSpace: 'nowrap',
+        textAlign: 'right'
+      },
+      title: v ? (v.real ? 'Realizado (consumo lançado)' : 'Previsto') + ' — valor cheio, sem o risco' : ''
+    }, v ? fmtUSD(k === 'rec' ? v.rec : v.cogs) : '—');
+  };
   var renderHandover = () => {
     var hd = hoDraft;
     if (!hd) return null;
@@ -112398,7 +112891,7 @@ ${transferDraft.notes ? '<p><b>Observações:</b> ' + esc(transferDraft.notes) +
     style: {
       flex: 1
     }
-  }, okMsg)), renderMainTabs(), safeTab === 'home' && renderHome(), safeTab === 'mob' && !planAssumed && renderSupQueue(), safeTab === 'mob' && planAssumed && React.createElement(React.Fragment, null, renderPlanRef(), renderStepper(), step === 1 && renderStep1(), step === 2 && renderStep2(), step === 3 && renderStep3(), step === 4 && renderStepChem(), step === 5 && renderStep4(), step === 6 && renderStep5(), renderMobFooter()), safeTab === 'ops' && renderOps(), safeTab === 'plan' && renderPlanejamento(), safeTab === 'coord' && renderCoord(), safeTab === 'logi' && renderLogi(), safeTab === 'lab' && renderLab(), safeTab === 'pes' && React.createElement(React.Fragment, null, secBar('pes'), renderParteApp('pessoal')), safeTab === 'eqp' && React.createElement(React.Fragment, null, secBar('eqp'), renderParteApp('equipamentos')), safeTab === 'dar' && renderDarFor(null), safeTab === 'rig' && renderRigXray(), safeTab === 'sl' && React.createElement(React.Fragment, null, hubLocation !== 'brasil' && secBar('pes'), renderEscalas()), safeTab === 'pab' && React.createElement(React.Fragment, null, secBar('pes'), renderPesBordo(), renderPesDesForm(), renderEmbForm()), safeTab === 'bulk' && renderBulk(), safeTab === 'chem' && renderChem(), safeTab === 'fc' && renderForecast(), safeTab === 'ind' && renderIndicadores(), safeTab === 'pfl' && React.createElement(React.Fragment, null, hubLocation !== 'brasil' && secBar('pes'), renderPerfis()), safeTab === 'equip' && React.createElement(React.Fragment, null, secBar(hubLocation === 'brasil' ? 'eqpBr' : 'eqp'), renderEquipmentWithScroll()), safeTab === 'eqs' && React.createElement(React.Fragment, null, secBar(hubLocation === 'brasil' ? 'eqpBr' : 'eqp'), renderEqSondas()), safeTab === 'hi' && hiMob && React.createElement(React.Fragment, null, renderHIStepper(), hiStep === 6 && renderHIEquipe(), hiStep === 7 && renderHIEquip(), hiStep === 8 && renderHI6(), hiStep === 9 && renderHI7(), hiStep === 10 && renderHI8(), hiStep === 11 && renderHI9(), hiStep === 12 && renderHI10(), renderHIFooter()), safeTab === 'jl' && jlMob && renderJL(), safeTab === 'db' && adminUnlocked && renderDB(), safeTab === 'ana' && adminUnlocked && renderAnalytics(mobs.filter(mobNoRecorte)), safeTab === 'br' && adminUnlocked && renderBrasil(), renderAvisos(), renderPlanForm(), renderHandover(), renderHoReview(), renderCoordRev(), renderParteRev(), renderLogView(), renderEnvView(), renderEmbModal(), renderCiencia(), renderAmoView(), renderAmoSup(), renderAmoLog(), renderAmoLab(), renderAmoFoto(), renderAdicForm(), renderProcView(), safeTab !== 'rig' && renderExpForm(), safeTab !== 'rig' && renderAmoForm(), renderReleaseGate(), renderPlanCascade(), renderEngSondas(), renderEngContratos(), renderEngQuim(), renderEngCasDb(), renderEngEspaco(), renderEngCons(), renderEngImpDados(), renderEngGer(), renderEngInvEd(), renderEngExp(), renderEngCambio(), renderEngLogo(), renderRigForm(), renderConfirmBox(), renderDiaPanel(), escalaPrompt && (() => {
+  }, okMsg)), renderMainTabs(), safeTab === 'home' && renderHome(), safeTab === 'mob' && !planAssumed && renderSupQueue(), safeTab === 'mob' && planAssumed && React.createElement(React.Fragment, null, renderPlanRef(), renderStepper(), step === 1 && renderStep1(), step === 2 && renderStep2(), step === 3 && renderStep3(), step === 4 && renderStepChem(), step === 5 && renderStep4(), step === 6 && renderStep5(), renderMobFooter()), safeTab === 'ops' && renderOps(), safeTab === 'plan' && renderPlanejamento(), safeTab === 'coord' && renderCoord(), safeTab === 'logi' && renderLogi(), safeTab === 'lab' && renderLab(), safeTab === 'pes' && React.createElement(React.Fragment, null, secBar('pes'), renderParteApp('pessoal')), safeTab === 'eqp' && React.createElement(React.Fragment, null, secBar('eqp'), renderParteApp('equipamentos')), safeTab === 'dar' && renderDarFor(null), safeTab === 'rig' && renderRigXray(), safeTab === 'sl' && React.createElement(React.Fragment, null, hubLocation !== 'brasil' && secBar('pes'), renderEscalas()), safeTab === 'pab' && React.createElement(React.Fragment, null, secBar('pes'), renderPesBordo(), renderPesDesForm(), renderEmbForm()), safeTab === 'bulk' && renderBulk(), safeTab === 'chem' && renderChem(), safeTab === 'fc' && renderForecast(), safeTab === 'ind' && renderIndicadores(), safeTab === 'pfl' && React.createElement(React.Fragment, null, hubLocation !== 'brasil' && secBar('pes'), renderPerfis()), safeTab === 'equip' && React.createElement(React.Fragment, null, secBar(hubLocation === 'brasil' ? 'eqpBr' : 'eqp'), renderEquipmentWithScroll()), safeTab === 'eqs' && React.createElement(React.Fragment, null, secBar(hubLocation === 'brasil' ? 'eqpBr' : 'eqp'), renderEqSondas()), safeTab === 'hi' && hiMob && React.createElement(React.Fragment, null, renderHIStepper(), hiStep === 6 && renderHIEquipe(), hiStep === 7 && renderHIEquip(), hiStep === 8 && renderHI6(), hiStep === 9 && renderHI7(), hiStep === 10 && renderHI8(), hiStep === 11 && renderHI9(), hiStep === 12 && renderHI10(), renderHIFooter()), safeTab === 'jl' && jlMob && renderJL(), safeTab === 'db' && adminUnlocked && renderDB(), safeTab === 'ana' && adminUnlocked && renderAnalytics(mobs.filter(mobNoRecorte)), safeTab === 'br' && adminUnlocked && renderBrasil(), renderAvisos(), renderPlanForm(), renderHandover(), renderHoReview(), renderCoordRev(), renderParteRev(), renderLogView(), renderEnvView(), renderEmbModal(), renderCiencia(), renderAmoView(), renderAmoSup(), renderAmoLog(), renderAmoLab(), renderAmoFoto(), renderAdicForm(), renderProcView(), safeTab !== 'rig' && renderExpForm(), safeTab !== 'rig' && renderAmoForm(), renderReleaseGate(), renderPlanCascade(), renderEngSondas(), renderEngContratos(), renderEngQuim(), renderEngCasDb(), renderEngEspaco(), renderEngCons(), renderEngConc(), renderEngCorPop(), renderEngCoresCss(), renderEngImpDados(), renderEngGer(), renderEngInvEd(), renderEngExp(), renderEngCambio(), renderEngLogo(), renderRigForm(), renderConfirmBox(), renderDiaPanel(), escalaPrompt && (() => {
     var e = escalaPrompt;
     var membros = (e.team.members || []).map(id => (db.people || []).find(p => p.id === id)).filter(Boolean);
     var aceitar = () => {

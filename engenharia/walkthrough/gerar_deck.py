@@ -190,11 +190,11 @@ S2 = 'Planejar'
 secao(2, S2, 'Como a engenharia monta o plano e prevê os recursos de cada operação.',
       [(6, 'O plano por sonda'), (7, 'Lista e calendário'), (8, 'Nova operação'), (9, 'Recursos, contingência e risco')])
 passo(6, S2, 'O plano por sonda', [
-    'Cada barra é uma operação planejada, na cor da etapa. Em roxo, as operações de contingência.',
-    'Arraste a barra para mudar a data. As operações ligadas na mesma sonda acompanham, para a frente ou para trás.',
-    'Filtre por sonda, tipo e situação no topo.'], '05_gantt.jpg')
+    'Cada barra é uma operação, na cor da etapa: roxo = contingência, preto = concluída. Embaixo do poço, a receita e o COGS (US$, valor cheio) da operação.',
+    'Arraste a barra para mudar a data: as operações ligadas na mesma sonda acompanham. Clique no nome da sonda para escolher a cor das linhas dela.',
+    'Filtre por sonda (só as sondas com operação), tipo e situação no topo.'], '05_gantt.jpg')
 passo2(7, S2, 'Lista e calendário',
-       'A <b>Lista</b> mostra as operações por data. Escolha o horizonte: 15, 30, 90, 180 dias ou <b>Todas</b>. Cada linha tem Editar, Duplicar, Σ Consumo e Handover.',
+       'A <b>Lista</b> mostra as operações por data, com a receita e o COGS (US$) de cada uma. Escolha o horizonte: 15, 30, 90, 180 dias ou <b>Todas</b>. Cada linha tem Editar, Duplicar, Σ Consumo e Handover.',
        ('06_lista.jpg', 'Lista', 'as operações e os botões de cada uma'), ('07_calendario.jpg', 'Calendário', 'o mês de uma vez'))
 passo(8, S2, 'Nova operação', [
     'Sonda, poço, tipo, data e duração. Sales Order e Nº VIDA podem ficar para depois: só são exigidos para enviar o handover.',
@@ -217,11 +217,10 @@ passo2(11, S3, 'O e-mail pronto no Outlook',
 
 S4 = 'Consumo e receita'
 secao(4, S4, 'O que foi usado em cada operação e quanto isso gera de receita.',
-      [(12, 'Lançar o consumo'), (13, 'Consumo e receita do contrato'), (14, 'O câmbio do mês')])
-passo(12, S4, 'Lançar o consumo', [
-    'Depois da operação, clique em <b>Σ Consumo</b>: a data do serviço, os itens PPU (com o valor vigente na data), as químicas, o casing e o pessoal.',
-    '“Copiar previsto” traz o planejado para você só ajustar.',
-    'O app avisa quando um item passa do saldo do contrato.'], '13_lancar_consumo.jpg')
+      [(12, 'Concluir a operação'), (13, 'Consumo e receita do contrato'), (14, 'O câmbio do mês')])
+passo2(12, S4, 'Concluir a operação',
+       'Na janela da operação, <b>✓ Concluir operação</b>. Primeiro, diga se cada contingência foi usada: a usada vira item normal; a não usada sai. Depois, confirme o consumo (já vem com o previsto) e a operação fica <b>concluída</b>: preta no Gantt, realizada nos Indicadores. “↺ Reabrir” desfaz.',
+       ('24_concluir.jpg', 'Contingências', 'usou ou não usou'), ('25_concluir_consumo.jpg', 'Consumo', 'confirme o que foi usado'))
 passo(13, S4, 'Consumo e receita do contrato', [
     'Receita em R$ e em US$, COGS e margem do consumo lançado no período escolhido.',
     'Abaixo: a receita por operação, o saldo de cada item PPU e a receita por mês.',
