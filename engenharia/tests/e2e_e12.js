@@ -264,7 +264,7 @@ const VIS = ' tbody tr:not([data-etfh])';
   const TL = 'table.db-table';
   await page.waitForSelector(TL + ' th .etf-b');
   const poco = () => page.$$eval(TL + VIS, l => l.map(r => r.cells[2].innerText.trim()));
-  await page.click(TL + ' thead th:nth-child(3)');
+  await page.click(TL + ' thead th:nth-child(3)', {position: {x: 8, y: 10}}); // no nome da coluna (e17: a coluna ficou mais estreita e o meio caía no ▾)
   conf((await poco()).join() === 'A-1,B-2,C-3', 'Lista: Poço em ordem crescente', await poco());
   await page.click(TL + ' thead th:nth-child(1) .etf-b');
   await page.click('#etfPop [data-o="-1"]');
