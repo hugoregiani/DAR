@@ -98,6 +98,49 @@ A Engenharia do EARL separada do resto do sistema, agora chamada **EARL Forecast
 - **Exportações:** "Consumo de produtos químicos", "Casing equipment" e "Pessoal" ganharam **Contingência (linha)** e **Risco da linha (%)**; a operação já tinha Contingência e Risco (%). O Painel de Compras aplica o risco da linha.
 - **Cards** da aba "Consumo e receita" com profundidade, como os do Gerencial g16.
 
+### e22 (27/11/2026) — Gantt mostra a operação salva, desfazer/refazer, grupos de contratos, filtros que ficam, operação sem sonda
+
+Pedidos do Hugo (código novo em `eng_e22.js`; patch, bloco e22):
+- **Operação que "sumia" do Gantt** (contrato "Deepwater Aquila" do DC, com operações só no 1º semestre): o Gantt abre
+  perto de hoje e só mostra o que está na janela. Agora, sem nenhuma operação perto de hoje, ele abre com tudo; e a
+  operação salva fora da janela leva a janela até ela (`engMostrarOpNoGantt`, também no duplicar o poço).
+- **Operações de contratos diferentes são independentes**: a fila da sonda (`planCascade`, "Reorganizar a fila da
+  sonda?") e o vínculo de data com a operação anterior (`planChain`) só valem dentro do mesmo contrato
+  (`engCtChave`); operação sem sonda não entra em fila. Antes, criar uma operação no "Deepwater Aquila" propunha mover a
+  do "Deepwater Aquila_2026" (mesma sonda).
+- **Operação sem sonda**: o campo virou "Sonda (opcional)"; sem sonda, ela fica na linha "(sem sonda)" do Gantt.
+- **Tipos**: "Disponibilidade de Pessoal" e "Disponibilidade de Equipamentos" (com "Entrega de Cimento/Blend" e
+  "Perfuração").
+- **Desfazer / refazer como no Excel**: botões "↶ Desfazer" / "↷ Refazer" na barra (o título diz o que desfaz) e
+  Ctrl+Z / Ctrl+Y (ou Ctrl+Shift+Z). Guarda o banco antes de cada alteração (`updateDB`), até 60 passos, enquanto o
+  arquivo está aberto. Dentro de um campo de texto vale o desfazer do campo; com uma janela aberta, nada muda por baixo.
+- **Cards dos contratos** (`db.engCards = {ordem, grupos}`, salvo no arquivo e com desfazer):
+  - **arrastar** o card para mudar a ordem (a ordem fica, inclusive ao reabrir);
+  - **grupos**: "🗂 Novo grupo" (nome + contratos) ou "⋯ → 🗂 Pôr num grupo…"; soltar um contrato no meio do card do
+    grupo coloca nele; o grupo fechado é um card só (contratos, operações, sondas, próxima); aberto, mostra os contratos
+    como uma pasta, com "⬇ Exportar grupo", "✎ Renomear" e "Desagrupar"; "↩ Tirar do grupo" no ⋯ do contrato;
+  - **exportar o grupo**: um .json com todos os contratos do grupo, `EARL_FORECAST_<NOME DO CARD>_AAAA.MM.DD_HHhMM.json`
+    (campo `grupo {nome, contratos}`); também na janela "Exportar dados" (seção Grupos). O importar recria o grupo.
+- **Filtros que ficam**: no Forecast (sonda, tipo, status, contrato/base/cliente, ordem, "só o que está na janela",
+  horizonte da Lista e Gantt/Calendário/Lista — `eng_filtros_v1`; as pílulas já ficavam) e nos Indicadores (Gerencial
+  g22) ficam até a pessoa mudar, também ao reabrir o arquivo.
+- **Paleta de cores da sonda**: 30 cores (eram 10), mais "Outra cor".
+- **Janelas**: uma alça visível no canto de baixo à direita da janela de cima (`eng_redim.js`), para mostrar que dá para
+  puxar a borda ou o canto.
+- **Arquivos dos contratos reais**: saiu o botão "Reiniciar" da faixa (a função `earlPlReiniciar` fica só para os
+  testes); idem na faixa "TESTE BP".
+- **Teste:** `tests/e2e_e22.js` (37).
+
+### e21 (27/11/2026) — importar: "＋ Adicionar arquivos", tirar um arquivo, arrastar os .json para a tela
+
+- Na janela "⬆ Importar dados": "＋ Adicionar arquivos" soma mais arquivos aos que já estão na janela (o mesmo arquivo
+  não entra duas vezes) e o "×" de cada arquivo tira ele da importação. A dica explica: para escolher vários de uma vez,
+  segure Ctrl ao clicar nos arquivos.
+- Arrastar arquivos .json do computador para qualquer lugar da tela abre a importação (ou soma à janela aberta);
+  aparece "Solte aqui os arquivos .json". Arquivo que não é .json: aviso. O navegador não abre o arquivo no lugar do app.
+- Chave de cada arquivo estável (`a.k`), para somar e tirar sem confundir as marcações.
+- **Teste:** `tests/e2e_e19.js` (57).
+
 ### e20 (27/11/2026) — um .json por contrato, importar vários arquivos de uma vez, entrega só do arquivo padrão
 
 Pedidos do Hugo:
@@ -463,4 +506,4 @@ node contratos_reais/e2e_contratos_reais.js <pasta das planilhas> <pasta dos HTM
     - apagar com operações: só com APAGAR, levando as operações e o handover;
     - os contratos apagados não voltam ao reabrir.
 - **A seção Receita e margem é o `../gerencial/gerencial.html`**, embutido pelo patch (`ENG_GER_HTML`, num iframe, no modo embutido do Gerencial). Mudou o Gerencial? Gere de novo o `EARL_Engenharia.html`.
-- Versão: `EARL_VERSION = 'EARL Forecast e20 (base v115)'`. O teste do fluxo completo com o Gerencial está em `../gerencial/tests/e2e_gerencial.js`.
+- Versão: `EARL_VERSION = 'EARL Forecast e22 (base v115)'`. O teste do fluxo completo com o Gerencial está em `../gerencial/tests/e2e_gerencial.js`.

@@ -182,7 +182,8 @@ const usd = v => 'US$ ' + v.toLocaleString('pt-BR', {minimumFractionDigits: 2, m
   console.log('Reiniciar');
   await p.evaluate(() => { const d = JSON.parse(localStorage.getItem('hal_cmt_db_v1')); d.plannedJobs = d.plannedJobs.filter(j => j.id !== 'bp_op_01'); localStorage.setItem('hal_cmt_db_v1', JSON.stringify(d)); });
   p.once('dialog', d => d.accept());
-  await Promise.all([p.waitForEvent('load'), p.click('.earl-bp-tag button')]);
+  conf(!(await p.locator('.earl-bp-tag button').count()), 'a faixa “TESTE BP” não tem mais o botão “Reiniciar” (e22)');
+  await Promise.all([p.waitForEvent('load'), p.evaluate(() => { setTimeout(() => window.earlBpReiniciar(), 0); })]);
   await p.waitForSelector('.eng-tools');
   const n2 = await p.evaluate(() => JSON.parse(localStorage.getItem('hal_cmt_db_v1')).plannedJobs.filter(j => j.contratoId === 'ct_bp').length);
   conf(n2 === 27, '“Reiniciar” volta aos dados da planilha', n2);

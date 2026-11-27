@@ -141,4 +141,48 @@
     }
   });
   window.engRedimSoltar = soltar;
+  /* e22: uma alça visível no canto de baixo à direita da janela que está por cima (mostra que dá para puxar).
+     Não recebe o ponteiro: o arraste continua sendo pela borda/canto, como acima. */
+  var alca = null, rodando = false, raio = typeof WeakMap === 'function' ? new WeakMap() : null;
+  // o canto é arredondado: a alça fica para dentro da curva (cerca de 0,3 × o raio)
+  var recuo = function (m) {
+    var v = raio && raio.get(m);
+    if (v == null) { v = Math.round((parseFloat(getComputedStyle(m).borderBottomRightRadius) || 0) * 0.3) + 3; if (raio) raio.set(m, v); }
+    return v;
+  };
+  var poeAlca = function () {
+    var achou = null, em = null;
+    for (var k = 0; k < VIVAS.length && !achou; k++) {
+      var l = VIVAS[k];
+      for (var i = l.length - 1; i >= 0; i--) {
+        var r = l[i].getBoundingClientRect();
+        if (!r.width || !r.height) continue;
+        var rc = recuo(l[i]);
+        var el = document.elementFromPoint(Math.max(0, r.right - rc - 6), Math.max(0, r.bottom - rc - 6));
+        if (el && (el === l[i] || l[i].contains(el))) { achou = r; em = rc; break; }
+      }
+    }
+    if (!achou) { if (alca) alca.style.display = 'none'; return false; }
+    if (!alca) {
+      alca = document.createElement('div');
+      alca.className = 'eng-rz-alca';
+      alca.setAttribute('aria-hidden', 'true');
+      alca.style.cssText = 'position:fixed;width:14px;height:14px;pointer-events:none;z-index:2147483000;opacity:.75;' +
+        'background:linear-gradient(135deg,transparent 0 46%,#8E979D 46% 54%,transparent 54% 64%,#8E979D 64% 72%,transparent 72% 82%,#8E979D 82% 90%,transparent 90%)';
+      document.body.appendChild(alca);
+    }
+    alca.style.display = 'block';
+    alca.style.left = Math.round(achou.right - 14 - em) + 'px';
+    alca.style.top = Math.round(achou.bottom - 14 - em) + 'px';
+    return true;
+  };
+  var laco = function () {
+    var tem = VIVAS.some(function (l) { return l.length > 0; });
+    if (!tem) { rodando = false; if (alca) alca.style.display = 'none'; return; }
+    poeAlca();
+    requestAnimationFrame(laco);
+  };
+  var acorda = function () { if (!rodando && VIVAS.some(function (l) { return l.length > 0; })) { rodando = true; requestAnimationFrame(laco); } };
+  try { new MutationObserver(acorda).observe(document.documentElement, {childList: true, subtree: true}); } catch (e) {}
+  acorda();
 })();

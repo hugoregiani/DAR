@@ -167,8 +167,9 @@ function totaisPlanilha(b64) {
     await p.reload();
     await p.waitForSelector('.eng2-card');
     const n1 = await p.evaluate(() => JSON.parse(localStorage.getItem('hal_cmt_db_v1')).plannedJobs.length);
+    conf(!(await p.locator('.earl-pl-tag button').count()), NOME + ': a faixa do arquivo não tem mais o botão “Reiniciar” (e22)');
     p.once('dialog', d => d.accept());
-    await Promise.all([p.waitForEvent('load'), p.click('.earl-pl-tag button')]);
+    await Promise.all([p.waitForEvent('load'), p.evaluate(() => { setTimeout(() => window.earlPlReiniciar(), 0); })]);
     await p.waitForSelector('.eng2-card');
     const n2 = await p.evaluate(() => JSON.parse(localStorage.getItem('hal_cmt_db_v1')).plannedJobs.length);
     conf(n1 === db.ops - 1 && n2 === db.ops, 'alteração fica salva ao reabrir; “Reiniciar” volta aos dados da planilha', [n1, n2]);

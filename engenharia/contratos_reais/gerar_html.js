@@ -308,6 +308,7 @@ function embutir(base, seed, nome, arquivo, xlsxBytes) {
   try{guardado=G.call(localStorage,P+'earl_pl_id');precisa=!G.call(localStorage,P+'hal_cmt_db_v1')||(guardado!==PLID&&PLID_COMPAT.indexOf(guardado)<0);}catch(e){}
   if(precisa){try{gravar();}catch(e){window.EARL_PL_SEM_ESPACO=true;}}
   else if(guardado!==PLID){try{S.call(localStorage,P+'earl_pl_id',PLID);}catch(e){}}
+  /* e22 (pedido do Hugo): saiu o botão "Reiniciar" da faixa; a função fica só para os testes */
   window.earlPlReiniciar=function(){
     if(!confirm('Voltar aos dados da planilha '+PL_ARQ+'?\\n\\nTudo o que foi lançado neste arquivo, neste computador, será apagado.'))return;
     try{gravar();}catch(e){}
@@ -315,17 +316,16 @@ function embutir(base, seed, nome, arquivo, xlsxBytes) {
   };
   document.addEventListener('DOMContentLoaded',function(){
     var t=document.createElement('div');t.className='earl-pl-tag'+(window.EARL_PL_SEM_ESPACO?' sem':'');
-    var b=document.createElement('b'),sp=document.createElement('span'),bt=document.createElement('button');
+    var b=document.createElement('b'),sp=document.createElement('span');
     b.textContent=PL_NOME;sp.textContent=window.EARL_PL_SEM_ESPACO?'⚠ este navegador não está salvando: o arquivo abre, mas as alterações não ficam salvas':'dados da planilha '+PL_ARQ+' · gerado em ${geradoEm}';
-    bt.type='button';bt.title='Voltar aos dados da planilha';bt.textContent='Reiniciar';bt.onclick=window.earlPlReiniciar;
-    t.appendChild(b);t.appendChild(sp);t.appendChild(bt);
+    t.appendChild(b);t.appendChild(sp);
     document.body.appendChild(t);
   });
 `;
   s = s.slice(0, j) + bloco + s.slice(j);
   s = s.replace(fim, () => fim + `
 <style>
-.earl-pl-tag{position:fixed;left:12px;bottom:12px;z-index:9000;display:flex;align-items:center;gap:10px;background:#1F4E79;color:#fff;border-radius:999px;padding:5px 6px 5px 14px;font:500 12px/1.2 Roboto,system-ui,sans-serif;box-shadow:0 4px 14px rgba(0,0,0,.18)}
+.earl-pl-tag{position:fixed;left:12px;bottom:12px;z-index:9000;display:flex;align-items:center;gap:10px;background:#1F4E79;color:#fff;border-radius:999px;padding:6px 14px;pointer-events:none;font:500 12px/1.2 Roboto,system-ui,sans-serif;box-shadow:0 4px 14px rgba(0,0,0,.18)}
 .earl-pl-tag b{font-weight:700;letter-spacing:.06em}
 .earl-pl-tag span{opacity:.85}
 .earl-pl-tag button{background:#fff;color:#1F4E79;border:0;border-radius:999px;padding:4px 11px;font:600 12px Roboto,system-ui,sans-serif;cursor:pointer}

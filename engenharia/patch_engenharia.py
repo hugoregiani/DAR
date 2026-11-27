@@ -105,7 +105,7 @@ assert i > 0
 s = s[:i] + css + s[i:]
 
 # ---------------------------------------------------------------- app (código compilado)
-rep("var EARL_VERSION = 'EARL v115';", "var EARL_VERSION = 'EARL Forecast e21 (base v115)';")
+rep("var EARL_VERSION = 'EARL v115';", "var EARL_VERSION = 'EARL Forecast e22 (base v115)';")
 rep("var HO_ST = {\n  pendente: {", "var HO_ST = {\n  email: {\n    label: 'Enviado por e-mail',\n    c: '#304220',\n    bg: '#F1F5EC',\n    brd: '#D9E4CC'\n  },\n  pendente: {")
 # quem gera o e-mail assina os registros (sem login)
 rep("  var currentUser = () => authUser && authUser.email || sbUser || '';",
@@ -644,7 +644,7 @@ rep("      if (d.people && d.people.length > 0) return migrateDB(d);", "      if
 rep("  return migrateDB(JSON.parse(JSON.stringify(SEED_DB)));", "  return engQuimMig(migrateDB(JSON.parse(JSON.stringify(SEED_DB))));")
 
 # Código novo (antes de renderHandover) e janelas novas na árvore
-novo = open(os.path.join(AQUI, 'eng_app.js'), encoding='utf-8').read() + '\n' + open(os.path.join(AQUI, 'eng_contratos.js'), encoding='utf-8').read() + '\n' + open(os.path.join(AQUI, 'eng_quimicos.js'), encoding='utf-8').read() + '\n' + open(os.path.join(AQUI, 'eng_inventario.js'), encoding='utf-8').read() + '\n' + open(os.path.join(AQUI, 'eng_cambio.js'), encoding='utf-8').read() + '\n' + open(os.path.join(AQUI, 'eng_logo.js'), encoding='utf-8').read() + '\n' + open(os.path.join(AQUI, 'eng_e17.js'), encoding='utf-8').read() + '\n' + open(os.path.join(AQUI, 'eng_e19.js'), encoding='utf-8').read()
+novo = open(os.path.join(AQUI, 'eng_app.js'), encoding='utf-8').read() + '\n' + open(os.path.join(AQUI, 'eng_contratos.js'), encoding='utf-8').read() + '\n' + open(os.path.join(AQUI, 'eng_quimicos.js'), encoding='utf-8').read() + '\n' + open(os.path.join(AQUI, 'eng_inventario.js'), encoding='utf-8').read() + '\n' + open(os.path.join(AQUI, 'eng_cambio.js'), encoding='utf-8').read() + '\n' + open(os.path.join(AQUI, 'eng_logo.js'), encoding='utf-8').read() + '\n' + open(os.path.join(AQUI, 'eng_e17.js'), encoding='utf-8').read() + '\n' + open(os.path.join(AQUI, 'eng_e19.js'), encoding='utf-8').read() + '\n' + open(os.path.join(AQUI, 'eng_e22.js'), encoding='utf-8').read()
 rep("  var renderHandover = () => {\n", novo.rstrip('\n') + "\n  var renderHandover = () => {\n")
 rep("renderRigForm(), renderConfirmBox(),", "renderEngSondas(), renderEngContratos(), renderEngQuim(), renderEngCasDb(), renderEngEspaco(), renderEngCons(), renderEngImpDados(), renderEngGer(), renderEngInvEd(), renderEngExp(), renderEngCambio(), renderEngLogo(), renderRigForm(), renderConfirmBox(),")
 # sonda salva com data de alteração (para o "juntar" da importação ficar com a mais recente)
@@ -940,6 +940,147 @@ rep("""}, {
 }, {""")
 rep("  'Perfuração': 'Drilling',\n  'Top-job': 'Top-job',\n", "  'Perfuração': 'Drilling',\n  'Entrega de Cimento/Blend': 'Cement/Blend delivery',\n  'Top-job': 'Top-job',\n")
 rep("  'Perfuração': 'Perforación',\n  'Top-job': 'Top-job',\n", "  'Perfuração': 'Perforación',\n  'Entrega de Cimento/Blend': 'Entrega de Cemento/Blend',\n  'Top-job': 'Top-job',\n")
+
+# e22 (pedidos do Hugo, 27/11/2026): eng_e22.js — operação salva aparece no Gantt; desfazer/refazer (Ctrl+Z/Ctrl+Y);
+# cards que se arrastam, grupos de contratos e exportar o grupo; operação sem sonda; a fila da sonda (vínculo de datas
+# e reorganização) só dentro do mesmo contrato.
+rep("""function planCascade(jobs, rigId, movedId) {
+  var fila = jobs.filter(j => j.rigId === rigId && j.status !== PJ_STATUS.CANC).sort(""", """/* e22: as operações de contratos diferentes são independentes: a fila da sonda é por contrato; sem sonda, não há fila */
+var engCtChave = j => j ? String(j.contratoId || (j.clienteName || '') + '|' + (j.contratoLabel || '')) : '';
+function planCascade(jobs, rigId, movedId) {
+  if (!rigId) return [];
+  var movido = jobs.find(j => j && j.id === movedId);
+  var ctK = movido ? engCtChave(movido) : null;
+  var fila = jobs.filter(j => j.rigId === rigId && j.status !== PJ_STATUS.CANC && (ctK === null || engCtChave(j) === ctK)).sort(""")
+rep("""  if (!antes || !depois || !antes.date || !depois.date || antes.rigId !== depois.rigId) return {""", """  if (!antes || !depois || !antes.date || !depois.date || !antes.rigId || antes.rigId !== depois.rigId || engCtChave(antes) !== engCtChave(depois)) return {""")
+rep("""  var fila = jobs.filter(j => j && j.id !== antes.id && j.rigId === antes.rigId && j.status !== PJ_STATUS.CANC && String(j.date || '') > String(antes.date)).sort(""", """  var fila = jobs.filter(j => j && j.id !== antes.id && j.rigId === antes.rigId && engCtChave(j) === engCtChave(antes) && j.status !== PJ_STATUS.CANC && String(j.date || '') > String(antes.date)).sort(""")
+# o Gantt abre mostrando as operações: sem nenhuma na janela padrão (perto de hoje), mostra tudo
+rep("""    var winP = clampWinP(planWin || janelaPadrao);
+""", """    if (!planWin && !jobs.some(j => dMs(pjEnd(j)) + 864e5 > janelaPadrao.s && dMs(j.date) < janelaPadrao.e)) janelaPadrao = {
+      s: fullS,
+      e: fullE
+    }; // e22: nenhuma operação perto de hoje — abre com tudo
+    var winP = clampWinP(planWin || janelaPadrao);
+""")
+# a operação salva fica visível
+rep("""    setPlanDraft(null);
+    avisoCadeia(cadeia, 'Operação planejada salva ✓');""", """    setPlanDraft(null);
+    engMostrarOpNoGantt(clean); // e22: se ela ficou fora da janela do Gantt, a janela vai até ela
+    avisoCadeia(cadeia, 'Operação planejada salva ✓');""")
+# desfazer / refazer: o banco antes de cada alteração
+rep("""function App() {
+  var [db, setDB] = useState(loadDB);
+""", """function App() {
+  var [db, setDB] = useState(loadDB);
+  // e22: desfazer/refazer (Ctrl+Z / Ctrl+Y) — o banco antes de cada alteração (até 60), só com o arquivo aberto
+  var engUndoRef = useRef([]),
+    engRedoRef = useRef([]);
+  var [engHistN, setEngHistN] = useState(0);
+""")
+rep("""      } else {}
+      return next;
+    });
+    if (logEntry) {
+      setDbLog(prev => {""", """      } else {}
+      if (prev !== next) {
+        engUndoRef.current.push({
+          db: prev,
+          o: logEntry ? [logEntry.action, logEntry.kind].filter(Boolean).join(' — ') + (logEntry.name ? ': ' + logEntry.name : '') : ''
+        });
+        if (engUndoRef.current.length > 60) engUndoRef.current.shift();
+        engRedoRef.current = [];
+      }
+      return next;
+    });
+    setEngHistN(n => n + 1);
+    if (logEntry) {
+      setDbLog(prev => {""")
+# operação sem sonda
+rep("""    var ok = tplMode ? !!d.tipoOp : !!((d.rigId || ehDisp) && d.tipoOp && d.date""", """    var ok = tplMode ? !!d.tipoOp : !!(d.tipoOp && d.date""")
+rep("""    }, ehDisp ? 'Sonda (opcional)' : 'Sonda *'), React.createElement("select", {""", """    }, 'Sonda (opcional)'), React.createElement("select", {""")
+# cards: ordem, grupos e arrastar (o card do contrato é o mesmo; engCardCt põe o arrastar)
+rep("""    }, React.createElement("div", {
+      role: "button",
+      tabIndex: 0,
+      className: "eng2-card eng2-hero",""", """    }, engCardsBarra(), React.createElement("div", {
+      role: "button",
+      tabIndex: 0,
+      className: "eng2-card eng2-hero",""")
+rep("""}, "\\u2192")), engContratos.map((ct, i) => {
+      var lista = planJobs.filter(j => pjDoContrato(j, ct));""", """}, "\\u2192")), (rCt => engCardsLista(engContratos).map((it, i) => it.tipo === 'gr' ? engGrupoCard(it, i, faixa, abrir, tecla, rCt) : engCardCt(it.ct, i, rCt)))((ct, i) => {
+      var lista = planJobs.filter(j => pjDoContrato(j, ct));""")
+rep("renderEngDup(), renderEngExpSel(), renderEngDia(), renderEngCorPop(),", "renderEngDup(), renderEngExpSel(), renderEngDia(), renderEngGrDlg(), renderEngCorPop(),")
+
+# e22: os filtros do plano (sonda, tipo, status, contrato/base/cliente, ordem, "só o que está na janela", horizonte da
+# Lista, Gantt/Calendário/Lista) ficam guardados até a pessoa mudar (inclusive ao reabrir o arquivo); as pílulas já ficavam
+rep("""var engCtChave = j => j ? String(j.contratoId || (j.clienteName || '') + '|' + (j.contratoLabel || '')) : '';""", """var engCtChave = j => j ? String(j.contratoId || (j.clienteName || '') + '|' + (j.contratoLabel || '')) : '';
+var engFiltroIni = (k, padrao) => {
+  try {
+    var o = JSON.parse(localStorage.getItem('eng_filtros_v1') || '{}');
+    var v = o && o[k];
+    if (v == null || typeof v !== typeof padrao) return padrao;
+    if (padrao && typeof padrao === 'object' && !Array.isArray(padrao)) return {
+      ...padrao,
+      ...v
+    };
+    return v;
+  } catch (e) {
+    return padrao;
+  }
+};""")
+rep("""  var [planView, setPlanView] = useState('gantt');
+""", """  var [planView, setPlanView] = useState(() => engFiltroIni('planView', 'gantt'));
+""")
+rep("""  var [planF, setPlanF] = useState({
+    rig: '',
+    cliente: '',
+    tipo: '',
+    status: ''
+  });""", """  var [planF, setPlanF] = useState(() => engFiltroIni('planF', {
+    rig: '',
+    cliente: '',
+    tipo: '',
+    status: ''
+  }));""")
+rep("""  var [planMF, setPlanMF] = useState({
+    ct: [],
+    base: [],
+    cli: []
+  });""", """  var [planMF, setPlanMF] = useState(() => engFiltroIni('planMF', {
+    ct: [],
+    base: [],
+    cli: []
+  }));""")
+rep("""  var [planOrd, setPlanOrd] = useState('nome');
+""", """  var [planOrd, setPlanOrd] = useState(() => engFiltroIni('planOrd', 'nome'));
+""")
+rep("""  var [planSoJan, setPlanSoJan] = useState(true);
+""", """  var [planSoJan, setPlanSoJan] = useState(() => engFiltroIni('planSoJan', true));
+""")
+rep("""  var [planListDays, setPlanListDays] = useState(15);
+""", """  var [planListDays, setPlanListDays] = useState(() => {
+    var v = engFiltroIni('planListDays', '');
+    return v === 'todas' || Number(v) > 0 ? v === 'todas' ? v : Number(v) : 15;
+  });
+""")
+# tipos "Disponibilidade de Pessoal" e "Disponibilidade de Equipamentos" (depois da Entrega de Cimento/Blend)
+rep("""  op: 'Entrega de Cimento/Blend',
+  casing: false,
+  vida: 'optional'
+}, {""", """  op: 'Entrega de Cimento/Blend',
+  casing: false,
+  vida: 'optional'
+}, {
+  op: 'Disponibilidade de Pessoal',
+  casing: false,
+  vida: 'optional'
+}, {
+  op: 'Disponibilidade de Equipamentos',
+  casing: false,
+  vida: 'optional'
+}, {""")
+rep("  'Entrega de Cimento/Blend': 'Cement/Blend delivery',\n", "  'Entrega de Cimento/Blend': 'Cement/Blend delivery',\n  'Disponibilidade de Pessoal': 'Personnel availability',\n  'Disponibilidade de Equipamentos': 'Equipment availability',\n")
+rep("  'Entrega de Cimento/Blend': 'Entrega de Cemento/Blend',\n", "  'Entrega de Cimento/Blend': 'Entrega de Cemento/Blend',\n  'Disponibilidade de Pessoal': 'Disponibilidad de personal',\n  'Disponibilidade de Equipamentos': 'Disponibilidad de equipos',\n")
 
 # e12: filtro e ordem em todas as tabelas (script avulso, fora do React), no fim do <body>
 tf = open(os.path.join(AQUI, 'eng_tabelas.js'), encoding='utf-8').read()

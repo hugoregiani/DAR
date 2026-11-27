@@ -6,7 +6,18 @@
 >
 > **O que entregar (pedido do Hugo, 27/11/2026, desde a V08):** só o arquivo padrão limpo `EARL_Forecast_Vnn.html` e este prompt (`EARL_prompt_continuidade_Vnn.md`). Não mandar um arquivo por contrato nem o PDF do passo a passo, a não ser que ele peça. Os arquivos dos contratos continuam sendo gerados para os testes.
 >
-> **Última atualização:** 27/11/2026 — **entrega _V08: EARL Forecast e20**:
+> **Última atualização:** 27/11/2026 — **entrega _V09: EARL Forecast e22 + Gerencial g22** (com a e21):
+> - **Importar vários arquivos:** "＋ Adicionar arquivos" na janela de importar, "×" para tirar um arquivo, arrastar os .json para a tela (e a dica: segure Ctrl para escolher vários).
+> - **Desfazer / refazer** como no Excel (botões e Ctrl+Z / Ctrl+Y).
+> - **Cards dos contratos:** arrastar para mudar a ordem (fica salva); **grupos** (um card com vários contratos, abre como pasta) e **exportar o grupo** num .json (`EARL_FORECAST_<NOME DO CARD>_…`; o importar recria o grupo).
+> - **Filtros que ficam** (Forecast e Indicadores) até a pessoa mudar, também ao reabrir.
+> - **Operações de contratos diferentes independentes** (a fila da sonda e o vínculo de data só no mesmo contrato); **operação sem sonda**; o Gantt mostra a operação salva (bug do "Deepwater Aquila").
+> - **30 cores** para a sonda; tipos **"Disponibilidade de Pessoal"** e **"Disponibilidade de Equipamentos"**; alça visível para mudar o tamanho das janelas; **sem o "Reiniciar"** nos arquivos de contrato.
+> - Arquivos `EARL_Forecast_V09.html`, os 7 `EARL_Forecast_<NOME>_V09.html` e `EARL_prompt_continuidade_V09.md`. Ver "e21 + e22" em 4-E.
+> - **Em andamento (parado):** narração do vídeo tutorial (o `gravar_tutorial.js` ainda usa a pílula "Consumo e receita", que saiu na e18).
+> - **Pendente:** a planilha do banco de químicos/casing não chegou.
+>
+> Antes, em 27/11/2026 — **entrega _V08: EARL Forecast e20**:
 > - **⬇ Exportar dados gera um .json para cada contrato** (os ativos marcados; os arquivados não vão), com o nome `EARL_FORECAST_<CLIENTE>_<CONTRATO>_AAAA.MM.DD_HHhMM.json` (o "h" no lugar de ":" porque o Windows não aceita ":" em nome de arquivo).
 > - **⬆ Importar dados aceita vários arquivos de uma vez:** os contratos de todos aparecem na mesma janela; no mesmo contrato em dois arquivos, fica o exportado por último.
 > - A entrega passou a ser só o arquivo padrão e o prompt (ver acima).
@@ -636,6 +647,33 @@ Pedidos do Hugo (12/11/2026): "No envio do email do Handover preciso que inclua 
   - Painel de Compras: `engenharia` 37, `invariantes` 64, `pedidos_enviados` 15, `regressao` 6, `reproduzir` ok.
   - Ajustes de expectativa nos testes antigos (mudanças pedidas): sonda "NS-32 - Norbe VIII" nos seletores, no assunto do e-mail e na matriz do Gerencial; coluna "Saldo na sonda" no e-mail; colunas novas nas exportações; versão g16.
 - **Pendências:** os textos novos ainda sem EN/ES; a tabela de câmbio não tem importação por planilha (é digitada); a "Frente" do PA ainda precisa de ajuste (a planilha fatura com outra regra).
+
+### e21 + e22 + Gerencial g22 — importar com "＋ Adicionar arquivos", desfazer/refazer, grupos de contratos, filtros que ficam, operações independentes — entrega _V09 (27/11/2026)
+
+- **Pedidos do Hugo (27/11/2026), além dos da e19/e20 que ele achou que faltavam (todos conferidos no arquivo V09, com telas):**
+  - "Ainda não consigo importar múltiplos arquivos json": a janela de escolher arquivos aceitava vários (Ctrl+clique), mas isso não era evidente;
+  - agrupar contratos em cards com nome próprio; mover os cards com o cursor (a posição fica salva); exportar o grupo num .json (`EARL_FORECAST_<NOME DO CARD>_…`);
+  - os filtros (Indicadores e contratos) ficam até a pessoa desfazer;
+  - criar operação sem sonda; tirar o "Reiniciar" (faixa azul dos arquivos de contrato); desfazer/refazer como no Excel;
+  - operações de contratos diferentes independentes (não pode haver vínculo entre operações da mesma sonda em contratos diferentes);
+  - paleta de cores maior; tipos "Disponibilidade de Pessoal" e "Disponibilidade de Equipamentos";
+  - bug: operação criada no contrato "Deepwater Aquila" (arquivo DC) não aparecia no Gantt.
+- **e21 (importar):** `<input multiple>` já existia (e20). Agora a janela tem "＋ Adicionar arquivos" (`engImpSomarRef` → `engImportarArquivo(files, somar)`, soma à janela aberta; o mesmo arquivo não entra 2×), "×" para tirar um arquivo (`tirarArquivo`), a dica "segure Ctrl" e arrastar os .json para a tela (`dragover`/`drop` na janela; `renderEngImpDados` desenha "Solte aqui os arquivos .json"). Chave estável por arquivo `a.k` ("a1", "a2"…; seleção `"<a.k>|<id>"`).
+- **e22 — causa do bug da Aquila:** o Gantt abre perto de hoje (nov/26) e mostra só o que está na janela; o contrato tem operações de jan a jun/26, então o Gantt abria vazio e a operação nova de março ficava fora. Correção: sem operação perto de hoje, abre com tudo (patch na `janelaPadrao`); salvar leva a janela até a operação (`engMostrarOpNoGantt`). Junto apareceu o outro problema: salvar no "Deepwater Aquila" propunha mover uma operação do "Deepwater Aquila_2026" (mesma sonda). `planCascade`/`planChain` agora só olham o mesmo contrato (`engCtChave` = contratoId ou cliente|rótulo) e não fazem fila sem sonda.
+- **Desfazer/refazer:** refs `engUndoRef`/`engRedoRef` no começo do `App` (patch); o `updateDB` empilha o banco anterior (com a descrição do log) e limpa o refazer; `engDesfazer`/`engRefazer` trocam o estado e gravam (`saveDB`). Ctrl+Z/Ctrl+Y/Ctrl+Shift+Z fora de campos de texto e sem janela aberta. Botões na barra (`engHistBotoes`).
+- **Cards e grupos** (`eng_e22.js`): `db.engCards = {ordem: ['ct:<id>'|'gr:<id>'], grupos: [{id, nome, ctIds}]}`; `engCardsLista` monta os itens (contratos novos entram no fim); o mapa dos cards na página inicial virou `(rCt => engCardsLista(...).map(...))((ct, i) => {card original})` (patch) e `engCardCt` põe o arrastar (HTML5 drag, tipo `text/x-earl-card`). Soltar à esquerda/direita = antes/depois; no meio do card do grupo = entra no grupo. Grupo fechado = card empilhado; aberto = pasta (`.eng2-grupo-aberto`) com "⬇ Exportar grupo", "✎ Renomear", "Desagrupar". Menu ⋯ do contrato: "🗂 Pôr num grupo…" e "↩ Tirar do grupo". Exportar: `engArqGrupo` (campo `grupo`), também na janela "Exportar dados" (seção Grupos, desmarcados no começo). Importar: `engImportarVarios` recria o grupo pelo nome (`a.grupo`).
+- **Filtros que ficam:** Forecast — `planView`, `planF`, `planMF`, `planOrd`, `planSoJan`, `planListDays` começam de `engFiltroIni` (localStorage `eng_filtros_v1`) e são gravados num `useEffect`; Gerencial g22 — `S.f` e `S.tf` em `CHV('filtros')`/`CHV('tf')`, restaurados ao abrir (não na versão compartilhada); um cliente/contrato/região/tipo que não existe mais volta para "Todos".
+- **Sem sonda:** `ok` não exige sonda; rótulo "Sonda (opcional)". **Tipos:** "Disponibilidade de Pessoal", "Disponibilidade de Equipamentos" (EN/ES). **Paleta:** 30 cores (`ENG_CORES_SONDA`, grade de 6). **Janelas:** alça visível no canto (`.eng-rz-alca`, para dentro da curva do canto). **Reiniciar:** saiu dos `gerar_html.js` e `teste_bp/montar_bp.py` (as funções ficam para os testes).
+- **Versões:** `EARL Forecast e22 (base v115)`, `EARL Gerencial g22`.
+- **Testes (27/11/2026):** todos sem falha.
+  - Engenharia: engenharia 63, contratos 79, quimicos 36, espaco 12, inventario 54, **painel 23**, e10 37, e12 50, e13 18, e15 27, e16 29, e17 42, e18 15, **e19 57**, **e22 37**.
+  - Correções nos testes durante a rodada:
+    - `e2e_painel` esperava o menu ⋯ só com Arquivar/Apagar; agora tem também "🗂 Pôr num grupo…".
+    - O `e2e_e19` parou porque a janelinha de cores (agora com 30 cores) abria fora da tela embaixo. Corrigido no app: `engAbrirCor` deixa a janelinha caber na tela, com `max-height` e rolagem.
+  - Gerencial: 62, 59, 71, 59, 27. **BP: 59**. Atenção: o arquivo de teste BP (`$S/bp/EARL_Engenharia_BP_teste.html`) ainda era da e18, então as rodadas da V07 e da V08 testaram o BP com o app antigo. Agora ele é montado com `python3 teste_bp/montar_bp.py EARL_Engenharia.html $S/bp/seed_db.json $S/bp/EARL_Engenharia_BP_teste.html` **a cada versão**, antes do `e2e_bp`.
+  - Contratos reais (gerados de novo com o código final em `$S/ctr/out16`, `--compat` dos V08 de `$S/ctr/out13`): 142 (com a conferência de que o "Reiniciar" saiu); `e2e_atualizacao` V08→V09 42; `e2e_importar` PA→BDII 9, BP→DC 9. `e2e_seguranca`: 70.
+  - ClamAV: 0 vírus nos arquivos entregues.
+- **Entrega V09:** o Hugo está usando os arquivos de contrato (a foto dele era do Shell, com o "Reiniciar"); por isso esta entrega leva, além do `EARL_Forecast_V09.html` e deste prompt, os 7 `EARL_Forecast_<NOME>_V09.html`. Na próxima, voltar à regra (só o padrão e o prompt), a não ser que ele peça.
 
 ### e20 — um .json por contrato, importar vários arquivos, entrega só do arquivo padrão — entrega _V08 (27/11/2026)
 

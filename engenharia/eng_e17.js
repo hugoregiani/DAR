@@ -283,7 +283,12 @@
   };
 
   /* ---- 3. cor das linhas de cada sonda no Gantt (neste navegador) ---- */
-  var ENG_CORES_SONDA = [['#CC0000', 'Vermelho'], ['#E67E22', 'Laranja'], ['#F1C40F', 'Amarelo'], ['#27AE60', 'Verde'], ['#16A085', 'Verde-água'], ['#2E86DE', 'Azul'], ['#6B3FA0', 'Roxo'], ['#E84393', 'Rosa'], ['#8D6E63', 'Marrom'], ['#6D757A', 'Cinza']];
+  // e22: paleta maior (30 cores, 6 por linha; e "Outra cor" para qualquer uma)
+  var ENG_CORES_SONDA = [['#CC0000', 'Vermelho'], ['#E53935', 'Vermelho claro'], ['#8E1B1B', 'Vinho'], ['#AD1457', 'Magenta'], ['#E84393', 'Rosa'], ['#F48FB1', 'Rosa claro'],
+    ['#E67E22', 'Laranja'], ['#FF9800', 'Âmbar'], ['#F1C40F', 'Amarelo'], ['#FFE082', 'Amarelo claro'], ['#8D6E63', 'Marrom'], ['#5D4037', 'Marrom escuro'],
+    ['#27AE60', 'Verde'], ['#81C784', 'Verde claro'], ['#1B5E20', 'Verde escuro'], ['#9CCC65', 'Verde-limão'], ['#16A085', 'Verde-água'], ['#00796B', 'Petróleo'],
+    ['#2E86DE', 'Azul'], ['#90CAF9', 'Azul claro'], ['#1F3A93', 'Azul-marinho'], ['#00ACC1', 'Ciano'], ['#80DEEA', 'Ciano claro'], ['#3949AB', 'Índigo'],
+    ['#6B3FA0', 'Roxo'], ['#B39DDB', 'Lilás'], ['#4A148C', 'Roxo escuro'], ['#6D757A', 'Cinza'], ['#B0BEC5', 'Cinza claro'], ['#263238', 'Grafite']];
   var [engCoresSonda, setEngCoresSonda] = useState(() => {
     try {
       var v = JSON.parse(localStorage.getItem('eng_cores_sonda_v1') || '{}');
@@ -312,10 +317,11 @@
       left: 40,
       bottom: 120
     };
+    // e22: a janelinha ficou maior (30 cores): cabe inteira na tela (abre para cima se faltar espaço embaixo)
     setEngCorPop({
       rid,
-      x: Math.min(r.left, window.innerWidth - 270),
-      y: Math.min(r.bottom + 6, window.innerHeight - 170)
+      x: Math.max(8, Math.min(r.left, window.innerWidth - 310)),
+      y: Math.max(8, Math.min(r.bottom + 6, window.innerHeight - 380))
     });
   };
   var engCorRgba = (hex, a) => {
@@ -664,6 +670,7 @@
       });
       setEngDup(null);
       setPlanDraft(null);
+      engMostrarOpNoGantt(novos[0]); // e22
       setOkMsg('Poço duplicado ✓ — ' + novos.length + ' de ' + l.length + ' operação(ões) em ' + novoPoco + ', a partir de ' + fmtD(engDup.data));
       setTimeout(() => setOkMsg(''), 5000);
     };

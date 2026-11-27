@@ -406,7 +406,7 @@ https://github.com/nodeca/pako/blob/main/LICENSE
    Para cada contrato vale o arquivo mais novo. Tudo fica neste navegador (localStorage, prefixo earlger:). */
 (function () {
   'use strict';
-  var VERSAO = 'EARL Gerencial g21';
+  var VERSAO = 'EARL Gerencial g22';
   var CHAVE = 'earlger:pacotes_v1';
   var $ = function (s) { return document.querySelector(s); };
   var esc = function (v) { return String(v == null ? '' : v).replace(/[&<>"']/g, function (c) { return {'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'}[c]; }); };
@@ -438,6 +438,15 @@ https://github.com/nodeca/pako/blob/main/LICENSE
   /* versão compartilhada: os dados vêm de dentro do arquivo (#earlger-dados) e nada é gravado no navegador */
   var DADOS_EMB = (function () { try { var de = document.getElementById('earlger-dados'); return de ? JSON.parse(de.textContent) : null; } catch (e) { return null; } })();
   var COMPARTILHADO = !!(DADOS_EMB && DADOS_EMB.tipo === 'EARL-Gerencial-Compartilhado' && Array.isArray(DADOS_EMB.pacotes));
+  /* g22 (pedido do Hugo, 27/11/2026): os filtros (do topo e das tabelas) ficam até a pessoa mudar — trocar de aba, ir aos
+     Contratos e voltar, reabrir o arquivo. Na versão compartilhada valem os filtros que vieram nela. */
+  var guardarFiltros = function () { if (COMPARTILHADO) return; try { localStorage.setItem(CHV('filtros'), JSON.stringify(S.f)); localStorage.setItem(CHV('tf'), JSON.stringify(S.tf || {})); } catch (e) {} };
+  if (!COMPARTILHADO) try {
+    var f0 = JSON.parse(localStorage.getItem(CHV('filtros')) || 'null');
+    if (f0 && typeof f0 === 'object') Object.keys(S.f).forEach(function (k) { if (f0[k] != null && typeof f0[k] === typeof S.f[k]) S.f[k] = f0[k]; });
+    var tf0 = JSON.parse(localStorage.getItem(CHV('tf')) || 'null');
+    if (tf0 && typeof tf0 === 'object' && !Array.isArray(tf0)) S.tf = tf0;
+  } catch (e) {}
   if (COMPARTILHADO) S.pacotes = DADOS_EMB.pacotes;
   var gravar = function () {
     if (COMPARTILHADO || EMB) return true;
@@ -1021,6 +1030,9 @@ https://github.com/nodeca/pako/blob/main/LICENSE
     if (!S.pacotes.length) { app.innerHTML = EMB ? '<p class="vazio emb-vazio">Nenhum contrato com operações. Lance as operações na aba Contratos, ou traga os contratos de outras pessoas com “⬆ Importar dados”, para ver a receita, o COGS e a margem aqui.</p>' : telaVazia(); ajustarAltura(); return; }
     var C = consolidar(), anos = anosDe(C);
     if (anos.indexOf(S.f.ano) < 0) S.f.ano = anoPadrao(anos);
+    // g22: filtro guardado de um contrato/cliente que não existe mais volta para "Todos"
+    ['cliente', 'contrato', 'regiao', 'tipo'].forEach(function (k) { if (S.f[k] && !C.contratos.some(function (c) { return String(k === 'contrato' ? c.id : c[k]) === String(S.f[k]); })) S.f[k] = ''; });
+    guardarFiltros();
     var F = filtrar(C), A = agregar(F), f = S.f, T = A.T;
     var h = EMB ? barraEmb(C) : ((COMPARTILHADO ? '<div class="sh-faixa">📤 <b>Versão compartilhada</b> do EARL Gerencial, com os dados de ' + fDH(DADOS_EMB.geradoEm) + (DADOS_EMB.soFiltro ? ' · só ' + esc(DADOS_EMB.soFiltro) : '') + '. Só consulta: filtros, gráficos, tabelas' + (S.regs.length ? ', comparação de registros' : '') + ' e Excel funcionam; os arquivos e os registros não mudam.</div>' : '') + '<h1>Gerencial</h1><p class="sub">' + C.contratos.length + ' contrato(s) de ' + uniq(S.pacotes.map(function (p) { return p.pac.por || '—'; })).length + ' engenheiro(s) · ' + C.ops.length + ' operação(ões) · realizado + previsto, com o risco aplicado</p>' + barraTopo());
     h += '<div class="filtros">' +
@@ -2419,6 +2431,50 @@ https://github.com/nodeca/pako/blob/main/LICENSE
     }
   });
   window.engRedimSoltar = soltar;
+  /* e22: uma alça visível no canto de baixo à direita da janela que está por cima (mostra que dá para puxar).
+     Não recebe o ponteiro: o arraste continua sendo pela borda/canto, como acima. */
+  var alca = null, rodando = false, raio = typeof WeakMap === 'function' ? new WeakMap() : null;
+  // o canto é arredondado: a alça fica para dentro da curva (cerca de 0,3 × o raio)
+  var recuo = function (m) {
+    var v = raio && raio.get(m);
+    if (v == null) { v = Math.round((parseFloat(getComputedStyle(m).borderBottomRightRadius) || 0) * 0.3) + 3; if (raio) raio.set(m, v); }
+    return v;
+  };
+  var poeAlca = function () {
+    var achou = null, em = null;
+    for (var k = 0; k < VIVAS.length && !achou; k++) {
+      var l = VIVAS[k];
+      for (var i = l.length - 1; i >= 0; i--) {
+        var r = l[i].getBoundingClientRect();
+        if (!r.width || !r.height) continue;
+        var rc = recuo(l[i]);
+        var el = document.elementFromPoint(Math.max(0, r.right - rc - 6), Math.max(0, r.bottom - rc - 6));
+        if (el && (el === l[i] || l[i].contains(el))) { achou = r; em = rc; break; }
+      }
+    }
+    if (!achou) { if (alca) alca.style.display = 'none'; return false; }
+    if (!alca) {
+      alca = document.createElement('div');
+      alca.className = 'eng-rz-alca';
+      alca.setAttribute('aria-hidden', 'true');
+      alca.style.cssText = 'position:fixed;width:14px;height:14px;pointer-events:none;z-index:2147483000;opacity:.75;' +
+        'background:linear-gradient(135deg,transparent 0 46%,#8E979D 46% 54%,transparent 54% 64%,#8E979D 64% 72%,transparent 72% 82%,#8E979D 82% 90%,transparent 90%)';
+      document.body.appendChild(alca);
+    }
+    alca.style.display = 'block';
+    alca.style.left = Math.round(achou.right - 14 - em) + 'px';
+    alca.style.top = Math.round(achou.bottom - 14 - em) + 'px';
+    return true;
+  };
+  var laco = function () {
+    var tem = VIVAS.some(function (l) { return l.length > 0; });
+    if (!tem) { rodando = false; if (alca) alca.style.display = 'none'; return; }
+    poeAlca();
+    requestAnimationFrame(laco);
+  };
+  var acorda = function () { if (!rodando && VIVAS.some(function (l) { return l.length > 0; })) { rodando = true; requestAnimationFrame(laco); } };
+  try { new MutationObserver(acorda).observe(document.documentElement, {childList: true, subtree: true}); } catch (e) {}
+  acorda();
 })();
 /* EARL_REDIM_FIM */
 </script>

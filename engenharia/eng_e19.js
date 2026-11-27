@@ -11,12 +11,14 @@
   var [engExpSel, setEngExpSel] = useState(null);
   var engExportarPedir = () => {
     var ativos = (db.contratos || []).filter(c => !c.archived);
-    if (ativos.length <= 1) {
+    var temGr = (engCardsCfg().grupos || []).some(g => (g.ctIds || []).some(id => ativos.some(c => c.id === id)));
+    if (ativos.length <= 1 && !temGr) {
       engExportar();
       return;
     }
     setEngExpSel({
-      sel: ativos.map(c => c.id)
+      sel: ativos.map(c => c.id),
+      gr: [] // e22: grupos (um arquivo por grupo), desmarcados no começo
     });
   };
   var renderEngExpSel = () => {
@@ -30,6 +32,16 @@
       sel: x.sel.includes(id) ? x.sel.filter(y => y !== id) : [...x.sel, id]
     }));
     var escolhidos = ativos.filter(c => sel.includes(c.id));
+    var grupos = (engCardsCfg().grupos || []).map(g => ({
+      ...g,
+      cts: (g.ctIds || []).map(id => ativos.find(c => c.id === id)).filter(Boolean)
+    })).filter(g => g.cts.length);
+    var grSel = (engExpSel.gr || []).filter(id => grupos.some(g => g.id === id));
+    var marcarGr = id => setEngExpSel(x => ({
+      ...x,
+      gr: (x.gr || []).includes(id) ? x.gr.filter(y => y !== id) : [...(x.gr || []), id]
+    }));
+    var nArqs = escolhidos.length + grSel.length;
     var nArq = (db.contratos || []).filter(c => c && c.archived).length; // e20: os arquivados não aparecem nem entram no nome
     var nOps = c => (db.plannedJobs || []).filter(j => j.status !== PJ_STATUS.CANC && pjDoContrato(j, c)).length;
     // operações sem contrato (ou de contrato arquivado) não vão em nenhum arquivo
@@ -85,12 +97,37 @@
       })), engH("td", null, engH("b", null, c.name)), engH("td", null, c.clientName || '—'), engH("td", {
         className: "ec-num"
       }, nOps(c)));
-    })))), engH("div", {
+    })))), grupos.length > 0 && engH("div", {
+      className: "eng-expsel-grs"
+    }, engH("div", {
+      className: "ec-imp-ajuda"
+    }, engH("b", null, "Grupos"), " — marque para sair ", engH("b", null, "um arquivo com todos os contratos do grupo"), " (quem importar recebe o grupo junto):"), engH("table", {
+      className: "db-table eng-expsel-tab eng-expsel-grtab",
+      "data-tf": "0"
+    }, engH("tbody", null, grupos.map(g => engH("tr", {
+      key: g.id,
+      className: grSel.includes(g.id) ? 'ec-imp-on' : '',
+      style: {
+        cursor: 'pointer'
+      },
+      onClick: e => {
+        if (e.target.tagName !== 'INPUT') marcarGr(g.id);
+      }
+    }, engH("td", null, engH("input", {
+      type: "checkbox",
+      className: "eng-expsel-gr",
+      checked: grSel.includes(g.id),
+      onChange: () => marcarGr(g.id),
+      "aria-label": 'Exportar o grupo ' + g.nome
+    })), engH("td", null, engH("b", null, "🗂 " + g.nome)), engH("td", null, g.cts.map(c => c.name).join(', '))))))), engH("div", {
       className: "eng-expsel-nome"
-    }, engH("span", null, escolhidos.length === 1 ? "Arquivo" : "Arquivos (" + escolhidos.length + ")"), escolhidos.length ? escolhidos.map(c => engH("code", {
+    }, engH("span", null, nArqs === 1 ? "Arquivo" : "Arquivos (" + nArqs + ")"), nArqs ? escolhidos.map(c => engH("code", {
       key: c.id,
       className: "eng-expsel-arqnome"
-    }, engNomeArqCt(c, quando))) : engH("code", null, "—"), engH("em", null, "(a hora vai com “h”, porque o Windows não aceita “:” no nome de arquivo" + (escolhidos.length > 1 ? "; se o navegador perguntar se pode baixar vários arquivos, clique em “Permitir”" : "") + ")"), nArq > 0 && engH("em", {
+    }, engNomeArqCt(c, quando))).concat(grupos.filter(g => grSel.includes(g.id)).map(g => engH("code", {
+      key: g.id,
+      className: "eng-expsel-arqnome eng-expsel-arqgr"
+    }, engNomeArqGrupo(g, quando)))) : engH("code", null, "—"), engH("em", null, "(a hora vai com “h”, porque o Windows não aceita “:” no nome de arquivo" + (nArqs > 1 ? "; se o navegador perguntar se pode baixar vários arquivos, clique em “Permitir”" : "") + ")"), nArq > 0 && engH("em", {
       className: "eng-expsel-arq"
     }, nArq + ' contrato(s) arquivado(s) não aparece(m) aqui e não é(são) exportado(s) (só os ativos).'), semCt > 0 && engH("em", {
       className: "eng-expsel-arq eng-expsel-semct"
@@ -105,13 +142,14 @@
       onClick: fechar
     }, "Cancelar"), engH("button", {
       className: "btn-r eng-expsel-ok",
-      disabled: !sel.length,
+      disabled: !nArqs,
       onClick: () => {
-        var ids = sel.slice();
+        var ids = sel.slice(),
+          gids = grSel.slice();
         setEngExpSel(null);
-        engExportar(ids);
+        engExportar(ids, gids);
       }
-    }, sel.length ? '⬇ Exportar ' + sel.length + (sel.length === 1 ? ' arquivo' : ' arquivos') : 'Marque um contrato'))));
+    }, nArqs ? '⬇ Exportar ' + nArqs + (nArqs === 1 ? ' arquivo' : ' arquivos') : 'Marque um contrato'))));
   };
 
   /* ---- 2. calendário: o tipo no dia e a janela do dia (só as operações daquele dia) ---- */

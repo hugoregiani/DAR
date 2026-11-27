@@ -769,8 +769,9 @@
       opTemplates: (db.opTemplates || []).filter(t => !t.contratoId || t.contratoId === c.id)
     };
   };
-  var engArqExport = (out, cts, nome) => {
+  var engArqExport = (out, cts, nome, extra) => {
     var blob = new Blob([JSON.stringify({
+      ...(extra || {}),
       app: 'EARL Forecast',
       versao: EARL_VERSION,
       geradoEm: new Date().toISOString(),
@@ -791,16 +792,18 @@
       type: 'application/json'
     });
   };
-  var engExportar = ids => {
+  var engExportar = (ids, gids) => {
     try {
       var ativos = (db.contratos || []).filter(c => !c.archived);
       var sel = Array.isArray(ids) ? ativos.filter(c => ids.includes(c.id)) : ativos;
       var quando = engCarimboArq();
-      var arqs = sel.length ? sel.map(c => engArqExport(engDbDoContrato(c), [c], engNomeArqCt(c, quando))) : [engArqExport(db, [], 'EARL_FORECAST_SEM-CONTRATOS_' + quando + '.json')];
+      // e22: e um arquivo por grupo marcado (todos os contratos do grupo juntos)
+      var grs = (engCardsCfg().grupos || []).filter(g => (gids || []).includes(g.id));
+      var arqs = ativos.length ? sel.map(c => engArqExport(engDbDoContrato(c), [c], engNomeArqCt(c, quando))).concat(grs.map(g => engArqGrupo(g, quando))) : [engArqExport(db, [], 'EARL_FORECAST_SEM-CONTRATOS_' + quando + '.json')];
       // um arquivo de cada vez (o navegador pode perguntar se a página pode baixar vários arquivos: "Permitir")
       arqs.forEach((f, i) => setTimeout(() => forceDownload([f]), i * 400));
       var nOps = sel.reduce((a, c) => a + (db.plannedJobs || []).filter(j => pjDoContrato(j, c)).length, 0);
-      setOkMsg(sel.length ? 'Dados exportados ✓ — ' + sel.length + ' arquivo(s), um por contrato (' + nOps + ' operação(ões) com consumos e handovers, inventário, sondas, câmbio, químicos e casing)' + (sel.length > 1 ? '. Se o navegador perguntar se pode baixar vários arquivos, clique em “Permitir”' : '') + '. No outro arquivo (o de quem junta os contratos), use “⬆ Importar dados”: os contratos entram nos Indicadores.' : 'Dados exportados ✓ — sem contrato ativo: um arquivo com as sondas, o câmbio, os químicos e o casing.');
+      setOkMsg(sel.length || grs.length ? 'Dados exportados ✓ — ' + arqs.length + ' arquivo(s)' + (sel.length ? ', um por contrato (' + nOps + ' operação(ões) com consumos e handovers, inventário, sondas, câmbio, químicos e casing)' : '') + (grs.length ? (sel.length ? ' e ' : ': ') + grs.length + ' de grupo(s) (' + grs.map(g => g.nome).join(', ') + ')' : '') + (arqs.length > 1 ? '. Se o navegador perguntar se pode baixar vários arquivos, clique em “Permitir”' : '') + '. No outro arquivo (o de quem junta os contratos), use “⬆ Importar dados”: os contratos entram nos Indicadores.' : 'Dados exportados ✓ — sem contrato ativo: um arquivo com as sondas, o câmbio, os químicos e o casing.');
       setTimeout(() => setOkMsg(''), 8000);
     } catch (e) {
       setSyncErr('Falha ao exportar os dados: ' + (e && e.message || e));
@@ -823,7 +826,8 @@
             nome: file.name,
             dados,
             geradoEm: j && j.geradoEm || '',
-            por: j && j.por || ''
+            por: j && j.por || '',
+            grupo: j && j.grupo && j.grupo.nome ? j.grupo : null // e22: arquivo de um grupo de contratos
           });
         } catch (e) {
           res({
@@ -909,6 +913,35 @@
         cambioArq
       });
       cur = r.db;
+      // e22: arquivo de um grupo: o grupo (mesmo nome) passa a ter os contratos importados
+      if (a.grupo && a.grupo.nome) {
+        var nomesImp = (a.dados.contratos || []).filter(c => ids.includes(c.id)).map(c => engNormNome(c.name));
+        var dest = (cur.contratos || []).filter(c => !c.archived && nomesImp.includes(engNormNome(c.name))).map(c => c.id);
+        if (dest.length) {
+          var cfg0 = cur.engCards && typeof cur.engCards === 'object' ? cur.engCards : {
+            ordem: [],
+            grupos: []
+          };
+          var grs = (cfg0.grupos || []).map(g => ({
+            ...g,
+            ctIds: (g.ctIds || []).filter(x => !dest.includes(x))
+          }));
+          var g0 = grs.find(g => engNormNome(g.nome) === engNormNome(a.grupo.nome));
+          if (g0) g0.ctIds = g0.ctIds.concat(dest);else grs.push({
+            id: 'gr_' + uid(),
+            nome: a.grupo.nome,
+            ctIds: dest
+          });
+          cur = {
+            ...cur,
+            engCards: {
+              ...cfg0,
+              ordem: (cfg0.ordem || []).filter(k => !dest.includes(String(k).slice(3))),
+              grupos: grs
+            }
+          };
+        }
+      }
       rel = rel.concat(r.rel.map(x => ({
         ...x,
         arquivo: a.nome
@@ -1295,12 +1328,12 @@
     }, varios ? arqs.map((a, i) => engH("div", {
       key: a.k || i,
       className: "ec-imp-arqlin"
-    }, engH("span", null, (i + 1) + '. ' + a.nome + (a.geradoEm ? ' · ' + fmtDH(a.geradoEm) : '') + (a.por ? ' · ' + a.por : '')), engH("button", {
+    }, engH("span", null, (i + 1) + '. ' + a.nome + (a.geradoEm ? ' · ' + fmtDH(a.geradoEm) : '') + (a.por ? ' · ' + a.por : '') + (a.grupo ? ' · grupo “' + a.grupo.nome + '”' : '')), engH("button", {
       type: "button",
       className: "ec-imp-tirar",
       title: "Tirar este arquivo da importação",
       onClick: () => tirarArquivo(a)
-    }, "\xD7"))) : im.nome), !varios && im.geradoEm && engH("div", {
+    }, "\xD7"))) : im.nome + (arqs[0] && arqs[0].grupo ? ' · grupo “' + arqs[0].grupo.nome + '” (o grupo é recriado aqui)' : '')), !varios && im.geradoEm && engH("div", {
       className: "hm-k"
     }, "Exportado"), !varios && im.geradoEm && engH("div", {
       className: "hm-arq"
@@ -1612,7 +1645,7 @@
   };
   var renderEngTools = () => hubLocation ? engH("div", {
     className: "eng-tools"
-  }, engH("button", {
+  }, engHistBotoes(), engH("button", {
     className: "btn-o",
     onClick: abrirEngContratos,
     title: "Contratos, itens PPU, valores em R$ e US$ e reajustes"

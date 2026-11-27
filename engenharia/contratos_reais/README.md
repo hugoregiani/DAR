@@ -46,6 +46,8 @@ receita ano a ano e a aba 📁 Contratos para percorrer os contratos.
 
 **Desde a V08 (27/11/2026, pedido do Hugo), estes arquivos não são mais entregues:** a entrega é só o arquivo padrão (`EARL_Forecast_Vnn.html`) e o prompt de continuidade. Os HTML dos contratos continuam sendo gerados para os testes (`e2e_contratos_reais`, `e2e_atualizacao`, `e2e_importar`).
 
+**V09 (27/11/2026, e22):** saiu o botão "Reiniciar" da faixa azul do arquivo (pedido do Hugo); `window.earlPlReiniciar()` continua só para os testes (`e2e_contratos_reais`, `e2e_atualizacao`). Gerados com `--compat` dos V08.
+
 **V05 (26/11/2026, e17):** gerados com `--compat <V04>/EARL_Forecast_<NOME>_V04.html` e entregues como `EARL_Forecast_<NOME>_V05.html`.
 
 Importar o contrato de um arquivo em outro (e15): `node contratos_reais/e2e_importar.js <pasta dos HTML> PA BDII`.

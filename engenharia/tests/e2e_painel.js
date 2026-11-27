@@ -74,7 +74,7 @@ const db = page => page.evaluate(() => JSON.parse(localStorage.getItem('hal_cmt_
   await card('Takatsugu J').hover();
   await card('Takatsugu J').locator('.eng2-menu-b').click();
   await foto(page, 'p3_menu');
-  conf((await txt(page, '.eng2-menu-pop')) === '🗄 Arquivar 🗑 Apagar…', 'menu: Arquivar e Apagar…', await txt(page, '.eng2-menu-pop'));
+  conf((await txt(page, '.eng2-menu-pop')) === '🗂 Pôr num grupo… 🗄 Arquivar 🗑 Apagar…', 'menu: Pôr num grupo (e22), Arquivar e Apagar…', await txt(page, '.eng2-menu-pop'));
   await page.click('.eng2-menu-arq');
   conf(/Para voltar: Contratos → “Mostrar arquivados”/.test(await page.innerText('body')), 'confirmação explica como voltar');
   await page.click('.overlay button.btn-r:has-text("Arquivar")');

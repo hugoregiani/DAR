@@ -57,8 +57,7 @@ rep(s[_i:_j], _ini + r"""  /* TESTE BP: banco com os dados da planilha Contrato_
   };
   document.addEventListener('DOMContentLoaded',function(){
     var t=document.createElement('div');t.className='earl-bp-tag'+(window.EARL_BP_SEM_ESPACO?' sem':'');
-    t.innerHTML='<b>TESTE BP</b><span>'+(window.EARL_BP_SEM_ESPACO?'⚠ este navegador não está salvando: o teste abre, mas as alterações não ficam salvas':'dados da planilha Contrato_BP_Teste_EARL')+'</span><button type="button">Reiniciar</button>';
-    t.querySelector('button').onclick=window.earlBpReiniciar;
+    t.innerHTML='<b>TESTE BP</b><span>'+(window.EARL_BP_SEM_ESPACO?'⚠ este navegador não está salvando: o teste abre, mas as alterações não ficam salvas':'dados da planilha Contrato_BP_Teste_EARL')+'</span>'; // e22: sem o botão "Reiniciar" (a função fica para os testes)
     document.body.appendChild(t);
   });
 })();

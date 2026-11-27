@@ -2703,6 +2703,27 @@
   }, engH("button", {
     type: "button",
     role: "menuitem",
+    className: "eng2-menu-grupo",
+    onClick: () => {
+      setEngCtMenuAb('');
+      setEngGrDlg({
+        modo: 'por',
+        ctId: ct.id,
+        gid: (engGrupoDe(ct.id) || {}).id || '',
+        nome: ''
+      });
+    }
+  }, "🗂 Pôr num grupo…"), engGrupoDe(ct.id) && engH("button", {
+    type: "button",
+    role: "menuitem",
+    className: "eng2-menu-tirar",
+    onClick: () => {
+      setEngCtMenuAb('');
+      engTirarDoGrupo(ct.id);
+    }
+  }, "↩ Tirar do grupo"), engH("button", {
+    type: "button",
+    role: "menuitem",
     className: "eng2-menu-arq",
     onClick: () => engCtArquivar(ct)
   }, "\uD83D\uDDC4 Arquivar"), engH("button", {

@@ -43,8 +43,8 @@ const acha = (pasta, nome) => fs.readdirSync(pasta).filter(f => new RegExp('^EAR
     conf(/LANÇADO NA VERSÃO ANTERIOR/.test(await p2.evaluate(id => (loadDB().plannedJobs.find(x => x.id === id) || {}).notes || '', antes.id)), 'continua depois de reabrir a versão nova');
     // 3. Reiniciar volta aos dados da planilha
     p2.once('dialog', d => d.accept());
-    await p2.click('.earl-pl-tag button');
-    await p2.waitForLoadState('load'); await p2.waitForSelector('.eng2-card', {timeout: 90000});
+    await Promise.all([p2.waitForEvent('load'), p2.evaluate(() => { setTimeout(() => window.earlPlReiniciar(), 0); })]); // e22: o botão saiu da faixa
+    await p2.waitForSelector('.eng2-card', {timeout: 90000});
     conf(!/LANÇADO NA VERSÃO ANTERIOR/.test(await p2.evaluate(id => (loadDB().plannedJobs.find(x => x.id === id) || {}).notes || '', antes.id)), '"Reiniciar" volta aos dados da planilha');
     await ctx.close();
     // 4. quem nunca abriu recebe os dados da planilha
