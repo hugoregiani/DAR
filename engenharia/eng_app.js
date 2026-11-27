@@ -722,6 +722,11 @@
      computador, exporta-se um .json com tudo e importa-se lá — substituindo ou juntando (fica o registro
      mais recente de cada item: operações, handovers, contratos, sondas, templates…). */
   var [engImpDados, setEngImpDados] = useState(null);
+  // e21: "＋ Adicionar arquivos" na janela de importar e arrastar os .json para a tela
+  var engImpSomarRef = useRef(false),
+    engImpSeqRef = useRef(0),
+    engImpFnRef = useRef(null);
+  var [engArrastando, setEngArrastando] = useState(false);
   var engAgoraTxt = () => {
     var d = new Date(),
       p = n => String(n).padStart(2, '0');
@@ -804,7 +809,7 @@
   /* e20 (pedido do Hugo): dá para escolher vários arquivos .json de uma vez (um por contrato, como sai o exportar).
      Os contratos de todos aparecem na mesma janela; os arquivos entram do exportado primeiro ao último, então, se o
      mesmo contrato estiver em mais de um, fica o mais recente. Chave de cada contrato: "<nº do arquivo>|<id>". */
-  var engImportarArquivo = files => {
+  var engImportarArquivo = (files, somar) => {
     var l = (Array.isArray(files) ? files : files && files.length != null && typeof files !== 'string' && !(files instanceof Blob) ? Array.from(files) : [files]).filter(Boolean);
     if (!l.length) return;
     Promise.all(l.map(file => new Promise(res => {
@@ -834,25 +839,70 @@
       r.readAsText(file);
     }))).then(rs => {
       var ruins = rs.filter(x => x.erro);
-      var arqs = rs.filter(x => !x.erro).sort((a, b) => String(a.geradoEm).localeCompare(String(b.geradoEm)));
-      if (ruins.length) setSyncErr('Não foi possível importar ' + ruins.map(x => '“' + x.nome + '” (' + x.erro + ')').join(', ') + (arqs.length ? '. Os outros arquivos estão na janela.' : '.'));
-      if (!arqs.length) return;
-      setEngImpDados({
-        arqs,
-        nome: arqs.length === 1 ? arqs[0].nome : arqs.length + ' arquivos',
-        dados: arqs[0].dados,
-        geradoEm: arqs.length === 1 ? arqs[0].geradoEm : '',
-        por: arqs.length === 1 ? arqs[0].por : '',
-        sel: [].concat(...arqs.map((a, i) => (a.dados.contratos || []).filter(c => !c.archived).map(c => i + '|' + c.id)))
+      var novos = rs.filter(x => !x.erro).map(x => ({
+        ...x,
+        k: 'a' + ++engImpSeqRef.current
+      }));
+      if (ruins.length) setSyncErr('Não foi possível importar ' + ruins.map(x => '“' + x.nome + '” (' + x.erro + ')').join(', ') + (novos.length ? '. Os outros arquivos estão na janela.' : '.'));
+      if (!novos.length) return;
+      // e21: somar à janela aberta (o mesmo arquivo de novo não entra duas vezes)
+      setEngImpDados(prev => {
+        var base = somar && prev && prev.arqs ? prev.arqs : [];
+        var mesmo = (a, b) => a.nome === b.nome && String(a.geradoEm) === String(b.geradoEm);
+        var entram = novos.filter(n => !base.some(b => mesmo(b, n)));
+        var arqs = base.concat(entram).sort((a, b) => String(a.geradoEm).localeCompare(String(b.geradoEm)));
+        var sel = (somar && prev && prev.arqs ? prev.sel || [] : []).concat(...entram.map(a => (a.dados.contratos || []).filter(c => !c.archived).map(c => a.k + '|' + c.id)));
+        return {
+          ...(somar && prev && prev.arqs ? prev : {}),
+          arqs,
+          nome: arqs.length === 1 ? arqs[0].nome : arqs.length + ' arquivos',
+          dados: arqs[0].dados,
+          geradoEm: arqs.length === 1 ? arqs[0].geradoEm : '',
+          por: arqs.length === 1 ? arqs[0].por : '',
+          sel
+        };
       });
     });
   };
+  engImpFnRef.current = engImportarArquivo;
+  // arrastar os .json para a tela (de qualquer lugar do Forecast): abre a janela de importar ou soma a ela
+  useEffect(() => {
+    var temArq = e => {
+      var t = e.dataTransfer && e.dataTransfer.types;
+      return !!t && Array.prototype.indexOf.call(t, 'Files') >= 0;
+    };
+    var saiu = 0;
+    var over = e => {
+      if (!temArq(e)) return;
+      e.preventDefault();
+      if (e.dataTransfer) e.dataTransfer.dropEffect = 'copy';
+      setEngArrastando(true);
+      clearTimeout(saiu);
+      saiu = setTimeout(() => setEngArrastando(false), 400);
+    };
+    var drop = e => {
+      if (!temArq(e)) return;
+      e.preventDefault(); // sem isso o navegador abriria o arquivo no lugar do Forecast
+      clearTimeout(saiu);
+      setEngArrastando(false);
+      var l = Array.from(e.dataTransfer.files || []);
+      var js = l.filter(f => /\.json$/i.test(f.name));
+      if (js.length) engImpFnRef.current && engImpFnRef.current(js, true);else if (l.length) setSyncErr('Para importar, solte os arquivos .json exportados pelo Forecast (“⬇ Exportar dados”).');
+    };
+    window.addEventListener('dragover', over);
+    window.addEventListener('drop', drop);
+    return () => {
+      window.removeEventListener('dragover', over);
+      window.removeEventListener('drop', drop);
+      clearTimeout(saiu);
+    };
+  }, []);
   // aplica os arquivos um depois do outro (do exportado primeiro ao último), só com os contratos marcados de cada um
   var engImportarVarios = (im, sel, cambioArq) => {
     var cur = db,
       rel = [];
     (im.arqs || []).forEach((a, i) => {
-      var pre = i + '|';
+      var pre = (a.k || i) + '|';
       var ids = (sel || []).filter(k => k.indexOf(pre) === 0).map(k => k.slice(pre.length));
       if (!ids.length) return;
       var r = engImportarContratos(cur, a.dados, ids, {
@@ -1121,7 +1171,10 @@
       }
     } catch (e) {}
   }, []);
-  var renderEngImpDados = () => {
+  var renderEngImpDados = () => engH(React.Fragment, null, engArrastando && engH("div", {
+    className: "eng-soltar"
+  }, engH("div", null, engH("b", null, "⬆ Solte aqui os arquivos .json"), engH("span", null, engImpDados ? "eles entram na janela de importar, junto com os que já estão lá" : "abre a janela de importar com os contratos de todos os arquivos"))), renderEngImpJanela());
+  var renderEngImpJanela = () => {
     var im = engImpDados;
     if (!im) return null;
     var arqs = im.arqs || [{
@@ -1134,9 +1187,26 @@
     // e20: os contratos de todos os arquivos (chave "<nº do arquivo>|<id>")
     var lista = [].concat(...arqs.map((a, i) => engCtsArquivo(a.dados).map(x => ({
       ...x,
-      k: i + '|' + x.ct.id,
+      k: (a.k || i) + '|' + x.ct.id,
       ai: i
     }))));
+    var maisArquivos = () => {
+      engImpSomarRef.current = true;
+      engRestRef.current && engRestRef.current.click();
+    };
+    var tirarArquivo = a => setEngImpDados(x => {
+      var resto = (x.arqs || []).filter(y => y !== a);
+      if (!resto.length) return null;
+      return {
+        ...x,
+        arqs: resto,
+        nome: resto.length === 1 ? resto[0].nome : resto.length + ' arquivos',
+        dados: resto[0].dados,
+        geradoEm: resto.length === 1 ? resto[0].geradoEm : '',
+        por: resto.length === 1 ? resto[0].por : '',
+        sel: (x.sel || []).filter(k => k.indexOf(a.k + '|') !== 0)
+      };
+    });
     var sel = im.sel || [];
     var difCb = [];
     arqs.forEach(a => engCambioDif(db, a.dados).forEach(c => {
@@ -1196,7 +1266,10 @@
         onOk: () => gravar(r.db, aviso)
       });
     };
-    var fechar = () => setEngImpDados(null);
+    var fechar = () => {
+      engImpSomarRef.current = false;
+      setEngImpDados(null);
+    };
     return engH("div", {
       className: "overlay",
       style: {
@@ -1220,12 +1293,25 @@
     }, varios ? "Arquivos (" + arqs.length + ")" : "Arquivo"), engH("div", {
       className: "hm-arq ec-imp-arqs"
     }, varios ? arqs.map((a, i) => engH("div", {
-      key: i
-    }, (i + 1) + '. ' + a.nome + (a.geradoEm ? ' · ' + fmtDH(a.geradoEm) : '') + (a.por ? ' · ' + a.por : ''))) : im.nome), !varios && im.geradoEm && engH("div", {
+      key: a.k || i,
+      className: "ec-imp-arqlin"
+    }, engH("span", null, (i + 1) + '. ' + a.nome + (a.geradoEm ? ' · ' + fmtDH(a.geradoEm) : '') + (a.por ? ' · ' + a.por : '')), engH("button", {
+      type: "button",
+      className: "ec-imp-tirar",
+      title: "Tirar este arquivo da importação",
+      onClick: () => tirarArquivo(a)
+    }, "\xD7"))) : im.nome), !varios && im.geradoEm && engH("div", {
       className: "hm-k"
     }, "Exportado"), !varios && im.geradoEm && engH("div", {
       className: "hm-arq"
     }, fmtDH(im.geradoEm) + (im.por ? ' · ' + im.por : ''))), engH("div", {
+      className: "ec-imp-mais-l"
+    }, engH("button", {
+      type: "button",
+      className: "btn-o ec-imp-mais",
+      onClick: maisArquivos,
+      title: "Escolher outro arquivo .json (de outro contrato) para importar junto"
+    }, "＋ Adicionar arquivos"), engH("span", null, "Para escolher vários de uma vez, segure ", engH("b", null, "Ctrl"), " ao clicar nos arquivos; ou arraste os arquivos .json para esta tela.")), engH("div", {
       className: "ec-imp-ajuda"
     }, varios ? "Marque os contratos que vêm dos arquivos. " : "Marque os contratos que vêm do arquivo. ", engH("b", null, "Contrato que já existe aqui (mesmo nome) é substituído"), ", com as operações dele; contrato novo entra; os outros contratos daqui não mudam.", varios ? " Os arquivos entram do exportado primeiro ao último: se o mesmo contrato estiver em mais de um, fica o mais recente." : ""), lista.length ? engH("div", {
       className: "tbl-scroll"
@@ -1553,7 +1639,7 @@
   }, "⬇ Exportar dados"), engH("button", {
     className: "btn-o eng-importar",
     onClick: () => engRestRef.current && engRestRef.current.click(),
-    title: "Carrega o arquivo exportado por outra pessoa ou outro computador: os contratos entram (o de mesmo nome é substituído, com as operações) e aparecem nos Indicadores"
+    title: "Carrega os arquivos .json exportados por outras pessoas ou por outro computador: os contratos entram (o de mesmo nome é substituído, com as operações) e aparecem nos Indicadores. Para escolher vários de uma vez, segure Ctrl ao clicar nos arquivos — ou arraste os arquivos .json para esta tela."
   }, "⬆ Importar dados"), engH("button", {
     className: "btn-o eng-planilhas",
     onClick: () => abrirEngExp(),
@@ -1569,7 +1655,9 @@
     onChange: e => {
       var fs = Array.from(e.target.files || []);
       e.target.value = '';
-      engImportarArquivo(fs); // e20: um ou vários arquivos
+      var somar = engImpSomarRef.current;
+      engImpSomarRef.current = false;
+      engImportarArquivo(fs, somar); // e20: um ou vários arquivos; e21: "＋ Adicionar arquivos" soma à janela aberta
     }
   })) : null;
   /* =================== fim EARL ENGENHARIA (avulso) =================== */

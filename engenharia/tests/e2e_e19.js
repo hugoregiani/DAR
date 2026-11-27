@@ -300,6 +300,47 @@ const estiloBarra = (p, id) => p.evaluate(i => { const b = document.querySelecto
   conf(depV.nPA === 1 && depV.notasPA.join() === 'versão mais nova' && depV.tk && depV.opsTK === espTK, 'depois de importar: o P&A da exportação mais nova (sem duplicar) e o Takatsugu J com as ' + espTK + ' operações', depV);
   conf(/Importado ✓/.test(await p.textContent('body')), 'aviso depois de importar');
 
+  /* ---------------------------------------------------------------- 1e. "＋ Adicionar arquivos" e arrastar os .json (e21) */
+  console.log('1e. “＋ Adicionar arquivos” na janela de importar e arrastar os .json para a tela');
+  await p.setInputFiles('.eng-tools input[type=file]', arqTK);
+  await p.waitForSelector('.ec-imp-dados');
+  conf(await p.locator('.ec-imp-ct-cb').count() === 1 && await p.locator('.ec-imp-dados .ec-imp-mais').count() === 1 && /segure Ctrl/.test(await p.innerText('.ec-imp-dados')), 'com 1 arquivo: o botão “＋ Adicionar arquivos” e a dica (Ctrl ou arrastar)');
+  let fcp = p.waitForEvent('filechooser');
+  await p.click('.ec-imp-mais');
+  let fc = await fcp;
+  await fc.setFiles(arqPA2);
+  await p.waitForFunction(() => document.querySelectorAll('.ec-imp-ct-cb').length === 2, null, {timeout: 10000}).catch(() => {});
+  conf(fc.isMultiple() && await p.locator('.ec-imp-ct-cb').count() === 2 && /Arquivos \(2\)/i.test(await p.innerText('.ec-imp-dados')), '“＋ Adicionar arquivos” soma o arquivo do P&A à janela (2 arquivos, 2 contratos)');
+  fcp = p.waitForEvent('filechooser');
+  await p.click('.ec-imp-mais');
+  fc = await fcp;
+  await fc.setFiles(arqTK);
+  await p.waitForTimeout(600);
+  conf(await p.locator('.ec-imp-ct-cb').count() === 2, 'o mesmo arquivo de novo não entra duas vezes');
+  await p.locator('.ec-imp-arqlin', {hasText: path.basename(arqPA2)}).locator('.ec-imp-tirar').click();
+  await p.waitForTimeout(300);
+  conf(await p.locator('.ec-imp-ct-cb').count() === 1 && !/P&A/.test(await p.innerText('.ec-imp-cts')), '“×” tira o arquivo do P&A da importação');
+  await p.click('.ec-imp-dados .ec-foot button:has-text("Cancelar")');
+  // arrastar dois .json para a tela
+  const txtPA = fs.readFileSync(arqPA2, 'utf8'), txtTK = fs.readFileSync(arqTK, 'utf8');
+  await p.evaluate(({a, b, na, nb}) => {
+    const dt = new DataTransfer();
+    dt.items.add(new File([a], na, {type: 'application/json'}));
+    dt.items.add(new File([b], nb, {type: 'application/json'}));
+    window.__dt = dt;
+    document.body.dispatchEvent(new DragEvent('dragover', {dataTransfer: dt, bubbles: true, cancelable: true}));
+  }, {a: txtPA, b: txtTK, na: path.basename(arqPA2), nb: path.basename(arqTK)});
+  await p.waitForTimeout(100);
+  conf(await p.locator('.eng-soltar').count() === 1 && /Solte aqui os arquivos/.test(await p.innerText('.eng-soltar')), 'arrastando arquivos sobre a tela: aparece “Solte aqui os arquivos .json”');
+  const naoAbriu = await p.evaluate(() => { const ev = new DragEvent('drop', {dataTransfer: window.__dt, bubbles: true, cancelable: true}); document.body.dispatchEvent(ev); return ev.defaultPrevented; });
+  await p.waitForSelector('.ec-imp-dados');
+  await p.waitForTimeout(300);
+  conf(naoAbriu && await p.locator('.ec-imp-ct-cb').count() === 2 && !(await p.locator('.eng-soltar').count()), 'soltando os 2 .json: abre a janela de importar com os 2 contratos (e o navegador não abre o arquivo)');
+  await p.click('.ec-imp-dados .ec-foot button:has-text("Cancelar")');
+  await p.evaluate(() => { const dt = new DataTransfer(); dt.items.add(new File(['x'], 'planilha.xlsx')); document.body.dispatchEvent(new DragEvent('dragover', {dataTransfer: dt, bubbles: true, cancelable: true})); document.body.dispatchEvent(new DragEvent('drop', {dataTransfer: dt, bubbles: true, cancelable: true})); });
+  await p.waitForTimeout(300);
+  conf(!(await p.locator('.ec-imp-dados').count()) && /solte os arquivos \.json exportados/.test(await p.textContent('body')), 'soltar um arquivo que não é .json: avisa e não abre a importação');
+
   /* ---------------------------------------------------------------- 1b. um contrato só: exporta direto */
   console.log('1b. Com um contrato só, exporta direto');
   await p.evaluate(() => { const d = loadDB(); const tk = d.contratos.find(c => !c.archived && c.name === 'Takatsugu J'); d.contratos.forEach(c => { if (c !== tk) c.archived = true; }); saveDB(d); });
