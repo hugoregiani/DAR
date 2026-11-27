@@ -670,7 +670,15 @@ Pedidos do Hugo (12/11/2026): "No envio do email do Handover preciso que inclua 
   4. `.zip` sem biblioteca (`engShZip`: `CompressionStream('deflate-raw')`, CRC32, nome UTF-8); .eml multipart com o anexo em base64 (`engShB64`), assunto com `=?UTF-8?B?…?=` quando tem acento.
 - **Registros dos Indicadores por arquivo (g23):** `CHAVE_REG = EMB ? CHV('registros_v1') : 'earlger:registros_v1'`; na primeira vez (chave do arquivo vazia), copia os da chave antiga, menos numa cópia compartilhada (`parent.EARL_COMPARTILHADO`), que grava `[]` se vier sem registros.
 - **Versões:** `EARL Forecast e23 (base v115)`, `EARL Gerencial g23`.
-- **Testes (27/11/2026):** <<RESULTADOS>>
+- **Testes (27/11/2026):** todos sem falha.
+  - Engenharia: engenharia 63, contratos 79, quimicos 36, espaco 12, inventario 54, painel 23, e10 37, e12 50, e13 18, e15 27, **e16 30** (o compartilhar dos Indicadores agora abre a janela do Forecast e a cópia abre noutro navegador com os mesmos números, o registro e o Excel), e17 42, e18 15, e19 57, e22 37, **e23 47** (novo: `node tests/e2e_e23.js EARL_Engenharia.html <arquivo de contrato>`; com `EARL_E23_SAIDA=<pasta>` guarda as cópias).
+  - Achados durante a rodada:
+    - no Chromium, nome de arquivo baixado com acento ou travessão vira "download" → o nome sai sem acento;
+    - os registros dos Indicadores ficavam numa chave só para todos os arquivos (não iam na cópia) → por arquivo (g23).
+  - Gerencial: 62, 59, 71, 59, 27 (versão g23). **BP: 59** (arquivo de teste montado de novo com `montar_bp.py`).
+  - Contratos reais (gerados de novo em `$S/ctr/out17`, `--compat` dos V09 de `$S/ctr/out16`): 142; `e2e_atualizacao` V09→V10 42; `e2e_importar` PA→BDII 9, BP→DC 9. `e2e_seguranca`: 85 (com as 3 cópias geradas pelo e2e_e23: do arquivo padrão, de uma cópia e de um arquivo de contrato).
+  - ClamAV: 0 vírus no `EARL_Forecast_V10.html` e nas cópias compartilhadas.
+- **Entrega V10:** só `EARL_Forecast_V10.html` e este prompt (regra da V08).
 
 ### e21 + e22 + Gerencial g22 — importar com "＋ Adicionar arquivos", desfazer/refazer, grupos de contratos, filtros que ficam, operações independentes — entrega _V09 (27/11/2026)
 
