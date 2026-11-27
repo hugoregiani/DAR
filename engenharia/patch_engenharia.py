@@ -105,7 +105,7 @@ assert i > 0
 s = s[:i] + css + s[i:]
 
 # ---------------------------------------------------------------- app (código compilado)
-rep("var EARL_VERSION = 'EARL v115';", "var EARL_VERSION = 'EARL Forecast e22 (base v115)';")
+rep("var EARL_VERSION = 'EARL v115';", "var EARL_VERSION = 'EARL Forecast e23 (base v115)';")
 rep("var HO_ST = {\n  pendente: {", "var HO_ST = {\n  email: {\n    label: 'Enviado por e-mail',\n    c: '#304220',\n    bg: '#F1F5EC',\n    brd: '#D9E4CC'\n  },\n  pendente: {")
 # quem gera o e-mail assina os registros (sem login)
 rep("  var currentUser = () => authUser && authUser.email || sbUser || '';",
@@ -644,7 +644,7 @@ rep("      if (d.people && d.people.length > 0) return migrateDB(d);", "      if
 rep("  return migrateDB(JSON.parse(JSON.stringify(SEED_DB)));", "  return engQuimMig(migrateDB(JSON.parse(JSON.stringify(SEED_DB))));")
 
 # Código novo (antes de renderHandover) e janelas novas na árvore
-novo = open(os.path.join(AQUI, 'eng_app.js'), encoding='utf-8').read() + '\n' + open(os.path.join(AQUI, 'eng_contratos.js'), encoding='utf-8').read() + '\n' + open(os.path.join(AQUI, 'eng_quimicos.js'), encoding='utf-8').read() + '\n' + open(os.path.join(AQUI, 'eng_inventario.js'), encoding='utf-8').read() + '\n' + open(os.path.join(AQUI, 'eng_cambio.js'), encoding='utf-8').read() + '\n' + open(os.path.join(AQUI, 'eng_logo.js'), encoding='utf-8').read() + '\n' + open(os.path.join(AQUI, 'eng_e17.js'), encoding='utf-8').read() + '\n' + open(os.path.join(AQUI, 'eng_e19.js'), encoding='utf-8').read() + '\n' + open(os.path.join(AQUI, 'eng_e22.js'), encoding='utf-8').read()
+novo = open(os.path.join(AQUI, 'eng_app.js'), encoding='utf-8').read() + '\n' + open(os.path.join(AQUI, 'eng_contratos.js'), encoding='utf-8').read() + '\n' + open(os.path.join(AQUI, 'eng_quimicos.js'), encoding='utf-8').read() + '\n' + open(os.path.join(AQUI, 'eng_inventario.js'), encoding='utf-8').read() + '\n' + open(os.path.join(AQUI, 'eng_cambio.js'), encoding='utf-8').read() + '\n' + open(os.path.join(AQUI, 'eng_logo.js'), encoding='utf-8').read() + '\n' + open(os.path.join(AQUI, 'eng_e17.js'), encoding='utf-8').read() + '\n' + open(os.path.join(AQUI, 'eng_e19.js'), encoding='utf-8').read() + '\n' + open(os.path.join(AQUI, 'eng_e22.js'), encoding='utf-8').read() + '\n' + open(os.path.join(AQUI, 'eng_e23.js'), encoding='utf-8').read()
 rep("  var renderHandover = () => {\n", novo.rstrip('\n') + "\n  var renderHandover = () => {\n")
 rep("renderRigForm(), renderConfirmBox(),", "renderEngSondas(), renderEngContratos(), renderEngQuim(), renderEngCasDb(), renderEngEspaco(), renderEngCons(), renderEngImpDados(), renderEngGer(), renderEngInvEd(), renderEngExp(), renderEngCambio(), renderEngLogo(), renderRigForm(), renderConfirmBox(),")
 # sonda salva com data de alteração (para o "juntar" da importação ficar com a mais recente)
@@ -1081,6 +1081,10 @@ rep("""  op: 'Entrega de Cimento/Blend',
 }, {""")
 rep("  'Entrega de Cimento/Blend': 'Cement/Blend delivery',\n", "  'Entrega de Cimento/Blend': 'Cement/Blend delivery',\n  'Disponibilidade de Pessoal': 'Personnel availability',\n  'Disponibilidade de Equipamentos': 'Equipment availability',\n")
 rep("  'Entrega de Cimento/Blend': 'Entrega de Cemento/Blend',\n", "  'Entrega de Cimento/Blend': 'Entrega de Cemento/Blend',\n  'Disponibilidade de Pessoal': 'Disponibilidad de personal',\n  'Disponibilidade de Equipamentos': 'Disponibilidad de equipos',\n")
+
+# e23 (pedido do Hugo, 27/11/2026): eng_e23.js — "📤 Compartilhar (HTML)" gera uma cópia deste arquivo do Forecast com os
+# dados de agora (o Gerencial embutido chama window.engCompartilharAbrir), com o nome escolhido antes de baixar/criar o e-mail
+rep("renderEngDup(), renderEngExpSel(), renderEngDia(), renderEngGrDlg(), renderEngCorPop(),", "renderEngDup(), renderEngExpSel(), renderEngDia(), renderEngGrDlg(), renderEngSh(), renderEngCorPop(),")
 
 # e12: filtro e ordem em todas as tabelas (script avulso, fora do React), no fim do <body>
 tf = open(os.path.join(AQUI, 'eng_tabelas.js'), encoding='utf-8').read()

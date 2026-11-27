@@ -487,3 +487,23 @@ tr.ec-conc-falta td{background:#FFF8E6}
 .eng-expsel-grtab td{padding:4px 10px}
 .eng-expsel-nome code.eng-expsel-arqgr{background:#2A2F30;color:#fff}
 .eng-cor-pop{max-height:calc(100vh - 16px);overflow:auto}
+/* e23: Compartilhar o arquivo (HTML), com o nome escolhido */
+.eng-sh{width:min(620px,96vw);max-height:92vh;overflow:auto}
+.eng-sh-campo{display:flex;flex-direction:column;gap:4px;margin:10px 0 0;font-size:12.5px;color:var(--ink-2)}
+.eng-sh-campo>span:first-child{font-size:10.5px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--ink-3)}
+.eng-sh-campo input[type=text],.eng-sh-campo textarea{width:100%;box-sizing:border-box;border:1px solid var(--border,#D4DADD);border-radius:10px;padding:8px 10px;font:inherit;font-size:13px;color:var(--ink);background:#fff}
+.eng-sh-campo textarea{resize:vertical;min-height:90px;font-size:12.5px;line-height:1.4}
+.eng-sh-nomebox{display:flex;align-items:center;gap:6px}
+.eng-sh-nomebox input{flex:1;min-width:0;font-weight:600}
+.eng-sh-ext{font-weight:700;color:var(--ink-2);font-size:13px}
+.eng-sh-saida{display:flex;align-items:center;gap:8px;margin-top:6px;font-size:12px;color:var(--ink-3)}
+.eng-sh-vai{flex:1;min-width:0;word-break:break-all}
+.eng-sh-saida b{color:var(--ink)}
+.eng-sh-aviso{color:#B45309;font-size:11.5px}
+div.eng-sh-aviso{margin-top:4px}
+.eng-sh-padrao{font-size:11px !important;padding:3px 10px !important;flex:none}
+.eng-sh-bts{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+.eng-sh-email{margin-top:16px;padding-top:12px;border-top:1px solid var(--border,#D4DADD)}
+.eng-sh-sub{font-weight:700;font-size:13px;color:var(--ink)}
+.eng-sh-chk{display:flex;align-items:center;gap:6px;margin-top:10px;font-size:12.5px;color:var(--ink-2);cursor:pointer}
+.eng-sh-nota{margin-top:8px;font-size:11.5px;color:var(--ink-3)}

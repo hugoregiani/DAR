@@ -13,6 +13,7 @@
   var FORA = 8, DENTRO = 4, MIN_W = 280, MIN_H = 160;
   var CUR = {n: 'ns-resize', s: 'ns-resize', e: 'ew-resize', w: 'ew-resize', ne: 'nesw-resize', sw: 'nesw-resize', nw: 'nwse-resize', se: 'nwse-resize'};
   var css = document.createElement('style');
+  css.setAttribute('data-earl-rt', '1'); // e23: posto pelo script depois de abrir (não vai na cópia compartilhada)
   css.textContent = Object.keys(CUR).map(function (k) { return 'html[data-engrz-cur="' + k + '"],html[data-engrz-cur="' + k + '"] *{cursor:' + CUR[k] + ' !important}'; }).join('\n') +
     '\nhtml[data-engrz-arr],html[data-engrz-arr] *{user-select:none !important;-webkit-user-select:none !important}' +
     '\n[data-engrz]{animation:none !important}';
@@ -166,6 +167,7 @@
     if (!alca) {
       alca = document.createElement('div');
       alca.className = 'eng-rz-alca';
+      alca.setAttribute('data-earl-rt', '1');
       alca.setAttribute('aria-hidden', 'true');
       alca.style.cssText = 'position:fixed;width:14px;height:14px;pointer-events:none;z-index:2147483000;opacity:.75;' +
         'background:linear-gradient(135deg,transparent 0 46%,#8E979D 46% 54%,transparent 54% 64%,#8E979D 64% 72%,transparent 72% 82%,#8E979D 82% 90%,transparent 90%)';

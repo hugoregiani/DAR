@@ -6,7 +6,16 @@
 >
 > **O que entregar (pedido do Hugo, 27/11/2026, desde a V08):** só o arquivo padrão limpo `EARL_Forecast_Vnn.html` e este prompt (`EARL_prompt_continuidade_Vnn.md`). Não mandar um arquivo por contrato nem o PDF do passo a passo, a não ser que ele peça. Os arquivos dos contratos continuam sendo gerados para os testes.
 >
-> **Última atualização:** 27/11/2026 — **entrega _V09: EARL Forecast e22 + Gerencial g22** (com a e21):
+> **Última atualização:** 27/11/2026 — **entrega _V10: EARL Forecast e23 + Gerencial g23**:
+> - **"📤 Compartilhar (HTML)" agora compartilha o próprio arquivo do Forecast** em que a pessoa está trabalhando (não existe mais o arquivo do Gerencial): sai uma cópia deste .html com todos os dados de agora (contratos, operações, consumos, handovers, inventário, câmbio, químicos, casing, grupos, filtros e os registros dos Indicadores). O botão fica na barra de ferramentas (ao lado de Exportar/Importar dados) e na aba Indicadores.
+> - **Dá para escolher o nome do arquivo** antes de baixar (.html ou .zip) ou de criar o e-mail (.eml, rascunho do Outlook com o arquivo anexo). O nome sai sem acento (o navegador troca por "download" nome de arquivo com acento) e sem os caracteres que o Windows não aceita.
+> - Quem recebe abre com dois cliques, sem internet, e usa como o arquivo original; o que lançar fica só no computador dela, separado dos outros arquivos do EARL.
+> - Os registros dos Indicadores (📌 Registrar) passaram a ser de cada arquivo (antes eram os mesmos para todos os arquivos do navegador).
+> - Arquivos `EARL_Forecast_V10.html` e `EARL_prompt_continuidade_V10.md`. Ver "e23" em 4-E.
+> - **Em andamento (parado):** narração do vídeo tutorial (o `gravar_tutorial.js` ainda usa a pílula "Consumo e receita", que saiu na e18).
+> - **Pendente:** a planilha do banco de químicos/casing não chegou.
+>
+> Antes, em 27/11/2026 — **entrega _V09: EARL Forecast e22 + Gerencial g22** (com a e21):
 > - **Importar vários arquivos:** "＋ Adicionar arquivos" na janela de importar, "×" para tirar um arquivo, arrastar os .json para a tela (e a dica: segure Ctrl para escolher vários).
 > - **Desfazer / refazer** como no Excel (botões e Ctrl+Z / Ctrl+Y).
 > - **Cards dos contratos:** arrastar para mudar a ordem (fica salva); **grupos** (um card com vários contratos, abre como pasta) e **exportar o grupo** num .json (`EARL_FORECAST_<NOME DO CARD>_…`; o importar recria o grupo).
@@ -647,6 +656,21 @@ Pedidos do Hugo (12/11/2026): "No envio do email do Handover preciso que inclua 
   - Painel de Compras: `engenharia` 37, `invariantes` 64, `pedidos_enviados` 15, `regressao` 6, `reproduzir` ok.
   - Ajustes de expectativa nos testes antigos (mudanças pedidas): sonda "NS-32 - Norbe VIII" nos seletores, no assunto do e-mail e na matriz do Gerencial; coluna "Saldo na sonda" no e-mail; colunas novas nas exportações; versão g16.
 - **Pendências:** os textos novos ainda sem EN/ES; a tabela de câmbio não tem importação por planilha (é digitada); a "Frente" do PA ainda precisa de ajuste (a planilha fatura com outra regra).
+
+### e23 + Gerencial g23 — "📤 Compartilhar (HTML)" é o próprio arquivo do Forecast, com o nome escolhido — entrega _V10 (27/11/2026)
+
+- **Pedido do Hugo (27/11/2026):** "Não existe mais o arquivo gerencial. Eu preciso que você mude a parte de exportar, de compartilhar o HTML. O compartilhar o HTML agora vai ser compartilhar exatamente o arquivo que eu estou trabalhando… e bota uma opção para eu poder nomear o arquivo da maneira que eu quiser, antes de vir por e-mail."
+- **Código novo:** `eng_e23.js` (entra depois do `eng_e22.js` no `patch_engenharia.py`; `renderEngSh()` na lista de janelas). Botão `.eng-compartilhar` na barra (`eng_app.js`). No Gerencial (g23), o `abrirCompartilhar` em modo embutido chama `window.parent.engCompartilharAbrir()` e volta; o compartilhar antigo (só os indicadores) fica no `EARL_Gerencial.html` separado (teste `e2e_compartilhar.js`).
+- **Janela** (`.eng-sh`): "Nome do arquivo" (`.eng-sh-nome`, padrão `EARL_FORECAST_<CLIENTE>_<CONTRATO>_AAAA.MM.DD_HHhMM` com um contrato ativo, senão `EARL_FORECAST_AAAA.MM.DD_HHhMM`; "↺ nome padrão"), "Vai sair: …", avisos; "⬇ Baixar HTML", "⬇ Baixar .zip"; quadro "✉ Mandar por e-mail" (Para, Assunto — com o nome como foi escrito, com acento —, Mensagem, "Anexar compactado (.zip)") e "✉ Criar e-mail (.eml)". Só fecha pelos botões.
+- **Nome do arquivo:** `engShNomeLimpo` tira `\ / : * ? " < > |` (viram "-"), caracteres de controle e **acentos** (`engShSemAcento`: ã → a, — → -). Achado: no Chromium, `a.download` com acento ou travessão faz o navegador salvar como "download" (o mesmo já tinha acontecido no Painel de Compras). O .eml sai com o mesmo nome (`<nome>.eml`).
+- **Como a cópia é feita (`engShMontar`):**
+  1. Dados: todas as chaves do `localStorage` com o prefixo deste arquivo (`EARL_ARMAZ.P`), descomprimidas (lembra quais estavam comprimidas, `lz`), menos `hal_cmt_dbsnap_v1`, `earl_sh_id`, `earl_fotos_sig_v1`; o banco é o da tela (`JSON.stringify(db)`); se ainda não houver `ger:registros_v1`, leva os registros da chave antiga `earlger:registros_v1`. Vão num `<script type="application/json" id="earl-sh-dados">` (com `<` como `\u003c`) logo antes do script do armazenamento.
+  2. HTML: `document.documentElement.cloneNode(true)` e `engShLimparClone` (`#app` vazio; saem `[data-earl-rt]` — o `eng_redim.js` marca assim o estilo e a alça que cria —, `.earl-pl-tag`, `.eng-rz-alca`; no `<body>` só ficam `#btn-install` (escondido), `#app` e os scripts; sem `href` no `#pwa-manifest`; sem `data-engrz-*`/classes de arraste no `<html>`/`<body>`).
+  3. No script do armazenamento (achado por `"  window.EARL_ENG_AVULSO=true;\n"` + `window.EARL_ARMAZ={P:P`): `var P='earlengsh<id>:';` e o bloco `/*EARL_SH_INI*/ … /*EARL_SH_FIM*/` logo depois de `window.EARL_ENG_AVULSO=true;` (antes do bloco da planilha dos arquivos de contrato). Na primeira vez que a cópia abre num navegador, grava as chaves (com `Z()` nas que estavam comprimidas) e marca `earl_sh_id`; ao reabrir, não grava de novo. Sem espaço: apaga o que entrou pela metade e o `getItem` devolve os dados embutidos (`EARL_SH_SEM_ESPACO`); armazenamento bloqueado: grava na memória. Cópia de uma cópia: o bloco antigo sai, o prefixo muda. Cópia de arquivo de contrato: o `earl_pl_id` vai junto, então o bloco da planilha não grava os dados da planilha por cima.
+  4. `.zip` sem biblioteca (`engShZip`: `CompressionStream('deflate-raw')`, CRC32, nome UTF-8); .eml multipart com o anexo em base64 (`engShB64`), assunto com `=?UTF-8?B?…?=` quando tem acento.
+- **Registros dos Indicadores por arquivo (g23):** `CHAVE_REG = EMB ? CHV('registros_v1') : 'earlger:registros_v1'`; na primeira vez (chave do arquivo vazia), copia os da chave antiga, menos numa cópia compartilhada (`parent.EARL_COMPARTILHADO`), que grava `[]` se vier sem registros.
+- **Versões:** `EARL Forecast e23 (base v115)`, `EARL Gerencial g23`.
+- **Testes (27/11/2026):** <<RESULTADOS>>
 
 ### e21 + e22 + Gerencial g22 — importar com "＋ Adicionar arquivos", desfazer/refazer, grupos de contratos, filtros que ficam, operações independentes — entrega _V09 (27/11/2026)
 

@@ -1674,6 +1674,10 @@
     onClick: () => engRestRef.current && engRestRef.current.click(),
     title: "Carrega os arquivos .json exportados por outras pessoas ou por outro computador: os contratos entram (o de mesmo nome é substituído, com as operações) e aparecem nos Indicadores. Para escolher vários de uma vez, segure Ctrl ao clicar nos arquivos — ou arraste os arquivos .json para esta tela."
   }, "⬆ Importar dados"), engH("button", {
+    className: "btn-o eng-compartilhar",
+    onClick: () => engShAbrir(), // e23: uma cópia deste arquivo, com os dados de agora, com o nome escolhido
+    title: "Gera uma cópia deste arquivo do EARL Forecast (.html) com todos os dados de agora, para mandar a outras pessoas (baixar ou criar o e-mail). Dá para escolher o nome do arquivo."
+  }, "📤 Compartilhar (HTML)"), engH("button", {
     className: "btn-o eng-planilhas",
     onClick: () => abrirEngExp(),
     title: "Baixa planilhas separadas dos contratos marcados: invent\xE1rio das sondas, consumo de produtos qu\xEDmicos, casing equipment e pessoal (o Painel de Compras usa o invent\xE1rio e o consumo de qu\xEDmicos)"

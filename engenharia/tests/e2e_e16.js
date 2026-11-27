@@ -177,11 +177,14 @@ const importar = async (p, arq) => {
   conf(/Comparar registros \(1\)/.test(await fg.innerText('.tabs')), 'o registro continua depois de reabrir');
   await fg.selectOption('[data-f="ano"]', '2026');
   const rec26 = valor(await fg.textContent('.k-rec-usd b'));
+  // e23: o “📤 Compartilhar (HTML)” dos Indicadores gera uma cópia do próprio arquivo do Forecast (com todos os dados)
   await fg.click('.b-sh');
-  await fg.waitForSelector('#dlg [data-a="shHtml"]');
-  const arqSh = await baixar(ph, () => fg.click('#dlg [data-a="shHtml"]'));
+  await ph.waitForSelector('.eng-sh .eng-sh-nome');
+  conf(!(await fg.locator('#dlg').count()), 'Compartilhar (HTML) dos Indicadores abre a janela do Forecast (cópia do arquivo), não a do Gerencial');
+  await ph.fill('.eng-sh-nome', 'Copia do Hugo');
+  const arqSh = await baixar(ph, () => ph.click('.eng-sh-html'));
   const h = fs.readFileSync(arqSh, 'utf8');
-  conf(!/id="earlger-embutido"/.test(h) && h.indexOf('/* xlsx/0.18.5') >= 0 && /hdr"><img src="data:image\/png/.test(h) && /http-equiv="Content-Security-Policy"/.test(h), 'HTML compartilhado independente: sem a marca do modo embutido, com a biblioteca do Excel, os logos e a política de segurança', {bytes: h.length});
+  conf(path.basename(arqSh) === 'Copia do Hugo.html' && h.includes('id="earl-sh-dados"') && /var P='earlengsh[a-z0-9]+:';/.test(h) && /http-equiv="Content-Security-Policy"/.test(h) && h.indexOf('/* xlsx/0.18.5') >= 0, 'cópia do arquivo do Forecast com o nome escolhido, os dados, a biblioteca do Excel e a política de segurança', {arq: path.basename(arqSh), bytes: h.length});
   const b2 = await chromium.launch();
   const c2 = await b2.newContext({viewport: {width: 1440, height: 900}, acceptDownloads: true});
   await c2.route(/^https?:\/\//, x => x.abort());
@@ -189,11 +192,12 @@ const importar = async (p, arq) => {
   await ps.clock.setFixedTime(new Date(HOJE + 'T12:00:00'));
   const errS = []; ps.on('pageerror', e => errS.push(String(e)));
   await ps.goto('file://' + arqSh);
-  await ps.waitForSelector('.kpis', {timeout: 30000});
-  await ps.selectOption('[data-f="ano"]', '2026').catch(() => {});
-  const recS = valor(await ps.textContent('.k-rec-usd b'));
-  const xl = await baixar(ps, () => ps.click('[data-a="excel"]'));
-  conf(perto(recS, rec26, 0.05) && /\.xlsx$/.test(xl) && fs.statSync(xl).size > 3000 && !errS.length, 'o compartilhado abre sozinho com os mesmos números (2026: US$ ' + rec26.toFixed(2) + ') e baixa o Excel', {recS, rec26, xl: path.basename(xl), errS: errS.slice(0, 2)});
+  const fs2 = await frame(ps);
+  await fs2.selectOption('[data-f="ano"]', '2026').catch(() => {});
+  const recS = valor(await fs2.textContent('.k-rec-usd b'));
+  const regS = /Comparar registros \(1\)/.test(await fs2.innerText('.tabs'));
+  const xl = await baixar(ps, () => fs2.click('[data-a="excel"]'));
+  conf(perto(recS, rec26, 0.05) && regS && /\.xlsx$/.test(xl) && fs.statSync(xl).size > 3000 && !errS.length, 'a cópia abre sozinha (outro navegador) com os mesmos números nos Indicadores (2026: US$ ' + rec26.toFixed(2) + '), o registro e o Excel', {recS, rec26, regS, xl: path.basename(xl), errS: errS.slice(0, 2)});
   await b2.close();
 
   conf(!H.errs.length, 'arquivo do Hugo: nenhum erro de JavaScript', H.errs.slice(0, 3));

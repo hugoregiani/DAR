@@ -98,6 +98,39 @@ A Engenharia do EARL separada do resto do sistema, agora chamada **EARL Forecast
 - **Exportações:** "Consumo de produtos químicos", "Casing equipment" e "Pessoal" ganharam **Contingência (linha)** e **Risco da linha (%)**; a operação já tinha Contingência e Risco (%). O Painel de Compras aplica o risco da linha.
 - **Cards** da aba "Consumo e receita" com profundidade, como os do Gerencial g16.
 
+### e23 (27/11/2026) — "📤 Compartilhar (HTML)" é o próprio arquivo do Forecast, com o nome escolhido
+
+Pedido do Hugo: "Não existe mais o arquivo gerencial… O compartilhar o HTML agora vai ser compartilhar exatamente o
+arquivo que eu estou trabalhando… e bota uma opção para eu poder nomear o arquivo da maneira que eu quiser, antes de vir
+por e-mail." Código novo em `eng_e23.js` (patch, bloco e23):
+- **Onde:** botão "📤 Compartilhar (HTML)" na barra de ferramentas (ao lado de Exportar/Importar dados) e na aba
+  📊 Indicadores (o Gerencial embutido chama `window.engCompartilharAbrir`; a janela é a do Forecast).
+- **Janela:** "Nome do arquivo" (padrão `EARL_FORECAST_<CLIENTE>_<CONTRATO>_AAAA.MM.DD_HHhMM` com um contrato ativo, ou
+  `EARL_FORECAST_AAAA.MM.DD_HHhMM`; "↺ nome padrão"); mostra o nome que vai sair. O que o Windows não aceita em nome de
+  arquivo (`\ / : * ? " < > |`) vira "-", e o nome sai **sem acento** (ã → a, — → -), porque o navegador troca por
+  "download" o nome de arquivo baixado com acento (conferido no Chromium); o assunto do e-mail fica com o acento.
+  Botões: "⬇ Baixar HTML", "⬇ Baixar .zip" e, no quadro "✉ Mandar por e-mail" (Para, Assunto, Mensagem, "Anexar
+  compactado (.zip)"), "✉ Criar e-mail (.eml)" — rascunho do Outlook (`X-Unsent: 1`) com o arquivo anexo.
+- **A cópia** (`engShMontar`): o HTML da própria página (`document.documentElement.cloneNode`), sem o que o app pôs nela
+  depois de abrir (`engShLimparClone`: `#app` vazio; saem `[data-earl-rt]` — o estilo e a alça do `eng_redim.js` —, a
+  faixa `.earl-pl-tag`, o `href` do manifesto e marcas no `<html>`/`<body>`; no `<body>` só ficam `#btn-install`, `#app`
+  e os scripts). Os dados vão num `<script type="application/json" id="earl-sh-dados">` antes do script do
+  armazenamento: **todas as chaves deste arquivo** no navegador (o banco, os filtros, as preferências e os registros dos
+  Indicadores), menos o backup automático (`hal_cmt_dbsnap_v1`); o banco é o da tela (`JSON.stringify(db)`). O script do
+  armazenamento ganha um **prefixo só da cópia** (`earlengsh<id>:`) e o bloco `/*EARL_SH_INI*/ … /*EARL_SH_FIM*/`: na
+  primeira vez que a cópia abre num navegador, grava os dados (comprimidos como estavam) e marca `earl_sh_id`; ao
+  reabrir, vale o que foi lançado. Sem espaço (ou armazenamento bloqueado), abre com os dados embutidos, sem salvar
+  (`EARL_SH_SEM_ESPACO`). Cópia de uma cópia troca o bloco e o prefixo; cópia de um arquivo de contrato mantém a
+  planilha embutida, mas abre com os dados de agora (o `earl_pl_id` vai junto).
+- **.zip** sem biblioteca (`engShZip`: um arquivo, `CompressionStream('deflate-raw')`, nome em UTF-8).
+- **Registros dos Indicadores por arquivo (g23):** antes ficavam numa chave só (`earlger:registros_v1`), a mesma para
+  todos os arquivos do navegador; agora cada arquivo tem os seus (`<prefixo>ger:registros_v1`), e na primeira vez vêm os
+  da chave antiga (menos numa cópia compartilhada). O compartilhar também leva os da chave antiga, se o arquivo ainda não
+  tiver os seus.
+- Teste novo: `tests/e2e_e23.js [EARL_Engenharia.html] [arquivo de contrato]` (com `EARL_E23_SAIDA=<pasta>` guarda as
+  cópias geradas, para o `e2e_seguranca.js` e o ClamAV). O `e2e_e16` passou a conferir o compartilhar dos Indicadores
+  pela janela do Forecast.
+
 ### e22 (27/11/2026) — Gantt mostra a operação salva, desfazer/refazer, grupos de contratos, filtros que ficam, operação sem sonda
 
 Pedidos do Hugo (código novo em `eng_e22.js`; patch, bloco e22):

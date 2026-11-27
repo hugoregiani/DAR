@@ -370,7 +370,7 @@ html.emb .kpis,html.emb .qcards{padding:2px 2px 8px}
    Para cada contrato vale o arquivo mais novo. Tudo fica neste navegador (localStorage, prefixo earlger:). */
 (function () {
   'use strict';
-  var VERSAO = 'EARL Gerencial g22';
+  var VERSAO = 'EARL Gerencial g23';
   var CHAVE = 'earlger:pacotes_v1';
   var $ = function (s) { return document.querySelector(s); };
   var esc = function (v) { return String(v == null ? '' : v).replace(/[&<>"']/g, function (c) { return {'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'}[c]; }); };
@@ -982,7 +982,7 @@ html.emb .kpis,html.emb .qcards{padding:2px 2px 8px}
   // arquivos; ficam o Excel, os registros (fotos por data, para comparar) e o HTML compartilhado
   var barraEmb = function (C) {
     return '<div class="bar emb-bar"><span class="info emb-info"><b>' + C.contratos.length + ' contrato(s)</b> · ' + C.ops.length + ' operação(ões) · realizado + previsto, com o risco de cada operação</span><span class="sp"></span>' +
-      '<button class="btn-o" data-a="excel">⬇ Excel consolidado</button><button class="btn-o b-reg" data-a="regAbrir" title="Guardar uma foto das informações nesta data, para comparar depois">📌 Registrar</button><button class="btn-o b-sh" data-a="shAbrir" title="Gerar um arquivo .html com os dados de agora, para mandar por e-mail">📤 Compartilhar (HTML)</button></div>';
+      '<button class="btn-o" data-a="excel">⬇ Excel consolidado</button><button class="btn-o b-reg" data-a="regAbrir" title="Guardar uma foto das informações nesta data, para comparar depois">📌 Registrar</button><button class="btn-o b-sh" data-a="shAbrir" title="Gerar uma cópia deste arquivo do EARL Forecast, com todos os dados de agora, para mandar por e-mail (dá para escolher o nome do arquivo)">📤 Compartilhar (HTML)</button></div>';
   };
   var opcoes = function (lista, val, todos) { return '<option value="">' + esc(todos) + '</option>' + lista.map(function (x) { var v = typeof x === 'string' ? x : x.v, t = typeof x === 'string' ? x : x.t; return '<option value="' + esc(v) + '"' + (v === val ? ' selected' : '') + '>' + esc(t) + '</option>'; }).join(''); };
   var uniq = function (l) { return l.filter(function (x, i) { return x && l.indexOf(x) === i; }).sort(function (a, b) { return a.localeCompare(b, 'pt'); }); };
@@ -1515,7 +1515,16 @@ html.emb .kpis,html.emb .qcards{padding:2px 2px 8px}
      Guarda, por operação (de todos os contratos carregados, sem os filtros): contrato, cliente, região, tipo, sonda,
      poço, operação, data, situação, risco e a receita/COGS em US$ já com o risco. Um registro por data: registrar de
      novo na mesma data sobrescreve. Fica neste navegador (earlger:registros_v1); exporta/importa em .json. */
-  var CHAVE_REG = 'earlger:registros_v1';
+  var CHAVE_REG = EMB ? CHV('registros_v1') : 'earlger:registros_v1';
+  // g23: no EARL Forecast (aba Indicadores) cada arquivo tem os seus registros (antes ficavam numa chave só, a mesma para
+  // todos os arquivos do navegador, e não iam na cópia compartilhada do arquivo). Na primeira vez, traz os da chave antiga
+  // (menos numa cópia compartilhada, que já vem com os registros de quem compartilhou).
+  if (EMB) try {
+    if (localStorage.getItem(CHAVE_REG) == null) {
+      var compart = false; try { compart = !!window.parent.EARL_COMPARTILHADO; } catch (e) {}
+      localStorage.setItem(CHAVE_REG, (!compart && localStorage.getItem('earlger:registros_v1')) || '[]');
+    }
+  } catch (e) {}
   var lerRegs = function () { try { var l = JSON.parse(localStorage.getItem(CHAVE_REG) || '[]'); return Array.isArray(l) ? l.filter(function (r) { return r && /^\d{4}-\d{2}-\d{2}$/.test(r.data) && Array.isArray(r.ops); }) : []; } catch (e) { return []; } };
   var gravarRegs = function (l) {
     if (COMPARTILHADO) return false;
@@ -1956,6 +1965,9 @@ html.emb .kpis,html.emb .qcards{padding:2px 2px 8px}
   };
   var abrirCompartilhar = function () {
     fecharDlg();
+    // g23 (pedido do Hugo): no EARL Forecast (aba Indicadores) o compartilhar é do próprio arquivo do Forecast, com todos
+    // os dados (contratos, operações, registros...): a janela é a do Forecast, com o nome do arquivo
+    if (EMB) { try { if (window.parent && window.parent !== window && typeof window.parent.engCompartilharAbrir === 'function') { window.parent.engCompartilharAbrir(); return; } } catch (e) {} }
     var f = S.f, temF = !!(f.cliente || f.contrato || f.regiao || f.tipo), desc = descFiltroCt();
     var msg = 'Olá,\n\nSegue em anexo o EARL Gerencial com a receita e o COGS (realizado + previsto)' + (desc ? ', só ' + desc : '') + '.\n\nPara abrir: salve o arquivo anexo e abra com dois cliques no Chrome ou no Edge (funciona sem internet). Dá para filtrar por ano, quarto, mês, cliente e contrato, ver os gráficos e as tabelas' + (S.regs.length ? ', comparar os registros' : '') + ' e baixar o Excel.\n';
     var d = document.createElement('div'); d.id = 'dlg'; d.className = 'ovl';
@@ -2267,6 +2279,7 @@ html.emb .kpis,html.emb .qcards{padding:2px 2px 8px}
   var FORA = 8, DENTRO = 4, MIN_W = 280, MIN_H = 160;
   var CUR = {n: 'ns-resize', s: 'ns-resize', e: 'ew-resize', w: 'ew-resize', ne: 'nesw-resize', sw: 'nesw-resize', nw: 'nwse-resize', se: 'nwse-resize'};
   var css = document.createElement('style');
+  css.setAttribute('data-earl-rt', '1'); // e23: posto pelo script depois de abrir (não vai na cópia compartilhada)
   css.textContent = Object.keys(CUR).map(function (k) { return 'html[data-engrz-cur="' + k + '"],html[data-engrz-cur="' + k + '"] *{cursor:' + CUR[k] + ' !important}'; }).join('\n') +
     '\nhtml[data-engrz-arr],html[data-engrz-arr] *{user-select:none !important;-webkit-user-select:none !important}' +
     '\n[data-engrz]{animation:none !important}';
@@ -2420,6 +2433,7 @@ html.emb .kpis,html.emb .qcards{padding:2px 2px 8px}
     if (!alca) {
       alca = document.createElement('div');
       alca.className = 'eng-rz-alca';
+      alca.setAttribute('data-earl-rt', '1');
       alca.setAttribute('aria-hidden', 'true');
       alca.style.cssText = 'position:fixed;width:14px;height:14px;pointer-events:none;z-index:2147483000;opacity:.75;' +
         'background:linear-gradient(135deg,transparent 0 46%,#8E979D 46% 54%,transparent 54% 64%,#8E979D 64% 72%,transparent 72% 82%,#8E979D 82% 90%,transparent 90%)';
