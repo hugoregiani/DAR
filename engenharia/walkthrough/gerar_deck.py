@@ -259,7 +259,7 @@ passo(20, S6, 'Planilhas para o Painel de Compras', [
     'Quatro planilhas separadas: inventário das sondas e consumo de químicos (o Painel de Compras usa estas duas), casing equipment e pessoal.',
     'Cada linha leva a contingência e o risco de não acontecer.'], '21_planilhas.jpg')
 passo2(21, S6, 'Exportar, importar e apagar',
-       '<b>⬇ Exportar dados</b> baixa um .json com os contratos marcados (itens, valores, reajustes, operações, consumos, handovers e inventário), as sondas, o câmbio e os bancos; o nome é EARL_FORECAST_&lt;contratos&gt;_data_hora. No outro arquivo, <b>⬆ Importar dados</b>: o contrato de mesmo nome é <b>substituído</b>, o novo entra, os outros não mudam. <b>🗑 Apagar contrato</b> apaga tudo o que é dele.',
+       '<b>⬇ Exportar dados</b> baixa <b>um .json para cada contrato</b> marcado (itens, valores, reajustes, operações, consumos, handovers e inventário, com as sondas, o câmbio e os bancos); o nome é EARL_FORECAST_&lt;cliente&gt;_&lt;contrato&gt;_data_hora. No outro arquivo, <b>⬆ Importar dados</b> (dá para escolher vários arquivos de uma vez): o contrato de mesmo nome é <b>substituído</b>, o novo entra, os outros não mudam. <b>🗑 Apagar contrato</b> apaga tudo o que é dele.',
        ('22a_exportar.jpg', 'Exportar', 'marque os contratos que vão no arquivo'), ('22_importar.jpg', 'Importar', 'marque os contratos que entram'))
 
 texto('O que este passo a passo não mostrou', 'Mais no mesmo arquivo', [

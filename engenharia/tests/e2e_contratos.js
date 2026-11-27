@@ -229,7 +229,7 @@ const kpi = (page, cls) => txt(page, '.' + cls + ' b');
   conf(db.it === 4 && db.rj.join() === '2026-11-05,2027-01-01' && db.brl === 1500 && db.reg === 'macae' && !!db.cli, 'contrato gravado com itens, valores, reajustes, cliente e região', db);
 
   console.log('Levar para outro computador (exportar → importar o contrato)');
-  const ex = await baixar(page, () => exportarDados(page, '.eng-tools button:has-text("Exportar dados")')); // e19: confirma a janela de escolher os contratos
+  const ex = await baixar(page, () => exportarDados(page, '.eng-tools button:has-text("Exportar dados")', ['Contrato Teste Macaé'])); // e20: um .json por contrato; marca só este
   const exPath = path.join(require('os').tmpdir(), ex.nome);
   fs.writeFileSync(exPath, ex.buf);
   const pc2 = await abrir(ARQ, {h: 1000, hoje: '2026-11-02'});
@@ -250,7 +250,8 @@ const kpi = (page, cls) => txt(page, '.' + cls + ' b');
   conf(/entra como contrato novo, com 2 operação/.test(await p2.innerText('.ec-imp-cts')), 'outro computador: o contrato do arquivo aparece como novo, com as 2 operações');
   await p2.click('.ec-imp-det summary');
   const tab2 = (await p2.innerText('.ec-imp-tab')).replace(/\s+/g, ' ');
-  conf(/Operações 1 2 3/.test(tab2) && /Contratos 16 17 17/.test(tab2), 'outro computador: 1 operação aqui + 2 do contrato importado = 3', tab2);
+  conf(/^EARL_FORECAST_[A-Z0-9&-]+_CONTRATO-TESTE-MACAE_\d{4}\.\d{2}\.\d{2}_\d{2}h\d{2}\.json$/.test(ex.nome), 'o arquivo exportado é só deste contrato: EARL_FORECAST_<cliente>_CONTRATO-TESTE-MACAE_….json', ex.nome);
+  conf(/Operações 1 2 3/.test(tab2) && /Contratos 16 1 17/.test(tab2), 'outro computador: 1 operação aqui + 2 do contrato importado = 3', tab2);
   await Promise.all([p2.waitForEvent('load'), p2.click('.ec-importar')]);
   await p2.waitForSelector('.eng2-card', {timeout: 60000});
   const j2 = await p2.evaluate(() => { const d = JSON.parse(localStorage.getItem('hal_cmt_db_v1')); const c = d.contratos.find(x => x.name === 'Contrato Teste Macaé'); return {ops: d.plannedJobs.map(j => j.well).sort(), cons: d.plannedJobs.filter(j => j.ppuCons).length, rj: c ? c.reajustes.length : -1, brl: c ? c.items[0].brl : null}; });

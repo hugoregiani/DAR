@@ -185,11 +185,11 @@ const fld = (page, rot) => page.locator('.eng-modal .fld').filter({has: page.loc
   await page.click('.eng-modal button:has-text("Cancelar")');
 
   console.log('Exportar dados');
-  const bk = await baixar(page, () => exportarDados(page, '.eng-tools button:has-text("Exportar dados")'));
+  const bk = await baixar(page, () => exportarDados(page, '.eng-tools button:has-text("Exportar dados")', ['P&A — Macaé'])) // e20: um .json por contrato;
   const bj = JSON.parse(bk.txt);
-  conf(/^EARL_FORECAST_[A-Z0-9&_-]+_\d{4}\.\d{2}\.\d{2}_\d{2}h\d{2}\.json$/.test(bk.nome) && bj.db.handovers.length === 1 && bj.db.plannedJobs.length === 1, 'exportação .json com a operação e o handover', bk.nome);
+  conf(/^EARL_FORECAST_PETROBRAS_P&A-MACAE-OFFSHORE_\d{4}\.\d{2}\.\d{2}_\d{2}h\d{2}\.json$/.test(bk.nome) && bj.db.contratos.length === 1 && bj.db.handovers.length === 1 && bj.db.plannedJobs.length === 1, 'exportação .json com a operação e o handover', bk.nome);
 
-  console.log('Importar dados (substituir)');
+  console.log('Importar dados (o contrato do arquivo substitui o daqui)');
   const bkPath = path.join(require('os').tmpdir(), bk.nome);
   fs.writeFileSync(bkPath, bk.txt);
   await page.evaluate(() => { const d = JSON.parse(localStorage.getItem('hal_cmt_db_v1')); d.plannedJobs = []; d.handovers = []; localStorage.setItem('hal_cmt_db_v1', JSON.stringify(d)); });
@@ -200,11 +200,13 @@ const fld = (page, rot) => page.locator('.eng-modal .fld').filter({has: page.loc
   await page.waitForSelector('.ec-imp-dados');
   await page.click('.ec-imp-det summary');
   conf(/Operações 0 1 1/.test((await page.innerText('.ec-imp-tab')).replace(/\s+/g, ' ')), 'importar mostra este computador × arquivo × depois de importar');
-  await page.click('.ec-substituir');
-  await Promise.all([page.waitForEvent('load'), page.locator('.modal').filter({hasText: 'Substituir os dados'}).locator('button', {hasText: /^Substituir$/}).click()]);
+  // e20: "Substituir tudo" avisa que os outros contratos daqui saem (o arquivo é de um contrato só)
+  conf(/só os contratos que estão nele/.test(await page.innerText('.ec-imp-dados')), '“Substituir tudo” avisa que ficam só os contratos do arquivo');
+  await page.click('.ec-importar');
+  await Promise.all([page.waitForEvent('load'), page.locator('.modal button', {hasText: 'Substituir e importar'}).click()]);
   await page.waitForSelector('.eng2-card, .eng2-ctbar', {timeout: 60000});
   const rest = await page.evaluate(() => { const d = JSON.parse(localStorage.getItem('hal_cmt_db_v1')); return [d.plannedJobs.length, d.handovers.length, d.handovers[0].versao]; });
-  conf(rest[0] === 1 && rest[1] === 1 && rest[2] === 2, 'substituir traz a operação e o handover v2 de volta', rest);
+  conf(rest[0] === 1 && rest[1] === 1 && rest[2] === 2, 'importar o contrato traz a operação e o handover v2 de volta', rest);
 
   console.log('Nordeste: sonda nova + handover onshore');
   await page.click('.eng-tools button:has-text("Sondas")');

@@ -78,7 +78,7 @@ function estatico(arq, completo) {
   const eml = await baixar(() => p.click('.hm-gerar'));
   conf(/\.eml$/.test(eml) && fs.statSync(eml).size > 1000, 'e-mail do handover gerado (.eml)', path.basename(eml));
   for (let i = 0; i < 3; i++) { const x = p.locator('.modal-close:visible'); if (!(await x.count())) break; await x.last().click(); await p.waitForTimeout(300); }
-  const bk = await baixar(() => exportarDados(p));
+  const bk = await baixar(() => exportarDados(p, undefined, ['P&A'])); // e20: um .json por contrato; só o do P&A
   conf(fs.statSync(bk).size > 1000, 'cópia de segurança exportada', path.basename(bk));
   await p.click('.eng-tools .eng-planilhas');
   await p.waitForTimeout(500);

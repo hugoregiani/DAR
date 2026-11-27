@@ -1,7 +1,7 @@
   /* ================= e19 (pedido do Hugo, 27/11/2026) =================
-     1. "⬇ Exportar dados": com mais de um contrato no arquivo, pergunta quais exportar (todos marcados). O nome do
-        arquivo é EARL_FORECAST_<CONTRATOS>_AAAA.MM.DD_HHhMM.json (engExportar/engNomeArqCts/engCarimboArq, eng_app.js).
-        A importação já perguntava (janela "⬆ Importar dados", contrato por contrato).
+     1. "⬇ Exportar dados": com mais de um contrato ativo no arquivo, pergunta quais exportar (todos marcados). e20: sai
+        um .json por contrato, EARL_FORECAST_<CLIENTE>_<CONTRATO>_AAAA.MM.DD_HHhMM.json (engExportar/engNomeArqCt/
+        engCarimboArq, eng_app.js). A importação já perguntava (janela "⬆ Importar dados", contrato por contrato).
      2. Calendário: o tipo da operação aparece no dia; "abrir" mostra só as operações daquele dia (clique = editar).
      3. Cor da sonda (escolhida no nome da sonda, no Gantt): a barra da operação fica na cor da sonda e a faixa de
         baixo na cor da legenda (situação), como no EARL. Sem cor escolhida, a barra fica como antes (cor da legenda).
@@ -30,7 +30,11 @@
       sel: x.sel.includes(id) ? x.sel.filter(y => y !== id) : [...x.sel, id]
     }));
     var escolhidos = ativos.filter(c => sel.includes(c.id));
+    var nArq = (db.contratos || []).filter(c => c && c.archived).length; // e20: os arquivados não aparecem nem entram no nome
     var nOps = c => (db.plannedJobs || []).filter(j => j.status !== PJ_STATUS.CANC && pjDoContrato(j, c)).length;
+    // operações sem contrato (ou de contrato arquivado) não vão em nenhum arquivo
+    var semCt = (db.plannedJobs || []).filter(j => j.status !== PJ_STATUS.CANC && !ativos.some(c => pjDoContrato(j, c))).length;
+    var quando = engCarimboArq();
     return engH("div", {
       className: "overlay",
       style: {
@@ -47,7 +51,7 @@
       onClick: fechar
     }, "\xD7")), engH("div", {
       className: "ec-imp-ajuda"
-    }, "Este arquivo tem ", engH("b", null, ativos.length + " contratos"), ". Marque os que vão no arquivo exportado (cada contrato vai com as operações, os consumos, os handovers e o inventário das sondas dele; as sondas, o câmbio, os químicos e o casing vão sempre)."), engH("div", {
+    }, "Este arquivo tem ", engH("b", null, ativos.length + " contratos ativos"), ". Marque os que quer exportar: ", engH("b", null, "sai um arquivo .json para cada contrato"), ", com as operações, os consumos, os handovers e o inventário das sondas dele (e as sondas, o câmbio, os químicos e o casing)."), engH("div", {
       className: "tbl-scroll"
     }, engH("table", {
       className: "db-table eng-expsel-tab",
@@ -83,7 +87,14 @@
       }, nOps(c)));
     })))), engH("div", {
       className: "eng-expsel-nome"
-    }, engH("span", null, "Nome do arquivo"), engH("code", null, escolhidos.length ? 'EARL_FORECAST_' + engNomeArqCts(escolhidos) + '_' + engCarimboArq() + '.json' : '—'), engH("em", null, "(a hora vai com “h”, porque o Windows não aceita “:” no nome de arquivo)")), engH("div", {
+    }, engH("span", null, escolhidos.length === 1 ? "Arquivo" : "Arquivos (" + escolhidos.length + ")"), escolhidos.length ? escolhidos.map(c => engH("code", {
+      key: c.id,
+      className: "eng-expsel-arqnome"
+    }, engNomeArqCt(c, quando))) : engH("code", null, "—"), engH("em", null, "(a hora vai com “h”, porque o Windows não aceita “:” no nome de arquivo" + (escolhidos.length > 1 ? "; se o navegador perguntar se pode baixar vários arquivos, clique em “Permitir”" : "") + ")"), nArq > 0 && engH("em", {
+      className: "eng-expsel-arq"
+    }, nArq + ' contrato(s) arquivado(s) não aparece(m) aqui e não é(são) exportado(s) (só os ativos).'), semCt > 0 && engH("em", {
+      className: "eng-expsel-arq eng-expsel-semct"
+    }, '⚠ ' + semCt + ' operação(ões) sem contrato ativo não vão em nenhum arquivo: escolha o contrato delas antes de exportar.')), engH("div", {
       className: "ec-foot"
     }, engH("span", {
       style: {
@@ -100,7 +111,7 @@
         setEngExpSel(null);
         engExportar(ids);
       }
-    }, sel.length ? '⬇ Exportar ' + sel.length + ' contrato(s)' : 'Marque um contrato'))));
+    }, sel.length ? '⬇ Exportar ' + sel.length + (sel.length === 1 ? ' arquivo' : ' arquivos') : 'Marque um contrato'))));
   };
 
   /* ---- 2. calendário: o tipo no dia e a janela do dia (só as operações daquele dia) ---- */

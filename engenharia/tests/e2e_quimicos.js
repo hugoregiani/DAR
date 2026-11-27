@@ -191,7 +191,7 @@ const valorDe = (page, sap) => linha(page, sap).locator('input.ec-q-usd').inputV
   await page.click('.ec-cons-modal .modal-close');
 
   console.log('Exportar dados e base aplicada uma vez');
-  const ex = await baixar(page, () => exportarDados(page, '.eng-exportar'));
+  const ex = await baixar(page, () => exportarDados(page, '.eng-exportar', ['P&A — Macaé'])) // e20: um .json por contrato;
   const exj = JSON.parse(fs.readFileSync(ex.path, 'utf8'));
   conf(exj.db.quimicos.length === 62 && exj.db.quimHist.length === 6 && exj.resumo.quimicos === 62, 'exportar dados leva o banco de químicos e o histórico');
   await page.reload();

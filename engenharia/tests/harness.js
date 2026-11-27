@@ -18,12 +18,30 @@ async function abrir(arquivo, {w = 1440, h = 900, hoje, aba = 'cts'} = {}) {
   await page.goto('file://' + path.resolve(arquivo));
   return {browser, ctx, page, errs};
 }
-// e19: "⬇ Exportar dados" pergunta quais contratos exportar quando há mais de um (vêm todos marcados): confirma.
-async function exportarDados(p, sel = '.eng-tools .eng-exportar') {
+// e19: "⬇ Exportar dados" pergunta quais contratos exportar quando há mais de um ativo (vêm todos marcados): confirma.
+// e20: sai um .json por contrato. Com `nomes` (texto do nome de cada contrato), deixa marcados só esses.
+async function exportarDados(p, sel = '.eng-tools .eng-exportar', nomes) {
   await p.click(sel);
   const ok = p.locator('.eng-expsel-ok');
   try { await ok.waitFor({state: 'visible', timeout: 1500}); } catch (e) { return false; }
+  if (nomes && nomes.length) {
+    if (await p.isChecked('.eng-expsel-todos')) await p.click('.eng-expsel-todos');
+    for (const n of nomes) await p.locator('.eng-expsel-tab tbody tr', {hasText: n}).first().locator('.eng-expsel-cb').check();
+  }
   await ok.click();
   return true;
 }
-module.exports = {abrir, exportarDados};
+// e20: espera `n` downloads (um .json por contrato) e grava todos em `dir`; devolve os caminhos.
+async function baixarVarios(p, acao, n, dir) {
+  const l = [];
+  const h = d => l.push(d);
+  p.on('download', h);
+  await acao();
+  for (let i = 0; i < 200 && l.length < n; i++) await p.waitForTimeout(100);
+  await p.waitForTimeout(600); // nenhum a mais
+  p.off('download', h);
+  const out = [];
+  for (const x of l) { const f = path.join(dir, x.suggestedFilename()); await x.saveAs(f); out.push(f); }
+  return out;
+}
+module.exports = {abrir, exportarDados, baixarVarios};

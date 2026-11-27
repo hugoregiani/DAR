@@ -4,7 +4,7 @@
 // excluir, matriz) e "⬇ Exportar planilhas" (inventário, consumo de químicos, casing e pessoal em arquivos separados,
 // conferidos célula a célula), exportar/importar dados e persistência.
 // Uso: node tests/e2e_inventario.js [EARL_Engenharia.html] [pasta para as telas]
-const {abrir, exportarDados} = require('./harness');
+const {abrir, exportarDados, baixarVarios} = require('./harness');
 const fs = require('fs');
 const path = require('path');
 const ARQ = process.argv[2] || path.join(__dirname, '..', 'EARL_Engenharia.html');
@@ -240,9 +240,12 @@ const arqX = (nome, b64) => ({name: nome, mimeType: 'application/vnd.openxmlform
   await page.waitForSelector('.ei-exp-modal');
   conf((await page.$$eval('.ei-exp-ck', x => x.length)) === await page.evaluate(() => (EARL_DB_REF.contratos || []).filter(c => !c.archived).length), 'botão "⬇ Exportar planilhas" na barra lista todos os contratos');
   await page.click('.ei-exp-modal .modal-close');
-  const bk = await baixar(page, () => exportarDados(page, '.eng-tools button:has-text("Exportar dados")'));
-  const bj = JSON.parse(bk.buf.toString('utf8'));
-  conf(bj.db.invSondas.length === 3 && bj.resumo.inventarios === 3, 'exportar dados leva as contagens de inventário');
+  // e20: um .json por contrato — exporta os contratos que têm contagem
+  const ctsInv = await page.evaluate(() => { const d = JSON.parse(localStorage.getItem('hal_cmt_db_v1')); return [...new Set((d.invSondas || []).map(v => v.ctId))].map(id => d.contratos.find(c => c.id === id).name); });
+  const dirInv = fs.mkdtempSync(path.join(require('os').tmpdir(), 'earl-inv-'));
+  const arqsInv = await baixarVarios(page, () => exportarDados(page, '.eng-tools button:has-text("Exportar dados")', ctsInv), ctsInv.length, dirInv);
+  const bjs = arqsInv.map(f => JSON.parse(fs.readFileSync(f, 'utf8')));
+  conf(arqsInv.length === ctsInv.length && bjs.reduce((a, j) => a + j.db.invSondas.length, 0) === 3 && bjs.every(j => j.db.contratos.length === 1 && j.db.invSondas.every(v => v.ctId === j.db.contratos[0].id) && j.resumo.inventarios === j.db.invSondas.length), 'exportar dados leva as contagens de inventário (' + ctsInv.length + ' arquivo(s), cada um com as do seu contrato)', {ctsInv, arqs: arqsInv.map(f => path.basename(f))});
   await page.reload();
   await page.waitForSelector('.eng2-card, .eng2-ctbar', {timeout: 60000});
   await page.goto(page.url());
@@ -255,17 +258,21 @@ const arqX = (nome, b64) => ({name: nome, mimeType: 'application/vnd.openxmlform
   await page.evaluate(() => { const d = JSON.parse(localStorage.getItem('hal_cmt_db_v1')); d.invSondas = []; localStorage.setItem('hal_cmt_db_v1', JSON.stringify(d)); });
   await page.reload();
   await page.waitForSelector('.eng2-card, .eng2-ctbar', {timeout: 60000});
-  const bkPath = path.join(require('os').tmpdir(), bk.nome);
-  fs.writeFileSync(bkPath, bk.buf);
-  await page.setInputFiles('.eng-tools input[type=file]', bkPath);
-  await page.waitForSelector('.ec-imp-dados');
-  await page.click('.ec-imp-det summary');
-  conf(/Contagens de inventário das sondas 0 3 3/.test((await page.innerText('.ec-imp-tab')).replace(/\s+/g, ' ')), 'importar dados mostra as contagens (0 aqui, 3 no arquivo, 3 depois de importar)');
-  const recarregou = page.waitForEvent('load');
-  await page.click('.ec-importar');
-  await page.click('.modal button:has-text("Substituir e importar")');
-  await recarregou;
-  await page.waitForSelector('.eng2-card, .eng2-ctbar', {timeout: 60000});
+  let somaInv = 0, telaOk = true;
+  for (const [i, f] of arqsInv.entries()) {
+    await page.setInputFiles('.eng-tools input[type=file]', f);
+    await page.waitForSelector('.ec-imp-dados');
+    await page.click('.ec-imp-det summary');
+    const m = /Contagens de inventário das sondas (\d+) (\d+) (\d+)/.exec((await page.innerText('.ec-imp-tab')).replace(/\s+/g, ' '));
+    if (!m || +m[1] !== somaInv || +m[2] !== bjs[i].db.invSondas.length || +m[3] !== somaInv + bjs[i].db.invSondas.length) telaOk = false;
+    somaInv += bjs[i].db.invSondas.length;
+    const recarregou = page.waitForEvent('load');
+    await page.click('.ec-importar');
+    await page.click('.modal button:has-text("Substituir e importar")');
+    await recarregou;
+    await page.waitForSelector('.eng2-card, .eng2-ctbar', {timeout: 60000});
+  }
+  conf(telaOk, 'importar dados mostra as contagens (aqui, no arquivo e depois de importar), arquivo por arquivo');
   await page.waitForFunction(() => (JSON.parse(localStorage.getItem('hal_cmt_db_v1')).invSondas || []).length === 3, null, {timeout: 20000});
   conf(true, 'importar os contratos traz as 3 contagens de volta');
 

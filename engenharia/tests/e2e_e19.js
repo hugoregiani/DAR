@@ -1,6 +1,6 @@
 // e19 (pedido do Hugo, 27/11/2026):
-// 1. "⬇ Exportar dados" com mais de um contrato pergunta quais exportar (todos marcados); o nome do arquivo é
-//    EARL_FORECAST_<CONTRATOS>_AAAA.MM.DD_HHhMM.json; com um contrato só, exporta direto;
+// 1. "⬇ Exportar dados" com mais de um contrato pergunta quais exportar (todos marcados); e20: sai um .json por
+//    contrato, EARL_FORECAST_<CLIENTE>_<CONTRATO>_AAAA.MM.DD_HHhMM.json; só os ativos; com um contrato só, exporta direto;
 // 2. as janelas mudam de tamanho puxando qualquer borda ou canto (também no Gerencial embutido);
 // 3. o cartão vermelho da Receita nos Indicadores = o card "Visão geral" dos Contratos (sem brilho);
 // 4. duplicar o poço com uma caixa de marcar em cada operação (todas marcadas no começo);
@@ -8,7 +8,7 @@
 // 6. calendário: o tipo da operação no dia; "abrir" mostra só as operações daquele dia (clique = editar);
 // 7. cor da sonda: a barra fica na cor da sonda e a faixa de baixo na cor da legenda (Gantt e calendário).
 // Uso: node tests/e2e_e19.js [EARL_Engenharia.html]
-const {abrir} = require('./harness');
+const {abrir, baixarVarios} = require('./harness');
 const {montar} = require('../walkthrough/demo');
 const fs = require('fs');
 const os = require('os');
@@ -40,8 +40,9 @@ const estiloBarra = (p, id) => p.evaluate(i => { const b = document.querySelecto
   const nLin = await p.locator('.eng-expsel-tab tbody tr').count();
   const nMarc = await p.locator('.eng-expsel-cb:checked').count();
   conf(cts.length === 3 && nLin === 3 && nMarc === 3, 'com ' + cts.length + ' contratos, pergunta quais exportar (todos marcados)', {cts, nLin, nMarc});
-  let nome = await p.textContent('.eng-expsel-nome code');
-  conf(nome === 'EARL_FORECAST_P&A-MACAE-OFFSHORE_BP-MACAE-OFFSHORE_TAKATSUGU-J_2026.11.27_12h00.json', 'nome do arquivo: EARL_FORECAST_<contratos>_AAAA.MM.DD_HHhMM.json', nome);
+  const NOMES3 = ['EARL_FORECAST_BP_BP-MACAE-OFFSHORE_2026.11.27_12h00.json', 'EARL_FORECAST_ETESCO_TAKATSUGU-J_2026.11.27_12h00.json', 'EARL_FORECAST_PETROBRAS_P&A-MACAE-OFFSHORE_2026.11.27_12h00.json'];
+  let nomes = (await p.locator('.eng-expsel-nome code').allTextContents()).sort();
+  conf(JSON.stringify(nomes) === JSON.stringify(NOMES3) && /Exportar 3 arquivos/.test(await p.textContent('.eng-expsel-ok')), 'um arquivo por contrato, com o nome EARL_FORECAST_<CLIENTE>_<CONTRATO>_AAAA.MM.DD_HHhMM.json', nomes);
   await p.click('.eng-expsel-todos');
   conf(await p.locator('.eng-expsel-cb:checked').count() === 0 && await p.isDisabled('.eng-expsel-ok'), '“marcar todos” desmarca; sem contrato marcado, não exporta');
   await p.click('.eng-expsel button:has-text("Cancelar")');
@@ -49,18 +50,26 @@ const estiloBarra = (p, id) => p.evaluate(i => { const b = document.querySelecto
   await p.click('.eng-tools .eng-exportar');
   await p.waitForSelector('.eng-expsel');
   await p.locator('.eng-expsel-tab tbody tr', {hasText: 'BP — Macaé'}).click(); // clicar na linha também desmarca
-  nome = await p.textContent('.eng-expsel-nome code');
-  conf(/^EARL_FORECAST_P&A-MACAE-OFFSHORE_TAKATSUGU-J_2026\.11\.27_12h00\.json$/.test(nome) && /Exportar 2 contrato/.test(await p.textContent('.eng-expsel-ok')), 'desmarcando o BP: “Exportar 2 contrato(s)” e o nome com os dois', nome);
-  const arq = await baixar(p, () => p.click('.eng-expsel-ok'));
-  const J = JSON.parse(fs.readFileSync(arq, 'utf8'));
-  const ids2 = ['ct_demo_pa', 'ct_demo_tk'];
-  const esperado = await p.evaluate(ids => { const d = loadDB(); const jobs = d.plannedJobs.filter(j => ids.includes(j.contratoId)); return {jobs: jobs.length, inv: (d.invSondas || []).filter(v => ids.includes(v.ctId)).length, ho: (d.handovers || []).filter(h => (h.opIds || []).length && h.opIds.every(id => jobs.some(j => j.id === id))).length, rigs: d.rigs.length}; }, ids2);
-  conf(path.basename(arq) === nome && J.db.contratos.map(c => c.id).sort().join() === ids2.join() && J.contratos.length === 2, 'o arquivo tem o nome mostrado e só os 2 contratos marcados', {arq: path.basename(arq), cts: J.db.contratos.map(c => c.id)});
-  conf(J.db.plannedJobs.length === esperado.jobs && J.db.plannedJobs.every(j => ids2.includes(j.contratoId)) && (J.db.invSondas || []).length === esperado.inv && (J.db.handovers || []).length === esperado.ho && J.db.rigs.length === esperado.rigs && J.db.cambio && J.db.quimicos, 'leva as operações (' + esperado.jobs + '), o inventário e os handovers desses contratos; as sondas, o câmbio e os químicos vão sempre', {jobs: J.db.plannedJobs.length, esperado});
-  // importar esse arquivo: a janela de importar mostra só os 2 contratos
+  nomes = (await p.locator('.eng-expsel-nome code').allTextContents()).sort();
+  conf(JSON.stringify(nomes) === JSON.stringify([NOMES3[1], NOMES3[2]]) && /Exportar 2 arquivos/.test(await p.textContent('.eng-expsel-ok')), 'desmarcando o BP: “Exportar 2 arquivos”, um do P&A e um do Takatsugu J', nomes);
+  const arqs = await baixarVarios(p, () => p.click('.eng-expsel-ok'), 2, TMP);
+  const Js = {};
+  arqs.forEach(f => { const J = JSON.parse(fs.readFileSync(f, 'utf8')); Js[J.db.contratos[0] && J.db.contratos[0].id] = {J, nome: path.basename(f)}; });
+  conf(arqs.length === 2 && JSON.stringify(arqs.map(f => path.basename(f)).sort()) === JSON.stringify(nomes) && Object.values(Js).every(x => x.J.db.contratos.length === 1 && x.J.contratos.length === 1), 'baixa 2 arquivos (os nomes mostrados), cada um com um contrato só', arqs.map(f => path.basename(f)));
+  let tudoCerto = true; const det = {};
+  for (const id of ['ct_demo_pa', 'ct_demo_tk']) {
+    const esp = await p.evaluate(i => { const d = loadDB(); const jobs = d.plannedJobs.filter(j => j.contratoId === i); return {jobs: jobs.length, inv: (d.invSondas || []).filter(v => v.ctId === i).length, ho: (d.handovers || []).filter(h => (h.opIds || []).length && h.opIds.every(x => jobs.some(j => j.id === x))).length, rigs: d.rigs.length}; }, id);
+    const J = Js[id] && Js[id].J;
+    det[id] = {esp, jobs: J && J.db.plannedJobs.length};
+    if (!J || J.db.plannedJobs.length !== esp.jobs || !J.db.plannedJobs.every(j => j.contratoId === id) || (J.db.invSondas || []).length !== esp.inv || (J.db.handovers || []).length !== esp.ho || J.db.rigs.length !== esp.rigs || !J.db.cambio || !J.db.quimicos) tudoCerto = false;
+  }
+  conf(tudoCerto, 'cada arquivo leva as operações, o inventário e os handovers do seu contrato; as sondas, o câmbio e os químicos vão nos dois', det);
+  conf(/2 arquivo\(s\), um por contrato/.test(await p.textContent('body')), 'aviso: 2 arquivos, um por contrato');
+  // importar o do P&A: a janela de importar mostra 1 contrato
+  const arq = arqs.find(f => /P&A/.test(f));
   await p.setInputFiles('.eng-tools input[type=file]', arq);
   await p.waitForSelector('.ec-imp-dados');
-  conf(await p.locator('.ec-imp-ct-cb').count() === 2, 'ao importar esse arquivo, a janela mostra os 2 contratos para escolher');
+  conf(await p.locator('.ec-imp-ct-cb').count() === 1 && /só os contratos que estão nele \(1\)/.test(await p.innerText('.ec-imp-dados')), 'ao importar o arquivo do P&A, a janela mostra 1 contrato (e “Substituir tudo” avisa que ficaria só ele)');
 
   /* ---------------------------------------------------------------- 2. janelas mudam de tamanho */
   console.log('2. As janelas mudam de tamanho puxando qualquer borda ou canto');
@@ -246,13 +255,57 @@ const estiloBarra = (p, id) => p.evaluate(i => { const b = document.querySelecto
   conf(await fld(p, 'Data prevista').locator('input').inputValue() === alvo.dia, '“+ Nova operação neste dia” já vem com a data do dia');
   await p.click('.eng-modal button:has-text("Cancelar")');
 
+  /* ---------------------------------------------------------------- 1c. contrato arquivado: fora da lista e do nome (e20) */
+  console.log('1c. Contrato arquivado não entra no nome do arquivo');
+  await p.click('.nav-back-btn');
+  await p.evaluate(() => { const d = loadDB(); d.contratos.find(c => c.id === 'ct_demo_bp').archived = true; saveDB(d); });
+  await p.reload(); await p.waitForSelector('.eng2-card', {timeout: 90000});
+  const nArq = await p.evaluate(() => loadDB().contratos.filter(c => c.archived).length);
+  await p.click('.eng-tools .eng-exportar');
+  await p.waitForSelector('.eng-expsel');
+  const nomesArq = (await p.locator('.eng-expsel-nome code').allTextContents()).sort();
+  conf(await p.locator('.eng-expsel-tab tbody tr').count() === 2 && JSON.stringify(nomesArq) === JSON.stringify([NOMES3[1], NOMES3[2]]), 'BP arquivado: a lista e os arquivos só com os 2 ativos (' + nArq + ' arquivados ficam de fora)', nomesArq);
+  conf(new RegExp(nArq + ' contrato\\(s\\) arquivado').test(await p.textContent('.eng-expsel')), 'a janela avisa que os arquivados não aparecem nem são exportados');
+  await p.click('.eng-expsel button:has-text("Cancelar")');
+  await p.evaluate(() => { const d = loadDB(); d.contratos.find(c => c.id === 'ct_demo_bp').archived = false; saveDB(d); });
+  await p.reload(); await p.waitForSelector('.eng2-card', {timeout: 90000});
+
+  /* ---------------------------------------------------------------- 1d. importar vários arquivos de uma vez (e20) */
+  console.log('1d. Importar vários arquivos .json de uma vez');
+  conf(await p.getAttribute('.eng-tools input[type=file]', 'multiple') !== null, 'o “⬆ Importar dados” aceita vários arquivos');
+  const arqPA = arqs.find(f => /P&A/.test(f)), arqTK = arqs.find(f => /TAKATSUGU/.test(f));
+  // uma exportação mais nova do P&A (outra pessoa, depois): no mesmo contrato, fica a mais recente
+  const novoPA = JSON.parse(fs.readFileSync(arqPA, 'utf8'));
+  novoPA.geradoEm = '2026-11-27T15:00:00.000Z';
+  novoPA.db.plannedJobs.forEach(j => { j.notes = 'versão mais nova'; });
+  const arqPA2 = path.join(TMP, 'EARL_FORECAST_PETROBRAS_P&A-MACAE-OFFSHORE_2026.11.27_15h00.json');
+  fs.writeFileSync(arqPA2, JSON.stringify(novoPA));
+  const espTK = await p.evaluate(() => loadDB().plannedJobs.filter(j => j.contratoId === 'ct_demo_tk').length);
+  // aqui: sem o Takatsugu J (como num computador que ainda não tem esse contrato)
+  await p.evaluate(() => { const d = loadDB(); const ops = new Set(d.plannedJobs.filter(j => j.contratoId === 'ct_demo_tk').map(j => j.id)); d.contratos = d.contratos.filter(c => c.id !== 'ct_demo_tk'); d.plannedJobs = d.plannedJobs.filter(j => !ops.has(j.id)); d.handovers = (d.handovers || []).filter(h => !(h.opIds || []).some(i => ops.has(i))); d.invSondas = (d.invSondas || []).filter(v => v.ctId !== 'ct_demo_tk'); saveDB(d); });
+  await p.reload(); await p.waitForSelector('.eng2-card', {timeout: 90000});
+  await p.setInputFiles('.eng-tools input[type=file]', [arqPA2, arqTK, arqPA]);
+  await p.waitForSelector('.ec-imp-dados');
+  const telaV = await p.innerText('.ec-imp-dados');
+  conf(await p.locator('.ec-imp-ct-cb').count() === 3 && await p.locator('.ec-imp-ct-cb:checked').count() === 3 && /Arquivos \(3\)/i.test(telaV), 'os 3 arquivos na mesma janela: os contratos de todos, marcados', telaV.slice(0, 300));
+  const linPAantigo = await p.locator('.ec-imp-cts tbody tr').filter({has: p.locator('td.ec-imp-arqnome[title^="' + path.basename(arqPA) + '"]')}).innerText(); // a coluna Arquivo mostra o nº; o nome fica no título
+  conf(/repetido: fica o do arquivo 3 \(mais recente\)/.test(linPAantigo) && /Importar 2 contrato/.test(await p.textContent('.ec-importar')), 'o P&A está em 2 arquivos: o mais antigo mostra “repetido: fica o do arquivo mais recente”; importa 2 contratos', linPAantigo);
+  conf(/entra como contrato novo|saem 0 operação/.test(await p.locator('.ec-imp-cts tbody tr', {hasText: 'Takatsugu J'}).innerText()), 'o Takatsugu J (que aqui só existe arquivado, sem operações) entra');
+  const carregouV = p.waitForEvent('load', {timeout: 60000});
+  await p.click('.ec-importar');
+  await p.locator('.modal button', {hasText: 'Substituir e importar'}).click();
+  await carregouV;
+  await p.waitForSelector('.eng2-card', {timeout: 90000});
+  const depV = await p.evaluate(() => { const d = loadDB(); const pa = d.contratos.filter(c => !c.archived && c.name === 'P&A — Macaé (offshore)'); const tk = d.contratos.find(c => !c.archived && c.name === 'Takatsugu J'); return {nPA: pa.length, notasPA: [...new Set(d.plannedJobs.filter(j => pa[0] && j.contratoId === pa[0].id).map(j => j.notes || ''))], tk: !!tk, opsTK: tk ? d.plannedJobs.filter(j => j.contratoId === tk.id).length : 0}; });
+  conf(depV.nPA === 1 && depV.notasPA.join() === 'versão mais nova' && depV.tk && depV.opsTK === espTK, 'depois de importar: o P&A da exportação mais nova (sem duplicar) e o Takatsugu J com as ' + espTK + ' operações', depV);
+  conf(/Importado ✓/.test(await p.textContent('body')), 'aviso depois de importar');
+
   /* ---------------------------------------------------------------- 1b. um contrato só: exporta direto */
   console.log('1b. Com um contrato só, exporta direto');
-  await p.click('.nav-back-btn');
-  await p.evaluate(() => { const d = loadDB(); d.contratos.forEach(c => { if (c.id !== 'ct_demo_tk') c.archived = true; }); saveDB(d); });
+  await p.evaluate(() => { const d = loadDB(); const tk = d.contratos.find(c => !c.archived && c.name === 'Takatsugu J'); d.contratos.forEach(c => { if (c !== tk) c.archived = true; }); saveDB(d); });
   await p.reload(); await p.waitForSelector('.eng2-card', {timeout: 90000});
   const um = await baixar(p, () => p.click('.eng-tools .eng-exportar'));
-  conf(/^EARL_FORECAST_TAKATSUGU-J_2026\.11\.27_12h00\.json$/.test(path.basename(um)) && !(await p.locator('.eng-expsel').count()), 'sem perguntar, com o nome do contrato: ' + path.basename(um));
+  conf(path.basename(um) === NOMES3[1] && !(await p.locator('.eng-expsel').count()), 'sem perguntar, com o nome do contrato: ' + path.basename(um));
 
   conf(!E.errs.length, 'nenhum erro de JavaScript', E.errs.slice(0, 3));
   await E.browser.close();

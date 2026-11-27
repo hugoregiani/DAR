@@ -83,7 +83,7 @@ const importar = async (p, arq) => {
       saveDB(d);
     }, {nome, base, ctId, nomeCt});
     await p.reload(); await p.waitForSelector('.eng2-card', {timeout: 90000});
-    const sug = await baixar(p, () => exportarDados(p));
+    const sug = await baixar(p, () => exportarDados(p, undefined, [nomeCt])); // e20: um .json por contrato; só o dela
     const arq = path.join(TMP, nome + '_' + path.basename(sug)); // as duas pessoas exportam no mesmo minuto (mesmo nome)
     fs.renameSync(sug, arq);
     await fechar(p);
@@ -93,7 +93,7 @@ const importar = async (p, arq) => {
   };
   const arqAna = await pessoa('Ana', 'ct_demo_tk', 'ct_ana', 'Contrato da Ana');
   const jAna = JSON.parse(fs.readFileSync(arqAna, 'utf8'));
-  conf(/^Ana_EARL_FORECAST_[A-Z0-9&_-]+_\d{4}\.\d{2}\.\d{2}_\d{2}h\d{2}\.json$/.test(path.basename(arqAna)) && jAna.app === 'EARL Forecast', 'exportação com o nome novo (EARL_FORECAST_<contratos>_AAAA.MM.DD_HHhMM.json, app “EARL Forecast”)', {nome: path.basename(arqAna), app: jAna.app});
+  conf(/^Ana_EARL_FORECAST_ETESCO_CONTRATO-DA-ANA_\d{4}\.\d{2}\.\d{2}_\d{2}h\d{2}\.json$/.test(path.basename(arqAna)) && jAna.app === 'EARL Forecast' && jAna.db.contratos.length === 1, 'exportação com o nome novo (EARL_FORECAST_<cliente>_<contrato>_AAAA.MM.DD_HHhMM.json, só o contrato dela, app “EARL Forecast”)', {nome: path.basename(arqAna), app: jAna.app});
   const arqBruno = await pessoa('Bruno', 'ct_demo_bp', 'ct_bruno', 'Contrato do Bruno');
 
   /* ---------------------------------------------------------------- 2. o arquivo do Hugo */

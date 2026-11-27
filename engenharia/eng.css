@@ -436,3 +436,11 @@ tr.ec-conc-falta td{background:#FFF8E6}
 .eng-cor-input{width:34px;height:26px;border:1px solid var(--line);border-radius:6px;padding:0;background:none;cursor:pointer}
 .eng-lgd-sonda{display:inline-flex;align-items:center;gap:6px}
 .eng-lgd .eng-lgd-sonda i.eng-lgd-sonda-i,.eng-lgd-sonda-i{width:26px;height:14px;border-radius:3px;display:inline-block}
+.eng-expsel-nome em.eng-expsel-arq{font-style:normal;color:var(--ink-2)}
+.eng-expsel-nome code.eng-expsel-arqnome{padding:4px 9px}
+.eng-expsel-nome{max-height:30vh;overflow:auto}
+.eng-expsel-nome em.eng-expsel-semct{color:#8A5A00}
+/* e20: importar vários arquivos */
+.ec-imp-arqs div{font-size:12.5px;line-height:1.45;overflow-wrap:anywhere}
+.ec-imp-arqnome{font-size:12px;color:var(--ink-3);white-space:nowrap}
+.hm-arq.ec-imp-arqs,.hm-arq.ec-imp-arqs div{word-break:normal;overflow-wrap:anywhere}

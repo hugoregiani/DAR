@@ -98,6 +98,36 @@ A Engenharia do EARL separada do resto do sistema, agora chamada **EARL Forecast
 - **Exportações:** "Consumo de produtos químicos", "Casing equipment" e "Pessoal" ganharam **Contingência (linha)** e **Risco da linha (%)**; a operação já tinha Contingência e Risco (%). O Painel de Compras aplica o risco da linha.
 - **Cards** da aba "Consumo e receita" com profundidade, como os do Gerencial g16.
 
+### e20 (27/11/2026) — um .json por contrato, importar vários arquivos de uma vez, entrega só do arquivo padrão
+
+Pedidos do Hugo:
+- **"⬇ Exportar dados" gera um arquivo .json para cada contrato** (`engExportar`, `engDbDoContrato`, `engArqExport`):
+  com mais de um contrato ativo, a janela "Exportar dados" (todos marcados) mostra a lista dos arquivos que vão sair;
+  cada arquivo leva o contrato (itens, valores, reajustes), as operações dele com consumos e handovers, o inventário
+  das sondas dele e as bases comuns (sondas, câmbio, químicos, casing, logos). Os downloads saem um a um (400 ms); o
+  navegador pode perguntar se a página pode baixar vários arquivos ("Permitir"). Com um contrato só, exporta direto.
+  Sem contrato ativo, sai um arquivo só com tudo (`EARL_FORECAST_SEM-CONTRATOS_…`).
+- **Nome:** `EARL_FORECAST_<CLIENTE>_<CONTRATO>_AAAA.MM.DD_HHhMM.json` (`engNomeArqCt`; maiúsculas, sem acento, "-" no
+  lugar de espaço e pontuação, "&" fica; sem cliente, `SEM-CLIENTE`). A hora vai com **"h"** no lugar de ":", que o
+  Windows não aceita em nome de arquivo. Ex.: `EARL_FORECAST_PETROBRAS_P&A-MACAE-OFFSHORE_2026.11.27_14h05.json`.
+- **Só os contratos ativos:** os arquivados não aparecem na janela nem são exportados (a janela diz quantos ficaram de
+  fora). Operações sem contrato ativo não vão em nenhum arquivo (a janela avisa).
+- **"⬆ Importar dados" aceita vários arquivos de uma vez** (`<input multiple>`, `engImportarArquivo(files)`): os
+  contratos de todos aparecem na mesma janela (coluna "Arquivo" com o nº; os nomes no topo), todos marcados. Os arquivos
+  entram do exportado primeiro ao último (`engImportarVarios`, que aplica o `engImportarContratos` arquivo por arquivo;
+  chave de cada contrato `"<nº do arquivo>|<id>"`): se o mesmo contrato estiver em mais de um, fica o mais recente (a
+  linha do mais antigo diz "repetido: fica o do arquivo N"). Arquivos de antes (com vários contratos) continuam entrando.
+  "Substituir tudo" com vários arquivos: o 1º e, por cima, os contratos dos outros; o texto avisa que ficam só os
+  contratos dos arquivos.
+- **Entrega:** só o arquivo padrão limpo (`EARL_Forecast_Vnn.html`) e o prompt de continuidade. Os arquivos de cada
+  contrato (`contratos_reais/`) e o PDF do passo a passo continuam no repositório e nos testes, mas não vão mais.
+- **Testes:** `tests/e2e_e19.js` (50: exportar por contrato, arquivados fora, importar 3 arquivos com um contrato
+  repetido). `tests/harness.js`: `exportarDados(p, sel, nomes)` (deixa marcados só os contratos `nomes`) e
+  `baixarVarios(p, acao, n, dir)`. Ajustados: `e2e_engenharia` (exporta o P&A e restaura importando o contrato),
+  `e2e_contratos`, `e2e_inventario` (um arquivo por contrato com contagem), `e2e_quimicos`, `e2e_seguranca`, `e2e_e15`
+  (4 arquivos; para os testes de importar, junta os 4 num arquivo como os de antes) e `e2e_e16` (cada pessoa exporta o
+  contrato dela).
+
 ### e19 (27/11/2026) — exportar escolhendo os contratos, janelas de qualquer tamanho, calendário, cor da sonda nas barras
 
 Pedidos do Hugo (código novo em `eng_e19.js` e `eng_redim.js`; duplicar e cor da sonda em `eng_e17.js`):
@@ -433,4 +463,4 @@ node contratos_reais/e2e_contratos_reais.js <pasta das planilhas> <pasta dos HTM
     - apagar com operações: só com APAGAR, levando as operações e o handover;
     - os contratos apagados não voltam ao reabrir.
 - **A seção Receita e margem é o `../gerencial/gerencial.html`**, embutido pelo patch (`ENG_GER_HTML`, num iframe, no modo embutido do Gerencial). Mudou o Gerencial? Gere de novo o `EARL_Engenharia.html`.
-- Versão: `EARL_VERSION = 'EARL Forecast e19 (base v115)'`. O teste do fluxo completo com o Gerencial está em `../gerencial/tests/e2e_gerencial.js`.
+- Versão: `EARL_VERSION = 'EARL Forecast e20 (base v115)'`. O teste do fluxo completo com o Gerencial está em `../gerencial/tests/e2e_gerencial.js`.

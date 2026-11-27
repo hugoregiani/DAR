@@ -44,6 +44,8 @@ receita ano a ano e a aba 📁 Contratos para percorrer os contratos.
 
 **V07 (27/11/2026, e19):** gerados com `--compat <V06>/EARL_Forecast_<NOME>_V06.html`. Cada arquivo tem um contrato, então "⬇ Exportar dados" exporta direto (sem a janela de escolher), com o nome `EARL_FORECAST_<CONTRATO>_AAAA.MM.DD_HHhMM.json`; o `e2e_importar.js` confirma a janela se ela abrir.
 
+**Desde a V08 (27/11/2026, pedido do Hugo), estes arquivos não são mais entregues:** a entrega é só o arquivo padrão (`EARL_Forecast_Vnn.html`) e o prompt de continuidade. Os HTML dos contratos continuam sendo gerados para os testes (`e2e_contratos_reais`, `e2e_atualizacao`, `e2e_importar`).
+
 **V05 (26/11/2026, e17):** gerados com `--compat <V04>/EARL_Forecast_<NOME>_V04.html` e entregues como `EARL_Forecast_<NOME>_V05.html`.
 
 Importar o contrato de um arquivo em outro (e15): `node contratos_reais/e2e_importar.js <pasta dos HTML> PA BDII`.

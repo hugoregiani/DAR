@@ -2,7 +2,7 @@
 // (o de mesmo nome é substituído, com as operações; o novo entra; os outros não mudam); apagar o contrato apaga tudo
 // o que é dele e, no último, deixa o arquivo em branco.
 // Uso: node tests/e2e_e15.js [EARL_Engenharia.html]
-const {abrir, exportarDados} = require('./harness');
+const {abrir, exportarDados, baixarVarios} = require('./harness');
 const {montar} = require('../walkthrough/demo');
 const fs = require('fs');
 const os = require('os');
@@ -61,11 +61,20 @@ const importar = async (p, arq, desmarcar = []) => {
   });
   await pa.reload(); await pa.waitForSelector('.eng2-card', {timeout: 60000});
   const EA = await estado(pa);
-  const arqA = await baixar(pa, () => exportarDados(pa));
-  const J = JSON.parse(fs.readFileSync(arqA, 'utf8'));
-  conf(J.db && J.db.contratos && J.db.plannedJobs && J.db.invSondas && J.db.cambio && J.db.quimicos && J.db.casingEquip && J.db.rigs, 'exportar leva tudo: contratos, operações, inventário, câmbio, químicos, casing, sondas');
-  conf((J.contratos || []).map(c => c.nome).sort().join('|') === Object.keys(EA.ct).sort().join('|') && J.contratos.find(c => c.nome.indexOf('P&A') === 0).operacoes === 7, 'o arquivo lista os contratos e as operações de cada um', J.contratos);
-  conf(/exportados ✓ — 4 contrato\(s\)/.test(await pa.textContent('body')), 'aviso diz o que foi exportado (os 4 contratos marcados)');
+  // e20: sai um .json por contrato (os 4 ativos)
+  const arqs = await baixarVarios(pa, () => exportarDados(pa), 4, TMP);
+  const Js = arqs.map(f => JSON.parse(fs.readFileSync(f, 'utf8')));
+  conf(Js.length === 4 && Js.every(J => J.db && J.db.contratos.length === 1 && J.contratos.length === 1 && J.db.plannedJobs && J.db.invSondas && J.db.cambio && J.db.quimicos && J.db.casingEquip && J.db.rigs), 'exportar: 4 arquivos, um por contrato, cada um com o contrato, as operações, o inventário e as bases (câmbio, químicos, casing, sondas)', arqs.map(f => path.basename(f)));
+  conf(Js.map(J => J.contratos[0].nome).sort().join('|') === Object.keys(EA.ct).sort().join('|') && Js.find(J => J.contratos[0].nome.indexOf('P&A') === 0).contratos[0].operacoes === 7 && Js.every(J => J.db.plannedJobs.every(j => j.contratoId === J.db.contratos[0].id)), 'cada arquivo só com as operações do seu contrato (P&A: 7)', Js.map(J => J.contratos[0]));
+  conf(arqs.every(f => /^EARL_FORECAST_[A-Z0-9&-]+_[A-Z0-9&-]+_2026\.11\.24_12h00\.json$/.test(path.basename(f))) && arqs.some(f => path.basename(f) === 'EARL_FORECAST_PETROBRAS_P&A-MACAE-OFFSHORE_2026.11.24_12h00.json'), 'nome de cada arquivo: EARL_FORECAST_<CLIENTE>_<CONTRATO>_AAAA.MM.DD_HHhMM.json', arqs.map(f => path.basename(f)));
+  conf(/4 arquivo\(s\), um por contrato/.test(await pa.textContent('body')), 'aviso diz o que foi exportado (4 arquivos, um por contrato)');
+  // para os testes de importar: um arquivo com os 4 contratos, como os exportados até a V07 (a importação continua aceitando)
+  const M = JSON.parse(JSON.stringify(Js[0]));
+  ['contratos', 'plannedJobs', 'handovers', 'invSondas'].forEach(k => { M.db[k] = [].concat(...Js.map(J => J.db[k] || [])); });
+  M.contratos = [].concat(...Js.map(J => J.contratos));
+  M.db.opTemplates = [].concat(...Js.map(J => J.db.opTemplates || [])).filter((t, i, l) => l.findIndex(x => x.id === t.id) === i);
+  const arqA = path.join(TMP, 'EARL_Forecast_dados_V07_varios_contratos.json');
+  fs.writeFileSync(arqA, JSON.stringify(M));
   await A.browser.close();
 
   /* ---------------------------------------------------------------- arquivo B: importa */

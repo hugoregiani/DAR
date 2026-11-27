@@ -4,7 +4,17 @@
 
 > **Regra de entrega (pedido do usuário, 05/11/2026):** sempre que houver alteração em qualquer arquivo (EARL, EARL Engenharia, EARL Gerencial, testes), **enviar junto este prompt de continuidade atualizado** — com o que foi feito, o que está pendente e como continuar — e commitá-lo junto com a alteração. Antes de entregar, rodar os testes (os novos e todos os anteriores) e dizer o resultado.
 >
-> **Última atualização:** 27/11/2026 — **entrega _V07: EARL Forecast e19 + Gerencial g21**:
+> **O que entregar (pedido do Hugo, 27/11/2026, desde a V08):** só o arquivo padrão limpo `EARL_Forecast_Vnn.html` e este prompt (`EARL_prompt_continuidade_Vnn.md`). Não mandar um arquivo por contrato nem o PDF do passo a passo, a não ser que ele peça. Os arquivos dos contratos continuam sendo gerados para os testes.
+>
+> **Última atualização:** 27/11/2026 — **entrega _V08: EARL Forecast e20**:
+> - **⬇ Exportar dados gera um .json para cada contrato** (os ativos marcados; os arquivados não vão), com o nome `EARL_FORECAST_<CLIENTE>_<CONTRATO>_AAAA.MM.DD_HHhMM.json` (o "h" no lugar de ":" porque o Windows não aceita ":" em nome de arquivo).
+> - **⬆ Importar dados aceita vários arquivos de uma vez:** os contratos de todos aparecem na mesma janela; no mesmo contrato em dois arquivos, fica o exportado por último.
+> - A entrega passou a ser só o arquivo padrão e o prompt (ver acima).
+> - Arquivos `EARL_Forecast_V08.html` e `EARL_prompt_continuidade_V08.md`. Ver "e20" em 4-E.
+> - **Em andamento (parado):** narração do vídeo tutorial (o `gravar_tutorial.js` ainda usa a pílula "Consumo e receita", que saiu na e18).
+> - **Pendente:** a planilha do banco de químicos/casing não chegou.
+>
+> Antes, em 27/11/2026 — **entrega _V07: EARL Forecast e19 + Gerencial g21**:
 > - **⬇ Exportar dados** com mais de um contrato pergunta quais (todos marcados); nome `EARL_FORECAST_<CONTRATOS>_AAAA.MM.DD_HHhMM.json` (o "h" no lugar de ":" porque o Windows não aceita ":" em nome de arquivo). Importar já perguntava.
 > - **Todas as janelas mudam de tamanho** puxando qualquer borda ou canto (duplo clique na borda volta ao normal).
 > - **Cartão vermelho da Receita** nos Indicadores igual ao card "Visão geral" (sem brilho).
@@ -626,6 +636,24 @@ Pedidos do Hugo (12/11/2026): "No envio do email do Handover preciso que inclua 
   - Painel de Compras: `engenharia` 37, `invariantes` 64, `pedidos_enviados` 15, `regressao` 6, `reproduzir` ok.
   - Ajustes de expectativa nos testes antigos (mudanças pedidas): sonda "NS-32 - Norbe VIII" nos seletores, no assunto do e-mail e na matriz do Gerencial; coluna "Saldo na sonda" no e-mail; colunas novas nas exportações; versão g16.
 - **Pendências:** os textos novos ainda sem EN/ES; a tabela de câmbio não tem importação por planilha (é digitada); a "Frente" do PA ainda precisa de ajuste (a planilha fatura com outra regra).
+
+### e20 — um .json por contrato, importar vários arquivos, entrega só do arquivo padrão — entrega _V08 (27/11/2026)
+
+- **Pedidos do Hugo (27/11/2026):**
+  - "Não precisa me enviar um arquivo para cada contrato mais, apenas um arquivo limpo padrão e o prompt de continuidade";
+  - "para a nomenclatura considere apenas contratos ativos, não considere contratos arquivados";
+  - "para os nomes dos arquivos exportados usar: EARL_FORECAST_"NOME DO CLIENTE"_"NOME DO CONTRATO"_AAAA.MM.DD_HH:MM; para arquivos com múltiplos contratos exportar um arquivo .json para cada contrato";
+  - "permita também que ao importar eu consiga selecionar múltiplos arquivos json".
+- **Exportar** (`eng_app.js`): `engExportar(ids)` gera um `File` por contrato ativo marcado (`engDbDoContrato(c)`: o contrato, as operações via `pjDoContrato`, os handovers com todas as operações dentro, o `invSondas` do `ctId`, os templates sem contrato ou dele; o resto do banco — sondas, câmbio, químicos, casing, logos, pessoas — vai inteiro) e baixa um a um (`setTimeout` de 400 ms). Nome `engNomeArqCt(c, quando)` = `EARL_FORECAST_` + cliente + `_` + contrato + `_` + `engCarimboArq()` (`AAAA.MM.DD_HHhMM`; "h" no lugar de ":"). Sem contrato ativo: um arquivo com tudo (`EARL_FORECAST_SEM-CONTRATOS_…`). A janela (`eng_e19.js`, `.eng-expsel`) lista os arquivos (`.eng-expsel-arqnome`), avisa os arquivados (`.eng-expsel-arq`) e as operações sem contrato ativo (`.eng-expsel-semct`); botão "⬇ Exportar N arquivos".
+- **Importar vários** (`eng_app.js`): `<input type="file" multiple>`; `engImportarArquivo(files)` lê todos (os que não são exportação do EARL viram aviso), ordena por `geradoEm` e guarda `engImpDados = {arqs:[{nome, dados, geradoEm, por}], sel:["<nº>|<id>"…]}`. `engImportarVarios(im, sel, cambioArq)` aplica `engImportarContratos` arquivo por arquivo (o último ganha no mesmo contrato) e, com vários arquivos, refaz o "substituído / saem N" em relação ao que havia aqui antes (`srcId` no `rel`). A janela mostra "Arquivos (N)" no topo, a coluna "Arquivo" (nº, nome no `title`), "repetido: fica o do arquivo N (mais recente)" e, em "Nos arquivos", a soma (sondas, químicos e casing: o maior). "Substituir tudo" com vários: o 1º arquivo e, por cima, os contratos dos outros; o texto avisa que ficam só os contratos dos arquivos.
+- **Entrega:** só `EARL_Forecast_V08.html` (o `EARL_Engenharia.html`, sem operações, com os 16 contratos do cadastro do EARL ativos) e `EARL_prompt_continuidade_V08.md`. Os contratos reais continuam gerados para os testes (`$S/ctr/gerar_todos13.sh` → `$S/ctr/out13`, `--compat` dos V07), mas não vão. O PDF não foi refeito nesta entrega (o texto do passo 21 no `gerar_deck.py` já fala de um .json por contrato e de importar vários).
+- **Versão:** `EARL Forecast e20 (base v115)`; o Gerencial não mudou (g21).
+- **Testes (27/11/2026):** todos sem falha.
+  - Engenharia: engenharia 63, contratos 79, quimicos 36, espaco 12, inventario 54, painel 23, e10 37, **e12 50**, **e13 18**, e15 27, e16 29, e17 42, e18 15, **e19 50**.
+  - Na suíte, `e2e_e12` e `e2e_e13` falharam só na conferência da versão: o padrão `/e1[2-9]/` não aceitava "e20". O padrão foi corrigido para `/e(1[2-9]|[2-9][0-9])\b/` e os dois rodaram de novo: 50 e 18.
+  - Gerencial: 62, 59, 71, 59, 27. BP: 58.
+  - Contratos reais: 135; `e2e_atualizacao` V07→V08 42; `e2e_importar` PA→BDII 9, BP→DC 9. `e2e_seguranca`: 70.
+  - ClamAV: 0 vírus no `EARL_Forecast_V08.html`.
 
 ### e19 — exportar escolhendo os contratos, janelas de qualquer tamanho, calendário, cor da sonda nas barras — entrega _V07 (27/11/2026)
 
