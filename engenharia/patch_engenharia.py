@@ -105,7 +105,7 @@ assert i > 0
 s = s[:i] + css + s[i:]
 
 # ---------------------------------------------------------------- app (código compilado)
-rep("var EARL_VERSION = 'EARL v115';", "var EARL_VERSION = 'EARL Forecast e18 (base v115)';")
+rep("var EARL_VERSION = 'EARL v115';", "var EARL_VERSION = 'EARL Forecast e19 (base v115)';")
 rep("var HO_ST = {\n  pendente: {", "var HO_ST = {\n  email: {\n    label: 'Enviado por e-mail',\n    c: '#304220',\n    bg: '#F1F5EC',\n    brd: '#D9E4CC'\n  },\n  pendente: {")
 # quem gera o e-mail assina os registros (sem login)
 rep("  var currentUser = () => authUser && authUser.email || sbUser || '';",
@@ -644,7 +644,7 @@ rep("      if (d.people && d.people.length > 0) return migrateDB(d);", "      if
 rep("  return migrateDB(JSON.parse(JSON.stringify(SEED_DB)));", "  return engQuimMig(migrateDB(JSON.parse(JSON.stringify(SEED_DB))));")
 
 # Código novo (antes de renderHandover) e janelas novas na árvore
-novo = open(os.path.join(AQUI, 'eng_app.js'), encoding='utf-8').read() + '\n' + open(os.path.join(AQUI, 'eng_contratos.js'), encoding='utf-8').read() + '\n' + open(os.path.join(AQUI, 'eng_quimicos.js'), encoding='utf-8').read() + '\n' + open(os.path.join(AQUI, 'eng_inventario.js'), encoding='utf-8').read() + '\n' + open(os.path.join(AQUI, 'eng_cambio.js'), encoding='utf-8').read() + '\n' + open(os.path.join(AQUI, 'eng_logo.js'), encoding='utf-8').read() + '\n' + open(os.path.join(AQUI, 'eng_e17.js'), encoding='utf-8').read()
+novo = open(os.path.join(AQUI, 'eng_app.js'), encoding='utf-8').read() + '\n' + open(os.path.join(AQUI, 'eng_contratos.js'), encoding='utf-8').read() + '\n' + open(os.path.join(AQUI, 'eng_quimicos.js'), encoding='utf-8').read() + '\n' + open(os.path.join(AQUI, 'eng_inventario.js'), encoding='utf-8').read() + '\n' + open(os.path.join(AQUI, 'eng_cambio.js'), encoding='utf-8').read() + '\n' + open(os.path.join(AQUI, 'eng_logo.js'), encoding='utf-8').read() + '\n' + open(os.path.join(AQUI, 'eng_e17.js'), encoding='utf-8').read() + '\n' + open(os.path.join(AQUI, 'eng_e19.js'), encoding='utf-8').read()
 rep("  var renderHandover = () => {\n", novo.rstrip('\n') + "\n  var renderHandover = () => {\n")
 rep("renderRigForm(), renderConfirmBox(),", "renderEngSondas(), renderEngContratos(), renderEngQuim(), renderEngCasDb(), renderEngEspaco(), renderEngCons(), renderEngImpDados(), renderEngGer(), renderEngInvEd(), renderEngExp(), renderEngCambio(), renderEngLogo(), renderRigForm(), renderConfirmBox(),")
 # sonda salva com data de alteração (para o "juntar" da importação ficar com a mais recente)
@@ -896,12 +896,65 @@ rep("""      onClick: e => {
         if (e.target.className === 'overlay') setPlanDraft(null);
       }""", """      onClick: e => {} // e18: a janela da operação só fecha pelos botões""")
 
+# e19 (pedido do Hugo, 27/11/2026): eng_e19.js — exportar escolhendo os contratos (nome EARL_FORECAST_…); calendário com
+# o tipo da operação e a janela do dia (só as operações daquele dia); cor da sonda na barra com a faixa da legenda embaixo;
+# tipo "Entrega de Cimento/Blend". As janelas mudam de tamanho (eng_redim.js, no fim do <body>).
+rep("renderEngDup(), renderEngCorPop(),", "renderEngDup(), renderEngExpSel(), renderEngDia(), renderEngCorPop(),")
+rep("""      onClick: () => setDiaPanel(d),
+      title: "Abrir o dia completo",""", """      onClick: () => setEngDia(d),
+      title: "Ver as operações deste dia (clique numa para editar)",""")
+rep(""" j.well || j.tipoOp, engRcCal(j)), mj && React.createElement("span", {""", """ j.well || j.tipoOp, engCalTipo(j), engRcCal(j)), mj && React.createElement("span", {""")
+rep("""          background: (PJ_GANTT_COR[pjCor(j)] || PJ_GANTT_COR.criada).c,
+          display: 'flex',""", """          background: (PJ_GANTT_COR[pjCor(j)] || PJ_GANTT_COR.criada).c,
+          ...engBarraCor(j, PJ_GANTT_COR[pjCor(j)] || PJ_GANTT_COR.criada, 3),
+          display: 'flex',""")
+rep("""          background: cor.c,
+          touchAction: 'pan-y',""", """          background: cor.c,
+          ...engBarraCor(j, cor, 5),
+          touchAction: 'pan-y',""")
+rep("""            background: cor.c,
+            display: 'flex',
+            alignItems: 'center',
+            padding: '0 5px',""", """            background: cor.c,
+            ...engBarraCor(j, cor, 4),
+            display: 'flex',
+            alignItems: 'center',
+            padding: '0 5px',""")
+rep("color: cor.t,", "color: engBarraTxt(j, cor),", 3)
+rep("""as vinculadas acompanham")), React.createElement("div", {
+      className: "gantt-wrap\"""", """as vinculadas acompanham"), engLgdSonda()), React.createElement("div", {
+      className: "gantt-wrap\"""")
+# tipo "Entrega de Cimento/Blend" (com a Perfuração, antes de "Outros")
+rep("""}, {
+  op: 'Perfuração',
+  casing: false,
+  vida: 'optional'
+}, {""", """}, {
+  op: 'Perfuração',
+  casing: false,
+  vida: 'optional'
+}, {
+  op: 'Entrega de Cimento/Blend',
+  casing: false,
+  vida: 'optional'
+}, {""")
+rep("  'Perfuração': 'Drilling',\n  'Top-job': 'Top-job',\n", "  'Perfuração': 'Drilling',\n  'Entrega de Cimento/Blend': 'Cement/Blend delivery',\n  'Top-job': 'Top-job',\n")
+rep("  'Perfuração': 'Perforación',\n  'Top-job': 'Top-job',\n", "  'Perfuração': 'Perforación',\n  'Entrega de Cimento/Blend': 'Entrega de Cemento/Blend',\n  'Top-job': 'Top-job',\n")
+
 # e12: filtro e ordem em todas as tabelas (script avulso, fora do React), no fim do <body>
 tf = open(os.path.join(AQUI, 'eng_tabelas.js'), encoding='utf-8').read()
 assert '</script' not in tf.lower()
 i = s.rfind('</body>')
 assert i > 0 and s[i:].strip() == '</body>\n</html>'.strip() or s[i:].replace('\n', '').strip() == '</body></html>', repr(s[i:i + 40])
 s = s[:i] + '<script>\n' + tf + '</script>\n' + s[i:]
+# e19: as janelas mudam de tamanho puxando qualquer borda ou canto (script avulso); o Gerencial tem uma cópia igual
+rz = open(os.path.join(AQUI, 'eng_redim.js'), encoding='utf-8').read()
+assert '</script' not in rz.lower()
+_g = open(os.path.join(AQUI, '..', 'gerencial', 'gerencial.html'), encoding='utf-8').read()
+_gi = _g.find('*/\n', _g.find('/* EARL_REDIM_INICIO')) + 3
+assert _g.find('/* EARL_REDIM_INICIO') > 0 and _g[_gi:_g.find('/* EARL_REDIM_FIM */')] == rz, 'a cópia do eng_redim.js no gerencial.html está diferente'
+i = s.rfind('</body>')
+s = s[:i] + '<script>\n' + rz + '</script>\n' + s[i:]
 
 open(OUT, 'w', encoding='utf-8').write(s)
 print('ok →', OUT, '(%.1f MB)' % (len(s.encode('utf-8')) / 1e6))

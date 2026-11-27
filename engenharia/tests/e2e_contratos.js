@@ -2,7 +2,7 @@
 // cadastro com planilha (xlsx e CSV do Excel em português), valores em R$ e US$, reajustes por data,
 // consumo de PPU por operação, saldo e receita (por operação, item, mês e contrato) e o Excel.
 // Uso: node tests/e2e_contratos.js [EARL_Engenharia.html] [pasta para as telas]
-const {abrir} = require('./harness');
+const {abrir, exportarDados} = require('./harness');
 const fs = require('fs');
 const path = require('path');
 const ARQ = process.argv[2] || path.join(__dirname, '..', 'EARL_Engenharia.html');
@@ -229,7 +229,7 @@ const kpi = (page, cls) => txt(page, '.' + cls + ' b');
   conf(db.it === 4 && db.rj.join() === '2026-11-05,2027-01-01' && db.brl === 1500 && db.reg === 'macae' && !!db.cli, 'contrato gravado com itens, valores, reajustes, cliente e região', db);
 
   console.log('Levar para outro computador (exportar → importar o contrato)');
-  const ex = await baixar(page, () => page.click('.eng-tools button:has-text("Exportar dados")'));
+  const ex = await baixar(page, () => exportarDados(page, '.eng-tools button:has-text("Exportar dados")')); // e19: confirma a janela de escolher os contratos
   const exPath = path.join(require('os').tmpdir(), ex.nome);
   fs.writeFileSync(exPath, ex.buf);
   const pc2 = await abrir(ARQ, {h: 1000, hoje: '2026-11-02'});

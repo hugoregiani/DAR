@@ -3,7 +3,7 @@
 // ignoradas e SAP repetido), planilha no formato do Forecast (só a tabela de químicos), edição na tela,
 // histórico, COGS das operações, exportar dados e a base aplicada uma vez só.
 // Uso: node tests/e2e_quimicos.js [EARL_Engenharia.html] [pasta das telas] [Contrato_BP_Teste_EARL.xlsx (opcional)]
-const {abrir} = require('./harness');
+const {abrir, exportarDados} = require('./harness');
 const fs = require('fs');
 const path = require('path');
 const ARQ = process.argv[2] || path.join(__dirname, '..', 'EARL_Engenharia.html');
@@ -191,7 +191,7 @@ const valorDe = (page, sap) => linha(page, sap).locator('input.ec-q-usd').inputV
   await page.click('.ec-cons-modal .modal-close');
 
   console.log('Exportar dados e base aplicada uma vez');
-  const ex = await baixar(page, () => page.click('.eng-exportar'));
+  const ex = await baixar(page, () => exportarDados(page, '.eng-exportar'));
   const exj = JSON.parse(fs.readFileSync(ex.path, 'utf8'));
   conf(exj.db.quimicos.length === 62 && exj.db.quimHist.length === 6 && exj.resumo.quimicos === 62, 'exportar dados leva o banco de químicos e o histórico');
   await page.reload();

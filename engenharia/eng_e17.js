@@ -293,7 +293,7 @@
     }
   });
   var [engCorPop, setEngCorPop] = useState(null);
-  var engMudarCor = (rid, cor) => {
+  var engMudarCor = (rid, cor, manter) => {
     setEngCoresSonda(x => {
       var o = {
         ...x
@@ -304,7 +304,7 @@
       } catch (e) {}
       return o;
     });
-    setEngCorPop(null);
+    if (!manter) setEngCorPop(null); // e19: "Outra cor" muda sem fechar (o seletor do navegador continua aberto)
   };
   var engAbrirCor = (rid, e) => {
     if (!rid) return;
@@ -331,7 +331,7 @@
     var q = id => String(id).replace(/["\\]/g, '\\$&');
     var css = ids.map(id => {
       var c = engCoresSonda[id],
-        fundo = engCorRgba(c, .16),
+        fundo = engCorRgba(c, .10), // e19: mais clara, para a barra (na cor da sonda) aparecer
         rot = engCorRgba(c, .34);
       var g = '.eng-gl[data-rig="' + q(id) + '"]',
         r = '.eng-gj[data-rigrow="' + q(id) + '"]';
@@ -356,7 +356,9 @@
         top: engCorPop.y
       },
       onClick: e => e.stopPropagation()
-    }, engH("b", null, "Cor das linhas \u2014 ", rigFmt(rig) || rig.name || ''), engH("div", {
+    }, engH("b", null, "Cor da sonda \u2014 ", rigFmt(rig) || rig.name || ''), engH("div", {
+      className: "eng-cor-ajuda"
+    }, "As barras das opera\xE7\xF5es ficam nesta cor; a faixa de baixo continua na cor da legenda (situa\xE7\xE3o)."), engH("div", {
       className: "eng-cor-grid"
     }, ENG_CORES_SONDA.map(([c, nome]) => engH("button", {
       key: c,
@@ -368,7 +370,15 @@
         background: c
       },
       onClick: () => engMudarCor(engCorPop.rid, c)
-    }))), engH("button", {
+    })), engH("label", {
+      className: "eng-cor-outra",
+      title: "Escolher outra cor"
+    }, engH("input", {
+      type: "color",
+      className: "eng-cor-input",
+      value: /^#[0-9a-f]{6}$/i.test(atual) ? atual : '#6D757A',
+      onChange: e => engMudarCor(engCorPop.rid, String(e.target.value || '').toUpperCase(), true)
+    }), "Outra cor")), engH("button", {
       type: "button",
       className: "btn-o eng-cor-tirar",
       disabled: !atual,
@@ -583,6 +593,7 @@
     setEngDup({
       draft: pj,
       ids: l.map(j => j.id),
+      marc: l.map(j => j.id), // e19: as operações marcadas (todas, no começo)
       modo: 'op',
       poco: '',
       data: dAdd(fim, 1),
@@ -598,14 +609,25 @@
       ...x,
       [k]: v
     }));
-    var pocoOk = !!String(engDup.poco || '').trim() && !!engDup.data;
+    // e19: só as operações marcadas vão para o poço novo; a "Data da 1ª operação" é a da 1ª marcada
+    var marc = engDup.marc || engDup.ids;
+    var lSel = l.filter(j => marc.includes(j.id));
+    var todasM = lSel.length === l.length;
+    var marcar = id => setEngDup(x => {
+      var m = x.marc || x.ids;
+      return {
+        ...x,
+        marc: m.includes(id) ? m.filter(y => y !== id) : [...m, id]
+      };
+    });
+    var pocoOk = !!String(engDup.poco || '').trim() && !!engDup.data && lSel.length > 0;
     var duplicarPoco = () => {
-      if (!pocoOk || !l.length) return;
+      if (!pocoOk || !lSel.length) return;
       var novoPoco = String(engDup.poco).trim();
-      var off = dDiff(l[0].date, engDup.data);
+      var off = dDiff(lSel[0].date, engDup.data);
       var agora = new Date().toISOString();
       var rig = engDup.rig ? (db.rigs || []).find(r => r.id === engDup.rig) : null;
-      var novos = l.map(j => {
+      var novos = lSel.map(j => {
         var o = JSON.parse(JSON.stringify(j));
         ['ppuCons', 'concluida', 'handoverId', 'hoEmailEm', 'hoEmailVersao', 'mobId', 'releasedAt', 'releasedBy', 'devolvida'].forEach(k => {
           delete o[k];
@@ -642,7 +664,7 @@
       });
       setEngDup(null);
       setPlanDraft(null);
-      setOkMsg('Poço duplicado ✓ — ' + novos.length + ' operação(ões) em ' + novoPoco + ', a partir de ' + fmtD(engDup.data));
+      setOkMsg('Poço duplicado ✓ — ' + novos.length + ' de ' + l.length + ' operação(ões) em ' + novoPoco + ', a partir de ' + fmtD(engDup.data));
       setTimeout(() => setOkMsg(''), 5000);
     };
     var rigsAt = (db.rigs || []).filter(r => r.active !== false).slice().sort((a, b) => String(rigFmt(a)).localeCompare(String(rigFmt(b)), 'pt'));
@@ -671,15 +693,32 @@
       onClick: fechar
     }, "\xD7")), engH("div", {
       className: "ec-conc-nota"
-    }, 'Esta operação é uma das ', engH("b", null, l.length + ' operações'), ' do poço ', engH("b", null, pj.well), '. O que você quer duplicar?'), opcao('op', 'Só esta operação', 'abre uma cópia (' + (tipoTxt(pj) || pj.tipoOp || '') + ') para você ajustar e salvar'), opcao('poco', 'O poço inteiro (' + l.length + ' operações)', 'cria um poço novo com as mesmas operações, na mesma sequência e com os mesmos recursos'), engDup.modo === 'poco' && engH("div", {
+    }, 'Esta operação é uma das ', engH("b", null, l.length + ' operações'), ' do poço ', engH("b", null, pj.well), '. O que você quer duplicar?'), opcao('op', 'Só esta operação', 'abre uma cópia (' + (tipoTxt(pj) || pj.tipoOp || '') + ') para você ajustar e salvar'), opcao('poco', 'O poço (' + l.length + ' operações)', 'cria um poço novo com as operações que você marcar (todas, no começo), na mesma sequência e com os mesmos recursos'), engDup.modo === 'poco' && engH("div", {
       className: "eng-dup-poco"
     }, engH("table", {
-      className: "db-table eng-dup-tab"
-    }, engH("thead", null, engH("tr", null, ['Data', 'Sonda', 'Operação'].map(h => engH("th", {
+      className: "db-table eng-dup-tab",
+      "data-tf": "0"
+    }, engH("thead", null, engH("tr", null, engH("th", null, engH("input", {
+      type: "checkbox",
+      className: "eng-dup-todas",
+      checked: todasM,
+      onChange: () => set('marc', todasM ? [] : l.map(j => j.id)),
+      "aria-label": "Marcar todas"
+    })), ['Data', 'Sonda', 'Operação'].map(h => engH("th", {
       key: h
     }, h)))), engH("tbody", null, l.map(j => engH("tr", {
-      key: j.id
-    }, engH("td", null, fmtD(j.date) + ' → ' + fmtD(dAdd(j.date, dDiff(l[0].date, engDup.data || l[0].date)))), engH("td", null, rigFmt(engDup.rig ? (db.rigs || []).find(r => r.id === engDup.rig) || {} : (db.rigs || []).find(r => r.id === j.rigId) || {}) || '—'), engH("td", null, tipoTxt(j) || j.tipoOp))))), engH("div", {
+      key: j.id,
+      className: marc.includes(j.id) ? 'eng-dup-on' : 'eng-dup-off',
+      onClick: e => {
+        if (e.target.tagName !== 'INPUT') marcar(j.id);
+      }
+    }, engH("td", null, engH("input", {
+      type: "checkbox",
+      className: "eng-dup-cb",
+      checked: marc.includes(j.id),
+      onChange: () => marcar(j.id),
+      "aria-label": 'Copiar ' + (tipoTxt(j) || j.tipoOp || '') + ' de ' + fmtD(j.date)
+    })), engH("td", null, marc.includes(j.id) ? fmtD(j.date) + ' → ' + fmtD(dAdd(j.date, dDiff((lSel[0] || l[0]).date, engDup.data || (lSel[0] || l[0]).date))) : fmtD(j.date) + ' (não vai)'), engH("td", null, rigFmt(engDup.rig ? (db.rigs || []).find(r => r.id === engDup.rig) || {} : (db.rigs || []).find(r => r.id === j.rigId) || {}) || '—'), engH("td", null, tipoTxt(j) || j.tipoOp))))), engH("div", {
       className: "eng-dup-flds"
     }, engH("div", {
       className: "fld"
@@ -694,7 +733,7 @@
       className: "fld"
     }, engH("label", {
       className: "lbl"
-    }, "Data da 1\xAA opera\xE7\xE3o *"), engH("input", {
+    }, "Data da 1\xAA opera\xE7\xE3o marcada *"), engH("input", {
       className: "ipt eng-dup-data",
       type: "date",
       value: engDup.data || '',
@@ -716,7 +755,7 @@
       className: "ec-foot"
     }, engDup.modo === 'poco' && !pocoOk && engH("em", {
       className: "ec-conc-falta-txt"
-    }, "Informe o novo po\xE7o e a data."), engH("span", {
+    }, !lSel.length ? "Marque pelo menos uma opera\xE7\xE3o." : "Informe o novo po\xE7o e a data."), engH("span", {
       style: {
         flex: 1
       }
@@ -732,7 +771,7 @@
           duplicatePlanned(pj);
         } else duplicarPoco();
       }
-    }, engDup.modo === 'poco' ? 'Duplicar o poço (' + l.length + ' operações)' : 'Duplicar a operação'))));
+    }, engDup.modo === 'poco' ? 'Duplicar o poço (' + lSel.length + (lSel.length === 1 ? ' operação)' : ' operações)') : 'Duplicar a operação'))));
   };
 
   /* e18: a pílula "Consumo e receita" saiu das abas do plano; a tela continua para os testes e para quem precisar */

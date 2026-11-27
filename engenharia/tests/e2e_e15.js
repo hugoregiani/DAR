@@ -2,7 +2,7 @@
 // (o de mesmo nome é substituído, com as operações; o novo entra; os outros não mudam); apagar o contrato apaga tudo
 // o que é dele e, no último, deixa o arquivo em branco.
 // Uso: node tests/e2e_e15.js [EARL_Engenharia.html]
-const {abrir} = require('./harness');
+const {abrir, exportarDados} = require('./harness');
 const {montar} = require('../walkthrough/demo');
 const fs = require('fs');
 const os = require('os');
@@ -61,11 +61,11 @@ const importar = async (p, arq, desmarcar = []) => {
   });
   await pa.reload(); await pa.waitForSelector('.eng2-card', {timeout: 60000});
   const EA = await estado(pa);
-  const arqA = await baixar(pa, () => pa.click('.eng-tools .eng-exportar'));
+  const arqA = await baixar(pa, () => exportarDados(pa));
   const J = JSON.parse(fs.readFileSync(arqA, 'utf8'));
   conf(J.db && J.db.contratos && J.db.plannedJobs && J.db.invSondas && J.db.cambio && J.db.quimicos && J.db.casingEquip && J.db.rigs, 'exportar leva tudo: contratos, operações, inventário, câmbio, químicos, casing, sondas');
   conf((J.contratos || []).map(c => c.nome).sort().join('|') === Object.keys(EA.ct).sort().join('|') && J.contratos.find(c => c.nome.indexOf('P&A') === 0).operacoes === 7, 'o arquivo lista os contratos e as operações de cada um', J.contratos);
-  conf(/tudo: 4 contrato\(s\)/.test(await pa.textContent('body')), 'aviso diz o que foi exportado');
+  conf(/exportados ✓ — 4 contrato\(s\)/.test(await pa.textContent('body')), 'aviso diz o que foi exportado (os 4 contratos marcados)');
   await A.browser.close();
 
   /* ---------------------------------------------------------------- arquivo B: importa */

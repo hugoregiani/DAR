@@ -18,4 +18,12 @@ async function abrir(arquivo, {w = 1440, h = 900, hoje, aba = 'cts'} = {}) {
   await page.goto('file://' + path.resolve(arquivo));
   return {browser, ctx, page, errs};
 }
-module.exports = {abrir};
+// e19: "⬇ Exportar dados" pergunta quais contratos exportar quando há mais de um (vêm todos marcados): confirma.
+async function exportarDados(p, sel = '.eng-tools .eng-exportar') {
+  await p.click(sel);
+  const ok = p.locator('.eng-expsel-ok');
+  try { await ok.waitFor({state: 'visible', timeout: 1500}); } catch (e) { return false; }
+  await ok.click();
+  return true;
+}
+module.exports = {abrir, exportarDados};

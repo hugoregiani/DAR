@@ -740,30 +740,59 @@
     casing: (d.casingEquip || []).length,
     inventarios: (d.invSondas || []).length
   });
-  var engExportar = () => {
+  /* e19 (pedido do Hugo, 27/11/2026): exportar só os contratos escolhidos (ids; sem ids = todos os ativos) e o nome
+     EARL_FORECAST_<CONTRATOS>_AAAA.MM.DD_HHhMM.json ("h" no lugar de ":", que o Windows não aceita em nome de arquivo) */
+  var engNomeArqCts = cts => {
+    var limpa = t => String(t || '').normalize('NFD').replace(/[^\x00-\x7F]/g, '').replace(/[^A-Za-z0-9&]+/g, '-').replace(/^-+|-+$/g, '').toUpperCase() || 'CONTRATO';
+    var n = (cts || []).map(c => limpa(c.name));
+    if (!n.length) return 'SEM-CONTRATOS';
+    return n.length > 3 ? n.slice(0, 3).join('_') + '_E-MAIS-' + (n.length - 3) : n.join('_');
+  };
+  var engCarimboArq = () => {
+    var d = new Date(),
+      p2 = x => String(x).padStart(2, '0');
+    return d.getFullYear() + '.' + p2(d.getMonth() + 1) + '.' + p2(d.getDate()) + '_' + p2(d.getHours()) + 'h' + p2(d.getMinutes());
+  };
+  var engExportar = ids => {
     try {
+      var ativos = (db.contratos || []).filter(c => !c.archived);
+      var sel = Array.isArray(ids) ? ativos.filter(c => ids.includes(c.id)) : ativos;
+      var out = db;
+      if (sel.length < ativos.length) {
+        var cIds = new Set(sel.map(c => c.id));
+        var jobs = (db.plannedJobs || []).filter(j => sel.some(c => pjDoContrato(j, c)));
+        var jIds = new Set(jobs.map(j => j.id));
+        out = {
+          ...db,
+          contratos: (db.contratos || []).filter(c => cIds.has(c.id)),
+          plannedJobs: jobs,
+          handovers: (db.handovers || []).filter(h => (h.opIds || []).length && h.opIds.every(id => jIds.has(id))),
+          invSondas: (db.invSondas || []).filter(v => cIds.has(v.ctId)),
+          opTemplates: (db.opTemplates || []).filter(t => !t.contratoId || cIds.has(t.contratoId))
+        };
+      }
       var blob = new Blob([JSON.stringify({
         app: 'EARL Forecast',
         versao: EARL_VERSION,
         geradoEm: new Date().toISOString(),
         por: (db.hoMail || {}).nome || '',
-        resumo: engResumoDb(db),
-        contratos: (db.contratos || []).filter(c => !c.archived).map(c => ({
+        resumo: engResumoDb(out),
+        contratos: sel.map(c => ({
           id: c.id,
           nome: c.name,
           cliente: c.clientName || '',
           numero: c.numero || '',
-          operacoes: (db.plannedJobs || []).filter(j => pjDoContrato(j, c)).length
+          operacoes: (out.plannedJobs || []).filter(j => pjDoContrato(j, c)).length
         })),
-        db
+        db: out
       })], {
         type: 'application/json'
       });
-      forceDownload([new File([blob], 'EARL_Forecast_dados_' + engAgoraTxt() + '.json', {
+      forceDownload([new File([blob], 'EARL_FORECAST_' + engNomeArqCts(sel) + '_' + engCarimboArq() + '.json', {
         type: 'application/json'
       })]);
-      var rx = engResumoDb(db);
-      setOkMsg('Dados exportados ✓ — tudo: ' + (db.contratos || []).filter(c => !c.archived).length + ' contrato(s) com itens, valores e reajustes, ' + rx.operacoes + ' operação(ões) com consumos e handovers, sondas, inventário, câmbio, químicos e casing. No outro arquivo (o de quem junta os contratos), use “⬆ Importar dados”: os contratos entram nos Indicadores.');
+      var rx = engResumoDb(out);
+      setOkMsg('Dados exportados ✓ — ' + sel.length + ' contrato(s) com itens, valores e reajustes, ' + rx.operacoes + ' operação(ões) com consumos e handovers, sondas, inventário, câmbio, químicos e casing. No outro arquivo (o de quem junta os contratos), use “⬆ Importar dados”: os contratos entram nos Indicadores.');
       setTimeout(() => setOkMsg(''), 6000);
     } catch (e) {
       setSyncErr('Falha ao exportar os dados: ' + (e && e.message || e));
@@ -1416,7 +1445,7 @@
     title: "C\xE2mbio do d\xF3lar por m\xEAs (R$ por US$ 1,00): converte em US$ os valores em R$ dos contratos, com a cota\xE7\xE3o do m\xEAs"
   }, "\uD83D\uDCB1 C\xE2mbio"), engH("button", {
     className: "btn-o eng-exportar",
-    onClick: engExportar,
+    onClick: () => engExportarPedir(), // e19: com mais de um contrato, pergunta quais exportar
     title: "Baixa um arquivo .json com todos os dados (contratos, valores, reajustes, opera\xE7\xF5es, consumos, handovers, sondas, templates, os bancos de qu\xEDmicos e de casing equipment e o invent\xE1rio das sondas) para guardar ou levar para outro computador"
   }, "⬇ Exportar dados"), engH("button", {
     className: "btn-o eng-importar",

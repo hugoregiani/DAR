@@ -4,7 +4,19 @@
 
 > **Regra de entrega (pedido do usuário, 05/11/2026):** sempre que houver alteração em qualquer arquivo (EARL, EARL Engenharia, EARL Gerencial, testes), **enviar junto este prompt de continuidade atualizado** — com o que foi feito, o que está pendente e como continuar — e commitá-lo junto com a alteração. Antes de entregar, rodar os testes (os novos e todos os anteriores) e dizer o resultado.
 >
-> **Última atualização:** 26/11/2026 — **entrega _V06: EARL Forecast e18**:
+> **Última atualização:** 27/11/2026 — **entrega _V07: EARL Forecast e19 + Gerencial g21**:
+> - **⬇ Exportar dados** com mais de um contrato pergunta quais (todos marcados); nome `EARL_FORECAST_<CONTRATOS>_AAAA.MM.DD_HHhMM.json` (o "h" no lugar de ":" porque o Windows não aceita ":" em nome de arquivo). Importar já perguntava.
+> - **Todas as janelas mudam de tamanho** puxando qualquer borda ou canto (duplo clique na borda volta ao normal).
+> - **Cartão vermelho da Receita** nos Indicadores igual ao card "Visão geral" (sem brilho).
+> - **Duplicar o poço** marcando as operações (todas marcadas no começo).
+> - Tipo **"Entrega de Cimento/Blend"** (e "Perfuração", que já existia).
+> - **Calendário:** o tipo no dia; "abrir" mostra só as operações do dia (clique = editar).
+> - **Cor da sonda** na barra, com a faixa de baixo na cor da legenda (Gantt e calendário); "Outra cor" livre.
+> - Arquivos `EARL_Forecast_…_V07`. Teste novo: `tests/e2e_e19.js`. Ver "e19" em 4-E.
+> - **Em andamento (parado):** narração do vídeo tutorial. O `walkthrough/tutorial/gravar_tutorial.js` ainda usa a pílula "Consumo e receita" (saiu na e18) e precisa ser ajustado ao regravar; a janela de exportar já está tratada nele.
+> - **Pendente:** a planilha do banco de químicos/casing não chegou.
+>
+> Antes, em 26/11/2026 — **entrega _V06: EARL Forecast e18**:
 > - Operação nova com data anterior a hoje (só um aviso).
 > - A janela da operação, e as que abrem a partir dela, só fecham pelos botões.
 > - **COGS do Cimento Classe G (SAP 100003685) = US$ 7,77/sk em todos os arquivos** (correção única ao abrir, no histórico do banco de químicos).
@@ -614,6 +626,35 @@ Pedidos do Hugo (12/11/2026): "No envio do email do Handover preciso que inclua 
   - Painel de Compras: `engenharia` 37, `invariantes` 64, `pedidos_enviados` 15, `regressao` 6, `reproduzir` ok.
   - Ajustes de expectativa nos testes antigos (mudanças pedidas): sonda "NS-32 - Norbe VIII" nos seletores, no assunto do e-mail e na matriz do Gerencial; coluna "Saldo na sonda" no e-mail; colunas novas nas exportações; versão g16.
 - **Pendências:** os textos novos ainda sem EN/ES; a tabela de câmbio não tem importação por planilha (é digitada); a "Frente" do PA ainda precisa de ajuste (a planilha fatura com outra regra).
+
+### e19 — exportar escolhendo os contratos, janelas de qualquer tamanho, calendário, cor da sonda nas barras — entrega _V07 (27/11/2026)
+
+- **Pedidos do Hugo:**
+  - ao exportar e importar dados, com mais de um contrato no arquivo, perguntar quais contratos exportar/importar;
+  - todas as janelas ("box") do app mudam de tamanho em qualquer direção;
+  - o total da receita nos Indicadores tinha um sombreado luminoso: usar o padrão do card "Visão geral" dos Contratos;
+  - nome do arquivo exportado: EARL_FORECAST_"NOME DOS CONTRATOS"_AAAA.MM.DD_HH:MM;
+  - duplicar o poço com uma caixa de marcar ao lado de cada operação (todas marcadas no começo);
+  - tipos de operação "Entrega de Cimento/Blend" e "Perfuração";
+  - calendário: mostrar o tipo da operação; o "abrir" do dia mostra só as operações daquele dia, para escolher qual editar (no lugar da janela antiga com Frentes e atividades e Na base);
+  - cor para cada sonda: a barra na cor da sonda e a faixa de baixo na cor da legenda, como no EARL principal.
+- **Exportar** (`eng_app.js` + `eng_e19.js`): o botão chama `engExportarPedir()`; com 2+ contratos ativos abre `renderEngExpSel` (`.eng-expsel`, todos marcados, `.eng-expsel-cb`, `.eng-expsel-todos`, `.eng-expsel-ok`); `engExportar(ids)` monta o `db` só com esses contratos (operações via `pjDoContrato`, handovers com todas as operações dentro, `invSondas` por `ctId`, templates sem contrato ou desses contratos); sondas, câmbio, químicos e casing vão sempre. Nome: `EARL_FORECAST_` + `engNomeArqCts` (maiúsculas, sem acento, "-" no lugar de espaço/pontuação, "&" fica; mais de 3 → 3 primeiros + `_E-MAIS-N`) + `_` + `engCarimboArq` (`AAAA.MM.DD_HHhMM`: **"h" no lugar de ":"**, que o Windows não aceita em nome de arquivo). Com um contrato só, exporta direto. **Importar** já perguntava (janela "⬆ Importar dados", contrato por contrato, todos marcados) — não mudou.
+- **Janelas de qualquer tamanho** (`eng_redim.js`, script avulso no fim do `<body>`, fora do React; nada é posto dentro das janelas): olha o ponteiro perto da borda de `.modal`/`.dlg` (8 px fora, 4 px dentro, cantos 14 px) e marca o cursor (`html[data-engrz-cur]`); ao arrastar, fixa `position/left/top/width/height` com `!important` e `data-engrz` (mín. 280 × 160, dentro da tela); duplo clique na borda volta ao normal; o clique que termina o arraste é engolido (não fecha a janela). Cópia igual no `gerencial.html` (entre `EARL_REDIM_INICIO`/`EARL_REDIM_FIM`), conferida pelo `patch_engenharia.py`.
+- **Cartão vermelho (Gerencial g21):** `.kpi.dest` = gradiente `#D71F34 → #CC0000 → #961B24` (150deg), borda `#CC0000`, sombra `0 1px 2px rgba(42,47,48,.2), 0 34px 60px -34px rgba(42,47,48,.7)` — igual ao `.eng2-hero`. `VERSAO = 'EARL Gerencial g21'`.
+- **Duplicar o poço** (`eng_e17.js`): `engDup.marc` (ids marcados; todos no começo); coluna de caixas + "marcar todas" no cabeçalho; a linha desmarcada fica riscada "(não vai)"; o deslocamento das datas sai da 1ª marcada ("Data da 1ª operação marcada"); botão "Duplicar o poço (N operações)" conta as marcadas e trava sem nenhuma. Tabela com `data-tf="0"` (sem filtro/ordem).
+- **Tipos** (patch, bloco e19): "Entrega de Cimento/Blend" (`casing:false, vida:'optional'`, duração padrão 1 dia) depois de "Perfuração"; EN "Cement/Blend delivery", ES "Entrega de Cemento/Blend" (o EARL base já tinha "Perfuração" nas traduções).
+- **Calendário** (patch + `eng_e19.js`): o chip do dia ganhou `engCalTipo(j)` (o tipo, embaixo de sonda · poço); o "abrir" chama `setEngDia(d)` → `renderEngDia` (`.eng-dia-modal`): só as operações daquele dia (de `planFiltered`, sem as canceladas, `pjDays`), com sonda · poço, tipo, período, situação, receita/COGS e "Editar ›"; clicar abre `setPlanDraft`; "+ Nova operação neste dia" (`newPlanDraft({date})`). A janela antiga do EARL (`setDiaPanel`) continua só no selo "⛭ frentes" (não usado no Forecast).
+- **Cor da sonda nas barras** (patch + `eng_e19.js`): `engBarraCor(j, cor, faixa)` → `{background: cor da sonda, color, boxShadow: 'inset 0 -Npx 0 ' + cor da legenda}` (N = 5 no Gantt por sonda/por data, 4 no "Sonda contínua", 3 no calendário); `engBarraTxt` (texto escuro em cor clara, luz > 165). Sem cor, nada muda. A janelinha (`renderEngCorPop`) virou "Cor da sonda", com "Outra cor" (`<input type="color">`, `engMudarCor(rid, cor, true)` não fecha). A linha da sonda no Gantt ficou com 10% (era 16%). Legenda: `engLgdSonda()`.
+- **Testes:** `tests/e2e_e19.js` (41). `tests/harness.js`: `exportarDados(p, sel)` (clica e confirma a janela, se abrir) — usado por `e2e_engenharia`, `e2e_inventario`, `e2e_quimicos`, `e2e_e15`, `e2e_e16`, `e2e_seguranca`; os nomes esperados passaram a `EARL_FORECAST_…`. `e2e_e10` confere o cartão sem brilho; `e2e_e17` lê a cor da situação na faixa de baixo quando a barra tem a cor da sonda; os do Gerencial esperam `g21`. `contratos_reais/e2e_importar.js`, `walkthrough/capturar.js` (tela nova `22a_exportar.jpg`) e o `tutorial/gravar_tutorial.js` (parado) confirmam a janela.
+- **PDF V07:** passo 6 (cor da sonda na barra), 7 (calendário e duplicar marcando), 8 (janela muda de tamanho) e 21 (exportar e importar, duas telas).
+- **Contratos reais V07:** `$S/ctr/gerar_todos12.sh` → `$S/ctr/out12`, `--compat` dos V06. Cada arquivo tem um contrato: "Exportar dados" exporta direto.
+- **Testes (27/11/2026):** todos sem falha.
+  - Engenharia: engenharia 62, **contratos 78**, quimicos 36, espaco 12, inventario 54, painel 23, e10 37, e12 50, e13 18, **e15 26**, e16 29, e17 42, e18 15, **e19 41**.
+  - Na suíte, dois testes antigos pararam na exportação nova; os dois foram corrigidos no teste e rodados de novo. O `e2e_contratos` clicava em "Exportar dados" e esperava o download direto: passou a usar `exportarDados`, 78. O `e2e_e15` procurava o texto antigo do aviso ("tudo: 4 contrato(s)"): 26.
+  - Gerencial: 62, 59, 71, 59, 27. BP: 58.
+  - Contratos reais: 135; `e2e_atualizacao` V06→V07 42; `e2e_importar` PA→BDII 9, BP→DC 9.
+  - `e2e_seguranca`: 70 (com os 7 contratos V07 e o BP).
+  - ClamAV: 0 vírus nos 9 arquivos entregues.
 
 ### e18 — data passada, janela só fecha pelos botões, Cimento G a US$ 7,77/sk, sem "Consumo e receita" — entrega _V06 (26/11/2026)
 

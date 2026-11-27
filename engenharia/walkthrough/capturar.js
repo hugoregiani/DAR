@@ -248,7 +248,9 @@ const SO = (process.argv[2] || '').split(',').filter(Boolean);
     await shot('20_por_contrato');
     await fr.click('.tab[data-tab="receita"]'); await page.evaluate(() => window.scrollTo(0, 0));
     await page.click('.eng-tools .eng-planilhas'); await page.waitForTimeout(800); await shot('21_planilhas'); await fechar();
-    const [dl] = await Promise.all([page.waitForEvent('download'), page.click('.eng-tools .eng-exportar')]);
+    await page.click('.eng-tools .eng-exportar'); await page.waitForSelector('.eng-expsel'); await page.waitForTimeout(400);
+    await shot('22a_exportar'); // e19: escolher os contratos que vão no arquivo
+    const [dl] = await Promise.all([page.waitForEvent('download'), page.click('.eng-expsel-ok')]);
     const p = path.join(__dirname, 'dados_demo.json'); await dl.saveAs(p);
     await page.setInputFiles('.eng-tools input[type=file]', p);
     await page.waitForSelector('.ec-imp-dados');

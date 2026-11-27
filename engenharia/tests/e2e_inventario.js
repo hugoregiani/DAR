@@ -4,7 +4,7 @@
 // excluir, matriz) e "⬇ Exportar planilhas" (inventário, consumo de químicos, casing e pessoal em arquivos separados,
 // conferidos célula a célula), exportar/importar dados e persistência.
 // Uso: node tests/e2e_inventario.js [EARL_Engenharia.html] [pasta para as telas]
-const {abrir} = require('./harness');
+const {abrir, exportarDados} = require('./harness');
 const fs = require('fs');
 const path = require('path');
 const ARQ = process.argv[2] || path.join(__dirname, '..', 'EARL_Engenharia.html');
@@ -240,7 +240,7 @@ const arqX = (nome, b64) => ({name: nome, mimeType: 'application/vnd.openxmlform
   await page.waitForSelector('.ei-exp-modal');
   conf((await page.$$eval('.ei-exp-ck', x => x.length)) === await page.evaluate(() => (EARL_DB_REF.contratos || []).filter(c => !c.archived).length), 'botão "⬇ Exportar planilhas" na barra lista todos os contratos');
   await page.click('.ei-exp-modal .modal-close');
-  const bk = await baixar(page, () => page.click('.eng-tools button:has-text("Exportar dados")'));
+  const bk = await baixar(page, () => exportarDados(page, '.eng-tools button:has-text("Exportar dados")'));
   const bj = JSON.parse(bk.buf.toString('utf8'));
   conf(bj.db.invSondas.length === 3 && bj.resumo.inventarios === 3, 'exportar dados leva as contagens de inventário');
   await page.reload();

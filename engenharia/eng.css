@@ -400,3 +400,39 @@ tr.ec-conc-falta td{background:#FFF8E6}
 @media(max-width:700px){.eng-dup-flds{grid-template-columns:1fr}}
 /* e18: data no passado (só um aviso) */
 .fld-hint.eng-retro{font-size:11.5px;color:#6B4E0E;background:#FBF4E4;border:1px solid #EEDDB4;border-radius:8px;padding:5px 9px;margin-top:5px}
+/* e19: exportar escolhendo os contratos */
+.eng-expsel{width:min(640px,96vw)}
+.eng-expsel .tbl-scroll{max-height:46vh}
+.eng-expsel-tab td,.eng-expsel-tab th{padding:4px 10px}
+.eng-expsel-nome{display:flex;flex-direction:column;gap:3px;font-size:12px;color:var(--ink-3)}
+.eng-expsel-nome span{font-size:10.5px;font-weight:700;letter-spacing:.07em;text-transform:uppercase}
+.eng-expsel-nome code{font-size:12.5px;color:var(--ink);background:var(--surface-3,#F2F4F5);border-radius:8px;padding:6px 9px;word-break:break-all}
+.eng-expsel-nome em{font-size:11.5px}
+/* e19: duplicar poço — operações marcadas */
+.eng-dup-tab tr{cursor:pointer}
+.eng-dup-tab tr.eng-dup-off td{color:var(--ink-4,#8E979D);text-decoration:line-through}
+.eng-dup-tab tr.eng-dup-off td:first-child{text-decoration:none}
+/* e19: calendário — tipo da operação e janela do dia */
+.eng-cal-tipo{font-size:8.5px;font-weight:400;opacity:.9;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;line-height:1.25}
+.eng-dia-modal{width:min(720px,96vw)}
+.eng-dia-sem{font-style:normal;color:var(--ink-3);font-size:14px}
+.eng-dia-sub{font-size:13px;color:var(--ink-2)}
+.eng-dia-lista{display:flex;flex-direction:column;gap:6px;overflow:auto;min-height:0}
+.eng-dia-op{display:flex;align-items:center;gap:10px;width:100%;text-align:left;border:1px solid var(--line);border-radius:14px;background:var(--surface,#fff);padding:8px 12px;cursor:pointer;font:inherit;color:var(--ink)}
+.eng-dia-op:hover{border-color:#CC0000;box-shadow:0 4px 14px -6px rgba(42,47,48,.35)}
+.eng-dia-cor{width:10px;align-self:stretch;min-height:34px;border-radius:4px;flex-shrink:0}
+.eng-dia-txt{display:flex;flex-direction:column;gap:1px;flex:1;min-width:0}
+.eng-dia-txt b{font-size:13.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.eng-dia-tipo{font-size:12.5px;color:var(--ink-2)}
+.eng-dia-per{font-size:11.5px;color:var(--ink-3)}
+.eng-dia-sit{font-size:10.5px;font-weight:700;border-radius:999px;padding:3px 9px;white-space:nowrap;flex-shrink:0}
+.eng-dia-rc{font-size:12px;font-weight:700;white-space:nowrap;flex-shrink:0;font-variant-numeric:tabular-nums}
+.eng-dia-rc i{font-style:normal;font-weight:400;color:var(--ink-3)}
+.eng-dia-ed{font-size:12px;font-weight:700;color:#CC0000;flex-shrink:0}
+@media(max-width:640px){.eng-dia-rc{display:none}}
+/* e19: cor da sonda — outra cor */
+.eng-cor-ajuda{color:var(--ink-3);font-size:11.5px;line-height:1.35}
+.eng-cor-outra{display:flex;align-items:center;gap:8px;font-size:12px;cursor:pointer;color:var(--ink-2)}
+.eng-cor-input{width:34px;height:26px;border:1px solid var(--line);border-radius:6px;padding:0;background:none;cursor:pointer}
+.eng-lgd-sonda{display:inline-flex;align-items:center;gap:6px}
+.eng-lgd .eng-lgd-sonda i.eng-lgd-sonda-i,.eng-lgd-sonda-i{width:26px;height:14px;border-radius:3px;display:inline-block}

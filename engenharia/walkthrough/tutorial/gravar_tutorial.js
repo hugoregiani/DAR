@@ -409,6 +409,8 @@ const W = 1440, H = 720; // × 4/3 = 1920 × 960 (a faixa da legenda, 1920 × 12
   PARTES[12] = async () => {
     await cartao(12, 'Guardar uma cópia', 'Os dados ficam no navegador deste computador.');
     await clicar(page.locator('.eng-tools .eng-exportar'), 'De vez em quando, clique em <b>⬇ Exportar dados</b>: é a sua <b>cópia de segurança</b>.', {depois: 1400});
+    // e19: com mais de um contrato, a janela pergunta quais exportar (vêm todos marcados)
+    if (await page.locator('.eng-expsel-ok').count()) await clicar(page.locator('.eng-expsel-ok'), 'Com mais de um contrato, marque os que vão no arquivo e clique em <b>⬇ Exportar</b>.', {depois: 1400});
     await legenda('Em outro computador, use <b>⬆ Importar dados</b> e escolha o arquivo exportado.', 400);
     await destacar(page.locator('.eng-tools button', {hasText: 'Importar dados'}).first(), 2600);
     await legenda('Abra sempre o arquivo pelo Chrome ou pelo Edge. Pela pré-visualização do Outlook ou do Teams o navegador não salva.', 4200);

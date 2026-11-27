@@ -1,7 +1,7 @@
 // Teste de ponta a ponta do EARL Engenharia (avulso).
 // Uso: node tests/e2e_engenharia.js [EARL_Engenharia.html] [pasta para as telas]
 // Abre o arquivo do disco (file://) com a internet bloqueada.
-const {abrir} = require('./harness');
+const {abrir, exportarDados} = require('./harness');
 const fs = require('fs');
 const path = require('path');
 const ARQ = process.argv[2] || path.join(__dirname, '..', 'EARL_Engenharia.html');
@@ -185,9 +185,9 @@ const fld = (page, rot) => page.locator('.eng-modal .fld').filter({has: page.loc
   await page.click('.eng-modal button:has-text("Cancelar")');
 
   console.log('Exportar dados');
-  const bk = await baixar(page, () => page.click('.eng-tools button:has-text("Exportar dados")'));
+  const bk = await baixar(page, () => exportarDados(page, '.eng-tools button:has-text("Exportar dados")'));
   const bj = JSON.parse(bk.txt);
-  conf(/^EARL_Forecast_dados_\d{4}-\d{2}-\d{2}_\d{2}h\d{2}\.json$/.test(bk.nome) && bj.db.handovers.length === 1 && bj.db.plannedJobs.length === 1, 'exportação .json com a operação e o handover', bk.nome);
+  conf(/^EARL_FORECAST_[A-Z0-9&_-]+_\d{4}\.\d{2}\.\d{2}_\d{2}h\d{2}\.json$/.test(bk.nome) && bj.db.handovers.length === 1 && bj.db.plannedJobs.length === 1, 'exportação .json com a operação e o handover', bk.nome);
 
   console.log('Importar dados (substituir)');
   const bkPath = path.join(require('os').tmpdir(), bk.nome);

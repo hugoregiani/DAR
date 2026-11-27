@@ -98,6 +98,44 @@ A Engenharia do EARL separada do resto do sistema, agora chamada **EARL Forecast
 - **Exportações:** "Consumo de produtos químicos", "Casing equipment" e "Pessoal" ganharam **Contingência (linha)** e **Risco da linha (%)**; a operação já tinha Contingência e Risco (%). O Painel de Compras aplica o risco da linha.
 - **Cards** da aba "Consumo e receita" com profundidade, como os do Gerencial g16.
 
+### e19 (27/11/2026) — exportar escolhendo os contratos, janelas de qualquer tamanho, calendário, cor da sonda nas barras
+
+Pedidos do Hugo (código novo em `eng_e19.js` e `eng_redim.js`; duplicar e cor da sonda em `eng_e17.js`):
+- **"⬇ Exportar dados" com mais de um contrato:** abre a janela "Exportar dados" (`engExportarPedir`,
+  `renderEngExpSel`, `.eng-expsel`) com os contratos **todos marcados**; cada um vai com as operações, consumos,
+  handovers e o inventário das sondas dele (`engExportar(ids)`); sondas, câmbio, químicos e casing vão sempre. Com um
+  contrato só, exporta direto. A **importação** já perguntava (janela "⬆ Importar dados", contrato por contrato).
+- **Nome do arquivo exportado:** `EARL_FORECAST_<CONTRATOS>_AAAA.MM.DD_HHhMM.json` (`engNomeArqCts`,
+  `engCarimboArq`). Os nomes dos contratos saem em maiúsculas, sem acento e com "-" no lugar de espaço e pontuação
+  (ex.: `EARL_FORECAST_P&A-MACAE-OFFSHORE_TAKATSUGU-J_2026.11.27_14h05.json`); com mais de 3 contratos, os 3 primeiros
+  e `_E-MAIS-N`. A hora vai com **"h"** no lugar de ":" porque o Windows não aceita ":" em nome de arquivo.
+- **Todas as janelas mudam de tamanho** puxando qualquer borda ou canto (`eng_redim.js`, script avulso no fim do
+  `<body>`, fora do React): perto da borda (8 px por fora, 4 px por dentro; cantos 14 px) o cursor vira a seta; ao
+  arrastar, a janela fica com posição e tamanho fixos (mínimo 280 × 160, sem sair da tela); **duplo clique na borda**
+  volta ao tamanho normal. O clique que termina um arraste não chega ao app (não fecha a janela por engano); clicar
+  fora sem arrastar continua fechando as janelas que já fechavam assim. O Gerencial tem uma cópia igual (janelas
+  `.dlg`), entre `EARL_REDIM_INICIO` e `EARL_REDIM_FIM` no `gerencial.html` — o `patch_engenharia.py` confere que são
+  iguais.
+- **Cartão vermelho da Receita nos Indicadores** (Gerencial g21): o mesmo gradiente sólido e a mesma sombra cinza do
+  card "Visão geral" dos Contratos, sem o brilho e sem a sombra vermelha luminosa.
+- **Duplicar o poço:** cada operação tem uma caixa de marcar (todas marcadas no começo; a do cabeçalho marca/desmarca
+  todas; clicar na linha também). Só as marcadas vão para o poço novo; a "Data da 1ª operação marcada" vale para a 1ª
+  marcada e as outras ficam na mesma distância. A desmarcada aparece riscada, "(não vai)".
+- **Tipos de operação:** "Entrega de Cimento/Blend" (nova, ao lado de "Perfuração", antes de "Outros"; EN "Cement/Blend
+  delivery", ES "Entrega de Cemento/Blend").
+- **Calendário:** o dia mostra o **tipo da operação** embaixo da sonda e do poço (`engCalTipo`). O "abrir" do dia
+  abre a janela **"Dia DD/MM/AAAA"** (`renderEngDia`, `.eng-dia-modal`) só com as operações daquele dia (com os filtros
+  da tela): sonda e poço, tipo, período, situação (cor da legenda), receita e COGS; **clicar numa operação abre a
+  janela dela para editar**; "+ Nova operação neste dia" já vem com a data. Saiu daí a janela antiga do EARL
+  (Operações do dia, Frentes e atividades, Na base).
+- **Cor da sonda nas barras** (Gantt nos 3 modos e calendário): com cor escolhida (clique no nome da sonda), a barra
+  fica na **cor da sonda** e a **faixa de baixo** (5 px no Gantt, 4 px no "Sonda contínua", 3 px no calendário) na
+  **cor da legenda** (situação), como no EARL (`engBarraCor`, `engBarraTxt`: texto escuro em cor clara). Sem cor,
+  a barra fica como antes. A janelinha da cor ganhou **"Outra cor"** (qualquer cor, `<input type="color">`). A legenda
+  explica (`engLgdSonda`). A linha da sonda no Gantt ficou mais clara (10%), para a barra aparecer.
+- **Testes:** `tests/e2e_e19.js` (41). `tests/harness.js` ganhou `exportarDados(p)` (clica em "⬇ Exportar dados" e
+  confirma a janela, se ela abrir), usado pelos testes que exportam.
+
 ### e18 (26/11/2026) — data passada, janela que só fecha pelos botões, Cimento G a US$ 7,77/sk, sem "Consumo e receita"
 
 Pedidos do Hugo:
@@ -395,4 +433,4 @@ node contratos_reais/e2e_contratos_reais.js <pasta das planilhas> <pasta dos HTM
     - apagar com operações: só com APAGAR, levando as operações e o handover;
     - os contratos apagados não voltam ao reabrir.
 - **A seção Receita e margem é o `../gerencial/gerencial.html`**, embutido pelo patch (`ENG_GER_HTML`, num iframe, no modo embutido do Gerencial). Mudou o Gerencial? Gere de novo o `EARL_Engenharia.html`.
-- Versão: `EARL_VERSION = 'EARL Forecast e18 (base v115)'`. O teste do fluxo completo com o Gerencial está em `../gerencial/tests/e2e_gerencial.js`.
+- Versão: `EARL_VERSION = 'EARL Forecast e19 (base v115)'`. O teste do fluxo completo com o Gerencial está em `../gerencial/tests/e2e_gerencial.js`.

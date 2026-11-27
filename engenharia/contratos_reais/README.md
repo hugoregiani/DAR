@@ -42,6 +42,8 @@ receita ano a ano e a aba 📁 Contratos para percorrer os contratos.
 
 **V06 (26/11/2026, e18):** gerados com `--compat <V05>/EARL_Forecast_<NOME>_V05.html`. O COGS do Cimento Classe G (100003685) vira US$ 7,77/sk ao abrir (o `gerar_html.js` apaga a flag `cogsCimentoGV1` depois de pôr os químicos da planilha); a conferência do gerador e o `e2e_contratos_reais.js` esperam a planilha com o cimento a 7,77.
 
+**V07 (27/11/2026, e19):** gerados com `--compat <V06>/EARL_Forecast_<NOME>_V06.html`. Cada arquivo tem um contrato, então "⬇ Exportar dados" exporta direto (sem a janela de escolher), com o nome `EARL_FORECAST_<CONTRATO>_AAAA.MM.DD_HHhMM.json`; o `e2e_importar.js` confirma a janela se ela abrir.
+
 **V05 (26/11/2026, e17):** gerados com `--compat <V04>/EARL_Forecast_<NOME>_V04.html` e entregues como `EARL_Forecast_<NOME>_V05.html`.
 
 Importar o contrato de um arquivo em outro (e15): `node contratos_reais/e2e_importar.js <pasta dos HTML> PA BDII`.

@@ -41,7 +41,7 @@ const resumo = p => p.evaluate(() => {
   console.log('A = ' + path.basename(acha(NA)) + ' · B = ' + path.basename(acha(NB)));
   const pA = await abre(ctxA, acha(NA));
   const RA = await resumo(pA);
-  const d = pA.waitForEvent('download'); await pA.click('.eng-tools .eng-exportar'); const x = await d;
+  const d = pA.waitForEvent('download'); await pA.click('.eng-tools .eng-exportar'); await pA.locator('.eng-expsel-ok').click({timeout: 1500}).catch(() => {}); const x = await d; // e19: com mais de um contrato, a janela pergunta quais
   const arqA = path.join(TMP, x.suggestedFilename()); await x.saveAs(arqA);
   const pB = await abre(ctxB, acha(NB));
   const RB = await resumo(pB);

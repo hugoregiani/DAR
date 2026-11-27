@@ -191,14 +191,14 @@ secao(2, S2, 'Como a engenharia monta o plano e prevê os recursos de cada opera
       [(6, 'O plano por sonda'), (7, 'Lista e calendário'), (8, 'Nova operação'), (9, 'Recursos, contingência e risco')])
 passo(6, S2, 'O plano por sonda', [
     'Cada barra é uma operação, na cor da etapa: roxo = contingência, preto = concluída. Embaixo do poço, a receita e o COGS (US$, valor cheio) da operação.',
-    'Arraste a barra para mudar a data: as operações ligadas na mesma sonda acompanham. Clique no nome da sonda para escolher a cor das linhas dela.',
+    'Arraste a barra para mudar a data: as operações ligadas na mesma sonda acompanham. Clique no nome da sonda para escolher a cor dela: a barra fica na cor da sonda e a faixa de baixo na cor da etapa.',
     'Filtre por sonda (só as sondas com operação), tipo e situação. As <b>pílulas</b> mostram só as previstas, concluídas, atrasadas, em contingência, com risco ou com/sem handover.'], '05_gantt.jpg')
 passo2(7, S2, 'Lista e calendário',
-       'A <b>Lista</b> mostra as operações por data, com a receita e o COGS (US$) de cada uma. Escolha o horizonte: 15, 30, 90, 180 dias ou <b>Todas</b>. Cada linha tem Editar, Duplicar (a operação ou o poço inteiro), Σ Consumo e Handover.',
+       'A <b>Lista</b> mostra as operações por data, com a receita e o COGS (US$) de cada uma. Escolha o horizonte: 15, 30, 90, 180 dias ou <b>Todas</b>. Cada linha tem Editar, Duplicar (a operação ou o poço, marcando as operações), Σ Consumo e Handover. No <b>Calendário</b>, o dia mostra o tipo da operação; “abrir” mostra só as operações do dia (clique numa para editar).',
        ('06_lista.jpg', 'Lista', 'as operações e os botões de cada uma'), ('07_calendario.jpg', 'Calendário', 'o mês de uma vez'))
 passo(8, S2, 'Nova operação', [
     'Sonda, poço, tipo, data e duração. Sales Order e Nº VIDA podem ficar para depois: só são exigidos para enviar o handover.',
-    '<b>Vincular data à operação anterior</b>: se a anterior mudar, esta acompanha.',
+    '<b>Vincular data à operação anterior</b>: se a anterior mudar, esta acompanha. A janela muda de tamanho: puxe qualquer borda ou canto.',
     '<b>Contingência</b>: marque se a operação pode ou não acontecer e informe o risco de não acontecer. 0% conta tudo; 100% fica fora da receita. Embaixo da janela: a receita, o COGS e a margem da operação, já com a contingência e o risco.'], '08_nova_op.jpg')
 passo(9, S2, 'Recursos, contingência e risco', [
     'Itens PPU do contrato, químicas, casing equipment, pessoal e equipamentos, com a quantidade prevista.',
@@ -258,10 +258,9 @@ passo(19, S6, 'Juntar os contratos de várias pessoas', [
 passo(20, S6, 'Planilhas para o Painel de Compras', [
     'Quatro planilhas separadas: inventário das sondas e consumo de químicos (o Painel de Compras usa estas duas), casing equipment e pessoal.',
     'Cada linha leva a contingência e o risco de não acontecer.'], '21_planilhas.jpg')
-passo(21, S6, 'Exportar, importar e apagar', [
-    '<b>⬇ Exportar dados</b> baixa um arquivo .json com tudo: contratos (itens, valores, reajustes), operações, consumos, handovers, inventário e câmbio.',
-    'No outro arquivo, <b>⬆ Importar dados</b>: marque os contratos. O que já existe (mesmo nome) é <b>substituído</b>, com as operações; o novo entra; os outros não mudam.',
-    '<b>🗑 Apagar contrato</b> (no topo do contrato ou no ⋯ do card) apaga o contrato e tudo o que é dele. No último, o arquivo fica em branco.'], '22_importar.jpg')
+passo2(21, S6, 'Exportar, importar e apagar',
+       '<b>⬇ Exportar dados</b> baixa um .json com os contratos marcados (itens, valores, reajustes, operações, consumos, handovers e inventário), as sondas, o câmbio e os bancos; o nome é EARL_FORECAST_&lt;contratos&gt;_data_hora. No outro arquivo, <b>⬆ Importar dados</b>: o contrato de mesmo nome é <b>substituído</b>, o novo entra, os outros não mudam. <b>🗑 Apagar contrato</b> apaga tudo o que é dele.',
+       ('22a_exportar.jpg', 'Exportar', 'marque os contratos que vão no arquivo'), ('22_importar.jpg', 'Importar', 'marque os contratos que entram'))
 
 texto('O que este passo a passo não mostrou', 'Mais no mesmo arquivo', [
     'O cadastro de sondas e os templates de operação.',

@@ -14,7 +14,8 @@ const conf = (c, msg, extra) => { if (c) { ok++; console.log('  ✓ ' + msg); } 
 const valor = t => Number(String(t).replace(/[^\d,-]/g, '').replace(',', '.'));
 const perto = (a, b, t = 0.02) => Math.abs(a - b) <= t;
 const job = (p, id) => p.evaluate(i => loadDB().plannedJobs.find(j => j.id === i), id);
-const corBarra = (p, id) => p.evaluate(i => { const b = document.querySelector('[data-pj="' + i + '"]'); return b ? getComputedStyle(b).backgroundColor : null; }, id);
+// e19: com cor da sonda, a barra fica na cor da sonda e a situação (cor da legenda) vai na faixa de baixo
+const corBarra = (p, id) => p.evaluate(i => { const b = document.querySelector('[data-pj="' + i + '"]'); if (!b) return null; const s = getComputedStyle(b); const m = /(rgba?\([^)]*\)) 0px -\d+px 0px 0px inset/.exec(s.boxShadow || ''); return m ? m[1] : s.backgroundColor; }, id);
 
 (async () => {
   const E = await abrir(ARQ, {hoje: '2026-11-25', h: 1000});

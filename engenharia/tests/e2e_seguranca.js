@@ -8,7 +8,7 @@
 //   4. texto malicioso nos dados (nomes de cliente, contrato, sonda, poço, produto, função) aparece como texto e não
 //      executa — na Engenharia, no e-mail do handover e no Gerencial (arquivo de outra pessoa).
 // Uso: node tests/e2e_seguranca.js [EARL_Engenharia.html] [EARL_Gerencial.html] [outros HTML para o item 1 ...]
-const {abrir} = require('./harness');
+const {abrir, exportarDados} = require('./harness');
 const {montar} = require('../walkthrough/demo');
 const fs = require('fs');
 const os = require('os');
@@ -78,7 +78,7 @@ function estatico(arq, completo) {
   const eml = await baixar(() => p.click('.hm-gerar'));
   conf(/\.eml$/.test(eml) && fs.statSync(eml).size > 1000, 'e-mail do handover gerado (.eml)', path.basename(eml));
   for (let i = 0; i < 3; i++) { const x = p.locator('.modal-close:visible'); if (!(await x.count())) break; await x.last().click(); await p.waitForTimeout(300); }
-  const bk = await baixar(() => p.click('.eng-tools .eng-exportar'));
+  const bk = await baixar(() => exportarDados(p));
   conf(fs.statSync(bk).size > 1000, 'cópia de segurança exportada', path.basename(bk));
   await p.click('.eng-tools .eng-planilhas');
   await p.waitForTimeout(500);
