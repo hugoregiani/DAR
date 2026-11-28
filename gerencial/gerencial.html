@@ -310,6 +310,8 @@ html.emb .emb-info{color:var(--ink-2)}
 html.emb .qcards{grid-template-columns:repeat(4,minmax(0,1fr))}
 @media(max-width:760px){html.emb .qcards{grid-template-columns:1fr 1fr}}
 .t-mx tr.mx-op[data-mx]{cursor:pointer}
+.op-abrir{margin-left:8px;padding:1px 9px;border:1px solid var(--line,#D4DADD);border-radius:999px;background:#fff;color:var(--red,#CC0000);font-family:inherit;font-weight:600;font-size:11px;line-height:1.6;cursor:pointer;vertical-align:1px;white-space:nowrap}
+.op-abrir:hover{background:var(--red,#CC0000);color:#fff;border-color:var(--red,#CC0000)}
 .t-mx tr.mx-op[data-mx]:hover td{background:#FAFBFB}
 .t-mx tr.mx-op.on > td.mx-rot{color:var(--red)}
 .t-mx tr.mx-it td{font-size:11.5px;color:var(--ink-2);background:#FCFCFC}
@@ -370,7 +372,7 @@ html.emb .kpis,html.emb .qcards{padding:2px 2px 8px}
    Para cada contrato vale o arquivo mais novo. Tudo fica neste navegador (localStorage, prefixo earlger:). */
 (function () {
   'use strict';
-  var VERSAO = 'EARL Gerencial g23';
+  var VERSAO = 'EARL Gerencial g24';
   var CHAVE = 'earlger:pacotes_v1';
   var $ = function (s) { return document.querySelector(s); };
   var esc = function (v) { return String(v == null ? '' : v).replace(/[&<>"']/g, function (c) { return {'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'}[c]; }); };
@@ -1245,7 +1247,7 @@ html.emb .kpis,html.emb .qcards{padding:2px 2px 8px}
       var cols = [
         {t: 'Data', h: function (x) { return fD(x.data); }, v: function (x) { return String(x.data || ''); }, f: function (x) { return /^\d{4}-\d{2}/.test(String(x.data)) ? fMes(String(x.data).slice(0, 7)) : '—'; }},
         txtc('Contrato', function (x) { return x.o._ct.nome; }), txtc('Sonda', function (x) { return x.o.sonda; }), txtc('Poço', function (x) { return x.o.poco; }),
-        txtc('Operação', function (x) { return (x.o.tipo || '') + (x.o.revestimento ? ' ' + x.o.revestimento : ''); }), txtc('SO', function (x) { return x.o.so; }),
+        (function (c) { c.h = function (x) { return esc((x.o.tipo || '') + (x.o.revestimento ? ' ' + x.o.revestimento : '') || '—') + btAbrirOp(x.o); }; return c; })(txtc('Operação', function (x) { return (x.o.tipo || '') + (x.o.revestimento ? ' ' + x.o.revestimento : ''); })), txtc('SO', function (x) { return x.o.so; }),
         {t: 'Situação', h: function (x) { return stTag(x.o); }, v: situ, f: situ},
         {t: 'Receita US$', n: 1, h: function (x) { return '<b>' + fUSD(x.rU) + '</b>' + (x.f !== 1 ? sub('bruto ' + fUSD(x.gU)) : ''); }, v: function (x) { return x.rU; }, f: function (x) { return fUSD(x.rU); }},
         num('Receita R$', function (x) { return x.rB; }, fBRL), num('COGS US$', function (x) { return x.cU; }, fUSD), num('Margem US$', function (x) { return x.rU - x.cU; }, fUSD),
@@ -1312,6 +1314,10 @@ html.emb .kpis,html.emb .qcards{padding:2px 2px 8px}
     return qs;
   };
   var rotOpMx = function (x) { var o = x.o; return fD(x.data) + ' · ' + (o.tipo || '—') + (o.revestimento ? ' ' + o.revestimento : ''); };
+  // g24 (pedido do Hugo, 28/11/2026): no EARL Forecast, "✎ abrir" na linha da operação abre a janela da operação para
+  // ver ou alterar (window.parent.engAbrirOperacao); no Gerencial avulso e na versão compartilhada não aparece
+  var podeAbrirOp = function (o) { if (!EMB || !o || !o.id) return false; try { return typeof window.parent.engAbrirOperacao === 'function'; } catch (e) { return false; } };
+  var btAbrirOp = function (o) { return podeAbrirOp(o) ? ' <button type="button" class="op-abrir" data-abrirop="' + esc(o.id) + '" title="Abrir a operação para ver ou alterar">✎ abrir</button>' : ''; };
   var subOpMx = function (x) {
     var o = x.o, r = Number(o.risco) || 0;
     return [x.tipo === 'real' ? 'realizada' : 'prevista', r >= 100 ? 'fora (risco 100%)' : r > 0 ? 'risco ' + fN(r) + '%' : '', o.so ? 'SO ' + o.so : ''].filter(Boolean).join(' · ');
@@ -1410,7 +1416,7 @@ html.emb .kpis,html.emb .qcards{padding:2px 2px 8px}
           sub(esc(fN(it.qtd) + ' ' + (it.unit || '')) + ' × ' + (it.pu != null ? 'US$ ' + nf(2, 4)(it.pu) : 'sem valor em US$') + (r.x.f !== 1 && it.g != null ? ' · bruto ' + esc(fUSD(it.g)) : '')) + '</td>' + celulasMx(r.t, qs, true) + '</tr>';
       }
       if (r.tipo === 'op') {
-        return '<tr class="mx-op' + (r.x.f === 0 ? ' fora' : '') + (r.ab ? ' on' : '') + '"' + (r.p ? ' data-mx="' + esc(r.p) + '"' : '') + '><td class="mx-rot"' + pad(r.d) + '><span class="dd-tw">' + (r.nIt ? (r.ab ? '▾' : '▸') : '') + '</span>' + esc(r.rot) +
+        return '<tr class="mx-op' + (r.x.f === 0 ? ' fora' : '') + (r.ab ? ' on' : '') + '"' + (r.p ? ' data-mx="' + esc(r.p) + '"' : '') + '><td class="mx-rot"' + pad(r.d) + '><span class="dd-tw">' + (r.nIt ? (r.ab ? '▾' : '▸') : '') + '</span>' + esc(r.rot) + btAbrirOp(r.x.o) +
           sub(esc(subOpMx(r.x) + (r.nIt ? ' · ' + r.nIt + ' item(ns) PPU' : ''))) + '</td>' + celulasMx(r.t, qs) + '</tr>';
       }
       return '<tr class="mx-g mx-n' + r.d + (r.ab ? ' on' : '') + '" data-mx="' + esc(r.p) + '"><td class="mx-rot"' + pad(r.d) + '><span class="dd-tw">' + (r.ab ? '▾' : '▸') + '</span>' + esc(r.rot) +
@@ -2119,6 +2125,8 @@ html.emb .kpis,html.emb .qcards{padding:2px 2px 8px}
 
   /* ---------- eventos ---------- */
   document.addEventListener('click', function (e) {
+    var ab = e.target.closest && e.target.closest('[data-abrirop]');
+    if (ab) { e.preventDefault(); e.stopPropagation(); try { window.parent.engAbrirOperacao(ab.getAttribute('data-abrirop')); } catch (x) {} return; } // g24: abre a janela da operação no Forecast
     var t = e.target.closest('[data-a],[data-tab],[data-ct],[data-rm],[data-gmodo],[data-mx],[data-mxmostrar],[data-q],[data-mesb],[data-qb],[data-gmet],[data-cx],[data-cxmostrar],[data-regdel],[data-tfsort],[data-tff],[data-tfclr]');
     if ($('#tfPop') && !e.target.closest('#tfPop') && !e.target.closest('[data-tff]')) fecharFiltroTab(); // clique fora fecha o painel de seleção
     if (e.target.id === 'dlg') { fecharDlg(); return; } // clique fora da janela fecha

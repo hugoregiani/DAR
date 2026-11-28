@@ -98,6 +98,25 @@ A Engenharia do EARL separada do resto do sistema, agora chamada **EARL Forecast
 - **Exportações:** "Consumo de produtos químicos", "Casing equipment" e "Pessoal" ganharam **Contingência (linha)** e **Risco da linha (%)**; a operação já tinha Contingência e Risco (%). O Painel de Compras aplica o risco da linha.
 - **Cards** da aba "Consumo e receita" com profundidade, como os do Gerencial g16.
 
+### e25 + Gerencial g24 (28/11/2026) — fila da sonda só com as posteriores vinculadas; abrir a operação pelos Indicadores
+
+Pedidos do Hugo (código em `eng_e25.js`; patch, bloco e25):
+- **"Reorganizar a fila da sonda?"** — relato: "estou duplicando uma operação não vinculada e o app segue me perguntando
+  se quero que mova operações de datas anteriores… sempre serão operações posteriores, nunca anteriores, e uma operação
+  sem vínculo não deveria mover nenhuma operação". Causa: o `planCascade` arrumava a fila inteira da sonda, desde a
+  primeira operação, e propunha mover operações antigas que já estavam sobrepostas entre si. Agora:
+  - a operação salva/movida **sem vínculo** ("Não vincular") não propõe mover nenhuma;
+  - **com vínculo**, só as operações **posteriores** (data depois da dela, no mesmo contrato e sonda), em cascata,
+    enquanto estiverem vinculadas e encostando na anterior; para na primeira sem vínculo ou que não encosta;
+  - nunca uma anterior, nem uma do mesmo dia.
+  O vínculo de datas (`planChain`: as vinculadas seguintes acompanham quando a operação muda de data ou de duração)
+  continua como era (já só olhava as posteriores e parava na primeira sem vínculo).
+- **Abrir a operação pelos Indicadores:** "✎ abrir" na linha da operação da tabela Receita/COGS e na aba Operações do
+  Gerencial embutido (g24, `btAbrirOp`) chama `window.engAbrirOperacao(id)`, que abre a janela "Editar operação
+  planejada" por cima dos Indicadores (o `renderPlanForm` é desenhado em qualquer tela); salvar atualiza os indicadores.
+- Teste novo: `tests/e2e_e25.js` (operações antigas sobrepostas; duplicar "Não vincular"; vinculada que encosta; vinculada
+  que não encosta; mesmo dia; "✎ abrir" na tabela e na aba Operações, alterar e salvar). Na V11 ele falha em 6 pontos.
+
 ### e24 (28/11/2026) — a cópia compartilhada não abre mais "em branco"
 
 Relato do Hugo: "quando baixo o HTML para compartilhar com outro usuário o arquivo está indo em branco". A cópia tinha os

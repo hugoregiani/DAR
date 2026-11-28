@@ -105,7 +105,7 @@ assert i > 0
 s = s[:i] + css + s[i:]
 
 # ---------------------------------------------------------------- app (código compilado)
-rep("var EARL_VERSION = 'EARL v115';", "var EARL_VERSION = 'EARL Forecast e24 (base v115)';")
+rep("var EARL_VERSION = 'EARL v115';", "var EARL_VERSION = 'EARL Forecast e25 (base v115)';")
 rep("var HO_ST = {\n  pendente: {", "var HO_ST = {\n  email: {\n    label: 'Enviado por e-mail',\n    c: '#304220',\n    bg: '#F1F5EC',\n    brd: '#D9E4CC'\n  },\n  pendente: {")
 # quem gera o e-mail assina os registros (sem login)
 rep("  var currentUser = () => authUser && authUser.email || sbUser || '';",
@@ -644,7 +644,7 @@ rep("      if (d.people && d.people.length > 0) return migrateDB(d);", "      if
 rep("  return migrateDB(JSON.parse(JSON.stringify(SEED_DB)));", "  return engQuimMig(migrateDB(JSON.parse(JSON.stringify(SEED_DB))));")
 
 # Código novo (antes de renderHandover) e janelas novas na árvore
-novo = open(os.path.join(AQUI, 'eng_app.js'), encoding='utf-8').read() + '\n' + open(os.path.join(AQUI, 'eng_contratos.js'), encoding='utf-8').read() + '\n' + open(os.path.join(AQUI, 'eng_quimicos.js'), encoding='utf-8').read() + '\n' + open(os.path.join(AQUI, 'eng_inventario.js'), encoding='utf-8').read() + '\n' + open(os.path.join(AQUI, 'eng_cambio.js'), encoding='utf-8').read() + '\n' + open(os.path.join(AQUI, 'eng_logo.js'), encoding='utf-8').read() + '\n' + open(os.path.join(AQUI, 'eng_e17.js'), encoding='utf-8').read() + '\n' + open(os.path.join(AQUI, 'eng_e19.js'), encoding='utf-8').read() + '\n' + open(os.path.join(AQUI, 'eng_e22.js'), encoding='utf-8').read() + '\n' + open(os.path.join(AQUI, 'eng_e23.js'), encoding='utf-8').read()
+novo = open(os.path.join(AQUI, 'eng_app.js'), encoding='utf-8').read() + '\n' + open(os.path.join(AQUI, 'eng_contratos.js'), encoding='utf-8').read() + '\n' + open(os.path.join(AQUI, 'eng_quimicos.js'), encoding='utf-8').read() + '\n' + open(os.path.join(AQUI, 'eng_inventario.js'), encoding='utf-8').read() + '\n' + open(os.path.join(AQUI, 'eng_cambio.js'), encoding='utf-8').read() + '\n' + open(os.path.join(AQUI, 'eng_logo.js'), encoding='utf-8').read() + '\n' + open(os.path.join(AQUI, 'eng_e17.js'), encoding='utf-8').read() + '\n' + open(os.path.join(AQUI, 'eng_e19.js'), encoding='utf-8').read() + '\n' + open(os.path.join(AQUI, 'eng_e22.js'), encoding='utf-8').read() + '\n' + open(os.path.join(AQUI, 'eng_e23.js'), encoding='utf-8').read() + '\n' + open(os.path.join(AQUI, 'eng_e25.js'), encoding='utf-8').read()
 rep("  var renderHandover = () => {\n", novo.rstrip('\n') + "\n  var renderHandover = () => {\n")
 rep("renderRigForm(), renderConfirmBox(),", "renderEngSondas(), renderEngContratos(), renderEngQuim(), renderEngCasDb(), renderEngEspaco(), renderEngCons(), renderEngImpDados(), renderEngGer(), renderEngInvEd(), renderEngExp(), renderEngCambio(), renderEngLogo(), renderRigForm(), renderConfirmBox(),")
 # sonda salva com data de alteração (para o "juntar" da importação ficar com a mais recente)
@@ -1092,6 +1092,70 @@ rep('<div id="app"></div>', '<div id="app"><div class="earl-semjs" style="max-wi
     '<div style="font-weight:700;font-size:20px;margin-bottom:8px">EARL Forecast</div>'
     '<p style="margin:0 0 10px">Para usar: <b>salve este arquivo no computador</b> (em Downloads, na área de trabalho ou numa pasta) e <b>abra com dois cliques no Google Chrome ou no Microsoft Edge</b>. Funciona sem internet.</p>'
     '<p style="margin:0;font-size:13px;color:#5b6369">A pré-visualização do Outlook, do Teams, do SharePoint e do OneDrive não abre o EARL: nela aparece só este aviso.</p></div></div>')
+
+# e25 (Hugo, 28/11/2026: "estou duplicando uma operação não vinculada e o app segue me perguntando se quero que mova
+# operações de datas anteriores"): o "Reorganizar a fila da sonda?" só propõe mover operações POSTERIORES à que foi
+# salva/movida, em cascata, enquanto estiverem vinculadas ("Vincular data à operação anterior") e encostando na anterior;
+# para na primeira sem vínculo ou que não encosta. Operação sem vínculo ("Não vincular") não move nenhuma. Antes, a função
+# arrumava a fila inteira da sonda (desde a primeira operação) e propunha mover operações anteriores que já estavam
+# sobrepostas entre si.
+rep("""function planCascade(jobs, rigId, movedId) {
+  if (!rigId) return [];
+  var movido = jobs.find(j => j && j.id === movedId);
+  var ctK = movido ? engCtChave(movido) : null;
+  var fila = jobs.filter(j => j.rigId === rigId && j.status !== PJ_STATUS.CANC && (ctK === null || engCtChave(j) === ctK)).sort((a, b) => a.date.localeCompare(b.date) || String(a.id).localeCompare(String(b.id)));
+  var changes = [];
+  var sim = fila.map(j => ({
+    ...j
+  }));
+  for (var i = 1; i < sim.length; i++) {
+    var prev = sim[i - 1],
+      cur = sim[i];
+    if (cur.anchor === 'fixed') continue;
+    var minStart = dAdd(pjEnd(prev), 1);
+    if (cur.date < minStart) {
+      var novo = minStart;
+      if (cur.id !== movedId) changes.push({
+        id: cur.id,
+        well: cur.well,
+        tipoOp: cur.tipoOp,
+        de: cur.date,
+        para: novo,
+        dias: dDiff(cur.date, novo)
+      });
+      cur.date = novo;
+    }
+  }
+  return changes;
+}""", """/* e25: só as operações POSTERIORES à salva/movida, em cascata, enquanto vinculadas e encostando; a operação sem vínculo
+   ("Não vincular") não move nenhuma; nunca mexe em operação anterior (ver o patch, bloco e25) */
+function planCascade(jobs, rigId, movedId) {
+  if (!rigId) return [];
+  var movido = jobs.find(j => j && j.id === movedId);
+  if (!movido || !movido.date || movido.anchor === 'fixed' || movido.status === PJ_STATUS.CANC) return [];
+  var ctK = engCtChave(movido);
+  var fila = jobs.filter(j => j && j.id !== movedId && j.rigId === rigId && j.status !== PJ_STATUS.CANC && engCtChave(j) === ctK && String(j.date || '') > String(movido.date)).sort((a, b) => String(a.date).localeCompare(String(b.date)) || String(a.id).localeCompare(String(b.id)));
+  var changes = [];
+  var fimAnt = pjEnd(movido);
+  for (var cur of fila) {
+    if (cur.anchor === 'fixed') break; // sem vínculo: a cascata para nela
+    var minStart = dAdd(fimAnt, 1);
+    if (String(cur.date) >= minStart) break; // não encosta na anterior: daqui em diante nada muda
+    changes.push({
+      id: cur.id,
+      well: cur.well,
+      tipoOp: cur.tipoOp,
+      de: cur.date,
+      para: minStart,
+      dias: dDiff(cur.date, minStart)
+    });
+    fimAnt = pjEnd({
+      ...cur,
+      date: minStart
+    });
+  }
+  return changes;
+}""")
 
 # e12: filtro e ordem em todas as tabelas (script avulso, fora do React), no fim do <body>
 tf = open(os.path.join(AQUI, 'eng_tabelas.js'), encoding='utf-8').read()
