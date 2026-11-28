@@ -11,6 +11,7 @@
 > - **"✎ abrir" nos Indicadores:** na linha de cada operação da tabela Receita/COGS e da aba Operações, abre a janela da operação para ver ou alterar, sem sair dos Indicadores.
 > - **Largura da 1ª coluna do Gantt:** arrastar a alça no cabeçalho da coluna das sondas/operações (como na tabela dos Indicadores); fica guardada; duplo clique volta ao padrão.
 > - Arquivos `EARL_Forecast_V12.html`, os 7 `EARL_Forecast_<NOME>_V12.html` (gerados com `--compat` dos V11) e `EARL_prompt_continuidade_V12.md`. Ver "e25" em 4-E.
+> - **Em andamento (próxima entrega, V13, e26/g25):** tirar a margem de todos os indicadores e do contrato; aba "Gráficos" nos Indicadores (barras verticais com escolha de itens: PPU de maior receita, contratos receita × COGS, receita esperada × em risco, PPU perto de acabar o saldo, sondas). O código-fonte já está no repositório (`gerencial.html`, `eng_e17.js`, `eng_contratos.js`, `eng_cambio.js`, `tests/e2e_e26.js`); falta ajustar os testes antigos que conferiam a margem, montar e rodar a bateria.
 > - **Em andamento (parado):** narração do vídeo tutorial (o `gravar_tutorial.js` ainda usa a pílula "Consumo e receita", que saiu na e18).
 > - **Pendente:** a planilha do banco de químicos/casing não chegou.
 >
@@ -685,7 +686,11 @@ Pedidos do Hugo (12/11/2026): "No envio do email do Handover preciso que inclua 
 - **2 (g24 + `eng_e25.js`):** `btAbrirOp(o)` no gerencial (matriz: linha `mx-op`; aba Operações: coluna Operação), só com `EMB` e `window.parent.engAbrirOperacao`; o clique é tratado antes do abrir/fechar da linha. No Forecast, `window.engAbrirOperacao(id)` faz `setPlanDraft({...j})` (a janela é desenhada em qualquer tela); salvar atualiza os Indicadores (`earlGerAtualizar`).
 - **3 (`eng_e25.js` + patch):** `engGanttLblW` (estado, `eng_gantt_lblw_v1`, 120–700 px, padrão 190) no lugar de `LBLW0` (no `fill` e no `LBLW` do `renderPlanGantt`); `engGanttAlca()` (alça `.eng-glbl-rsz`, ponteiro + `requestAnimationFrame`, duplo clique = padrão) nas duas células do cabeçalho da 1ª coluna, que ficaram `sticky` à esquerda.
 - **Versões:** `EARL Forecast e25 (base v115)`, `EARL Gerencial g24`.
-- **Testes (28/11/2026):** <<RESULTADOS>>
+- **Testes (28/11/2026):** todos sem falha.
+  - Engenharia: engenharia 63, contratos 79, quimicos 36, espaco 12, inventario 54, painel 23, e10 37, e12 50, e13 18, e15 27, e16 30, e17 42, e18 15, e19 57, e22 37, e23 54, **e25 23** (novo).
+  - Gerencial: 62, 59, 71, 59, 27 (versão g24). BP: 59.
+  - Contratos reais (`$S/ctr/out19`, `--compat` dos V11 de `$S/ctr/out18`): 142; `e2e_atualizacao` V11→V12 42; `e2e_importar` PA→BDII 9, BP→DC 9. `e2e_seguranca`: 85.
+  - ClamAV: 0 vírus nos 8 arquivos entregues e nas cópias compartilhadas.
 - **Entrega V12:** `EARL_Forecast_V12.html`, os 7 `EARL_Forecast_<NOME>_V12.html` (o Hugo trabalha nos arquivos de contrato; gerados com `--compat` dos V11) e este prompt.
 
 ### e24 — a cópia compartilhada não abre "em branco" — entrega _V11 (28/11/2026)
