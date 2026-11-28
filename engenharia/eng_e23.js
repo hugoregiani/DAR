@@ -97,7 +97,7 @@
     [cl, body].forEach(e => {
       if (!e) return;
       ['data-engrz-cur', 'data-engrz-arr'].forEach(a => e.removeAttribute(a));
-      e.classList.remove('gantt-arrastando', 'mx-arr');
+      e.classList.remove('gantt-arrastando', 'mx-arr', 'eng-glbl-arr');
       if (!e.getAttribute('class')) e.removeAttribute('class');
     });
     var velho = cl.querySelector('#earl-sh-dados');

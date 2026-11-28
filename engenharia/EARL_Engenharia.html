@@ -3936,6 +3936,11 @@ div.eng-sh-aviso{margin-top:4px}
    (quando o programa roda, o React troca o aviso pela tela antes disso); sem animação no navegador, aparece direto */
 @keyframes earlSemjs{from{opacity:0;visibility:hidden}to{opacity:0;visibility:hidden}}
 .earl-semjs{animation:earlSemjs .01s linear 2.5s backwards}
+/* e25: alça para mudar a largura da 1ª coluna do Gantt (como a .mx-rsz dos Indicadores) */
+.eng-glbl-rsz{position:absolute;top:0;right:-6px;width:11px;height:100%;cursor:col-resize;z-index:6;touch-action:none}
+.eng-glbl-rsz::after{content:'';position:absolute;left:4px;top:18%;bottom:18%;width:3px;border-radius:2px;background:#C5CBD0;transition:background .12s}
+.eng-glbl-rsz:hover::after,html.eng-glbl-arr .eng-glbl-rsz::after{background:var(--red,#CC0000);top:0;bottom:0}
+html.eng-glbl-arr,html.eng-glbl-arr *{cursor:col-resize !important;user-select:none !important}
 </style>
 </head>
 <body>
@@ -59653,7 +59658,7 @@ _Gerado por: ${user}_`;
     var minD = msToD(t0),
       maxD = msToD(Math.max(t0, t1 - 1));
     var dens = Math.max(0.5, Math.min(2, (planDayW || 26) / 26));
-    var fill = Math.max(320, (planBoxW || 1400) - LBLW0 - 6);
+    var fill = Math.max(320, (planBoxW || 1400) - engGanttLblW - 6);
     var W = Math.round(fill * dens);
     var x = ms => (ms - t0) / (t1 - t0) * W;
     var dayW = W * (G_DAY / (t1 - t0));
@@ -59679,7 +59684,7 @@ _Gerado por: ${user}_`;
       });else months[months.length - 1].e = ms + G_DAY;
     }
     var MON = ['jan', 'fev', 'mar', 'abr', 'mai', 'jun', 'jul', 'ago', 'set', 'out', 'nov', 'dez'];
-    var LBLW = LBLW0;
+    var LBLW = engGanttLblW;
     var agora = Date.now();
     var nowX = agora >= t0 && agora <= t1 ? x(agora) : null;
     var gridBg = {
@@ -60357,9 +60362,13 @@ _Gerado por: ${user}_`;
         width: LBLW,
         flexShrink: 0,
         borderRight: '1px solid var(--line)',
-        borderBottom: '1px solid var(--line)'
+        borderBottom: '1px solid var(--line)',
+        position: 'sticky',
+        left: 0,
+        zIndex: 3,
+        background: 'var(--surface)'
       }
-    }), React.createElement("div", {
+    }, engGanttAlca()), React.createElement("div", {
       style: {
         position: 'relative',
         width: W,
@@ -60400,9 +60409,13 @@ _Gerado por: ${user}_`;
         width: LBLW,
         flexShrink: 0,
         borderRight: '1px solid var(--line)',
-        borderBottom: '1px solid var(--line)'
+        borderBottom: '1px solid var(--line)',
+        position: 'sticky',
+        left: 0,
+        zIndex: 3,
+        background: 'var(--surface)'
       }
-    }), React.createElement("div", {
+    }, engGanttAlca()), React.createElement("div", {
       style: {
         position: 'relative',
         width: W,
@@ -71367,7 +71380,7 @@ _Gerado por: ${user}_`;
     [cl, body].forEach(e => {
       if (!e) return;
       ['data-engrz-cur', 'data-engrz-arr'].forEach(a => e.removeAttribute(a));
-      e.classList.remove('gantt-arrastando', 'mx-arr');
+      e.classList.remove('gantt-arrastando', 'mx-arr', 'eng-glbl-arr');
       if (!e.getAttribute('class')) e.removeAttribute('class');
     });
     var velho = cl.querySelector('#earl-sh-dados');
@@ -71600,6 +71613,65 @@ _Gerado por: ${user}_`;
     });
     return true;
   };
+  /* 3. A primeira coluna do Gantt (sondas e operações) muda de largura puxando a alça do cabeçalho, como a da tabela dos
+        Indicadores; duplo clique volta ao padrão (190 px); a largura fica guardada (eng_gantt_lblw_v1). O patch (bloco
+        e25) troca a largura fixa LBLW0 por engGanttLblW e põe a alça (engGanttAlca) nas células do cabeçalho. */
+  var ENG_GLBL_PADRAO = 190;
+  var [engGanttLblW, setEngGanttLblW] = useState(() => {
+    try {
+      var n = Number(localStorage.getItem('eng_gantt_lblw_v1'));
+      return n >= 120 && n <= 700 ? Math.round(n) : ENG_GLBL_PADRAO;
+    } catch (e) {
+      return ENG_GLBL_PADRAO;
+    }
+  });
+  var engGanttLblRef = useRef(engGanttLblW);
+  engGanttLblRef.current = engGanttLblW;
+  var engGanttAlca = () => engH("span", {
+    className: "eng-glbl-rsz",
+    role: "separator",
+    "aria-orientation": "vertical",
+    "aria-label": "Largura da primeira coluna do Gantt",
+    title: "Arraste para aumentar ou diminuir a largura desta coluna (duplo clique: largura padrão)",
+    onPointerDown: e => {
+      if (e.button > 0) return;
+      e.preventDefault();
+      e.stopPropagation();
+      var x0 = e.clientX,
+        w0 = engGanttLblRef.current,
+        w = w0,
+        quadro = 0;
+      document.documentElement.classList.add('eng-glbl-arr');
+      var mover = ev => {
+        w = Math.max(120, Math.min(700, Math.round(w0 + ev.clientX - x0)));
+        if (!quadro) quadro = requestAnimationFrame(() => {
+          quadro = 0;
+          setEngGanttLblW(w);
+        });
+      };
+      var soltar = () => {
+        document.removeEventListener('pointermove', mover);
+        document.removeEventListener('pointerup', soltar);
+        document.removeEventListener('pointercancel', soltar);
+        document.documentElement.classList.remove('eng-glbl-arr');
+        setEngGanttLblW(w);
+        try {
+          localStorage.setItem('eng_gantt_lblw_v1', String(w));
+        } catch (x) {}
+      };
+      document.addEventListener('pointermove', mover);
+      document.addEventListener('pointerup', soltar);
+      document.addEventListener('pointercancel', soltar);
+    },
+    onDoubleClick: e => {
+      e.preventDefault();
+      e.stopPropagation();
+      setEngGanttLblW(ENG_GLBL_PADRAO);
+      try {
+        localStorage.removeItem('eng_gantt_lblw_v1');
+      } catch (x) {}
+    }
+  });
   var renderHandover = () => {
     var hd = hoDraft;
     if (!hd) return null;

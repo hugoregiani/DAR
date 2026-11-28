@@ -514,3 +514,8 @@ div.eng-sh-aviso{margin-top:4px}
    (quando o programa roda, o React troca o aviso pela tela antes disso); sem animação no navegador, aparece direto */
 @keyframes earlSemjs{from{opacity:0;visibility:hidden}to{opacity:0;visibility:hidden}}
 .earl-semjs{animation:earlSemjs .01s linear 2.5s backwards}
+/* e25: alça para mudar a largura da 1ª coluna do Gantt (como a .mx-rsz dos Indicadores) */
+.eng-glbl-rsz{position:absolute;top:0;right:-6px;width:11px;height:100%;cursor:col-resize;z-index:6;touch-action:none}
+.eng-glbl-rsz::after{content:'';position:absolute;left:4px;top:18%;bottom:18%;width:3px;border-radius:2px;background:#C5CBD0;transition:background .12s}
+.eng-glbl-rsz:hover::after,html.eng-glbl-arr .eng-glbl-rsz::after{background:var(--red,#CC0000);top:0;bottom:0}
+html.eng-glbl-arr,html.eng-glbl-arr *{cursor:col-resize !important;user-select:none !important}

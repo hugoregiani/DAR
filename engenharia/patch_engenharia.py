@@ -1157,6 +1157,31 @@ function planCascade(jobs, rigId, movedId) {
   return changes;
 }""")
 
+# e25 (Hugo, 28/11/2026): "permita que o usuário expanda e reduza a largura da primeira coluna [do Gantt] com o cursor,
+# igual como foi feito na tabela dos indicadores": a largura vem de engGanttLblW (eng_e25.js) e as células do cabeçalho
+# da 1ª coluna ganham a alça (engGanttAlca) e ficam presas à esquerda ao rolar para o lado, como as linhas.
+rep("""    var fill = Math.max(320, (planBoxW || 1400) - LBLW0 - 6);""", """    var fill = Math.max(320, (planBoxW || 1400) - engGanttLblW - 6);""")
+rep("""    var LBLW = LBLW0;""", """    var LBLW = engGanttLblW;""")
+rep("""    }, React.createElement("div", {
+      style: {
+        width: LBLW,
+        flexShrink: 0,
+        borderRight: '1px solid var(--line)',
+        borderBottom: '1px solid var(--line)'
+      }
+    }), React.createElement("div", {""", """    }, React.createElement("div", {
+      style: {
+        width: LBLW,
+        flexShrink: 0,
+        borderRight: '1px solid var(--line)',
+        borderBottom: '1px solid var(--line)',
+        position: 'sticky',
+        left: 0,
+        zIndex: 3,
+        background: 'var(--surface)'
+      }
+    }, engGanttAlca()), React.createElement("div", {""", 2)
+
 # e12: filtro e ordem em todas as tabelas (script avulso, fora do React), no fim do <body>
 tf = open(os.path.join(AQUI, 'eng_tabelas.js'), encoding='utf-8').read()
 assert '</script' not in tf.lower()

@@ -114,8 +114,13 @@ Pedidos do Hugo (código em `eng_e25.js`; patch, bloco e25):
 - **Abrir a operação pelos Indicadores:** "✎ abrir" na linha da operação da tabela Receita/COGS e na aba Operações do
   Gerencial embutido (g24, `btAbrirOp`) chama `window.engAbrirOperacao(id)`, que abre a janela "Editar operação
   planejada" por cima dos Indicadores (o `renderPlanForm` é desenhado em qualquer tela); salvar atualiza os indicadores.
+- **Largura da 1ª coluna do Gantt:** alça no cabeçalho da coluna das sondas/operações (`engGanttAlca`, `.eng-glbl-rsz`,
+  como a `.mx-rsz` dos Indicadores): arrastar muda a largura (120 a 700 px; o Gantt redesenha a cada quadro), duplo
+  clique volta ao padrão (190 px); a largura fica guardada (`eng_gantt_lblw_v1`). O patch troca a largura fixa `LBLW0`
+  por `engGanttLblW`; as células do cabeçalho da 1ª coluna ficaram presas à esquerda ao rolar para o lado, como as linhas.
 - Teste novo: `tests/e2e_e25.js` (operações antigas sobrepostas; duplicar "Não vincular"; vinculada que encosta; vinculada
-  que não encosta; mesmo dia; "✎ abrir" na tabela e na aba Operações, alterar e salvar). Na V11 ele falha em 6 pontos.
+  que não encosta; mesmo dia; "✎ abrir" na tabela e na aba Operações, alterar e salvar; largura da 1ª coluna do Gantt).
+  Na V11 ele falha em 6 pontos.
 
 ### e24 (28/11/2026) — a cópia compartilhada não abre mais "em branco"
 

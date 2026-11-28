@@ -9,6 +9,7 @@
 > **Última atualização:** 28/11/2026 — **entrega _V12: EARL Forecast e25 + Gerencial g24**:
 > - **"Reorganizar a fila da sonda?" corrigido** (relato do Hugo: ao duplicar uma operação "Não vincular", o app propunha mover operações de datas anteriores). Agora: operação **sem vínculo** não move nenhuma; **com vínculo**, só as **posteriores**, em cascata, enquanto vinculadas e encostando; nunca uma anterior.
 > - **"✎ abrir" nos Indicadores:** na linha de cada operação da tabela Receita/COGS e da aba Operações, abre a janela da operação para ver ou alterar, sem sair dos Indicadores.
+> - **Largura da 1ª coluna do Gantt:** arrastar a alça no cabeçalho da coluna das sondas/operações (como na tabela dos Indicadores); fica guardada; duplo clique volta ao padrão.
 > - Arquivos `EARL_Forecast_V12.html`, os 7 `EARL_Forecast_<NOME>_V12.html` (gerados com `--compat` dos V11) e `EARL_prompt_continuidade_V12.md`. Ver "e25" em 4-E.
 > - **Em andamento (parado):** narração do vídeo tutorial (o `gravar_tutorial.js` ainda usa a pílula "Consumo e receita", que saiu na e18).
 > - **Pendente:** a planilha do banco de químicos/casing não chegou.
@@ -678,9 +679,11 @@ Pedidos do Hugo (12/11/2026): "No envio do email do Handover preciso que inclua 
 - **Pedidos do Hugo (28/11/2026):**
   1. "estou duplicando uma operação não vinculada e o app segue me perguntando se quero que mova operações de datas anteriores. Lembrando que a sistemática de movimentação é de mover as operações vinculadas em cascata da operação que está sendo movida, ou seja, sempre serão operações posteriores, nunca anteriores, e uma operação sem vínculo não deveria mover nenhuma operação" (telas: NS-41 - ODN I, Foresea, "Disponibilidade de Equipamentos" em 12/01/2027 "Não vincular"; a janela propunha mover operações de 2026).
   2. "Permita também que eu possa clicar na operação na tabela [Receita, COGS e margem dos Indicadores] para abrir o box da operação para fazer modificações… crie um ícone ou algum lugar que o usuário possa clicar".
+  3. "também permita que o usuário expanda e reduza a largura da primeira coluna [do Gantt] com o cursor, igual como foi feito na tabela dos indicadores".
 - **Causa do 1:** o `planCascade` (depois de salvar ou mover no Gantt) percorria a fila inteira da sonda desde a primeira operação, empurrando toda operação que começasse antes do fim da anterior; operações antigas já sobrepostas (várias em 01/01, 01/03…) entravam na proposta, sem olhar o vínculo da operação salva.
 - **Correção (patch, bloco e25, troca a função inteira):** sem vínculo (`anchor === 'fixed'`) → `[]`; senão só as do mesmo contrato e sonda com data **depois** da dela, em ordem, empurrando para o dia seguinte ao fim da anterior enquanto encostam; para na primeira sem vínculo ou que não encosta. O `planChain` (vínculo de datas ao mover/mudar a duração) não mudou.
 - **2 (g24 + `eng_e25.js`):** `btAbrirOp(o)` no gerencial (matriz: linha `mx-op`; aba Operações: coluna Operação), só com `EMB` e `window.parent.engAbrirOperacao`; o clique é tratado antes do abrir/fechar da linha. No Forecast, `window.engAbrirOperacao(id)` faz `setPlanDraft({...j})` (a janela é desenhada em qualquer tela); salvar atualiza os Indicadores (`earlGerAtualizar`).
+- **3 (`eng_e25.js` + patch):** `engGanttLblW` (estado, `eng_gantt_lblw_v1`, 120–700 px, padrão 190) no lugar de `LBLW0` (no `fill` e no `LBLW` do `renderPlanGantt`); `engGanttAlca()` (alça `.eng-glbl-rsz`, ponteiro + `requestAnimationFrame`, duplo clique = padrão) nas duas células do cabeçalho da 1ª coluna, que ficaram `sticky` à esquerda.
 - **Versões:** `EARL Forecast e25 (base v115)`, `EARL Gerencial g24`.
 - **Testes (28/11/2026):** <<RESULTADOS>>
 - **Entrega V12:** `EARL_Forecast_V12.html`, os 7 `EARL_Forecast_<NOME>_V12.html` (o Hugo trabalha nos arquivos de contrato; gerados com `--compat` dos V11) e este prompt.

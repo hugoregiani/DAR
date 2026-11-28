@@ -5,7 +5,8 @@
 // Confere: duplicar uma operação "Não vincular" (pelo botão Duplicar) não pergunta nada e não move nada; operação
 // vinculada que encosta nas seguintes propõe mover só as POSTERIORES, em cascata, até a primeira sem vínculo; operação
 // vinculada que não encosta em nenhuma posterior não pergunta (mesmo com as anteriores sobrepostas); aplicar o deslize
-// move só as propostas. E (g24) o "✎ abrir" da linha da operação nos Indicadores abre a janela da operação.
+// move só as propostas. E (g24) o "✎ abrir" da linha da operação nos Indicadores abre a janela da operação; e a
+// primeira coluna do Gantt muda de largura puxando a alça do cabeçalho (guardada; duplo clique volta ao padrão).
 // Uso: node tests/e2e_e25.js [EARL_Engenharia.html]
 const {abrir} = require('./harness');
 const {montar} = require('../walkthrough/demo');
@@ -146,6 +147,43 @@ const novaOp = async (p, cen, {poco, data, dur, vinculo}) => {
   await p.waitForSelector('.eng-modal', {timeout: 5000}).catch(() => {});
   conf(/E25-D/.test(await fld(p, 'Poço').locator('input').inputValue().catch(() => '')), 'na aba Operações, abre a janela da E25-D');
   await p.click('.eng-modal button:has-text("Cancelar")');
+
+  console.log('\n7. Gantt: a primeira coluna muda de largura puxando a alça do cabeçalho');
+  await p.click('.fr-tab-cts').catch(() => {});
+  await p.waitForTimeout(300);
+  await p.locator('.eng2-card', {hasText: 'P&A — Macaé'}).first().click();
+  await p.waitForSelector('.db-tab');
+  await p.click('.db-tab:has-text("Gantt")');
+  await p.waitForSelector('.eng-glbl-rsz');
+  const largura = () => p.locator('[title="Abrir a operação"]').first().boundingBox().then(b => Math.round(b.width));
+  const w0 = await largura();
+  const alca = p.locator('.eng-glbl-rsz').first();
+  conf(w0 === 190 && await p.locator('.eng-glbl-rsz').count() >= 1, 'alça no cabeçalho da 1ª coluna; largura padrão 190 px', w0);
+  const b0 = await alca.boundingBox();
+  await p.mouse.move(b0.x + b0.width / 2, b0.y + b0.height / 2);
+  await p.mouse.down();
+  for (let i = 1; i <= 10; i++) await p.mouse.move(b0.x + b0.width / 2 + i * 15, b0.y + b0.height / 2);
+  await p.mouse.up();
+  await p.waitForTimeout(300);
+  const w1 = await largura();
+  const cab = await p.locator('.eng-glbl-rsz').first().evaluate(e => Math.round(e.parentElement.getBoundingClientRect().width));
+  conf(Math.abs(w1 - 340) <= 3 && Math.abs(cab - w1) <= 1, 'arrastando 150 px para a direita, a coluna (linhas e cabeçalho) fica com ~340 px', {w1, cab});
+  await p.reload(); await p.waitForSelector('.eng2-card', {timeout: 90000});
+  await p.locator('.eng2-card', {hasText: 'P&A — Macaé'}).first().click();
+  await p.waitForSelector('.db-tab');
+  await p.click('.db-tab:has-text("Gantt")');
+  await p.waitForSelector('.eng-glbl-rsz');
+  conf(Math.abs((await largura()) - w1) <= 1, 'a largura fica guardada (reabrindo o arquivo)', await largura());
+  const b1 = await p.locator('.eng-glbl-rsz').first().boundingBox();
+  await p.mouse.move(b1.x + b1.width / 2, b1.y + b1.height / 2);
+  await p.mouse.down();
+  for (let i = 1; i <= 10; i++) await p.mouse.move(b1.x + b1.width / 2 - i * 60, b1.y + b1.height / 2);
+  await p.mouse.up();
+  await p.waitForTimeout(300);
+  conf(await largura() === 120, 'não fica menor que 120 px', await largura());
+  await p.locator('.eng-glbl-rsz').first().dblclick();
+  await p.waitForTimeout(300);
+  conf(await largura() === 190, 'duplo clique na alça volta à largura padrão (190 px)', await largura());
 
   conf(!E.errs.length, 'nenhum erro de JavaScript', E.errs.slice(0, 3));
   await E.browser.close();
