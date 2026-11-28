@@ -697,7 +697,12 @@ Pedidos do Hugo (12/11/2026): "No envio do email do Handover preciso que inclua 
   - Rótulos inclinados (−40°), rolagem horizontal quando há muitas barras; a margem esquerda cresce para o nome da 1ª barra não cortar.
 - **Achado:** nenhum dos 7 contratos reais tem `saldoIni` (saldo contratado) nos itens PPU, então o gráfico "perto de acabar" mostra como preencher.
 - **Versões:** `EARL Forecast e26 (base v115)`, `EARL Gerencial g25`.
-- **Testes (28/11/2026):** <<RESULTADOS>>
+- **Testes (28/11/2026):** todos sem falha (29 rodadas).
+  - Engenharia: engenharia 63, contratos 79, quimicos 36, espaco 12, inventario 54, painel 23, e10 37, e12 50, e13 18, e15 27, e16 30, e17 42, e18 15, e19 57, e22 37, e23 54, e25 23, **e26 31** (novo).
+  - Gerencial (g25): 62, 59, 68, 59, 27. BP: 59.
+  - Testes antigos ajustados porque conferiam a margem ou a ordem das abas: `e2e_gerencial`, `e2e_matriz`, `e2e_registros`, `e2e_compartilhar`, `e2e_contratos`, `e2e_e16`, `teste_bp/e2e_bp.js`.
+  - Contratos reais (`$S/ctr/out20`, `--compat` dos V12 de `$S/ctr/out19`): 142; `e2e_atualizacao` V12→V13 42; `e2e_importar` PA→BDII 9, BP→DC 9. `e2e_seguranca`: 85.
+  - ClamAV: 0 vírus nos 8 arquivos entregues e nas 3 cópias compartilhadas.
 - **Entrega V13:** `EARL_Forecast_V13.html`, os 7 `EARL_Forecast_<NOME>_V13.html` (`--compat` dos V12) e este prompt.
 
 ### e25 + Gerencial g24 — fila da sonda só com as posteriores vinculadas; "✎ abrir" a operação pelos Indicadores — entrega _V12 (28/11/2026)
