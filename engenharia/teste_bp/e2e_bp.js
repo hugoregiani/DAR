@@ -126,7 +126,7 @@ const usd = v => 'US$ ' + v.toLocaleString('pt-BR', {minimumFractionDigits: 2, m
   conf(perto(v.usd, T.ano['2026']) && v.ops === '16' && v.sub === '9 realizada(s) · 7 prevista(s) · 2 fora (risco 100%)', '2026 (o ano padrão): ' + usd(T.ano['2026']) + ', 16 operações (2 fora)', v);
   await foto(p, 'bp2_painel');
   const cards = await fg.$$eval('.kpis .kpi > span', l => l.map(s => s.textContent));
-  conf(cards.join('|') === 'Receita em US$|COGS em US$|Operações|Receita / operação (US$)|Margem em US$', 'cartões: Receita, COGS, Operações, Receita/operação, Margem', cards);
+  conf(cards.join('|') === 'Receita em US$|COGS em US$|Operações|Receita / operação (US$)', 'cartões: Receita, COGS, Operações, Receita/operação (sem a Margem, g25)', cards);
   const nConta26 = pl.filter(o => o.risco < 1 && o.data.startsWith('2026')).length;
   conf(perto(valor(await fg.textContent('.k-rec-op b')), T.ano['2026'] / nConta26), 'receita por operação 2026: ' + usd(T.ano['2026'] / nConta26) + ' (÷ ' + nConta26 + ', sem as com risco 100%)', await fg.textContent('.k-rec-op b'));
   const recPrev = s => { const m = s.match(/realizado US\$ ([\d.,]+) · previsto US\$ ([\d.,]+)/); return m ? [valor(m[1]), valor(m[2])] : [NaN, NaN]; };
@@ -235,7 +235,7 @@ const usd = v => 'US$ ' + v.toLocaleString('pt-BR', {minimumFractionDigits: 2, m
   await p.waitForSelector('.kpi.k-rec-usd');
   const MES = ['jan', 'fev', 'mar', 'abr', 'mai', 'jun', 'jul', 'ago', 'set', 'out', 'nov', 'dez'];
   const doAno = a => pl.filter(o => o.data.startsWith(a));
-  const kpis = async () => ({usd: valor(await txt(p, '.k-rec-usd b')), cogs: valor(await txt(p, '.k-cogs b')), mg: valor(await txt(p, '.k-margem b')), ops: await txt(p, '.k-ops b'), sub: await txt(p, '.k-ops em'), sr: await txt(p, '.k-rec-usd em')});
+  const kpis = async () => ({usd: valor(await txt(p, '.k-rec-usd b')), cogs: valor(await txt(p, '.k-cogs b')), ops: await txt(p, '.k-ops b'), sub: await txt(p, '.k-ops em'), sr: await txt(p, '.k-rec-usd em')});
   // um ano por vez (como o Excel do usuário): abre no ano de hoje (2026); 2026 + 2027 = planilha
   const anosG = await p.$$eval('[data-f="ano"] option', l => l.map(o => o.value));
   conf(anosG.join() === '2026,2027' && await p.inputValue('[data-f="ano"]') === '2026', 'gerencial: um ano por vez (2026 e 2027), abre em 2026', anosG);
@@ -244,7 +244,7 @@ const usd = v => 'US$ ' + v.toLocaleString('pt-BR', {minimumFractionDigits: 2, m
     await p.selectOption('[data-f="ano"]', a);
     const k = await kpis(), l = doAno(a), rec = soma(l, 'receitaFinal'), cogs = soma(l, 'cogsFinal');
     porAno[a] = k;
-    conf(perto(k.usd, rec, 0.05) && perto(k.cogs, cogs, 0.05) && perto(k.mg, rec - cogs, 0.1) && k.ops === String(l.length), 'gerencial ' + a + ': receita ' + usd(rec) + ', COGS ' + usd(cogs) + ' e ' + l.length + ' operações (= planilha)', k);
+    conf(perto(k.usd, rec, 0.05) && perto(k.cogs, cogs, 0.05) && k.ops === String(l.length), 'gerencial ' + a + ': receita ' + usd(rec) + ', COGS ' + usd(cogs) + ' e ' + l.length + ' operações (= planilha)', k);
     const qc = await p.$$eval('.qc', l => l.map(b => [b.dataset.q, b.querySelector('b').textContent]));
     const difQ = [1, 2, 3, 4].map(q => { const lq = l.filter(o => Math.ceil(Number(o.data.slice(5, 7)) / 3) === q), c = qc.find(x => x[0] === String(q)); return c && perto(valor(c[1]), soma(lq, 'receitaFinal'), 0.05) ? null : {q, c}; }).filter(Boolean);
     conf(qc.length === 5 && !difQ.length && perto(valor(qc[4][1]), rec, 0.05), 'gerencial ' + a + ': cards Q1–Q4 e total do ano = planilha', qc);

@@ -109,7 +109,7 @@ const importar = async (p, arq) => {
   await pronto(ph);
   let fg = await frame(ph);
   const abas = await fg.$$eval('.tabs .tab', l => l.map(t => t.textContent));
-  conf(abas.join('|') === 'Receita e margem|Comparar registros (0)|Por contrato|Itens PPU|Químicas|Casing equipment|Pessoal|Operações', 'as abas do Gerencial (sem “Arquivos”; “Contratos” vira “Por contrato”)', abas);
+  conf(abas.join('|') === 'Receita e COGS|Gráficos|Comparar registros (0)|Por contrato|Itens PPU|Químicas|Casing equipment|Pessoal|Operações', 'as abas do Gerencial (sem “Arquivos”; “Contratos” vira “Por contrato”)', abas);
   const barra = (await fg.innerText('.emb-bar')).replace(/\s+/g, ' ');
   conf(/Excel consolidado/.test(barra) && /Registrar/.test(barra) && /Compartilhar \(HTML\)/.test(barra) && !/Carregar/.test(barra), 'barra dos indicadores: ⬇ Excel consolidado, 📌 Registrar, 📤 Compartilhar (sem carregar arquivos)', barra);
   let P = await pacote(ph);

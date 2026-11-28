@@ -139,13 +139,13 @@ async function arquivoGerencial(page, nome, arq) {
   await p.waitForSelector('.kpi.k-rec-usd');
   conf(await txt(p, '.k-rec-usd b') === 'US$ 1.540,00' && !(await p.locator('.k-rec-brl').count()), 'receita consolidada em US$: US$ 1.540,00 (sem cartão em R$)', await txt(p, '.k-rec-usd b'));
   const cartoes = await p.$$eval('.kpis .kpi span', l => l.map(s => s.textContent));
-  conf(cartoes.join('|') === 'Receita em US$|COGS em US$|Operações|Receita / operação (US$)|Margem em US$' && await txt(p, '.k-rec-op b') === 'US$ 513,33', 'cartões: Receita, COGS, Operações, Receita/operação (US$ 1.540 ÷ 3), Margem (sem o de Pessoal)', cartoes);
+  conf(cartoes.join('|') === 'Receita em US$|COGS em US$|Operações|Receita / operação (US$)' && await txt(p, '.k-rec-op b') === 'US$ 513,33', 'cartões: Receita, COGS, Operações, Receita/operação (US$ 1.540 ÷ 3) — sem a Margem (g25) e sem o de Pessoal', cartoes);
   conf(await txt(p, '.k-ops b') === '3' && !(await p.locator('.k-hd').count()), '3 operações com consumo', await txt(p, '.k-ops b'));
   await foto(p, 'g1_contratos');
-  conf(await p.locator('.tab.on[data-tab="receita"]').count() === 1 && await p.locator('.t-mx').count() === 1 && await p.locator('.qc').count() === 5, 'abre na aba Receita e margem (cards dos quartos e matriz do ano)');
+  conf(await p.locator('.tab.on[data-tab="receita"]').count() === 1 && await p.locator('.t-mx').count() === 1 && await p.locator('.qc').count() === 5, 'abre na aba Receita e COGS (cards dos quartos e matriz do ano)');
   await p.click('.tab[data-tab="contratos"]');
   const ctA = await txt(p, '.t-cts tbody tr:has-text("Contrato Teste")'), ctB = await txt(p, '.t-cts tbody tr:has-text("PBR Land")');
-  conf(/Eng A .* 2 2 real\. · 0 prev\. US\$ 1\.440,00 .* R\$ 7\.700,00 US\$ 0,00 US\$ 1\.440,00/.test(ctA) && /Eng B .* 1 1 real\. · 0 prev\. US\$ 100,00 .* R\$ 500,00/.test(ctB), 'receita por contrato (US$, R$, COGS, margem), com o engenheiro', [ctA, ctB]);
+  conf(/Eng A .* 2 2 real\. · 0 prev\. US\$ 1\.440,00 .* R\$ 7\.700,00 US\$ 0,00 3,6%/.test(ctA) && /Eng B .* 1 1 real\. · 0 prev\. US\$ 100,00 .* R\$ 500,00/.test(ctB) && !/US\$ 1\.440,00$|margem/i.test(ctA), 'receita por contrato (US$, R$, COGS — sem a margem), com o engenheiro', [ctA, ctB]);
   await p.click('.tab[data-tab="fontes"]');
   const fon = await txt(p, '.t-fontes tbody');
   conf(/A1\.json .*substituído por arquivo mais novo/.test(fon) && /A2\.json .*em uso/.test(fon) && /B\.json .*em uso/.test(fon), 'o arquivo mais novo de cada contrato vale; o antigo aparece como substituído', fon);
@@ -165,9 +165,9 @@ async function arquivoGerencial(page, nome, arq) {
   conf(qc.join(' | ') === 'Q1 jan–mar = US$ 0,00 | Q2 abr–jun = US$ 0,00 | Q3 jul–set = US$ 0,00 | Q4 out–dez = US$ 1.540,00 | Total 2026 jan–dez = US$ 1.540,00', 'cards Q1–Q4 e total do ano', qc);
   const mxLinhas = () => p.$$eval('.t-mx tbody tr', l => l.map(r => r.className.replace(/ on$/, '') + ' | ' + r.innerText.replace(/\s+/g, ' ').trim()));
   const mxCab = await p.$$eval('.t-mx thead th', l => l.map(t => t.textContent).join('|'));
-  conf(mxCab === 'Cliente › Contrato › Sonda › Poço › Operação › Item PPU|Q4/2026|Total|nov/2026|Total Q4/2026|Receita|COGS|Receita|COGS|Receita|COGS|Margem', 'matriz: Q4/2026 › nov/2026 › Receita | COGS, total do quarto e total', mxCab);
+  conf(mxCab === 'Cliente › Contrato › Sonda › Poço › Operação › Item PPU|Q4/2026|Total|nov/2026|Total Q4/2026|Receita|COGS|Receita|COGS|Receita|COGS', 'matriz: Q4/2026 › nov/2026 › Receita | COGS, total do quarto e total', mxCab);
   let mx = await mxLinhas();
-  conf(mx.length === 3 && /^mx-g mx-n0 \| ▾Petrobras 3 op\. 1\.540,00 0,00 1\.540,00 0,00 1\.540,00 0,00 1\.540,00$/.test(mx[0]) && /^mx-g mx-n1 \| ▸Contrato Teste Macaé 2 op\. 1\.440,00 0,00 /.test(mx[1]) && /^mx-g mx-n1 \| ▸PBR Land 1 op\. 100,00 0,00 /.test(mx[2]) && !mx.some(l => /R\$/.test(l)), 'cliente aberto nos contratos: Petrobras US$ 1.540 = Contrato Teste Macaé 1.440 + PBR Land 100 (só US$)', mx);
+  conf(mx.length === 3 && /^mx-g mx-n0 \| ▾Petrobras 3 op\. 1\.540,00 0,00 1\.540,00 0,00 1\.540,00 0,00$/.test(mx[0]) && /^mx-g mx-n1 \| ▸Contrato Teste Macaé 2 op\. 1\.440,00 0,00 /.test(mx[1]) && /^mx-g mx-n1 \| ▸PBR Land 1 op\. 100,00 0,00 /.test(mx[2]) && !mx.some(l => /R\$/.test(l)), 'cliente aberto nos contratos: Petrobras US$ 1.540 = Contrato Teste Macaé 1.440 + PBR Land 100 (só US$)', mx);
   await p.click('[data-mxmostrar="4"]');
   mx = await mxLinhas();
   conf(mx.filter(l => l.startsWith('mx-op')).length === 3 && mx.filter(l => l.startsWith('mx-op')).every(l => /^mx-op \| ▸\d{2}\/11\/2026 · /.test(l)) && /mx-g mx-n2 \| ▾NS-32 - Norbe VIII/.test(mx.join('\n')), '“Mostrar até: Operação” mostra as 3 operações (por data), debaixo de sonda e poço', mx);
@@ -280,7 +280,7 @@ async function arquivoGerencial(page, nome, arq) {
     const cl = await q.$$eval('.g-cli', l => l.map(g => g.dataset.cli + ' ' + g.querySelector('.g-vl').textContent));
     conf(cl.join(' | ') === 'Petrobras US$ 7,5 mil | Shell US$ 5,7 mil | Equinor US$ 900', 'por cliente: barras horizontais, clientes no eixo vertical, da maior receita para a menor, com o valor na ponta', cl);
     await q.locator('.g-cli').nth(1).hover();
-    conf(/^Shell US\$ 0,00 receita realizada US\$ 5\.700,00 receita prevista US\$ 570,00 COGS US\$ 5\.700,00 receita total .* US\$ 2\.850,00 receita por operação 2 operação/.test(await txt(q, '.g-tip')), 'tooltip do cliente: receita, COGS, margem, receita por operação e operações', await txt(q, '.g-tip'));
+    conf(/^Shell US\$ 0,00 receita realizada US\$ 5\.700,00 receita prevista US\$ 570,00 COGS US\$ 5\.700,00 receita total US\$ 2\.850,00 receita por operação 2 operação/.test(await txt(q, '.g-tip')) && !/margem/i.test(await txt(q, '.g-tip')), 'tooltip do cliente: receita, COGS, receita por operação e operações (sem a margem)', await txt(q, '.g-tip'));
     await foto(q, 'g6_por_cliente');
     await q.locator('.g-cli[data-cli="Shell"]').click();
     conf(await q.inputValue('[data-f="cliente"]') === 'Shell' && await txt(q, '.k-rec-usd b') === 'US$ 5.700,00', 'clicar no cliente filtra a página por ele');

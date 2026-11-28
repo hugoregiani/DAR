@@ -1,4 +1,4 @@
-// Teste da aba "Receita e margem" do EARL Gerencial (g8): visão por ano, como o "Relatório Receita" do Excel.
+// Teste da aba "Receita e COGS" (antes "Receita e margem") do EARL Gerencial (g8): visão por ano, como o "Relatório Receita" do Excel.
 // Cards Q1–Q4 + total do ano; matriz com clientes nas linhas (Cliente › Contrato › Sonda › Poço › Operação › Item PPU)
 // e quarto › mês › Receita/COGS nas colunas; filtro de período numa caixa só (mês inicial e final); o quarto vale no
 // lugar dos meses. Arquivos sintéticos (2 engenheiros, 4 clientes, dez/2025 a fev/2027, realizadas e previstas,
@@ -82,7 +82,7 @@ const celulas = (ls, tris) => {
     t.meses.forEach(m => { const g = ls.filter(x => x.m === m), r = g.reduce((a, x) => a + x.r, 0), c = g.reduce((a, x) => a + x.c, 0); out.push(v(r, g.length), v(c, g.length)); qr += r; qc += c; qn += g.length; });
     out.push(v(qr, qn), v(qc, qn)); R += qr; Cc += qc;
   });
-  out.push(v(R, ls.length), v(Cc, ls.length), v(R - Cc, ls.length));
+  out.push(v(R, ls.length), v(Cc, ls.length)); // g25: o Total só com Receita e COGS (saiu a margem)
   return out;
 };
 const ordenar = (ls, chave) => {
@@ -126,13 +126,13 @@ const h2txt = M => M.h2.map(h => h.t);
   await page.evaluate(() => { const m = document.getElementById('msg'); if (m) m.remove(); });
 
   console.log('Tela: a matriz no lugar da tabela, sem aba nova; 5 cartões do mesmo tamanho');
-  conf((await page.textContent('#ver')).includes('g24'), 'versão g24');
+  conf((await page.textContent('#ver')).includes('g25'), 'versão g25');
   const abas = await page.$$eval('.tab', l => l.map(b => b.textContent.trim()));
-  conf(abas[0] === 'Receita e margem' && abas[1] === 'Comparar registros (0)' && abas[2] === 'Contratos' && !abas.some(a => /matriz/i.test(a)), 'sem aba separada: a matriz fica na aba "Receita e margem"', abas);
-  conf(await page.locator('.tab.on[data-tab="receita"] ').count() === 1 && await page.locator('.t-mx').count() === 1 && await page.locator('.t-dd').count() === 0, 'a matriz substitui a tabela "Receita, COGS e margem"');
+  conf(abas[0] === 'Receita e COGS' && abas[1] === 'Gráficos' && abas[2] === 'Comparar registros (0)' && abas[3] === 'Contratos' && !abas.some(a => /matriz/i.test(a)), 'sem aba separada: a matriz fica na aba "Receita e COGS" (g25: antes "Receita e margem"; depois dela, a aba "Gráficos")', abas);
+  conf(await page.locator('.tab.on[data-tab="receita"] ').count() === 1 && await page.locator('.t-mx').count() === 1 && await page.locator('.t-dd').count() === 0, 'a matriz substitui a tabela "Receita e COGS"');
   const kp = await page.$$eval('.kpis .kpi', l => l.map(k => { const r = k.getBoundingClientRect(); return {t: k.querySelector('span').textContent, w: Math.round(r.width), y: Math.round(r.top)}; }));
-  conf(kp.map(k => k.t).join('|') === 'Receita em US$|COGS em US$|Operações|Receita / operação (US$)|Margem em US$' && !(await page.locator('.k-hd').count()), 'sem o cartão "Pessoal (homem-dia)"', kp.map(k => k.t));
-  conf(kp.every(k => Math.abs(k.w - kp[0].w) <= 1 && k.y === kp[0].y) && kp[0].w > 240, 'os 5 cartões numa linha, do mesmo tamanho (' + kp[0].w + ' px)', kp);
+  conf(kp.map(k => k.t).join('|') === 'Receita em US$|COGS em US$|Operações|Receita / operação (US$)' && !(await page.locator('.k-hd').count()), 'sem o cartão "Pessoal (homem-dia)" nem o de Margem (g25)', kp.map(k => k.t));
+  conf(kp.every(k => Math.abs(k.w - kp[0].w) <= 1 && k.y === kp[0].y) && kp[0].w > 240, 'os 4 cartões numa linha, do mesmo tamanho (' + kp[0].w + ' px)', kp);
 
   console.log('Um ano por vez (abre no ano de hoje)');
   const anos = await page.$$eval('[data-f="ano"] option', l => l.map(o => o.value));
@@ -165,9 +165,9 @@ const h2txt = M => M.h2.map(h => h.t);
   });
   const difs = esperado.filter((e, i) => !M.rows[i] || M.rows[i].rot !== e.rot || !M.rows[i].cls.includes(e.cls) || JSON.stringify(M.rows[i].cel) !== JSON.stringify(e.cel));
   conf(M.rows.length === esperado.length && !difs.length, 'clientes e contratos (padrão): cada célula de mês, de quarto e do total bate', difs.slice(0, 2));
-  conf(M.ftRot.startsWith('Total 2026') && JSON.stringify(M.ft) === JSON.stringify(celulas(R26, qs26)) && M.ft[M.ft.length - 3] === fV(somaR(R26)), 'linha "Total 2026" = indicador = card do ano', M.ftRot);
+  conf(M.ftRot.startsWith('Total 2026') && JSON.stringify(M.ft) === JSON.stringify(celulas(R26, qs26)) && M.ft[M.ft.length - 2] === fV(somaR(R26)), 'linha "Total 2026" = indicador = card do ano', M.ftRot);
   const h1Txt = (await page.textContent('.mx-card h2')).trim();
-  conf(/— 2026 \(US\$\)$/.test(h1Txt), 'título: "Receita, COGS e margem — 2026"', h1Txt);
+  conf(/— 2026 \(US\$\)$/.test(h1Txt), 'título: "Receita e COGS — 2026"', h1Txt);
   await foto(page, 'mx1_ano');
 
   console.log('Outros anos');
@@ -178,7 +178,7 @@ const h2txt = M => M.h2.map(h => h.t);
   await page.selectOption('[data-f="ano"]', '2025');
   M = await lerMatriz(page);
   const R25 = doAno('2025');
-  conf(JSON.stringify(M.h2.map(h => h.t)) === '["dez/2025","Total Q4/2025"]' && M.ft[M.ft.length - 3] === fV(somaR(R25)), '2025: só dez/2025 (Q4)', h2txt(M));
+  conf(JSON.stringify(M.h2.map(h => h.t)) === '["dez/2025","Total Q4/2025"]' && M.ft[M.ft.length - 2] === fV(somaR(R25)), '2025: só dez/2025 (Q4)', h2txt(M));
   await page.selectOption('[data-f="ano"]', '2026');
 
   console.log('Quarto (início e fim, no lugar de trimestre) e o filtro de mês numa caixa só');
@@ -298,7 +298,7 @@ const h2txt = M => M.h2.map(h => h.t);
   const aoa = X.aoa, totX = aoa[aoa.length - 1];
   conf(dl.suggestedFilename() === 'EARL_Gerencial_receita_2026_2026-11-05.xlsx' && X.abas[0] === 'Receita 2026', 'baixa "EARL_Gerencial_receita_2026_2026-11-05.xlsx" (aba "Receita 2026")', dl.suggestedFilename());
   conf(aoa[0].slice(0, 8).join() === 'Nível,Cliente,Contrato,Sonda,Poço,Operação,Item PPU,Q1/2026' && aoa[1][7] === 'jan/2026' && aoa[2][7] === 'Receita' && X.merges > 10 && X.z === '#,##0.00', 'cabeçalho em 3 linhas (Q1/2026 › jan/2026 › Receita), mesclado, números de verdade', aoa.slice(0, 3).map(l => l.slice(0, 9)));
-  conf(totX[0] === 'Total 2026' && Math.abs(totX[totX.length - 3] - somaR(R26)) < 0.01 && aoa.length === 3 + esperado.length + 1, 'linhas como na tela + "Total 2026" certo', totX.slice(-3));
+  conf(totX[0] === 'Total 2026' && Math.abs(totX[totX.length - 2] - somaR(R26)) < 0.01 && aoa.length === 3 + esperado.length + 1, 'linhas como na tela + "Total 2026" certo', totX.slice(-3));
   const [dl2] = await Promise.all([page.waitForEvent('download'), page.click('[data-a="excel"]')]);
   const Y = await page.evaluate(b => { const w = XLSX.read(b, {type: 'base64'}); const a = XLSX.utils.sheet_to_json(w.Sheets['Receita 2026'], {header: 1}); return {abas: w.SheetNames, ops: a.filter(l => l[0] === 'Operação').length, its: a.filter(l => l[0] === 'Item PPU').length}; }, fs.readFileSync(await dl2.path()).toString('base64'));
   conf(Y.abas.join() === 'Contratos,Receita 2026,Por mês,Itens PPU,Químicas,Casing,Pessoal,Operações,Lançamentos' && Y.ops === R26.length && Y.its === 4, 'Excel consolidado: aba "Receita 2026" com todas as operações e itens PPU do ano', Y);

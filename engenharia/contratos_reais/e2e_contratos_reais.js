@@ -98,7 +98,7 @@ function totaisPlanilha(b64) {
     await fg.waitForSelector('.kpis', {timeout: 30000});
     const anos = await fg.$$eval('[data-f="ano"] option', l => l.map(o => o.value).filter(Boolean));
     const anosPl = Object.keys(PL.anos).filter(a => Math.abs(PL.anos[a].rec) > 0.005 || Math.abs(PL.anos[a].cogs) > 0.005 || true).sort();
-    conf(anosPl.every(a => anos.includes(a)), 'Receita e margem: anos ' + anosPl.join(', '), anos);
+    conf(anosPl.every(a => anos.includes(a)), 'Receita e COGS: anos ' + anosPl.join(', '), anos);
     let sR = 0, sC = 0;
     const difA = [];
     for (const a of anos) {

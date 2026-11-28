@@ -98,6 +98,35 @@ A Engenharia do EARL separada do resto do sistema, agora chamada **EARL Forecast
 - **Exportações:** "Consumo de produtos químicos", "Casing equipment" e "Pessoal" ganharam **Contingência (linha)** e **Risco da linha (%)**; a operação já tinha Contingência e Risco (%). O Painel de Compras aplica o risco da linha.
 - **Cards** da aba "Consumo e receita" com profundidade, como os do Gerencial g16.
 
+### e26 + Gerencial g25 (28/11/2026) — sem margem; aba "Gráficos" nos Indicadores
+
+Pedidos do Hugo: "Retire tudo o que se refere a margem de todos os indicadores ou no contrato também, não precisamos dessa
+informação e ela está errada tecnicamente"; gráficos de barras verticais das PPUs de maior retorno em dólares e dos
+contratos (receita e COGS), "permitindo que seja feito o filtro individualmente no gráfico"; e outros gráficos úteis,
+"como PPUs próximos de acabar".
+- **Sem margem:** no Forecast, saiu da janela da operação (`eng_e17.js`), do resumo do consumo da operação e do cartão
+  da tela de receita do contrato (`eng_contratos.js`), da aba "Operações" do Excel do contrato e dos textos. No Gerencial
+  (g25): o cartão "Margem em US$", a opção "Margem" dos gráficos (uma versão compartilhada antiga com "Margem" volta para
+  "Receita e COGS"), as linhas de margem das dicas, as colunas de margem de "Por contrato", "Operações", da comparação de
+  registros e do Excel consolidado, e a coluna Margem do Total da matriz (e do Excel da matriz). A aba "Receita e margem"
+  virou "Receita e COGS"; os cartões passaram a 4 por linha.
+- **Aba "Gráficos"** (Gerencial g25, `cardsGf`/`gfLista`/`desenharBarrasV`): barras verticais, nos filtros do topo, cada
+  gráfico com "Mostrar" (10/15/20/30 maiores ou todos) e "Itens ▾" (lista com busca, Todos/Nenhum; vale só para aquele
+  gráfico; o que se desmarca fica guardado em `CHV('gf')`):
+  1. **Itens PPU com maior receita (US$)** — por contrato e item, realizada (azul) + prevista (verde), com o risco de cada
+     operação (a mesma conta das linhas de item da matriz, `itensOpMx`);
+  2. **Contratos — receita e COGS** — receita (realizada + prevista) e COGS lado a lado; clicar filtra a página pelo contrato;
+  3. **Contratos — receita esperada e receita em risco** — a receita cheia separada em esperada (com o risco) e em risco
+     (a parte descontada pelo risco/contingência); nome em vermelho com 25% ou mais em risco;
+  4. **Itens PPU perto de acabar o saldo** — (consumido + previsto com o risco) ÷ contratado, no contrato inteiro; linha de
+     100%; vermelho com 90% ou mais. Precisa do saldo contratado dos itens (Contratos → itens PPU, coluna "Saldo"); os
+     7 contratos reais ainda não têm, e o gráfico explica isso;
+  5. **Sondas — receita e COGS**.
+- Teste novo: `tests/e2e_e26.js` (sem margem em nenhuma aba, no Excel e no contrato; os 5 gráficos; somas = cartão;
+  "Mostrar" e "Itens ▾" guardados; clique no contrato; % de "perto de acabar" conferido por uma conta independente).
+  Testes antigos ajustados: `e2e_gerencial`, `e2e_matriz`, `e2e_registros`, `e2e_compartilhar` (a aba "Gráficos" é a 2ª),
+  `e2e_contratos`, `e2e_e16`, `teste_bp/e2e_bp.js`.
+
 ### e25 + Gerencial g24 (28/11/2026) — fila da sonda só com as posteriores vinculadas; abrir a operação pelos Indicadores
 
 Pedidos do Hugo (código em `eng_e25.js`; patch, bloco e25):

@@ -83,7 +83,7 @@ const foto0 = page => page.evaluate(() => ({
   conf(/Versão compartilhada do EARL Gerencial, com os dados de 05\/11\/2026/.test(await txt(q, '.sh-faixa')) && (await q.title()) === 'EARL — Gerencial (compartilhado)', 'abre sozinho, com a faixa "Versão compartilhada" e a data dos dados');
   conf(sh.tab === 'cmp' && sh.met === 'cogs' && sh.base === orig.base && JSON.stringify(sh.chips) === JSON.stringify(orig.chips) && /^Q1 \(jan – mar\)/.test(await q.textContent('.q-box')), 'abre na mesma aba, com "só COGS", Q1 e a mesma comparação', sh);
   conf(JSON.stringify(sh.kpi) === JSON.stringify(orig.kpi) && JSON.stringify(sh.ft) === JSON.stringify(orig.ft), 'os mesmos números (indicadores e tabela de comparação)', {o: orig.kpi, s: sh.kpi});
-  conf((await q.$$eval('.tab', l => l.map(b => b.textContent.trim())))[1] === 'Comparar registros (2)' && await q.locator('#g-evo .g-reg').count() === 2 && await q.locator('.g-var-box svg').count() === 1, 'os registros vieram junto; os gráficos da comparação estão lá');
+  conf((await q.$$eval('.tab', l => l.map(b => b.textContent.trim())))[2] === 'Comparar registros (2)' && await q.locator('#g-evo .g-reg').count() === 2 && await q.locator('.g-var-box svg').count() === 1, 'os registros vieram junto; os gráficos da comparação estão lá');
   conf(!(await q.locator('[data-a="arq"], [data-a="pasta"], [data-a="limpar"], [data-a="regAbrir"], [data-a="regImport"], [data-regdel]').count()) && await q.locator('.bar [data-a="excel"]').count() === 1, 'só consulta: sem Carregar, Limpar, Registrar, Importar e 🗑; o Excel continua');
   await foto(q, 's2_compartilhado');
   await q.click('.cx-sel [data-gmet="ambos"]');
@@ -111,7 +111,7 @@ const foto0 = page => page.evaluate(() => ({
   await R.browser.close();
   const R2 = await abrir(H2.path, {w: 1440, h: 950, hoje: '2026-11-07'});
   await R2.page.waitForSelector('.kpis', {timeout: 60000});
-  conf(/Versão compartilhada/.test(await txt(R2.page, '.sh-faixa')) && JSON.stringify((await foto0(R2.page)).kpi.slice(0, 2)) !== '[]' && (await R2.page.$$eval('.tab', l => l.map(b => b.textContent.trim())))[1] === 'Comparar registros (2)' && R2.errs.length === 0, 'a versão compartilhada pode ser compartilhada de novo (abre igual, com os registros)');
+  conf(/Versão compartilhada/.test(await txt(R2.page, '.sh-faixa')) && JSON.stringify((await foto0(R2.page)).kpi.slice(0, 2)) !== '[]' && (await R2.page.$$eval('.tab', l => l.map(b => b.textContent.trim())))[2] === 'Comparar registros (2)' && R2.errs.length === 0, 'a versão compartilhada pode ser compartilhada de novo (abre igual, com os registros)');
   await R2.browser.close();
 
   console.log('No mesmo navegador de quem tem os dados');

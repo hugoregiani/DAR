@@ -1,5 +1,5 @@
 // Teste dos registros e da aba "Comparar registros" do EARL Gerencial (g12: vários registros ao mesmo tempo), do seletor
-// Receita | COGS | Receita e COGS | Margem (gráficos, cards e tabela) e da versão compartilhada (HTML com os dados dentro).
+// Receita | COGS | Receita e COGS (gráficos, cards e tabela; g25: saiu a Margem) e da versão compartilhada (HTML com os dados dentro).
 // Registra o forecast de 01/10/2026 (versão 1 dos arquivos) e o de 01/11/2026 (versão 2, com operação nova, removida,
 // data mudada, risco mudado, valor mudado e operação que passou a realizada) e confere, contra uma conta feita aqui,
 // os cards, os dois gráficos, a tabela (mês, quarto e total) e o Excel; sobrescrever na mesma data, remover,
@@ -131,10 +131,10 @@ const carregar = (page, nome, P) => page.setInputFiles('#inArq', [{name: nome, m
   await page.waitForSelector('[data-a="arq"]');
   await carregar(page, 'v1.json', V1);
   await page.waitForSelector('.kpis');
-  conf((await page.textContent('#ver')).includes('g24'), 'versão g24');
+  conf((await page.textContent('#ver')).includes('g25'), 'versão g25');
 
   console.log('Registrar');
-  conf(await page.locator('.bar [data-a="regAbrir"]').count() === 1 && (await page.$$eval('.tab', l => l.map(b => b.textContent.trim())))[1] === 'Comparar registros (0)', 'botão "📌 Registrar" na barra do topo e aba "Comparar registros (0)"');
+  conf(await page.locator('.bar [data-a="regAbrir"]').count() === 1 && (await page.$$eval('.tab', l => l.map(b => b.textContent.trim())))[2] === 'Comparar registros (0)', 'botão "📌 Registrar" na barra do topo e aba "Comparar registros (0)"');
   await page.click('.bar [data-a="regAbrir"]');
   await page.waitForSelector('#dlg');
   const dlg = await txt(page, '#dlg');
@@ -158,7 +158,7 @@ const carregar = (page, nome, P) => page.setInputFiles('#inArq', [{name: nome, m
   await page.waitForTimeout(300);
   r1 = await registrar(page, '2026-11-01', 'forecast de novembro');
   regs = await page.evaluate(() => JSON.parse(localStorage.getItem('earlger:registros_v1')));
-  conf(regs.map(r => r.data).join() === '2026-10-01,2026-11-01' && regs[1].ops.length === 7 && (await page.$$eval('.tab', l => l.map(b => b.textContent.trim())))[1] === 'Comparar registros (2)', 'com os arquivos novos, registra 01/11/2026: 2 registros, em ordem de data', regs.map(r => r.data));
+  conf(regs.map(r => r.data).join() === '2026-10-01,2026-11-01' && regs[1].ops.length === 7 && (await page.$$eval('.tab', l => l.map(b => b.textContent.trim())))[2] === 'Comparar registros (2)', 'com os arquivos novos, registra 01/11/2026: 2 registros, em ordem de data', regs.map(r => r.data));
   const tamanho = await page.evaluate(() => localStorage.getItem('earlger:registros_v1').length);
   conf(tamanho < 2000, 'registro compacto (' + tamanho + ' caracteres para 2 registros de 7 operações)');
 
@@ -171,12 +171,12 @@ const carregar = (page, nome, P) => page.setInputFiles('#inArq', [{name: nome, m
   conf(lista.length === 3 && /^Agora /.test(lista[0]) && /^01\/11\/2026 .*forecast de novembro .* comparar/.test(lista[1]) && /^01\/10\/2026 .*base/.test(lista[2]), 'lista: Agora, 01/11 (comparar) e 01/10 (base), com a observação', lista);
   // g18: a lista dos registros com ordem e seleção de itens, como as outras tabelas
   const datas = () => page.$$eval('.t-regs tbody tr', l => l.map(r => r.cells[0].innerText.trim()));
-  conf(await page.locator('.t-regs thead .tf-b').count() === 9, 'lista dos registros: ▾ em todas as colunas com título');
+  conf(await page.locator('.t-regs thead .tf-b').count() === 8, 'lista dos registros: ▾ em todas as colunas com título (g25: sem a coluna Margem)');
   await page.click('.t-regs thead [data-tfsort="regs|0"]');
   conf((await datas()).join() === '01/10/2026,01/11/2026,Agora', 'clique em Data: crescente (Agora por último)', await datas());
   await page.click('.t-regs thead [data-tfsort="regs|0"]');
   conf((await datas()).join() === 'Agora,01/11/2026,01/10/2026', 'de novo: decrescente', await datas());
-  await page.click('.t-regs thead [data-tff="regs|8"]');
+  await page.click('.t-regs thead [data-tff="regs|7"]');
   await page.click('#tfPop .tf-it:has-text("base") .tf-so');
   conf((await datas()).join() === '01/10/2026' && /Mostrando 1 de 3/.test(await page.innerText('.tf-info')), '“só este” em “Na comparação” = base: só 01/10', await datas());
   await page.click('[data-tfclr="regs"]');
@@ -184,8 +184,8 @@ const carregar = (page, nome, P) => page.setInputFiles('#inArq', [{name: nome, m
   const ta = tot(A26), tb = tot(B26);
   let cs = await cards(page);
   conf(cs[0][1] === 'US$ ' + nf2(tb.r) && cs[0][2] === 'base 01/10/2026: US$ ' + nf2(ta.r) && cs[0][3] === fDelta(tb.r - ta.r) + ' (' + fPct(ta.r, tb.r) + ')', 'card Receita: ' + nf2(ta.r) + ' → ' + nf2(tb.r) + ' (' + fPct(ta.r, tb.r) + ')', cs[0]);
-  conf(cs[1][1] === 'US$ ' + nf2(tb.c) && cs[1][3] === fDelta(tb.c - ta.c) + ' (' + fPct(ta.c, tb.c) + ')' && cs[2][1] === 'US$ ' + nf2(tb.r - tb.c) && cs[2][3] === fDelta((tb.r - tb.c) - (ta.r - ta.c)) + ' (' + fPct(ta.r - ta.c, tb.r - tb.c) + ')', 'cards COGS e Margem com a variação em US$ e %', [cs[1], cs[2]]);
-  conf(cs[3][1] === '6' && /base 01\/10\/2026: 6/.test(cs[3][2]) && cs[3][3] === '1 nova(s) · 1 removida(s)', 'card Operações: 6 → 6, 1 nova e 1 removida', cs[3]);
+  conf(cs[1][1] === 'US$ ' + nf2(tb.c) && cs[1][3] === fDelta(tb.c - ta.c) + ' (' + fPct(ta.c, tb.c) + ')' && cs.length === 3 && !cs.some(c => /margem/i.test(c.join(' '))), 'card COGS com a variação em US$ e %; sem o card de Margem (g25)', cs);
+  conf(cs[2][1] === '6' && /base 01\/10\/2026: 6/.test(cs[2][2]) && cs[2][3] === '1 nova(s) · 1 removida(s)', 'card Operações: 6 → 6, 1 nova e 1 removida', cs[2]);
   const corR = await page.$eval('.k-cx-r .cx-d', e => e.className), corC = await page.$eval('.k-cx-c .cx-d', e => e.className);
   conf(/cv-ruim/.test(corR) && /cv-bom/.test(corC), 'receita caiu = vermelho; COGS caiu = verde (favorável)', [corR, corC]);
   let T = await lerCx(page);
@@ -225,8 +225,8 @@ const carregar = (page, nome, P) => page.setInputFiles('#inArq', [{name: nome, m
   conf(/^fev\/2026 · receita US\$ 40\.000,00 base 01\/10\/2026 \+5,0% 01\/11\/2026: US\$ 42\.000,00 \(\+2\.000,00\)/.test(await txt(page, '#g-var-r .g-tip')), 'tooltip do mês: base, comparado e a diferença', await txt(page, '#g-var-r .g-tip'));
   await foto(page, 'r2_graficos');
 
-  console.log('Mostrar: Receita | COGS | Receita e COGS | Margem');
-  conf((await page.$$eval('.cx-sel .g-mets button', l => l.map(b => b.textContent))).join('|') === 'Receita|COGS|Receita e COGS|Margem' && await page.locator('.cx-sel .g-mets button.on[data-gmet="ambos"]').count() === 1, 'seletor com as 4 opções; padrão "Receita e COGS"');
+  console.log('Mostrar: Receita | COGS | Receita e COGS (g25: saiu a Margem)');
+  conf((await page.$$eval('.cx-sel .g-mets button', l => l.map(b => b.textContent))).join('|') === 'Receita|COGS|Receita e COGS' && await page.locator('.cx-sel .g-mets button.on[data-gmet="ambos"]').count() === 1 && !(await page.locator('[data-gmet="mg"]').count()), 'seletor com as 3 opções (sem Margem); padrão "Receita e COGS"');
   await page.click('.cx-sel [data-gmet="rec"]');
   T = await lerCx(page);
   cs = await cards(page);
@@ -235,19 +235,12 @@ const carregar = (page, nome, P) => page.setInputFiles('#inArq', [{name: nome, m
   T = await lerCx(page);
   cs = await cards(page);
   conf(!T.h3.includes('Receita') && JSON.stringify(T.ft) === JSON.stringify(celulasTotal(A26, B26, ['c'])) && cs.map(c => c[0]).join('|') === 'COGS · 01/11/2026|Operações · 01/11/2026' && await page.locator('#g-var-c').count() === 1 && !(await page.locator('#g-var-r').count()), 'só COGS: card, gráficos e tabela só com o COGS', cs.map(c => c[0]));
-  await page.click('.cx-sel [data-gmet="mg"]');
-  T = await lerCx(page);
-  const iFev = h2esp.indexOf('fev/2026') * 2;
-  cs = await cards(page);
-  conf(T.h3[0] === 'Margem' && JSON.stringify(T.ft) === JSON.stringify(celulasTotal(A26, B26, ['m'])) && T.ft[iFev] === '-1.000,00' && T.ft[iFev + 1] === '+80,0%' && cs.map(c => c[0]).join('|') === 'Margem · 01/11/2026|Operações · 01/11/2026', 'só Margem: card, gráficos e tabela; fev/2026 com margem negativa (−5.000 → −1.000 = +80%)', T.ft.slice(iFev, iFev + 2));
   await page.click('.cx-card [data-gmet="rec"]');
   conf(await page.locator('.cx-sel [data-gmet="rec"].on').count() === 1 && await page.locator('.g-var-box').count() === 1, 'o "Mostrar" também fica em cada gráfico e na tabela (e vale para a aba toda)');
-  await page.click('.cx-sel [data-gmet="mg"]');
   await page.click('.tab[data-tab="receita"]');
   await page.waitForSelector('#graf .g-svg');
   const legMg = await page.$$eval('#g-leg span', l => l.map(s => s.textContent));
-  const mgFev = await page.$eval('#graf .g-mes[data-i="1"] path[data-mg]', p => [p.dataset.mg, p.getAttribute('fill')]);
-  conf(legMg.join('|').startsWith('Margem|Margem negativa') && mgFev[0] === '-1000' && mgFev[1] === '#e34948' && /Margem por mês/.test(await page.textContent('.g-card h2')), 'aba Receita: o gráfico também mostra só a margem, com a negativa em vermelho abaixo do zero', [legMg, mgFev]);
+  conf(!legMg.some(t => /margem/i.test(t)) && (await page.$$eval('.g-card .g-mets button', l => l.map(b => b.textContent))).join('|') === 'Receita|COGS|Receita e COGS', 'aba Receita: o gráfico também sem a opção Margem', legMg);
   await page.click('.g-card [data-gmet="cogs"]');
   conf((await page.$$eval('#g-leg span', l => l.map(s => s.textContent))).join('|').startsWith('COGS|Tendência linear do COGS') && (await page.$$eval('#graf .g-mes', l => l.map(g => g.getAttribute('aria-label')))).every(a => /: COGS US\$/.test(a)), 'só COGS no gráfico por mês, com a tendência do COGS');
   await page.click('.g-card [data-gmet="rec"]');
@@ -255,12 +248,6 @@ const carregar = (page, nome, P) => page.setInputFiles('#inArq', [{name: nome, m
   await page.click('[data-gmodo="cli"]');
   const cliRec = await page.$$eval('.g-cli', l => l.map(g => g.getAttribute('aria-label')));
   conf(cliRec.join(' | ') === 'Petrobras: receita US$ 220.000,00 | Shell: receita US$ 67.000,00', 'por cliente, só receita', cliRec);
-  await page.click('.g-card [data-gmet="mg"]');
-  const cliMg = await page.$$eval('.g-cli', l => l.map(g => g.getAttribute('aria-label')));
-  conf(cliMg.join(' | ') === 'Petrobras: margem US$ 164.000,00 | Shell: margem US$ 19.000,00', 'por cliente, só margem', cliMg);
-  await page.click('[data-gmodo="mescli"]');
-  const segMg = await page.$$eval('#graf path[data-c]', l => l.map(p => p.dataset.c + '=' + p.dataset.v));
-  conf(segMg.includes('Shell=-1000') && segMg.includes('Petrobras=70000'), 'por mês e cliente, margem: a da Shell em fev é negativa', segMg);
   await page.click('[data-gmodo="mes"]');
   await page.click('.g-card [data-gmet="ambos"]');
   conf((await page.$$eval('#g-leg span', l => l.map(s => s.textContent))).join('|') === 'Receita realizada|Receita prevista|COGS|Tendência linear da receita', '"Receita e COGS" volta ao gráfico de antes');
@@ -283,7 +270,7 @@ const carregar = (page, nome, P) => page.setInputFiles('#inArq', [{name: nome, m
   conf(/Marque pelo menos um registro/.test(await txt(page, '#app')) && !(await chipsOn()).length, 'a base vira 01/11 (que estava em "Comparar com"): pede para marcar um registro');
   await page.check('.cx-chip input[data-cmpsel="agora"]');
   cs = await cards(page);
-  conf(cs.slice(0, 3).every(c => c[3] === 'sem alteração'), 'base 01/11 × Agora (os mesmos arquivos): sem alteração', cs.map(c => c[3]));
+  conf(cs.slice(0, 2).every(c => c[3] === 'sem alteração') && cs[2][3] === '0 nova(s) · 0 removida(s)', 'base 01/11 × Agora (os mesmos arquivos): sem alteração (Receita e COGS; Operações sem novas nem removidas)', cs.map(c => c[3]));
   await page.uncheck('.cx-chip input[data-cmpsel="agora"]');
   await page.check('.cx-chip input[data-cmpsel="2026-10-01"]');
   cs = await cards(page);
@@ -309,7 +296,7 @@ const carregar = (page, nome, P) => page.setInputFiles('#inArq', [{name: nome, m
   const tc = tot(C26);
   cs = await cards(page);
   conf(cs[0][0] === 'Receita · 01/12/2026' && cs[0][1] === 'US$ ' + nf2(tc.r) && cs[0][2] === 'base 01/10/2026: US$ ' + nf2(ta.r) && cs[0][3] === '01/11/2026: US$ ' + nf2(tb.r) + ' · ' + fPct(ta.r, tb.r) && cs[0][4] === '01/12/2026: US$ ' + nf2(tc.r) + ' · ' + fPct(ta.r, tc.r), 'card Receita: a base e cada registro, com a variação sobre a base', cs[0]);
-  conf(/^01\/11\/2026: 6 · 1 nova\(s\) · 1 removida\(s\)$/.test(cs[3][3]) && /^01\/12\/2026: 6 · 2 nova\(s\) · 2 removida\(s\)$/.test(cs[3][4]), 'card Operações: novas e removidas em cada registro', cs[3]);
+  conf(/^01\/11\/2026: 6 · 1 nova\(s\) · 1 removida\(s\)$/.test(cs[2][3]) && /^01\/12\/2026: 6 · 2 nova\(s\) · 2 removida\(s\)$/.test(cs[2][4]), 'card Operações: novas e removidas em cada registro', cs[2]);
   evo = await lerEvo();
   conf(evo.map(e => e.k).join() === '2026-10-01,2026-11-01,2026-12-01' && evo[2].v.join() === 'r=' + tc.r + ',c=' + tc.c && evo[2].pl.join() === [fPct(ta.r, tc.r), fPct(ta.c, tc.c)].join(), 'evolução com os 3 registros; 01/12 com a variação sobre a base', evo.map(e => [e.k, e.pl]));
   regsC = ['2026-11-01', '2026-12-01'];
@@ -354,12 +341,12 @@ const carregar = (page, nome, P) => page.setInputFiles('#inArq', [{name: nome, m
   conf(regs.map(r => r.data).join() === '2026-10-01,2026-11-01,2026-12-01' && /1 registro\(s\) novo\(s\) · 0 substituído\(s\) por um mais novo · 2 já estava\(m\) aqui/.test(await txt(page, '#msg')), 'importa o .json: volta o 01/10; os outros já estavam', await txt(page, '#msg'));
   await page.reload();
   await page.waitForSelector('.kpis');
-  conf((await page.$$eval('.tab', l => l.map(b => b.textContent.trim())))[1] === 'Comparar registros (3)', 'os registros continuam depois de reabrir');
+  conf((await page.$$eval('.tab', l => l.map(b => b.textContent.trim())))[2] === 'Comparar registros (3)', 'os registros continuam depois de reabrir');
   await page.evaluate(() => { const S0 = Storage.prototype.setItem; Storage.prototype.setItem = function (k, v) { if (k === 'earlger:registros_v1') throw new DOMException('cheio', 'QuotaExceededError'); return S0.call(this, k, v); }; });
   await page.click('.bar [data-a="regAbrir"]');
   await page.fill('#dlg .reg-data', '2026-11-05');
   await page.click('#dlg .reg-ok');
-  conf(/armazenamento cheio/.test(await txt(page, '#msg')) && await page.locator('#dlg').count() === 1 && (await page.$$eval('.tab', l => l.map(b => b.textContent.trim())))[1] === 'Comparar registros (3)', 'armazenamento cheio: avisa, a janela fica aberta e nada muda', await txt(page, '#msg'));
+  conf(/armazenamento cheio/.test(await txt(page, '#msg')) && await page.locator('#dlg').count() === 1 && (await page.$$eval('.tab', l => l.map(b => b.textContent.trim())))[2] === 'Comparar registros (3)', 'armazenamento cheio: avisa, a janela fica aberta e nada muda', await txt(page, '#msg'));
   await page.keyboard.press('Escape');
 
   console.log('Celular');

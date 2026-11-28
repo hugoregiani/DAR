@@ -6,12 +6,19 @@
 >
 > **O que entregar (pedido do Hugo, 27/11/2026, desde a V08):** só o arquivo padrão limpo `EARL_Forecast_Vnn.html` e este prompt (`EARL_prompt_continuidade_Vnn.md`). Não mandar um arquivo por contrato nem o PDF do passo a passo, a não ser que ele peça. Os arquivos dos contratos continuam sendo gerados para os testes.
 >
-> **Última atualização:** 28/11/2026 — **entrega _V12: EARL Forecast e25 + Gerencial g24**:
+> **Última atualização:** 28/11/2026 — **entrega _V13: EARL Forecast e26 + Gerencial g25**:
+> - **Sem margem** em nenhum indicador nem no contrato (pedido do Hugo: "não precisamos dessa informação e ela está errada tecnicamente"). A aba "Receita e margem" virou "Receita e COGS".
+> - **Aba "Gráficos"** nos Indicadores: barras verticais, cada gráfico com "Mostrar" (os N maiores) e "Itens ▾" (escolher os itens só daquele gráfico, fica guardado): itens PPU de maior receita, contratos (receita e COGS), receita esperada × em risco, itens PPU perto de acabar o saldo e sondas.
+> - O gráfico "perto de acabar" precisa do saldo contratado dos itens PPU (Contratos → itens PPU, coluna "Saldo"); nos 7 contratos reais ele está em branco.
+> - Arquivos `EARL_Forecast_V13.html`, os 7 `EARL_Forecast_<NOME>_V13.html` (`--compat` dos V12) e `EARL_prompt_continuidade_V13.md`. Ver "e26" em 4-E.
+> - **Em andamento (parado):** narração do vídeo tutorial (o `gravar_tutorial.js` ainda usa a pílula "Consumo e receita", que saiu na e18).
+> - **Pendente:** a planilha do banco de químicos/casing não chegou.
+>
+> Antes, em 28/11/2026 — **entrega _V12: EARL Forecast e25 + Gerencial g24**:
 > - **"Reorganizar a fila da sonda?" corrigido** (relato do Hugo: ao duplicar uma operação "Não vincular", o app propunha mover operações de datas anteriores). Agora: operação **sem vínculo** não move nenhuma; **com vínculo**, só as **posteriores**, em cascata, enquanto vinculadas e encostando; nunca uma anterior.
 > - **"✎ abrir" nos Indicadores:** na linha de cada operação da tabela Receita/COGS e da aba Operações, abre a janela da operação para ver ou alterar, sem sair dos Indicadores.
 > - **Largura da 1ª coluna do Gantt:** arrastar a alça no cabeçalho da coluna das sondas/operações (como na tabela dos Indicadores); fica guardada; duplo clique volta ao padrão.
 > - Arquivos `EARL_Forecast_V12.html`, os 7 `EARL_Forecast_<NOME>_V12.html` (gerados com `--compat` dos V11) e `EARL_prompt_continuidade_V12.md`. Ver "e25" em 4-E.
-> - **Em andamento (próxima entrega, V13, e26/g25):** tirar a margem de todos os indicadores e do contrato; aba "Gráficos" nos Indicadores (barras verticais com escolha de itens: PPU de maior receita, contratos receita × COGS, receita esperada × em risco, PPU perto de acabar o saldo, sondas). O código-fonte já está no repositório (`gerencial.html`, `eng_e17.js`, `eng_contratos.js`, `eng_cambio.js`, `tests/e2e_e26.js`); falta ajustar os testes antigos que conferiam a margem, montar e rodar a bateria.
 > - **Em andamento (parado):** narração do vídeo tutorial (o `gravar_tutorial.js` ainda usa a pílula "Consumo e receita", que saiu na e18).
 > - **Pendente:** a planilha do banco de químicos/casing não chegou.
 >
@@ -674,6 +681,24 @@ Pedidos do Hugo (12/11/2026): "No envio do email do Handover preciso que inclua 
   - Painel de Compras: `engenharia` 37, `invariantes` 64, `pedidos_enviados` 15, `regressao` 6, `reproduzir` ok.
   - Ajustes de expectativa nos testes antigos (mudanças pedidas): sonda "NS-32 - Norbe VIII" nos seletores, no assunto do e-mail e na matriz do Gerencial; coluna "Saldo na sonda" no e-mail; colunas novas nas exportações; versão g16.
 - **Pendências:** os textos novos ainda sem EN/ES; a tabela de câmbio não tem importação por planilha (é digitada); a "Frente" do PA ainda precisa de ajuste (a planilha fatura com outra regra).
+
+### e26 + Gerencial g25 — sem margem; aba "Gráficos" nos Indicadores — entrega _V13 (28/11/2026)
+
+- **Pedidos do Hugo (28/11/2026):** "Retire tudo o que se refere a margem de todos os indicadores ou no contrato também, não precisamos dessa informação e ela está errada tecnicamente"; "crie novos indicadores como as PPUs de maior retorno em dólares permitindo que seja feito o filtro individualmente no gráfico, pode ser um gráfico de barras na vertical"; "outro gráfico de barras na vertical para os contratos contabilizando receita e COGS, também podendo fazer os filtros"; "pense em outros gráficos que seriam importantes como PPUs próximos de acabar".
+- **Margem (tudo fora):**
+  - Forecast: `eng_e17.js` (janela da operação), `eng_contratos.js` (resumo do consumo `.ec-res-margem`, cartão `.ec-kpi-margem` da tela de receita, coluna do Excel do contrato, textos), `eng_cambio.js` (texto).
+  - Gerencial g25: cartão `k-margem` (os cartões ficaram 4, grade de 4); `GMET` sem `mg` (gmet guardado ou de versão compartilhada antiga volta para `ambos`); dicas dos gráficos; colunas de "Por contrato" (`linhaValores`), "Operações", "Registros"; comparação (`MEDIDAS`/`NOME_MED` sem `m`; cartões Receita, COGS, Operações); Excel consolidado; matriz: Total com Receita e COGS (`celulasMx`, cabeçalhos, `abaMatriz`). Aba "Receita e margem" → "Receita e COGS". Ficou código morto dos ramos `mg` (inalcançável).
+- **Aba "Gráficos"** (`telas.graficos`, `cardsGf`, `gfLista(key, A)`, `desenharBarrasV`, `desenharGf`; estado `S.gf = {ppu|ct|risco|acab|sonda: {n, fora}}` guardado em `CHV('gf')`; `S.gfPop`/`S.gfQ` para a lista de itens):
+  - `ppu`: soma `itensOpMx(x).v` por contrato|item (realizada/prevista);
+  - `ct`: `A.porCt` (receita realizada + prevista, COGS ao lado); clique alterna `S.f.contrato`;
+  - `risco`: por contrato, `gU` (cheia) − `rU` (com risco) das linhas;
+  - `acab`: `A.ppu` com `contratado > 0`, (cons + aR) ÷ contratado; linha de 100%; `gf-al` com ≥ 90%;
+  - `sonda`: `A.linhas` por `o.sonda`.
+  - Rótulos inclinados (−40°), rolagem horizontal quando há muitas barras; a margem esquerda cresce para o nome da 1ª barra não cortar.
+- **Achado:** nenhum dos 7 contratos reais tem `saldoIni` (saldo contratado) nos itens PPU, então o gráfico "perto de acabar" mostra como preencher.
+- **Versões:** `EARL Forecast e26 (base v115)`, `EARL Gerencial g25`.
+- **Testes (28/11/2026):** <<RESULTADOS>>
+- **Entrega V13:** `EARL_Forecast_V13.html`, os 7 `EARL_Forecast_<NOME>_V13.html` (`--compat` dos V12) e este prompt.
 
 ### e25 + Gerencial g24 — fila da sonda só com as posteriores vinculadas; "✎ abrir" a operação pelos Indicadores — entrega _V12 (28/11/2026)
 
