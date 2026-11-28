@@ -98,6 +98,23 @@ A Engenharia do EARL separada do resto do sistema, agora chamada **EARL Forecast
 - **Exportações:** "Consumo de produtos químicos", "Casing equipment" e "Pessoal" ganharam **Contingência (linha)** e **Risco da linha (%)**; a operação já tinha Contingência e Risco (%). O Painel de Compras aplica o risco da linha.
 - **Cards** da aba "Consumo e receita" com profundidade, como os do Gerencial g16.
 
+### e24 (28/11/2026) — a cópia compartilhada não abre mais "em branco"
+
+Relato do Hugo: "quando baixo o HTML para compartilhar com outro usuário o arquivo está indo em branco". A cópia tinha os
+dados (conferido com 41 contratos e 544 operações, num navegador limpo e num com o armazenamento cheio), mas:
+- **Aberta numa pré-visualização** (Outlook, Teams, SharePoint, OneDrive), que não roda o programa, a página ficava
+  totalmente em branco (o `#app` era vazio). Agora o `#app` tem um aviso (`.earl-semjs`): no arquivo padrão e nos de
+  contrato, como abrir; na cópia (`engShAviso`), o nome do arquivo, a data, os contratos e as operações que ela leva, e
+  como abrir ("salve no computador e abra com dois cliques no Chrome ou no Edge"). Quando o programa roda, o React troca o
+  aviso pela tela; o aviso só aparece depois de 2,5 s (animação no `eng.css`), para não piscar ao abrir normalmente.
+- **Cópia de um arquivo sem operações:** o arquivo padrão novo vem com os 16 contratos de exemplo e nenhuma operação; os
+  dados ficam no arquivo (e no navegador) em que foram lançados — os arquivos de contrato têm prefixo próprio. A janela
+  de compartilhar agora mostra "Cópia de: <arquivo aberto>" e, sem nenhuma operação, um aviso vermelho (`.eng-sh-vazio`):
+  abrir o arquivo do contrato e compartilhar de lá, ou importar os contratos.
+- A mensagem do e-mail diz que a pré-visualização do Outlook/Teams não abre o EARL.
+- Teste: `tests/e2e_e23.js` ganhou a abertura sem JavaScript (cópia e original), o aviso escondido com o programa
+  rodando, "Cópia de:" e o aviso de arquivo sem operações.
+
 ### e23 (27/11/2026) — "📤 Compartilhar (HTML)" é o próprio arquivo do Forecast, com o nome escolhido
 
 Pedido do Hugo: "Não existe mais o arquivo gerencial… O compartilhar o HTML agora vai ser compartilhar exatamente o

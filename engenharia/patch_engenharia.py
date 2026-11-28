@@ -105,7 +105,7 @@ assert i > 0
 s = s[:i] + css + s[i:]
 
 # ---------------------------------------------------------------- app (código compilado)
-rep("var EARL_VERSION = 'EARL v115';", "var EARL_VERSION = 'EARL Forecast e23 (base v115)';")
+rep("var EARL_VERSION = 'EARL v115';", "var EARL_VERSION = 'EARL Forecast e24 (base v115)';")
 rep("var HO_ST = {\n  pendente: {", "var HO_ST = {\n  email: {\n    label: 'Enviado por e-mail',\n    c: '#304220',\n    bg: '#F1F5EC',\n    brd: '#D9E4CC'\n  },\n  pendente: {")
 # quem gera o e-mail assina os registros (sem login)
 rep("  var currentUser = () => authUser && authUser.email || sbUser || '';",
@@ -1085,6 +1085,13 @@ rep("  'Entrega de Cimento/Blend': 'Entrega de Cemento/Blend',\n", "  'Entrega d
 # e23 (pedido do Hugo, 27/11/2026): eng_e23.js — "📤 Compartilhar (HTML)" gera uma cópia deste arquivo do Forecast com os
 # dados de agora (o Gerencial embutido chama window.engCompartilharAbrir), com o nome escolhido antes de baixar/criar o e-mail
 rep("renderEngDup(), renderEngExpSel(), renderEngDia(), renderEngGrDlg(), renderEngCorPop(),", "renderEngDup(), renderEngExpSel(), renderEngDia(), renderEngGrDlg(), renderEngSh(), renderEngCorPop(),")
+
+# e24 (Hugo, 28/11/2026: arquivo "em branco"): sem o programa rodar (pré-visualização do Outlook, do Teams, do SharePoint,
+# do OneDrive) a página ficava em branco; agora mostra como abrir. O React troca o aviso pela tela ao abrir no Chrome/Edge.
+rep('<div id="app"></div>', '<div id="app"><div class="earl-semjs" style="max-width:660px;margin:56px auto;padding:28px 32px;font:15px/1.5 Arial,Helvetica,sans-serif;color:#1d2125;background:#fff;border-radius:16px;box-shadow:0 6px 24px rgba(0,0,0,.12);border-top:6px solid #CC0000">'
+    '<div style="font-weight:700;font-size:20px;margin-bottom:8px">EARL Forecast</div>'
+    '<p style="margin:0 0 10px">Para usar: <b>salve este arquivo no computador</b> (em Downloads, na área de trabalho ou numa pasta) e <b>abra com dois cliques no Google Chrome ou no Microsoft Edge</b>. Funciona sem internet.</p>'
+    '<p style="margin:0;font-size:13px;color:#5b6369">A pré-visualização do Outlook, do Teams, do SharePoint e do OneDrive não abre o EARL: nela aparece só este aviso.</p></div></div>')
 
 # e12: filtro e ordem em todas as tabelas (script avulso, fora do React), no fim do <body>
 tf = open(os.path.join(AQUI, 'eng_tabelas.js'), encoding='utf-8').read()

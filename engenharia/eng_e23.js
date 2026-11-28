@@ -41,7 +41,14 @@
   var engShMsg = nome => {
     var r = engShResumo();
     return 'Olá,\n\nSegue em anexo o arquivo do EARL Forecast (' + nome + ') com os dados de ' + new Date().toLocaleDateString('pt-BR') + ': ' + r.cts + ' contrato(s) e ' + r.ops + ' operação(ões).\n\n' +
-      'Para abrir: salve o arquivo anexo e abra com dois cliques no Chrome ou no Edge (funciona sem internet). É uma cópia completa do arquivo: dá para ver os Indicadores e os contratos, o Gantt e as operações, e continuar lançando. O que você lançar fica só no seu computador, separado dos outros arquivos do EARL que você tiver.\n';
+      'Para abrir: salve o arquivo anexo no computador e abra com dois cliques no Chrome ou no Edge (funciona sem internet; a pré-visualização do Outlook ou do Teams não abre o EARL, mostra só um aviso). É uma cópia completa do arquivo: dá para ver os Indicadores e os contratos, o Gantt e as operações, e continuar lançando. O que você lançar fica só no seu computador, separado dos outros arquivos do EARL que você tiver.\n';
+  };
+  var engShArqAberto = () => {
+    try {
+      return decodeURIComponent(String(location.pathname || '').split('/').pop() || '');
+    } catch (e) {
+      return '';
+    }
   };
   var engShAbrir = () => {
     var nome = engShPadrao();
@@ -49,9 +56,35 @@
   };
   window.engCompartilharAbrir = engShAbrir;
   // o que o app põe na página depois de abrir não vai na cópia (volta sozinho quando a cópia abre)
-  var engShLimparClone = cl => {
+  /* e24 (Hugo, 28/11/2026: "o arquivo está indo em branco"): aberta numa pré-visualização (Outlook, Teams, SharePoint,
+     OneDrive), que não roda o programa, a página ficava em branco. O #app da cópia leva um aviso com o resumo dos dados e
+     como abrir; quando o programa roda, o React troca o aviso pela tela (o aviso só aparece depois de 2,5 s, ver eng.css). */
+  var engShAviso = (doc, info) => {
+    var el = (t, css, txt) => { var e = doc.createElement(t); if (css) e.setAttribute('style', css); if (txt != null) e.textContent = txt; return e; };
+    var cx = el('div', 'max-width:660px;margin:56px auto;padding:28px 32px;font:15px/1.5 Arial,Helvetica,sans-serif;color:#1d2125;background:#fff;border-radius:16px;box-shadow:0 6px 24px rgba(0,0,0,.12);border-top:6px solid #CC0000');
+    cx.className = 'earl-semjs';
+    cx.appendChild(el('div', 'font-weight:700;font-size:20px;margin-bottom:8px', 'EARL Forecast — cópia compartilhada'));
+    var p1 = el('p', 'margin:0 0 10px');
+    p1.appendChild(doc.createTextNode('Arquivo '));
+    p1.appendChild(el('b', null, info.nome));
+    p1.appendChild(doc.createTextNode(', com os dados de ' + info.quando + ': '));
+    p1.appendChild(el('b', null, info.cts + ' contrato(s) e ' + info.ops + ' operação(ões)'));
+    p1.appendChild(doc.createTextNode('.'));
+    cx.appendChild(p1);
+    if (info.nomes.length) cx.appendChild(el('p', 'margin:0 0 10px;font-size:13px;color:#43494E', 'Contratos: ' + info.nomes.slice(0, 12).join(', ') + (info.nomes.length > 12 ? ' e mais ' + (info.nomes.length - 12) : '') + '.'));
+    var p2 = el('p', 'margin:0 0 10px');
+    p2.appendChild(doc.createTextNode('Para usar: '));
+    p2.appendChild(el('b', null, 'salve este arquivo no computador'));
+    p2.appendChild(doc.createTextNode(' (em Downloads, na área de trabalho ou numa pasta) e '));
+    p2.appendChild(el('b', null, 'abra com dois cliques no Google Chrome ou no Microsoft Edge'));
+    p2.appendChild(doc.createTextNode('. Funciona sem internet.'));
+    cx.appendChild(p2);
+    cx.appendChild(el('p', 'margin:0;font-size:13px;color:#5b6369', 'A pré-visualização do Outlook, do Teams, do SharePoint e do OneDrive não abre o EARL: nela aparece só este aviso.'));
+    return cx;
+  };
+  var engShLimparClone = (cl, info) => {
     var app = cl.querySelector('#app');
-    if (app) app.innerHTML = '';
+    if (app) { app.innerHTML = ''; if (info) app.appendChild(engShAviso(cl.ownerDocument || document, info)); }
     Array.from(cl.querySelectorAll('[data-earl-rt], .earl-pl-tag, .eng-rz-alca')).forEach(e => e.parentNode && e.parentNode.removeChild(e));
     var body = cl.querySelector('body');
     if (body) Array.from(body.children).forEach(e => {
@@ -130,7 +163,8 @@
     var dados = {tipo: 'EARL-Forecast-Compartilhado', formato: 1, id: id, versao: EARL_VERSION, geradoEm: new Date().toISOString(), nome: nome + '.html', de: P, chaves: chaves, lz: lz};
     // 2. o HTML: a própria página, sem o que o app pôs nela depois de abrir
     var cl = document.documentElement.cloneNode(true);
-    engShLimparClone(cl);
+    var ativos = (db.contratos || []).filter(c => c && !c.archived), rs0 = engShResumo();
+    engShLimparClone(cl, {nome: nome + '.html', quando: new Date().toLocaleString('pt-BR', {dateStyle: 'short', timeStyle: 'short'}), cts: rs0.cts, ops: rs0.ops, nomes: ativos.map(c => String(c.name || '').trim()).filter(Boolean)});
     var ancora = '  window.EARL_ENG_AVULSO=true;\n';
     var sc = Array.from(cl.querySelectorAll('script')).find(s => s.textContent.indexOf(ancora) >= 0 && s.textContent.indexOf('window.EARL_ARMAZ={P:P') >= 0);
     if (!sc) throw new Error('não achei o bloco de armazenamento do arquivo');
@@ -250,7 +284,9 @@
     }, engH("div", {className: "modal-title"}, engH("span", null, "📤 Compartilhar o arquivo (HTML)"), engH("button", {className: "modal-close", onClick: fechar, disabled: ocupado}, "\xD7")),
     engH("div", {className: "ec-imp-ajuda"}, "Gera uma ", engH("b", null, "cópia deste arquivo do EARL Forecast"), " com todos os dados de agora: ",
       engH("b", null, rs.cts + " contrato(s) ativo(s)" + (rs.arq ? " (e " + rs.arq + " arquivado(s))" : "") + " e " + rs.ops + " operação(ões)"),
-      ", com os consumos, os handovers, o inventário das sondas, o câmbio, os químicos, o casing, os grupos e os registros dos Indicadores. Quem receber abre com dois cliques no Chrome ou no Edge, sem internet, e usa como este arquivo. O que a pessoa lançar fica só no computador dela, separado dos outros arquivos do EARL que ela tiver."),
+      ", com os consumos, os handovers, o inventário das sondas, o câmbio, os químicos, o casing, os grupos e os registros dos Indicadores. Quem receber salva o arquivo e abre com dois cliques no Chrome ou no Edge, sem internet, e usa como este arquivo (a pré-visualização do Outlook, do Teams ou do SharePoint não abre o EARL: mostra só um aviso com o resumo). O que a pessoa lançar fica só no computador dela, separado dos outros arquivos do EARL que ela tiver."),
+    engShArqAberto() && engH("div", {className: "eng-sh-origem"}, "Cópia de: ", engH("b", null, engShArqAberto())),
+    !rs.ops && engH("div", {className: "eng-sh-vazio"}, "⚠ Este arquivo não tem nenhuma operação lançada: a cópia vai sair assim, sem operações. Os dados ficam no arquivo (e no navegador) em que foram lançados — por exemplo, no arquivo do contrato (EARL_Forecast_<CONTRATO>…html). Abra esse arquivo e compartilhe de lá, ou traga os contratos para cá com “⬆ Importar dados”."),
     campo("Nome do arquivo", engH("span", {className: "eng-sh-nomebox"}, engH("input", {
       type: "text",
       className: "eng-sh-nome",

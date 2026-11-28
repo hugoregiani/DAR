@@ -115,6 +115,7 @@ const abrirSh = async p => { await p.click('.eng-tools .eng-compartilhar'); awai
   await pronto(p);
   conf(await p.locator('.eng-tools .eng-compartilhar').count() === 1, 'botão “📤 Compartilhar (HTML)” na barra de ferramentas');
   await abrirSh(p);
+  conf((await p.innerText('.eng-sh-origem')) === 'Cópia de: ' + path.basename(ARQ) && !(await p.locator('.eng-sh-vazio').count()), 'a janela mostra de qual arquivo sai a cópia (' + path.basename(ARQ) + ')', await p.innerText('.eng-sh-origem').catch(() => ''));
   const padrao = await p.inputValue('.eng-sh-nome');
   const umAtivo = (base.contratos || []).filter(c => !c.archived).length === 1;
   conf(umAtivo ? /^EARL_FORECAST_[A-Z0-9&-]+_[A-Z0-9&-]+_\d{4}\.\d{2}\.\d{2}_\d{2}h\d{2}$/.test(padrao) : /^EARL_FORECAST_([A-Z0-9&-]+_)?\d{4}\.\d{2}\.\d{2}_\d{2}h\d{2}$/.test(padrao), 'nome padrão: ' + padrao + '.html', padrao);
@@ -143,7 +144,10 @@ const abrirSh = async p => { await p.click('.eng-tools .eng-compartilhar'); awai
   conf(JSON.stringify(semDados(ec.head)) === JSON.stringify(semDados(eo.head)) && JSON.stringify(ec.body) === JSON.stringify(eo.body), 'a cópia tem a mesma estrutura do arquivo original (só o JSON dos dados a mais)', {copia: ec.head.slice(0, 8), orig: eo.head.slice(0, 8), cb: ec.body, ob: eo.body});
   const difs = ec.scripts.filter(t => t !== ec.dados).map((t, i) => t === eo.scripts[i] ? null : i).filter(i => i !== null);
   conf(difs.length === 1 && /window\.EARL_ENG_AVULSO=true;/.test(ec.scripts.filter(t => t !== ec.dados)[difs[0]]), 'todos os scripts iguais ao original, menos o do armazenamento (prefixo e o bloco da cópia)', difs);
-  conf(!ec.app && !ec.sujo && !ec.manifesto && !ec.attrs.some(a => /engrz|class|style/.test(a)), 'sem o que o app pôs na tela depois de abrir (#app vazio, sem alças, faixas nem marcas)', {app: (ec.app || '').length, sujo: ec.sujo, attrs: ec.attrs, manifesto: ec.manifesto});
+  const avisoC = (ec.app || '').replace(/<[^>]+>/g, '');
+  conf(/^<div [^>]*class="earl-semjs"[^>]*>/.test(ec.app || '') && (ec.app.match(/class="/g) || []).length === 1 && !ec.sujo && !ec.manifesto && !ec.attrs.some(a => /engrz|class|style/.test(a)), 'sem o que o app pôs na tela depois de abrir (no #app só o aviso para quando o programa não roda; sem alças, faixas nem marcas)', {app: (ec.app || '').slice(0, 200), sujo: ec.sujo, attrs: ec.attrs, manifesto: ec.manifesto});
+  conf(/cópia compartilhada/.test(avisoC) && avisoC.includes(LIMPO + '.html') && avisoC.includes((base.contratos || []).filter(c => !c.archived).length + ' contrato(s)') && /Chrome/.test(avisoC) && /pré-visualização do Outlook/.test(avisoC), 'o aviso da cópia tem o nome do arquivo, o resumo dos dados e como abrir', avisoC.slice(0, 300));
+  conf(/^<div class="earl-semjs"/.test(eo.app || '') && /abra com dois cliques no Google Chrome/.test(eo.app), 'o arquivo original também tem o aviso (sem o resumo)', (eo.app || '').slice(0, 120));
   const csp = H.indexOf('http-equiv="Content-Security-Policy"');
   conf(csp > 0 && csp < H.indexOf('<script') && !/<script[^>]+src=["']https?:/i.test(H), 'a política de segurança continua antes de qualquer script; nada carregado da internet');
   const pref = prefixo(H);
@@ -183,6 +187,25 @@ const abrirSh = async p => { await p.click('.eng-tools .eng-compartilhar'); awai
   const f5 = await frame(c5.p);
   conf(JSON.stringify(resumo(await dbAqui(c5.p))) === JSON.stringify(R0) && /Comparar registros \(1\)/.test(await f5.innerText('.tabs')) && !c5.errs.length, 'noutro navegador (sem nada guardado), a cópia abre com os mesmos dados e o registro dos Indicadores', c5.errs.slice(0, 3));
   await b5.close();
+
+  console.log('\n4b. Pré-visualização (sem o programa rodar): aviso com o resumo, em vez da tela em branco');
+  const b6 = await chromium.launch();
+  const x6 = await b6.newContext({viewport: {width: 1200, height: 800}, javaScriptEnabled: false});
+  const p6 = await x6.newPage();
+  await p6.goto('file://' + arqH);
+  await p6.waitForTimeout(3200);
+  const t6 = await p6.innerText('body');
+  conf(/cópia compartilhada/.test(t6) && t6.includes(LIMPO + '.html') && /operação\(ões\)/.test(t6) && /Chrome/.test(t6) && await p6.locator('.earl-semjs').isVisible(), 'sem JavaScript, a cópia mostra o aviso com o resumo dos dados e como abrir (não fica em branco)', t6.slice(0, 200));
+  await p6.goto('file://' + ARQ);
+  await p6.waitForTimeout(3200);
+  conf(/abra com dois cliques no Google Chrome/.test(await p6.innerText('body')), 'sem JavaScript, o arquivo original também mostra como abrir');
+  await b6.close();
+  const p7 = await ctx.newPage();
+  await p7.goto('file://' + arqH);
+  const cedo = await p7.evaluate(() => { const e = document.querySelector('.earl-semjs'); return e ? getComputedStyle(e).visibility : 'sem'; });
+  await pronto(p7);
+  conf((cedo === 'hidden' || cedo === 'sem') && !(await p7.locator('.earl-semjs').count()), 'com o programa rodando, o aviso não aparece (fica escondido nos primeiros segundos e a tela do app o substitui)', cedo);
+  await p7.close();
 
   console.log('\n5. ⬇ Baixar .zip');
   await abrirSh(p);
@@ -255,6 +278,15 @@ const abrirSh = async p => { await p.click('.eng-tools .eng-compartilhar'); awai
     conf(!errC.length && !c4.errs.length, 'contrato e cópia: nenhum erro de JavaScript', errC.concat(c4.errs).slice(0, 3));
     await pc.close();
   }
+
+  console.log('\n10. Arquivo sem operações (o padrão, novo): a janela avisa que a cópia vai sair sem operações');
+  const b8 = await chromium.launch();
+  const x8 = await b8.newContext({viewport: {width: 1440, height: 900}});
+  await x8.addInitScript(() => { window.EARL_ABA_INICIAL = 'cts'; });
+  const c8 = await abrirCopia(x8, ARQ);
+  await abrirSh(c8.p);
+  conf(/não tem nenhuma operação lançada/.test(await c8.p.innerText('.eng-sh-vazio').catch(() => '')), 'arquivo sem operações: aviso vermelho na janela (abrir o arquivo do contrato ou importar)');
+  await b8.close();
 
   conf(!errs.length, 'arquivo original: nenhum erro de JavaScript', errs.slice(0, 3));
   await browser.close();

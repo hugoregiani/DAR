@@ -6,7 +6,16 @@
 >
 > **O que entregar (pedido do Hugo, 27/11/2026, desde a V08):** só o arquivo padrão limpo `EARL_Forecast_Vnn.html` e este prompt (`EARL_prompt_continuidade_Vnn.md`). Não mandar um arquivo por contrato nem o PDF do passo a passo, a não ser que ele peça. Os arquivos dos contratos continuam sendo gerados para os testes.
 >
-> **Última atualização:** 27/11/2026 — **entrega _V10: EARL Forecast e23 + Gerencial g23**:
+> **Última atualização:** 28/11/2026 — **entrega _V11: EARL Forecast e24** (Gerencial continua g23):
+> - Relato do Hugo: "quando baixo o HTML para compartilhar com outro usuário o arquivo está indo em branco".
+> - **Causa 1:** aberta numa pré-visualização (Outlook, Teams, SharePoint, OneDrive), que não roda o programa, a página ficava toda em branco. Agora aparece um aviso: na cópia, o nome do arquivo, a data, os contratos e as operações que ela leva, e como abrir (salvar e abrir com dois cliques no Chrome ou no Edge). O arquivo padrão e os de contrato também têm o aviso.
+> - **Causa 2 (provável):** a cópia sai do arquivo aberto. Os dados ficam no arquivo (e no navegador) em que foram lançados, e os arquivos de contrato guardam os dados à parte; o padrão novo vem só com os contratos de exemplo, sem operações. A janela de compartilhar agora mostra "Cópia de: <arquivo>" e avisa quando o arquivo não tem operações. Por isso esta entrega leva também os **7 arquivos de contrato V11** (gerados com `--compat` dos V09: quem já lançou neles não perde nada) — a V10 só tinha o compartilhar novo no arquivo padrão.
+> - Conferido: a cópia leva os dados com 41 contratos e 544 operações, num navegador limpo e num com o armazenamento cheio.
+> - Arquivos `EARL_Forecast_V11.html`, os 7 `EARL_Forecast_<NOME>_V11.html` e `EARL_prompt_continuidade_V11.md`. Ver "e24" em 4-E.
+> - **Em andamento (parado):** narração do vídeo tutorial (o `gravar_tutorial.js` ainda usa a pílula "Consumo e receita", que saiu na e18).
+> - **Pendente:** a planilha do banco de químicos/casing não chegou.
+>
+> Antes, em 27/11/2026 — **entrega _V10: EARL Forecast e23 + Gerencial g23**:
 > - **"📤 Compartilhar (HTML)" agora compartilha o próprio arquivo do Forecast** em que a pessoa está trabalhando (não existe mais o arquivo do Gerencial): sai uma cópia deste .html com todos os dados de agora (contratos, operações, consumos, handovers, inventário, câmbio, químicos, casing, grupos, filtros e os registros dos Indicadores). O botão fica na barra de ferramentas (ao lado de Exportar/Importar dados) e na aba Indicadores.
 > - **Dá para escolher o nome do arquivo** antes de baixar (.html ou .zip) ou de criar o e-mail (.eml, rascunho do Outlook com o arquivo anexo). O nome sai sem acento (o navegador troca por "download" nome de arquivo com acento) e sem os caracteres que o Windows não aceita.
 > - Quem recebe abre com dois cliques, sem internet, e usa como o arquivo original; o que lançar fica só no computador dela, separado dos outros arquivos do EARL.
@@ -656,6 +665,23 @@ Pedidos do Hugo (12/11/2026): "No envio do email do Handover preciso que inclua 
   - Painel de Compras: `engenharia` 37, `invariantes` 64, `pedidos_enviados` 15, `regressao` 6, `reproduzir` ok.
   - Ajustes de expectativa nos testes antigos (mudanças pedidas): sonda "NS-32 - Norbe VIII" nos seletores, no assunto do e-mail e na matriz do Gerencial; coluna "Saldo na sonda" no e-mail; colunas novas nas exportações; versão g16.
 - **Pendências:** os textos novos ainda sem EN/ES; a tabela de câmbio não tem importação por planilha (é digitada); a "Frente" do PA ainda precisa de ajuste (a planilha fatura com outra regra).
+
+### e24 — a cópia compartilhada não abre "em branco" — entrega _V11 (28/11/2026)
+
+- **Relato do Hugo (28/11/2026):** "quando baixo o HTML para compartilhar com outro usuário o arquivo está indo em branco, preciso que vá com todas as informações do arquivo original".
+- **Investigação:**
+  - Juntei os bancos dos 7 contratos reais num arquivo padrão (41 contratos, 544 operações, banco de 1,4 MB). A cópia saiu com 9,7 MB e abriu com tudo num navegador limpo e num com o armazenamento do `file://` cheio (5,2 M caracteres; caminho `EARL_SH_SEM_ESPACO`).
+  - **Sem JavaScript**, a cópia mostrava a página **toda em branco** (o `#app` era vazio). É o que se vê na pré-visualização do Outlook, do Teams, do SharePoint e do OneDrive.
+  - O arquivo padrão novo vem com os 16 contratos de exemplo e **nenhuma operação**. Quem trabalha num arquivo de contrato (V09), ao abrir o padrão V10, vê outro armazenamento (outro prefixo); a cópia sai dele sem operações.
+- **Mudanças (e24):**
+  - `patch_engenharia.py`: `<div id="app">` com um aviso `.earl-semjs` (como abrir).
+  - `eng_e23.js`: `engShAviso(doc, info)` monta o aviso da cópia (nome, data, contratos e operações ativos, nomes dos contratos — até 12 —, como abrir; tudo com `textContent`). `engShLimparClone(cl, info)` põe esse aviso no `#app` da cópia.
+  - `eng.css`: o aviso fica escondido nos primeiros 2,5 s (`animation … backwards`), e o React troca o `#app` pela tela (o `createRoot` limpa o conteúdo). Sem animação no navegador, aparece direto.
+  - Janela: "Cópia de: <arquivo aberto>" (`.eng-sh-origem`, `location.pathname`). Sem nenhuma operação, aviso vermelho (`.eng-sh-vazio`): abrir o arquivo do contrato e compartilhar de lá, ou importar.
+  - Mensagem do e-mail: "a pré-visualização do Outlook ou do Teams não abre o EARL".
+- **Versão:** `EARL Forecast e24 (base v115)`.
+- **Testes (28/11/2026):** <<RESULTADOS>>
+- **Entrega V11:** `EARL_Forecast_V11.html`, os 7 `EARL_Forecast_<NOME>_V11.html` (o compartilhar novo também nos arquivos de contrato, onde estão os dados de quem trabalha neles) e este prompt.
 
 ### e23 + Gerencial g23 — "📤 Compartilhar (HTML)" é o próprio arquivo do Forecast, com o nome escolhido — entrega _V10 (27/11/2026)
 
