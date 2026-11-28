@@ -44,7 +44,7 @@ h1:before{content:"";position:absolute;left:-22px;top:-12px;width:18px;height:18
 .f label{font-size:10.5px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--ink-3)}
 .f input,.f select{border:1px solid var(--line-2);border-radius:10px;padding:7px 10px;background:#fff;min-width:0}
 .f select{max-width:240px}
-.kpis{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:10px;margin:10px 0}
+.kpis{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin:10px 0}
 .kpi{background:#fff;border:1px solid var(--line);border-radius:16px;padding:12px 14px;display:flex;flex-direction:column;gap:2px}
 .kpi span{font-size:10.5px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--ink-3)}
 .kpi{container-type:inline-size}
@@ -119,6 +119,27 @@ tr.fora td{color:var(--ink-3)}
 .g-vl{font-size:11.5px;fill:var(--ink);font-weight:600}
 .g-modos button{font-size:12px;padding:5px 10px}
 .g-bg{fill:transparent}
+/* g25: aba Gráficos */
+.gf-intro{margin:0 0 10px}
+.gf-graf{min-height:380px;overflow-y:hidden}
+.gf-tx{font-size:11px;fill:var(--ink-2);text-anchor:end}
+.gf-tx.al{fill:#C1272D;font-weight:700}
+.gf-vl{font-size:10.5px;fill:var(--ink);font-weight:600;text-anchor:middle}
+.gf-ref{stroke:#e34948;stroke-width:1.5;stroke-dasharray:6 4}
+.gf-reft{font-size:11px;fill:#e34948;text-anchor:end;font-weight:700}
+.gf-leg i.gf-lref{width:16px;height:0;border-radius:0;border-top:2px dashed #e34948;background:transparent}
+.gf-b.on .g-bg{fill:#F1F2F3}
+.gf-sel-w{position:relative}
+.gf-sel-b{font-size:12px;padding:5px 12px}
+.gf-pop{position:absolute;right:0;top:calc(100% + 6px);z-index:20;width:min(460px,86vw);background:#fff;border:1px solid var(--line-2);border-radius:12px;box-shadow:0 10px 28px rgba(0,0,0,.18);padding:10px}
+.gf-pop-h{display:flex;gap:6px;align-items:center;margin-bottom:8px}
+.gf-pop-h .gf-q{flex:1;min-width:0;border:1px solid var(--line-2);border-radius:10px;padding:6px 9px;font:inherit;font-size:12.5px}
+.gf-pop-h .btn-o{font-size:12px;padding:4px 10px}
+.gf-pop-l{max-height:320px;overflow:auto}
+.gf-it{display:flex;align-items:center;gap:8px;padding:5px 4px;border-radius:8px;font-size:12.5px;cursor:pointer}
+.gf-it:hover{background:#F4F5F6}
+.gf-it span{flex:1;min-width:0}
+.gf-it em{font-style:normal;color:var(--ink-3);white-space:nowrap}
 .g-mes:hover .g-bg,.g-mes:focus .g-bg{fill:#F1F2F3}
 .g-mes:focus-visible .g-bg{stroke:var(--ink-3);stroke-width:1}
 .g-tip{position:absolute;display:none;pointer-events:none;background:#fff;border:1px solid var(--line-2);border-radius:10px;box-shadow:0 4px 14px rgba(0,0,0,.12);padding:8px 10px;font-size:12px;min-width:200px;z-index:5}
@@ -300,7 +321,7 @@ button.kpi{font:inherit;color:inherit;text-align:left;cursor:pointer;align-items
 .previa .mes-b.on:not(.pv),.previa .q-b.on:not(.pv){background:#fff;border-color:var(--line);color:inherit;font-weight:400}
 .mes-b.pv,.q-b.pv{background:#FBEFEF;border-color:#F0C9C9;color:var(--red-dk)}
 .mes-b.pv-ponta,.q-b.pv-ponta{background:var(--red);border-color:var(--red);color:#fff;font-weight:700}
-/* modo embutido (seção Receita e margem no EARL Engenharia) */
+/* modo embutido (aba Indicadores do EARL Forecast) */
 html.emb body{background:transparent;min-height:0}
 html.emb .hdr{display:none}
 html.emb .wrap{max-width:none;padding:0 0 6px}
@@ -326,7 +347,7 @@ html.emb .qcards{grid-template-columns:repeat(4,minmax(0,1fr))}
 .mx-rsz:hover::after,.mx-arrastando .mx-rsz::after{background:var(--red);top:0;bottom:0}
 html.mx-arr,html.mx-arr *{cursor:col-resize!important;user-select:none}
 .t-mx.mx-fix .mx-rot{width:var(--mxw);min-width:var(--mxw);max-width:var(--mxw)}
-@media(max-width:760px){.t-mx .mx-rot{min-width:150px;max-width:200px}.qcards{grid-template-columns:1fr 1fr}.qc-ano,.kpis .k-margem{grid-column:1/-1}.mes-box,.q-box{min-width:0;width:100%}}
+@media(max-width:760px){.t-mx .mx-rot{min-width:150px;max-width:200px}.qcards{grid-template-columns:1fr 1fr}.qc-ano{grid-column:1/-1}.mes-box,.q-box{min-width:0;width:100%}}
 @media(max-width:1100px){.kpis,.qcards{grid-template-columns:repeat(3,minmax(0,1fr))}.cx-kpis{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:760px){.hdr{gap:10px;padding:0 12px}.hdr img{height:24px}.hdr .ver{display:none}h1{font-size:30px;padding-left:22px}h1:before{left:0;top:-6px}.f select{max-width:100%}.f{flex:1 1 140px}.kpis{grid-template-columns:1fr 1fr}.kpi b{font-size:min(17px,10.5cqi)}.kpi em{font-size:11px}}
 @media print{.bar,.tabs,.filtros{display:none}}
@@ -372,7 +393,7 @@ html.emb .kpis,html.emb .qcards{padding:2px 2px 8px}
    Para cada contrato vale o arquivo mais novo. Tudo fica neste navegador (localStorage, prefixo earlger:). */
 (function () {
   'use strict';
-  var VERSAO = 'EARL Gerencial g24';
+  var VERSAO = 'EARL Gerencial g25';
   var CHAVE = 'earlger:pacotes_v1';
   var $ = function (s) { return document.querySelector(s); };
   var esc = function (v) { return String(v == null ? '' : v).replace(/[&<>"']/g, function (c) { return {'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'}[c]; }); };
@@ -400,7 +421,7 @@ html.emb .kpis,html.emb .qcards{padding:2px 2px 8px}
   var CHV = function (k) { return (EMB ? PREF_EMB : 'earlger:') + k; };
   try { var t0 = localStorage.getItem(CHV('tab')); if (t0) S.tab = t0 === 'matriz' ? 'receita' : t0; } catch (e) {}
   try { var w0 = JSON.parse(localStorage.getItem(CHV('mxw')) || '{}'); ['mx', 'cx'].forEach(function (k) { var n = Number(w0 && w0[k]); if (n >= 120 && n <= 1200) S.mxw[k] = Math.round(n); }); } catch (e) {}
-  try { if (localStorage.getItem(CHV('graf')) === 'oculto') S.graf = false; var t1 = localStorage.getItem(CHV('tend')); if (t1 === 'linear' || t1 === 'mm3' || t1 === 'nenhuma') S.tend = t1; var t2 = localStorage.getItem(CHV('gmodo')); if (t2 === 'mes' || t2 === 'mescli' || t2 === 'cli') S.gmodo = t2; var t3 = localStorage.getItem(CHV('gmet')); if (t3 === 'rec' || t3 === 'cogs' || t3 === 'ambos' || t3 === 'mg') S.gmet = t3; } catch (e) {}
+  try { if (localStorage.getItem(CHV('graf')) === 'oculto') S.graf = false; var t1 = localStorage.getItem(CHV('tend')); if (t1 === 'linear' || t1 === 'mm3' || t1 === 'nenhuma') S.tend = t1; var t2 = localStorage.getItem(CHV('gmodo')); if (t2 === 'mes' || t2 === 'mescli' || t2 === 'cli') S.gmodo = t2; var t3 = localStorage.getItem(CHV('gmet')); if (t3 === 'rec' || t3 === 'cogs' || t3 === 'ambos') S.gmet = t3; } catch (e) {}
   /* versão compartilhada: os dados vêm de dentro do arquivo (#earlger-dados) e nada é gravado no navegador */
   var DADOS_EMB = (function () { try { var de = document.getElementById('earlger-dados'); return de ? JSON.parse(de.textContent) : null; } catch (e) { return null; } })();
   var COMPARTILHADO = !!(DADOS_EMB && DADOS_EMB.tipo === 'EARL-Gerencial-Compartilhado' && Array.isArray(DADOS_EMB.pacotes));
@@ -645,7 +666,7 @@ html.emb .kpis,html.emb .qcards{padding:2px 2px 8px}
   /* ---------- telas ---------- */
   var barra = function (pct, verm) { var w = Math.max(0, Math.min(100, pct || 0)); return '<div class="barra"><i class="' + (verm ? 'r' : '') + '" style="width:' + w.toFixed(1) + '%"></i></div>'; };
   var pctCel = function (pct) { return pct == null ? '—' : '<div class="pct">' + barra(pct, pct > 100) + '<span' + (pct > 100 ? ' class="neg"' : '') + '>' + fN(pct) + '%</span></div>'; };
-  /* g18: largura da 1ª coluna das matrizes (Receita, COGS e margem; comparação) ajustável arrastando a borda do título.
+  /* g18: largura da 1ª coluna das matrizes (Receita e COGS; comparação) ajustável arrastando a borda do título.
      Fica guardada neste navegador (mx = matriz da aba Receita, cx = comparação); duplo clique volta ao padrão. */
   var alcaMx = function (k) { return '<span class="mx-rsz" data-rsz="' + k + '" role="separator" aria-orientation="vertical" aria-label="Largura da primeira coluna" title="Arraste para aumentar ou diminuir a largura desta coluna (duplo clique: largura padrão)"></span>'; };
   var estMx = function (k) { var w = S.mxw[k]; return w ? ' mx-fix" style="--mxw:' + w + 'px"' : '"'; };
@@ -683,8 +704,9 @@ html.emb .kpis,html.emb .qcards{padding:2px 2px 8px}
      Receita: realizado + previsto empilhados; COGS ao lado. Cores: 3 primeiras do palette de referência,
      validadas juntas (validate_palette.js --pairs all). O aqua fica abaixo de 3:1: a tabela é a vista acessível. */
   var COR = {real: '#2a78d6', cogs: '#eb6834', prev: '#1baf7a', mg: '#6250d6', mgNeg: '#e34948'};
-  /* o que os gráficos mostram (S.gmet): só receita, só COGS, receita e COGS (padrão) ou margem (receita − COGS, pode ser negativa) */
-  var GMET = [['rec', 'Receita'], ['cogs', 'COGS'], ['ambos', 'Receita e COGS'], ['mg', 'Margem']];
+  /* o que os gráficos mostram (S.gmet): só receita, só COGS ou receita e COGS (padrão). g25 (pedido do Hugo): saiu a
+     margem de todos os indicadores ("não precisamos dessa informação e ela está errada tecnicamente") */
+  var GMET = [['rec', 'Receita'], ['cogs', 'COGS'], ['ambos', 'Receita e COGS']];
   var NOME_MET = {rec: 'receita', cogs: 'COGS', ambos: 'receita', mg: 'margem'};
   var valMet = function (met, rU, cU) { return met === 'cogs' ? cU : met === 'mg' ? rU - cU : rU; };
   var corMg = function (v) { return v < 0 ? COR.mgNeg : COR.mg; };
@@ -837,7 +859,6 @@ html.emb .kpis,html.emb .qcards{padding:2px 2px 8px}
       else if (met === 'cogs') T.linha(porCli ? '' : COR.cogs, fUSD(t.cU), 'COGS' + (porCli ? ' total' : ''));
       else { T.linha(porCli ? '' : corMg(t.v), fUSD(t.v) + ' (' + margemTxt(t.rU, t.cU) + ')', 'margem' + (porCli ? ' total' : '')); if (!porCli) { T.linha('', fUSD(t.rU), 'receita'); T.linha('', fUSD(t.cU), 'COGS'); } }
       if (tv && tv[i] != null) T.linha('', fUSD(tv[i]), S.tend === 'linear' ? 'tendência linear' : 'média móvel 3 meses', 'g-lk' + (S.tend === 'linear' ? ' tr' : ''));
-      if (!porCli && met === 'ambos') T.linha('', fUSD(t.rU - t.cU) + ' (' + margemTxt(t.rU, t.cU) + ')', 'margem');
       T.linha('', String(t.n), 'operação(ões): ' + t.nR + ' real. · ' + t.nP + ' prev.' + (t.nF ? ' · ' + t.nF + ' fora' : ''));
       var cx = mL + band * i + band / 2, tw = T.el.offsetWidth;
       T.pos(Math.max(0, cx + band / 2 + tw + 8 > W ? cx - band / 2 - tw - 4 : cx + band / 2 + 4), mT);
@@ -908,7 +929,6 @@ html.emb .kpis,html.emb .qcards{padding:2px 2px 8px}
         if (met === 'ambos' || met === 'cogs') T.linha(COR.cogs, fUSD(t.cU), 'COGS');
         if (met === 'mg') { T.linha(corMg(t.v), fUSD(t.v) + ' (' + margemTxt(t.rU, t.cU) + ')', 'margem'); T.linha('', fUSD(t.rU), 'receita'); T.linha('', fUSD(t.cU), 'COGS'); }
         if (met === 'ambos' || met === 'rec') T.linha('', fUSD(t.rU), 'receita total');
-        if (met === 'ambos') T.linha('', fUSD(t.rU - t.cU) + ' (' + margemTxt(t.rU, t.cU) + ')', 'margem');
         if (met !== 'cogs') T.linha('', nC ? fUSD(t.rU / nC) : '—', 'receita por operação');
         T.linha('', String(t.n), 'operação(ões): ' + t.nR + ' real. · ' + t.nP + ' prev.' + (t.nF ? ' · ' + t.nF + ' fora' : ''));
         var tw = T.el.offsetWidth, th = T.el.offsetHeight, yb = mT + (i + 1) * row;
@@ -961,11 +981,162 @@ html.emb .kpis,html.emb .qcards{padding:2px 2px 8px}
   };
   var tRedim = null;
   var largAnt = window.innerWidth;
-  window.addEventListener('resize', function () { if (window.innerWidth === largAnt) return; largAnt = window.innerWidth; clearTimeout(tRedim); tRedim = setTimeout(function () { if ((S.tab === 'receita' && S.graf && $('#graf')) || S.tab === 'cmp') render(); else ajustarTw15(); }, 150); });
+  window.addEventListener('resize', function () { if (window.innerWidth === largAnt) return; largAnt = window.innerWidth; clearTimeout(tRedim); tRedim = setTimeout(function () { if ((S.tab === 'receita' && S.graf && $('#graf')) || S.tab === 'cmp' || S.tab === 'graficos') render(); else ajustarTw15(); }, 150); });
+  /* ---------- g25 (pedido do Hugo, 28/11/2026): aba "Gráficos" — barras verticais. Cada gráfico tem a sua escolha de
+     itens (botão "Itens ▾", vale só para aquele gráfico; o que se desmarca fica guardado) e quantos mostrar (os maiores
+     primeiro). Respeitam os filtros do topo (ano, quarto, mês, cliente, contrato, região, tipo). Valores em US$, com o
+     risco de cada operação (como a matriz); "PPU perto de acabar" é sobre o contrato inteiro (consumido + previsto). ---------- */
+  var GF_ORDEM = ['ppu', 'ct', 'risco', 'acab', 'sonda'];
+  var GF = {
+    ppu: {tit: 'Itens PPU com maior receita (US$)', un: 'US$', fmt: fUSD, vazio: 'Nenhum item PPU com receita no filtro.',
+      nota: 'Receita de cada item PPU de cada contrato no período e nos filtros do topo, em US$, com o risco de cada operação: realizada (operações concluídas) e prevista (planejadas). Passe o mouse numa barra para ver os valores.'},
+    ct: {tit: 'Contratos — receita e COGS (US$)', un: 'US$', fmt: fUSD, vazio: 'Nenhum contrato com operações no filtro.', dois: true,
+      nota: 'Receita (realizada + prevista) e COGS de cada contrato no período e nos filtros do topo, em US$, com o risco de cada operação. Clique num contrato para filtrar a página por ele (clique de novo para tirar o filtro).'},
+    risco: {tit: 'Contratos — receita esperada e receita em risco (US$)', un: 'US$', fmt: fUSD, vazio: 'Nenhum contrato com operações no filtro.',
+      nota: 'Receita cheia das operações de cada contrato no período, separada em esperada (já com o risco de cada operação, é a que entra nos indicadores) e em risco (a parte descontada pelo risco/contingência, que pode não acontecer). O nome fica em vermelho quando 25% ou mais da receita está em risco.'},
+    acab: {tit: 'Itens PPU perto de acabar o saldo do contrato (% do contratado)', un: '%', fmt: function (v) { return fN(v) + '%'; }, vazio: 'Nenhum item PPU com quantidade contratada nos contratos do filtro. Para ver este gráfico, preencha o saldo contratado de cada item (no Forecast: Contratos → itens PPU, coluna “Saldo”).',
+      nota: 'Quanto de cada item PPU já foi usado do contratado: consumido (operações concluídas) + previsto (operações planejadas, com o risco), no contrato inteiro (sem o filtro de período). A linha vermelha é 100% do contratado; os itens com 90% ou mais ficam em vermelho.'},
+    sonda: {tit: 'Sondas — receita e COGS (US$)', un: 'US$', fmt: fUSD, vazio: 'Nenhuma operação no filtro.', dois: true,
+      nota: 'Receita (realizada + prevista) e COGS das operações de cada sonda no período e nos filtros do topo, em US$, com o risco de cada operação.'}
+  };
+  var GF_NS = [[10, '10 maiores'], [15, '15 maiores'], [20, '20 maiores'], [30, '30 maiores'], [0, 'Todos']];
+  S.gf = {}; S.gfPop = null; S.gfQ = {};
+  GF_ORDEM.forEach(function (k) { S.gf[k] = {n: k === 'ct' || k === 'sonda' || k === 'risco' ? 0 : 15, fora: {}}; });
+  try {
+    var gf0 = JSON.parse(localStorage.getItem(CHV('gf')) || 'null');
+    if (gf0 && typeof gf0 === 'object') GF_ORDEM.forEach(function (k) {
+      var x = gf0[k]; if (!x) return;
+      if (GF_NS.some(function (o) { return o[0] === Number(x.n); })) S.gf[k].n = Number(x.n);
+      if (x.fora && typeof x.fora === 'object') S.gf[k].fora = x.fora;
+    });
+  } catch (e) {}
+  var guardarGf = function () { if (COMPARTILHADO) return; try { localStorage.setItem(CHV('gf'), JSON.stringify(S.gf)); } catch (e) {} };
+  var semRisco = function (d) { return String(d || '').replace(/ · contingência, risco .*$/, ''); };
+  var gfLista = function (key, A) {
+    var tl = function (rot, t, sub) {
+      return {k: rot.k, rot: rot.rot, rotLista: rot.rot + (sub ? ' — ' + sub : ''), ord: t.rU, valor: t.rU,
+        segs: [{v: t.rRU, cor: COR.real}, {v: t.rPU, cor: COR.prev}], extra: {v: t.cU, cor: COR.cogs},
+        aria: 'receita ' + fUSD(t.rU) + ', COGS ' + fUSD(t.cU), tit: rot.rot + (sub ? ' — ' + sub : ''),
+        linhas: [[COR.real, fUSD(t.rRU), 'receita realizada'], [COR.prev, fUSD(t.rPU), 'receita prevista'], ['', fUSD(t.rU), 'receita total'], [COR.cogs, fUSD(t.cU), 'COGS'],
+          ['', String(t.n), 'operação(ões): ' + t.nR + ' real. · ' + t.nP + ' prev.' + (t.nF ? ' · ' + t.nF + ' fora (risco 100%)' : '')]]};
+    };
+    var ord = function (l) { return l.sort(function (a, b) { return b.ord - a.ord || String(a.rot).localeCompare(String(b.rot), 'pt', {numeric: true}); }); };
+    if (key === 'ppu') {
+      var g = {};
+      A.linhas.forEach(function (x) {
+        itensOpMx(x).forEach(function (it) {
+          if (!(it.v > 0)) return;
+          var k = x.o.contratoId + '|' + it.ref, pi = precoItem(x.o, it.ref);
+          var e = g[k] || (g[k] = {k: k, ref: it.ref, desc: pi.desc || semRisco(it.desc), ct: x.o._ct.nome, cli: x.o._ct.cliente, real: 0, prev: 0, ops: {}});
+          if (x.tipo === 'real') e.real += it.v; else e.prev += it.v;
+          e.ops[x.o.id] = 1;
+        });
+      });
+      return ord(Object.keys(g).map(function (k) {
+        var e = g[k], t = e.real + e.prev, rot = e.ref + ' · ' + (e.desc || '—');
+        return {k: k, rot: rot, rotLista: rot + ' — ' + e.ct, ord: t, valor: t, segs: [{v: e.real, cor: COR.real}, {v: e.prev, cor: COR.prev}], aria: 'receita ' + fUSD(t), tit: rot,
+          linhas: [['', e.ct + (e.cli ? ' · ' + e.cli : ''), ''], [COR.real, fUSD(e.real), 'receita realizada'], [COR.prev, fUSD(e.prev), 'receita prevista'], ['', fUSD(t), 'receita total'], ['', String(Object.keys(e.ops).length), 'operação(ões)']]};
+      }));
+    }
+    if (key === 'risco') return ord(A.porCt.map(function (x) {
+      var ls = A.linhas.filter(function (l) { return l.o.contratoId === x.c.id; }), g = 0, r0 = 0, nR = 0;
+      ls.forEach(function (l) { g += l.gU || 0; r0 += l.rU || 0; if ((Number(l.o.risco) || 0) > 0) nR++; });
+      var em = Math.max(0, g - r0), rot = x.c.nome;
+      return {k: x.c.id, rot: rot, rotLista: rot + (x.c.cliente ? ' — ' + x.c.cliente : ''), ord: g, valor: g, alerta: g > 0 && em / g >= 0.25,
+        segs: [{v: r0, cor: COR.real}, {v: em, cor: '#e9a6a6'}], aria: 'receita cheia ' + fUSD(g) + ', em risco ' + fUSD(em), tit: rot + (x.c.cliente ? ' — ' + x.c.cliente : ''),
+        linhas: [[COR.real, fUSD(r0), 'receita esperada (com o risco)'], ['#e9a6a6', fUSD(em) + (g ? ' (' + fN(em / g * 100) + '%)' : ''), 'receita em risco'], ['', fUSD(g), 'receita cheia'], ['', String(nR), 'operação(ões) com risco']]};
+    }).filter(function (it) { return it.valor > 0; }));
+    if (key === 'ct') return ord(A.porCt.filter(function (x) { return x.t.n > 0; }).map(function (x) { return tl({k: x.c.id, rot: x.c.nome}, x.t, x.c.cliente); }));
+    if (key === 'sonda') {
+      var gs = {};
+      A.linhas.forEach(function (x) { var k = x.o.sonda || '(sem sonda)'; (gs[k] = gs[k] || []).push(x); });
+      return ord(Object.keys(gs).map(function (k) { return tl({k: k, rot: k}, soma(gs[k])); }));
+    }
+    return ord(A.ppu.filter(function (p) { return p.i.contratado > 0; }).map(function (p) {
+      var c = p.i.contratado, un = p.i.unit ? ' ' + p.i.unit : '', pr = p.cons / c * 100, pp = p.aR / c * 100, pt = pr + pp, sobra = c - p.proj;
+      var rot = p.i.ref + ' · ' + (p.i.desc || '—');
+      return {k: p.c.id + '|' + p.i.ref, rot: rot, rotLista: rot + ' — ' + p.c.nome, ord: pt, valor: pt, alerta: pt >= 90,
+        segs: [{v: pr, cor: COR.real}, {v: pp, cor: COR.prev}], aria: fN(pt) + '% do contratado', tit: rot,
+        linhas: [['', p.c.nome, ''], ['', fN(c) + un, 'contratado'], [COR.real, fN(p.cons) + un + ' (' + fN(pr) + '%)', 'consumido'], [COR.prev, fN(p.aR) + un + ' (' + fN(pp) + '%)', 'previsto (com o risco)'],
+          ['', fN(pt) + '%', 'do contratado, com o previsto'], ['', fN(Math.abs(sobra)) + un, sobra < 0 ? 'passa do contratado' : 'sobra depois do previsto']]};
+    }));
+  };
+  var _gf = {};
+  var popGf = function (key, todos) {
+    var fora = S.gf[key].fora, q = String(S.gfQ[key] || '').toLowerCase();
+    return '<div class="gf-pop" role="dialog" aria-label="Escolher os itens do gráfico"><div class="gf-pop-h"><input type="search" class="gf-q" data-gfq="' + key + '" placeholder="Buscar…" value="' + esc(S.gfQ[key] || '') + '">' +
+      '<button type="button" class="btn-o" data-a="gfTodos" data-gf="' + key + '">Todos</button><button type="button" class="btn-o" data-a="gfNenhum" data-gf="' + key + '">Nenhum</button><button type="button" class="btn-x" data-a="gfFechar" title="Fechar">×</button></div>' +
+      '<div class="gf-pop-l">' + (todos.length ? todos.map(function (it) {
+        var txt = it.rotLista || it.rot;
+        return '<label class="gf-it"' + (q && txt.toLowerCase().indexOf(q) < 0 ? ' style="display:none"' : '') + '><input type="checkbox" data-gfsel="' + key + '" data-k="' + esc(it.k) + '"' + (fora[it.k] ? '' : ' checked') + '><span>' + esc(txt) + '</span><em>' + esc(GF[key].fmt(it.valor)) + '</em></label>';
+      }).join('') : '<p class="vazio">Nada no filtro.</p>') + '</div></div>';
+  };
+  var cardsGf = function (A) {
+    var h = '';
+    GF_ORDEM.forEach(function (key) {
+      var cfg = GF[key], todos = gfLista(key, A), fora = S.gf[key].fora, sel = todos.filter(function (it) { return !fora[it.k]; }), n = S.gf[key].n;
+      var mostra = n ? sel.slice(0, n) : sel;
+      _gf[key] = mostra;
+      var leg = key === 'risco' ? [{cor: COR.real, rot: 'Receita esperada (com o risco)'}, {cor: '#e9a6a6', rot: 'Receita em risco'}] : key === 'acab' ? [{cor: COR.real, rot: 'Consumido'}, {cor: COR.prev, rot: 'Previsto'}, {cor: '#e34948', rot: '100% do contratado', ref: 1}]
+        : cfg.dois ? [{cor: COR.real, rot: 'Receita realizada'}, {cor: COR.prev, rot: 'Receita prevista'}, {cor: COR.cogs, rot: 'COGS'}] : [{cor: COR.real, rot: 'Receita realizada'}, {cor: COR.prev, rot: 'Receita prevista'}];
+      h += '<div class="card g-card gf-card" data-gfcard="' + key + '"><div class="card-h"><h2>' + esc(cfg.tit) + '</h2>' +
+        '<label class="g-ctl">Mostrar <select data-gfn="' + key + '">' + GF_NS.map(function (o) { return '<option value="' + o[0] + '"' + (o[0] === n ? ' selected' : '') + '>' + o[1] + '</option>'; }).join('') + '</select></label>' +
+        '<div class="gf-sel-w"><button type="button" class="btn-o gf-sel-b" data-gfpop="' + key + '" title="Escolher quais itens aparecem neste gráfico">Itens: ' + (sel.length === todos.length ? 'todos (' + todos.length + ')' : sel.length + ' de ' + todos.length) + ' ▾</button>' + (S.gfPop === key ? popGf(key, todos) : '') + '</div></div>' +
+        '<div class="g-leg gf-leg">' + leg.map(function (l) { return '<span><i' + (l.ref ? ' class="gf-lref"' : ' style="background:' + l.cor + '"') + '></i>' + esc(l.rot) + '</span>'; }).join('') + '</div>' +
+        '<div class="graf gf-graf" id="gf-' + key + '"></div><p class="nota">' + esc(cfg.nota) + (mostra.length < sel.length ? ' Mostrando os ' + mostra.length + ' maiores de ' + sel.length + '.' : '') + (sel.length < todos.length ? ' ' + (todos.length - sel.length) + ' item(ns) desmarcado(s) em “Itens”.' : '') + '</p></div>';
+    });
+    return h;
+  };
+  var desenharBarrasV = function (box, itens, key) {
+    var cfg = GF[key];
+    if (!itens.length) { box.innerHTML = '<p class="vazio">' + esc(cfg.vazio) + '</p>'; box.style.minHeight = '0'; return; }
+    var n = itens.length, larg = Math.max(300, box.clientWidth), mL = 62, mR = 12, mT = 24, mB = 110, dois = !!cfg.dois;
+    var W = Math.max(larg, mL + mR + n * (dois ? 38 : 26)), H = 380;
+    // o nome da 1ª barra é inclinado para a esquerda: a margem cresce para ele não cortar na borda
+    var len0 = Math.min(24, String(itens[0].rot).length), b0 = (W - mL - mR) / n;
+    mL = Math.max(mL, Math.ceil(len0 * 6.2 * 0.766 - b0 / 2 + 6));
+    var pw = W - mL - mR, ph = H - mT - mB;
+    var tot = function (it) { return it.segs.reduce(function (a, s0) { return a + Math.max(0, s0.v); }, 0); };
+    var vals = [key === 'acab' ? 100 : 1];
+    itens.forEach(function (it) { vals.push(tot(it)); if (dois) vals.push(it.extra.v); });
+    var E = escala(vals, 5), y = function (v) { return mT + ph - (v - E.lo) / (E.hi - E.lo) * ph; };
+    var band = pw / n, bw = dois ? Math.max(5, Math.min(26, (band * 0.74 - 2) / 2)) : Math.max(6, Math.min(42, band * 0.6));
+    var fmtE = key === 'acab' ? function (v) { return nf(0, 0)(v) + '%'; } : fEixo;
+    var s = '<svg class="g-svg" width="' + W + '" height="' + H + '" viewBox="0 0 ' + W + ' ' + H + '" role="img" aria-label="' + esc(cfg.tit) + '">';
+    s += E.ticks.map(function (v) { var yy = Math.round(y(v)) + '.5'; return '<line class="g-grade' + (v === 0 ? ' base' : '') + '" x1="' + mL + '" x2="' + (W - mR) + '" y1="' + yy + '" y2="' + yy + '"/><text class="g-ty" x="' + (mL - 8) + '" y="' + (y(v) + 4) + '">' + fmtE(v) + '</text>'; }).join('');
+    s += '<text class="g-ty g-un" x="' + (mL - 8) + '" y="11">' + esc(cfg.un) + '</text>';
+    itens.forEach(function (it, i) {
+      var cx = mL + band * i + band / 2, x0 = dois ? cx - bw - 1 : cx - bw / 2, b = '', acc = 0, pos = it.segs.filter(function (s0) { return s0.v > 0; }), j = 0;
+      pos.forEach(function (s0) { j++; var yb = y(acc) - (acc > 0 ? 2 : 0), yt = y(acc + s0.v); b += coluna(x0, yt, bw, yb - yt, s0.cor, j === pos.length); acc += s0.v; });
+      if (dois && it.extra.v > 0) b += coluna(cx + 1, y(it.extra.v), bw, y(0) - y(it.extra.v), it.extra.cor, true);
+      var topo = Math.min(y(acc), dois ? y(Math.max(0, it.extra.v)) : Infinity);
+      var rot = it.rot.length > 24 ? it.rot.slice(0, 23) + '…' : it.rot;
+      s += '<g class="g-mes gf-b' + (it.alerta ? ' gf-al' : '') + (key === 'ct' && S.f.contrato === it.k ? ' on' : '') + '" tabindex="0" data-i="' + i + '" data-k="' + esc(it.k) + '" aria-label="' + esc(it.rot + ': ' + it.aria) + '">' +
+        '<rect class="g-bg" x="' + (mL + band * i + 1) + '" y="' + mT + '" width="' + Math.max(1, band - 2) + '" height="' + ph + '" rx="6"/>' + b +
+        (band >= 34 ? '<text class="gf-vl" x="' + cx + '" y="' + (topo - 5) + '">' + esc(key === 'acab' ? nf(0, 0)(it.valor) + '%' : fEixo(it.valor)) + '</text>' : '') +
+        '<text class="gf-tx' + (it.alerta ? ' al' : '') + '" transform="translate(' + (cx + 3) + ',' + (mT + ph + 12) + ') rotate(-40)">' + esc(rot) + '</text></g>';
+    });
+    if (key === 'acab') { var y100 = Math.round(y(100)) + '.5'; s += '<line class="gf-ref" x1="' + mL + '" x2="' + (W - mR) + '" y1="' + y100 + '" y2="' + y100 + '"/><text class="gf-reft" x="' + (W - mR - 2) + '" y="' + (y(100) - 5) + '">100% do contratado</text>'; }
+    s += '</svg>';
+    box.innerHTML = s;
+    box.style.overflowX = W > larg ? 'auto' : '';
+    var T = dica(box);
+    box.querySelectorAll('.gf-b').forEach(function (el) {
+      var i = Number(el.dataset.i), it = itens[i];
+      T.ligar(el, function () {
+        T.inicio(it.tit || it.rot);
+        it.linhas.forEach(function (l) { T.linha(l[0], l[1], l[2]); });
+        var tw = T.el.offsetWidth, cx = mL + band * i + band / 2, sl = box.scrollLeft;
+        var lx = cx + band / 2 + 4 + tw > sl + larg ? cx - band / 2 - tw - 4 : cx + band / 2 + 4;
+        T.pos(Math.max(sl, Math.min(sl + larg - tw, lx)), mT);
+      }, function () { if (key === 'ct') { S.f.contrato = S.f.contrato === it.k ? '' : it.k; render(); } });
+    });
+  };
+  var desenharGf = function () { GF_ORDEM.forEach(function (key) { var box = $('#gf-' + key); if (box) desenharBarrasV(box, _gf[key] || [], key); }); };
   var margemTxt = function (r, c) { return r ? fN((r - c) / r * 100) + '%' : '—'; };
 
   var telaVazia = function () {
-    return '<h1>Gerencial</h1><p class="sub">Receita, COGS e margem, consumo de itens PPU, químicas, casing equipment e pessoal de todos os contratos — realizado e previsto.</p>' + barraTopo() +
+    return '<h1>Gerencial</h1><p class="sub">Receita e COGS, consumo de itens PPU, químicas, casing equipment e pessoal de todos os contratos — realizado e previsto.</p>' + barraTopo() +
       '<div class="drop" id="drop"><b>Carregue os arquivos dos engenheiros</b>Arraste aqui os arquivos .json (ou a pasta, ou o .zip baixado do SharePoint), ou use os botões acima.' +
       '<p class="drop-novo"><b>Novo (EARL Forecast):</b> estes indicadores agora ficam na aba <b>📊 Indicadores</b> do próprio Forecast. Cada pessoa usa “⬇ Exportar dados” e você usa “⬆ Importar dados” no seu arquivo: os contratos importados entram nos indicadores. Este Gerencial separado continua abrindo os arquivos “Arquivo do gerencial” das versões anteriores.</p>' +
       '<ol><li>No <b>EARL Engenharia</b> (versões anteriores), cada engenheiro clica em <b>“⬇ Arquivo do gerencial”</b>, marca os contratos dele e salva o arquivo na pasta do SharePoint do gerencial.</li>' +
@@ -993,7 +1164,7 @@ html.emb .kpis,html.emb .qcards{padding:2px 2px 8px}
     fecharFiltroTab();
     $('#ver').textContent = VERSAO;
     var app = $('#app');
-    if (!S.pacotes.length) { app.innerHTML = EMB ? '<p class="vazio emb-vazio">Nenhum contrato com operações. Lance as operações na aba Contratos, ou traga os contratos de outras pessoas com “⬆ Importar dados”, para ver a receita, o COGS e a margem aqui.</p>' : telaVazia(); ajustarAltura(); return; }
+    if (!S.pacotes.length) { app.innerHTML = EMB ? '<p class="vazio emb-vazio">Nenhum contrato com operações. Lance as operações na aba Contratos, ou traga os contratos de outras pessoas com “⬆ Importar dados”, para ver a receita e o COGS aqui.</p>' : telaVazia(); ajustarAltura(); return; }
     var C = consolidar(), anos = anosDe(C);
     if (anos.indexOf(S.f.ano) < 0) S.f.ano = anoPadrao(anos);
     // g22: filtro guardado de um contrato/cliente que não existe mais volta para "Todos"
@@ -1017,9 +1188,8 @@ html.emb .kpis,html.emb .qcards{padding:2px 2px 8px}
       '<div class="kpi dest k-rec-usd"><span>Receita em US$</span><b>' + bUSD(T.rU) + '</b><em>realizado ' + fUSD(T.rRU) + ' · previsto ' + fUSD(T.rPU) + '</em></div>' +
       '<div class="kpi k-cogs"><span>COGS em US$</span><b>' + bUSD(T.cU) + '</b><em>realizado ' + fUSD(T.cRU) + ' · previsto ' + fUSD(T.cPU) + '</em></div>' +
       '<div class="kpi k-ops"><span>Operações</span><b>' + T.n + '</b><em>' + T.nR + ' realizada(s) · ' + T.nP + ' prevista(s)' + (T.nF ? ' · ' + T.nF + ' fora (risco 100%)' : '') + '</em></div>' +
-      '<div class="kpi k-rec-op"><span>Receita / operação (US$)</span><b>' + (nC ? bUSD(T.rU / nC) : '—') + '</b><em>realizado ' + (nCR ? fUSD(T.rRU / nCR) : '—') + ' · previsto ' + (nCP ? fUSD(T.rPU / nCP) : '—') + (T.nF ? ' · sem as ' + T.nF + ' fora' : '') + '</em></div>' +
-      '<div class="kpi k-margem"><span>Margem em US$</span><b>' + bUSD(T.rU - T.cU) + '</b><em>' + margemTxt(T.rU, T.cU) + ' da receita</em></div></div>';
-    var tabs = [['receita', 'Receita e margem'], ['cmp', 'Comparar registros (' + S.regs.length + ')'], ['contratos', 'Contratos'], ['ppu', 'Itens PPU'], ['quim', 'Químicas'], ['cas', 'Casing equipment'], ['pes', 'Pessoal'], ['ops', 'Operações'], ['fontes', 'Arquivos (' + S.pacotes.length + ')']];
+      '<div class="kpi k-rec-op"><span>Receita / operação (US$)</span><b>' + (nC ? bUSD(T.rU / nC) : '—') + '</b><em>realizado ' + (nCR ? fUSD(T.rRU / nCR) : '—') + ' · previsto ' + (nCP ? fUSD(T.rPU / nCP) : '—') + (T.nF ? ' · sem as ' + T.nF + ' fora' : '') + '</em></div></div>';
+    var tabs = [['receita', 'Receita e COGS'], ['graficos', 'Gráficos'], ['cmp', 'Comparar registros (' + S.regs.length + ')'], ['contratos', 'Contratos'], ['ppu', 'Itens PPU'], ['quim', 'Químicas'], ['cas', 'Casing equipment'], ['pes', 'Pessoal'], ['ops', 'Operações'], ['fontes', 'Arquivos (' + S.pacotes.length + ')']];
     if (EMB) {
       tabs = tabs.filter(function (t) { return t[0] !== 'fontes'; }).map(function (t) { return t[0] === 'contratos' ? ['contratos', 'Por contrato'] : t; });
       if (S.tab === 'fontes') S.tab = 'receita';
@@ -1028,6 +1198,7 @@ html.emb .kpis,html.emb .qcards{padding:2px 2px 8px}
     h += telas[S.tab] ? telas[S.tab](C, F, A) : '';
     app.innerHTML = h;
     if (S.tab === 'receita' && S.graf) desenharGrafico(A, C);
+    if (S.tab === 'graficos') desenharGf();
     if (S.tab === 'cmp' && _cmp) { var ge = $('#g-evo'); if (ge) desenharEvolucao(ge, _cmp.serie); document.querySelectorAll('.g-var-box').forEach(function (el) { desenharVarMes(el, _cmp, el.dataset.k); }); }
     if (S.mxVer) { verMesNaTabela(S.mxVer); S.mxVer = null; }
     var on = app.querySelector('.tab.on'); if (on) { var tb = on.parentNode; tb.scrollLeft = on.offsetLeft - 20; }
@@ -1055,7 +1226,7 @@ html.emb .kpis,html.emb .qcards{padding:2px 2px 8px}
     });
   };
   var linhaValores = function (t) {
-    return '<td class="n"><b>' + fUSD(t.rU) + '</b>' + sub('real. ' + fUSD(t.rRU) + ' · prev. ' + fUSD(t.rPU)) + '</td><td class="n">' + fBRL(t.rB) + '</td><td class="n">' + fUSD(t.cU) + '</td><td class="n">' + fUSD(t.rU - t.cU) + sub(margemTxt(t.rU, t.cU)) + '</td>';
+    return '<td class="n"><b>' + fUSD(t.rU) + '</b>' + sub('real. ' + fUSD(t.rRU) + ' · prev. ' + fUSD(t.rPU)) + '</td><td class="n">' + fBRL(t.rB) + '</td><td class="n">' + fUSD(t.cU) + '</td>';
   };
   /* ---------- tabelas com ordem (crescente/decrescente) e seleção de itens, como o filtro do Excel ----------
      tabelaF(id, cols, rows, {cls, tr, rod}): cols = [{t: título, h: html da célula, v: valor para ordenar, f: rótulo(s) para
@@ -1168,6 +1339,9 @@ html.emb .kpis,html.emb .qcards{padding:2px 2px 8px}
   };
   var somaT = function (ts) { var t = {}; ts.forEach(function (x) { Object.keys(x).forEach(function (k) { if (typeof x[k] === 'number') t[k] = (t[k] || 0) + x[k]; }); }); return t; };
   var telas = {
+    graficos: function (C, F, A) {
+      return '<p class="nota gf-intro">Gráficos de barras dos contratos deste arquivo, nos filtros do topo. Em cada gráfico, “Itens ▾” escolhe o que aparece (só naquele gráfico) e “Mostrar” quantos (os maiores primeiro).</p>' + cardsGf(A);
+    },
     contratos: function (C, F, A) {
       var mx = Math.max.apply(null, [1].concat(A.porCt.map(function (x) { return x.t.rU + x.t.rB; })));
       var cols = [
@@ -1179,7 +1353,6 @@ html.emb .kpis,html.emb .qcards{padding:2px 2px 8px}
         {t: 'Receita US$', n: 1, h: function (x) { return '<b>' + fUSD(x.t.rU) + '</b>' + sub('real. ' + fUSD(x.t.rRU) + ' · prev. ' + fUSD(x.t.rPU)); }, v: function (x) { return x.t.rU; }, f: function (x) { return fUSD(x.t.rU); }},
         {t: 'Receita R$', n: 1, h: function (x) { return fBRL(x.t.rB); }, v: function (x) { return x.t.rB; }, f: function (x) { return fBRL(x.t.rB); }},
         {t: 'COGS US$', n: 1, h: function (x) { return fUSD(x.t.cU); }, v: function (x) { return x.t.cU; }, f: function (x) { return fUSD(x.t.cU); }},
-        {t: 'Margem US$', n: 1, h: function (x) { return fUSD(x.t.rU - x.t.cU) + sub(margemTxt(x.t.rU, x.t.cU)); }, v: function (x) { return x.t.rU - x.t.cU; }, f: function (x) { return fUSD(x.t.rU - x.t.cU); }},
         {t: '', st: 'min-width:110px', h: function (x) { return barra((x.t.rU + x.t.rB) / mx * 100); }},
         {t: 'Uso do contrato (valor)', h: function (x) { return pctCel(x.pctValor); }, v: function (x) { return x.pctValor; }, f: function (x) { return x.pctValor == null ? '—' : fN(x.pctValor) + '%'; }}
       ];
@@ -1250,12 +1423,12 @@ html.emb .kpis,html.emb .qcards{padding:2px 2px 8px}
         (function (c) { c.h = function (x) { return esc((x.o.tipo || '') + (x.o.revestimento ? ' ' + x.o.revestimento : '') || '—') + btAbrirOp(x.o); }; return c; })(txtc('Operação', function (x) { return (x.o.tipo || '') + (x.o.revestimento ? ' ' + x.o.revestimento : ''); })), txtc('SO', function (x) { return x.o.so; }),
         {t: 'Situação', h: function (x) { return stTag(x.o); }, v: situ, f: situ},
         {t: 'Receita US$', n: 1, h: function (x) { return '<b>' + fUSD(x.rU) + '</b>' + (x.f !== 1 ? sub('bruto ' + fUSD(x.gU)) : ''); }, v: function (x) { return x.rU; }, f: function (x) { return fUSD(x.rU); }},
-        num('Receita R$', function (x) { return x.rB; }, fBRL), num('COGS US$', function (x) { return x.cU; }, fUSD), num('Margem US$', function (x) { return x.rU - x.cU; }, fUSD),
+        num('Receita R$', function (x) { return x.rB; }, fBRL), num('COGS US$', function (x) { return x.cU; }, fUSD),
         {t: 'Homem-dia', n: 1, h: function (x) { return x.hd ? fN(x.hd) : '—'; }, v: function (x) { return x.hd || 0; }, f: function (x) { return x.hd ? fN(x.hd) : '—'; }}
       ];
       var T = tabelaF('ops', cols, l, {cls: 't-ops', tr: function (x) { return x.f === 0 ? ' class="fora"' : ''; }, rod: function (vis) {
         var t = soma(vis);
-        return '<tr><td colspan="7">Total (' + vis.length + ' operação(ões))</td><td class="n">' + fUSD(t.rU) + '</td><td class="n">' + fBRL(t.rB) + '</td><td class="n">' + fUSD(t.cU) + '</td><td class="n">' + fUSD(t.rU - t.cU) + '</td><td class="n">' + fN(t.hdR + t.hdP) + '</td></tr>';
+        return '<tr><td colspan="7">Total (' + vis.length + ' operação(ões))</td><td class="n">' + fUSD(t.rU) + '</td><td class="n">' + fBRL(t.rB) + '</td><td class="n">' + fUSD(t.cU) + '</td><td class="n">' + fN(t.hdR + t.hdP) + '</td></tr>';
       }});
       return '<div class="card"><h2>Operações (' + T.vis.length + ')</h2><div class="filtros" style="margin-top:0"><div class="f" style="flex:1 1 260px"><label>Buscar</label><input data-f="busca" placeholder="sonda, poço, operação, SO, contrato…" value="' + esc(S.f.busca) + '"></div></div>' + T.html +
         '<p class="nota">Data = data do serviço (realizada) ou data planejada (prevista). Valores já com o risco aplicado; “bruto” = antes do risco. No ▾ da Data, os itens são os meses.</p></div>';
@@ -1276,9 +1449,9 @@ html.emb .kpis,html.emb .qcards{padding:2px 2px 8px}
         '<p class="nota">Quando o mesmo contrato está em mais de um arquivo, vale o gerado por último.</p></div>';
     }
   };
-  /* ---------- Receita, COGS e margem por ano (matriz) — como o "Relatório Receita" do Excel ----------
+  /* ---------- Receita e COGS por ano (matriz) — como o "Relatório Receita" do Excel ----------
      Linhas: Cliente › Contrato › Sonda › Poço › Operação › Item PPU (abre e fecha). Colunas: quarto (Q1…Q4) › mês ›
-     Receita e COGS, o total de cada quarto e o Total (Receita, COGS, Margem). Um ano por vez (filtro Ano); o quarto
+     Receita e COGS, o total de cada quarto e o Total (Receita e COGS). Um ano por vez (filtro Ano); o quarto
      escolhido vale no lugar dos meses. US$, com o risco de cada operação aplicado. */
   var NIV_MX = [
     {t: 'Cliente', k: function (x) { return x.o._ct.cliente || '—'; }},
@@ -1360,7 +1533,7 @@ html.emb .kpis,html.emb .qcards{padding:2px 2px 8px}
   };
   var fV = nf(2, 2);
   var celMx = function (v, n, cls, mes) { return '<td class="n ' + cls + (n && v < 0 ? ' neg' : '') + '"' + (mes ? ' data-mes="' + mes + '"' : '') + '>' + (n ? fV(v) : '') + '</td>'; };
-  // semCogs: linha de item PPU (só receita; COGS e margem ficam em branco)
+  // semCogs: linha de item PPU (só receita; o COGS fica em branco)
   var celulasMx = function (t, qs, semCogs) {
     var h = '', nc = function (n) { return semCogs ? 0 : n; };
     qs.forEach(function (qd) {
@@ -1368,7 +1541,7 @@ html.emb .kpis,html.emb .qcards{padding:2px 2px 8px}
       var q = quartoMx(t, qd);
       h += celMx(q.r, q.n, 'mx-r mx-q mx-ini') + celMx(q.c, nc(q.n), 'mx-c mx-q');
     });
-    return h + celMx(t.r, t.n, 'mx-r mx-t mx-ini') + celMx(t.c, nc(t.n), 'mx-c mx-t') + celMx(t.r - t.c, nc(t.n), 'mx-t');
+    return h + celMx(t.r, t.n, 'mx-r mx-t mx-ini') + celMx(t.c, nc(t.n), 'mx-c mx-t');
   };
   var periodoTxt = function () {
     var f = S.f;
@@ -1402,13 +1575,13 @@ html.emb .kpis,html.emb .qcards{padding:2px 2px 8px}
     var pad = function (d) { return ' style="padding-left:' + (8 + d * 18) + 'px"'; };
     var cab1 = '<tr><th rowspan="3" class="mx-rot">' + NIV_MX.map(function (n) { return n.t; }).join(' › ') + ' › Operação › Item PPU' + alcaMx('mx') + '</th>' +
       qs.map(function (qd) { return '<th class="mx-tri mx-ini" colspan="' + (qd.meses.length * 2 + 2) + '">' + esc(qd.rot) + '</th>'; }).join('') +
-      '<th class="mx-tri mx-t mx-ini" colspan="3" rowspan="2">Total</th></tr>';
+      '<th class="mx-tri mx-t mx-ini" colspan="2" rowspan="2">Total</th></tr>';
     var cab2 = '<tr>' + qs.map(function (qd) {
       return qd.meses.map(function (m) { return '<th class="mx-mes mx-ini" colspan="2" data-mes="' + m + '">' + esc(fMes(m)) + '</th>'; }).join('') + '<th class="mx-mes mx-q mx-ini" colspan="2">Total ' + esc(qd.rot) + '</th>';
     }).join('') + '</tr>';
     var cab3 = '<tr>' + qs.map(function (qd) {
       return qd.meses.map(function (m) { return '<th class="n mx-ini" data-mes="' + m + '">Receita</th><th class="n" data-mes="' + m + '">COGS</th>'; }).join('') + '<th class="n mx-q mx-ini">Receita</th><th class="n mx-q">COGS</th>';
-    }).join('') + '<th class="n mx-t mx-ini">Receita</th><th class="n mx-t">COGS</th><th class="n mx-t">Margem</th></tr>';
+    }).join('') + '<th class="n mx-t mx-ini">Receita</th><th class="n mx-t">COGS</th></tr>';
     var corpo = rows.map(function (r) {
       if (r.tipo === 'it') {
         var it = r.it;
@@ -1429,7 +1602,7 @@ html.emb .kpis,html.emb .qcards{padding:2px 2px 8px}
     var per = periodoTxt();
     var barraM = '<div class="dd-bar"><span class="dd-l">Mostrar até</span><span class="dd-ate">' + MX_ATE.map(function (t, i) { return '<button class="btn-o" data-mxmostrar="' + i + '">' + t + '</button>'; }).join('') + '</span>' +
       '<span class="sp"></span><button class="btn-o mx-xls" data-a="mxExcel"' + (qs.length ? '' : ' disabled') + ' title="Baixa a tabela como está na tela (as linhas abertas)">⬇ Excel desta tabela</button></div>';
-    return '<div class="card mx-card"><div class="card-h"><h2>Receita, COGS e margem — ' + esc(S.f.ano || '') + (per ? ' · ' + esc(per) : '') + ' (US$)</h2>' + (S.graf ? '' : '<button class="btn-o g-mostrar" data-a="grafMostrar">Mostrar gráfico por mês</button>') + '</div>' + barraM + tab +
+    return '<div class="card mx-card"><div class="card-h"><h2>Receita e COGS — ' + esc(S.f.ano || '') + (per ? ' · ' + esc(per) : '') + ' (US$)</h2>' + (S.graf ? '' : '<button class="btn-o g-mostrar" data-a="grafMostrar">Mostrar gráfico por mês</button>') + '</div>' + barraM + tab +
       '<p class="nota">Clientes nas linhas (clique para abrir contrato, sonda, poço, operação e itens PPU); quartos e meses nas colunas, com o total de cada quarto (em verde) e o total. ' +
       'Valores em US$, com o risco de cada operação aplicado: realizada pela data do serviço, prevista pela data planejada. Célula vazia = sem operação no mês; operação com risco 100% em cinza, com 0,00.</p></div>';
   };
@@ -1481,15 +1654,15 @@ html.emb .kpis,html.emb .qcards{padding:2px 2px 8px}
       h2.push('Total ' + qd.rot, null); h3.push('Receita', 'COGS'); merges.push({s: {r: 1, c: c0 + w - 2}, e: {r: 1, c: c0 + w - 1}});
       c0 += w;
     });
-    h1.push('Total', null, null); h2.push(null, null, null); h3.push('Receita', 'COGS', 'Margem');
-    merges.push({s: {r: 0, c: c0}, e: {r: 1, c: c0 + 2}});
+    h1.push('Total', null); h2.push(null, null); h3.push('Receita', 'COGS');
+    merges.push({s: {r: 0, c: c0}, e: {r: 1, c: c0 + 1}});
     var vals = function (t, semCogs) {
       var v = [], num = function (x, n) { return n ? r4(x) : null; }, nc = function (n) { return semCogs ? 0 : n; };
       qs.forEach(function (qd) {
         qd.meses.forEach(function (m) { var c = t.m[m]; v.push(num(c ? c.r : 0, c && c.n), num(c ? c.c : 0, nc(c && c.n))); });
         var q = quartoMx(t, qd); v.push(num(q.r, q.n), num(q.c, nc(q.n)));
       });
-      return v.concat([num(t.r, t.n), num(t.c, nc(t.n)), num(t.r - t.c, nc(t.n))]);
+      return v.concat([num(t.r, t.n), num(t.c, nc(t.n))]);
     };
     var aoa = [h1, h2, h3];
     rows.forEach(function (r) {
@@ -1570,8 +1743,8 @@ html.emb .kpis,html.emb .qcards{padding:2px 2px 8px}
   };
   var somaRC = function (ls) { var t = {r: 0, c: 0, n: ls.length}; ls.forEach(function (x) { t.r += x.rU; t.c += x.cU; }); return t; };
   /* variação: % sobre a base; "novo" quando a base é zero; verde = favorável, vermelho = desfavorável (COGS que sobe é desfavorável) */
-  var MEDIDAS = {rec: ['r'], cogs: ['c'], ambos: ['r', 'c'], mg: ['m']};
-  var NOME_MED = {r: 'Receita', c: 'COGS', m: 'Margem'};
+  var MEDIDAS = {rec: ['r'], cogs: ['c'], ambos: ['r', 'c']};
+  var NOME_MED = {r: 'Receita', c: 'COGS'};
   var COR_MED = {r: COR.real, c: COR.cogs, m: COR.mg};
   var vMed = function (t, k) { return !t ? 0 : k === 'r' ? t.r : k === 'c' ? t.c : t.r - t.c; };
   var pctVar = function (a, b) { if (Math.abs(a) < 0.005 && Math.abs(b) < 0.005) return null; if (Math.abs(a) < 0.005) return Infinity; return (b - a) / Math.abs(a) * 100; };
@@ -1703,7 +1876,6 @@ html.emb .kpis,html.emb .qcards{padding:2px 2px 8px}
       {t: 'Operações ' + (S.f.ano || ''), n: 1, h: function (x) { return String(x.t.n); }, v: function (x) { return x.t.n; }, f: function (x) { return String(x.t.n); }},
       {t: 'Receita US$', n: 1, h: function (x) { return fUSD(x.t.r); }, v: function (x) { return x.t.r; }, f: function (x) { return fUSD(x.t.r); }},
       {t: 'COGS US$', n: 1, h: function (x) { return fUSD(x.t.c); }, v: function (x) { return x.t.c; }, f: function (x) { return fUSD(x.t.c); }},
-      {t: 'Margem US$', n: 1, h: function (x) { return fUSD(x.t.r - x.t.c); }, v: function (x) { return x.t.r - x.t.c; }, f: function (x) { return fUSD(x.t.r - x.t.c); }},
       {t: 'Na comparação', h: function (x) { return x.papel === 'base' ? '<span class="tag t-pl">base</span>' : x.papel ? '<span class="tag t-ho">comparar</span>' : ''; }, v: function (x) { return x.papel; }, f: function (x) { return x.papel || '—'; }},
       {t: '', h: function (x) { return x.k === 'agora' || ro ? '' : '<button class="btn-x" title="Remover o registro de ' + fD(x.k) + '" data-regdel="' + x.k + '">🗑</button>'; }}
     ];
@@ -1726,17 +1898,16 @@ html.emb .kpis,html.emb .qcards{padding:2px 2px 8px}
     var ls = fotos.map(function (f) { return filtraLinhas(linhasReg(f)); }), tots = ls.map(somaRC);
     var K = fotos.map(function (f) { var o = {}; linhasReg(f).forEach(function (x) { o[x.k] = 1; }); return o; });
     var rotsC = Cs.map(rotCurto), nomeComp = nC === 1 ? rotReg(Cs[0]) : Cs.map(rotReg).join(', ');
-    // cards: só as medidas escolhidas em "Mostrar" (Receita e COGS mostra também a margem) + operações
+    // cards: só as medidas escolhidas em "Mostrar" + operações
     var cardMed = function (k) {
       var a = vMed(tots[0], k), b = vMed(tots[nC], k), p = pctVar(a, b);
       var linhas = nC === 1 ? '<em class="cx-d ' + clsVar(p, k) + '">' + (p == null || Math.abs(b - a) < 0.005 ? 'sem alteração' : fDelta(b - a) + ' (' + fPct(p) + ')') + '</em>'
         : Cs.map(function (c, j) { var v = vMed(tots[j + 1], k), q = pctVar(a, v); return '<em class="cx-d ' + clsVar(q, k) + '">' + rotReg(c) + ': ' + fUSD(v) + ' · ' + (q == null || Math.abs(v - a) < 0.005 ? 'sem alteração' : fPct(q)) + '</em>'; }).join('');
-      return '<div class="kpi cx-k k-cx-' + k + '"><span>' + NOME_MED[k] + ' · ' + rotReg(Cs[nC - 1]) + '</span><b>' + fUSD(b) + '</b><em>base ' + rotReg(M.base) + ': ' + fUSD(a) + '</em>' + linhas +
-        (k === 'm' ? '<em>margem ' + margemTxt(tots[0].r, tots[0].c) + ' → ' + margemTxt(tots[nC].r, tots[nC].c) + '</em>' : '') + '</div>';
+      return '<div class="kpi cx-k k-cx-' + k + '"><span>' + NOME_MED[k] + ' · ' + rotReg(Cs[nC - 1]) + '</span><b>' + fUSD(b) + '</b><em>base ' + rotReg(M.base) + ': ' + fUSD(a) + '</em>' + linhas + '</div>';
     };
     var cardOps = '<div class="kpi cx-k k-cx-n"><span>Operações · ' + rotReg(Cs[nC - 1]) + '</span><b>' + tots[nC].n + '</b><em>base ' + rotReg(M.base) + ': ' + tots[0].n + '</em>' +
       Cs.map(function (c, j) { var nv = ls[j + 1].filter(function (x) { return !K[0][x.k]; }).length, rm = ls[0].filter(function (x) { return !K[j + 1][x.k]; }).length; return '<em>' + (nC > 1 ? rotReg(c) + ': ' + tots[j + 1].n + ' · ' : '') + nv + ' nova(s) · ' + rm + ' removida(s)</em>'; }).join('') + '</div>';
-    var medCards = met === 'ambos' ? ['r', 'c', 'm'] : ms;
+    var medCards = ms;
     h += '<div class="kpis cx-kpis" style="grid-template-columns:repeat(' + (medCards.length + 1) + ',minmax(0,1fr))">' + medCards.map(cardMed).join('') + cardOps + '</div>';
     // gráficos
     var nomeM = {rec: 'Receita', cogs: 'COGS', ambos: 'Receita e COGS', mg: 'Margem'}[met];
@@ -1820,9 +1991,9 @@ html.emb .kpis,html.emb .qcards{padding:2px 2px 8px}
       var i = Number(el.dataset.i), it = serie[i], ant = serie[i - 1];
       T.ligar(el, function () {
         T.inicio(rotReg(it.k) + (it.obs ? ' — ' + it.obs : '') + (it.k === base ? ' (base)' : ''));
-        ['r', 'c', 'm'].forEach(function (k) {
+        ['r', 'c'].forEach(function (k) {
           var v = vMed(it.t, k), pb = it.k !== base && tb ? pctVar(vMed(tb, k), v) : null, pa = ant ? pctVar(vMed(ant.t, k), v) : null;
-          T.linha(ms.indexOf(k) >= 0 ? (k === 'm' ? corMg(v) : COR_MED[k]) : '', fUSD(v) + (k === 'm' ? ' (' + margemTxt(it.t.r, it.t.c) + ')' : ''), NOME_MED[k].toLowerCase() + (pb != null ? ' · ' + fPct(pb) + ' sobre a base' : '') + (pa != null ? ' · ' + fPct(pa) + ' sobre ' + rotReg(ant.k) : ''));
+          T.linha(ms.indexOf(k) >= 0 ? COR_MED[k] : '', fUSD(v), NOME_MED[k].toLowerCase() + (pb != null ? ' · ' + fPct(pb) + ' sobre a base' : '') + (pa != null ? ' · ' + fPct(pa) + ' sobre ' + rotReg(ant.k) : ''));
         });
         T.linha('', String(it.t.n), 'operação(ões)');
         var cx = mL + band * i + band / 2, tw = T.el.offsetWidth;
@@ -2094,8 +2265,8 @@ html.emb .kpis,html.emb .qcards{padding:2px 2px 8px}
     var C = consolidar(), F = filtrar(C), A = agregar(F), T = A.T;
     var wb = XLSX.utils.book_new();
     var aba = function (nome, aoa, larg) { var ws = XLSX.utils.aoa_to_sheet(aoa); if (larg) ws['!cols'] = larg.map(function (w) { return {wch: w}; }); XLSX.utils.book_append_sheet(wb, ws, nome); };
-    var cols = function (t) { return [t.n, t.nR, t.nP, t.nF, r4(t.rRU), r4(t.rPU), r4(t.rU), r4(t.rRB), r4(t.rPB), r4(t.rB), r4(t.cU), r4(t.cB), r4(t.rU - t.cU), r4(t.rB - t.cB)]; };
-    var cab = ['Operações', 'Realizadas', 'Previstas', 'Fora (risco 100%)', 'Receita realizada US$', 'Receita prevista US$', 'Receita US$', 'Receita realizada R$', 'Receita prevista R$', 'Receita R$', 'COGS US$', 'COGS R$', 'Margem US$', 'Margem R$'];
+    var cols = function (t) { return [t.n, t.nR, t.nP, t.nF, r4(t.rRU), r4(t.rPU), r4(t.rU), r4(t.rRB), r4(t.rPB), r4(t.rB), r4(t.cU), r4(t.cB)]; };
+    var cab = ['Operações', 'Realizadas', 'Previstas', 'Fora (risco 100%)', 'Receita realizada US$', 'Receita prevista US$', 'Receita US$', 'Receita realizada R$', 'Receita prevista R$', 'Receita R$', 'COGS US$', 'COGS R$'];
     aba('Contratos', [['Contrato', 'Número', 'Cliente', 'Região', 'Tipo', 'Engenheiro', 'Arquivo gerado em'].concat(cab).concat(['Uso do contrato (valor) %'])].concat(A.porCt.map(function (x) { return [x.c.nome, x.c.numero || '', x.c.cliente, x.c.regiao, x.c.tipo, x.c._por, fDH(x.c._gerado)].concat(cols(x.t)).concat([x.pctValor == null ? null : r4(x.pctValor)]); })).concat([['Total', '', '', '', '', '', ''].concat(cols(T))]), [30, 16, 18, 12, 18, 20, 16].concat(cab.map(function () { return 14; })));
     XLSX.utils.book_append_sheet(wb, abaMatriz(A, function () { return true; }), 'Receita ' + (S.f.ano || ''));
     aba('Por mês', [['Mês'].concat(cab)].concat(A.porMes.map(function (x) { return [fMes(x.k)].concat(cols(x)); })), [12].concat(cab.map(function () { return 14; })));
@@ -2104,7 +2275,7 @@ html.emb .kpis,html.emb .qcards{padding:2px 2px 8px}
     aba('Químicas', matA(A.quim), [12, 40, 8, 12, 12, 12, 12, 12, 14, 14, 40]);
     aba('Casing', matA(A.cas), [12, 40, 8, 12, 12, 12, 12, 12, 14, 14, 40]);
     aba('Pessoal', [['Função', 'Planejado (pessoas)', 'Planejado (homem-dia)', 'Lançado (pessoas)', 'Lançado (homem-dia)', 'A realizar (homem-dia)', 'Operações lançadas']].concat(A.pes.map(function (x) { return [x.funcao, x.pP, x.hP, x.pR, x.hR, x.hA, x.n]; })), [28, 16, 18, 16, 18, 18, 14]);
-    aba('Operações', [['Data', 'Situação', 'Contrato', 'Cliente', 'Região', 'Sonda', 'Poço', 'Operação', 'Revestimento', 'SO', 'Risco %', 'Contingência', 'Receita bruta US$', 'Receita bruta R$', 'Receita US$', 'Receita R$', 'COGS US$', 'COGS R$', 'Margem US$', 'Homem-dia']].concat(A.linhas.map(function (x) { var o = x.o; return [fD(x.data), x.tipo === 'real' ? 'realizada' : 'prevista', o._ct.nome, o._ct.cliente, o.regiao, o.sonda, o.poco, o.tipo, o.revestimento, o.so, Number(o.risco) || 0, o.contingencia ? 'Sim' : 'Não', r4(x.gU), r4(x.gB), r4(x.rU), r4(x.rB), r4(x.cU), r4(x.cB), r4(x.rU - x.cU), x.hd || null]; })), [11, 10, 26, 18, 10, 16, 16, 24, 12, 12, 8, 11, 14, 14, 14, 14, 14, 14, 14, 10]);
+    aba('Operações', [['Data', 'Situação', 'Contrato', 'Cliente', 'Região', 'Sonda', 'Poço', 'Operação', 'Revestimento', 'SO', 'Risco %', 'Contingência', 'Receita bruta US$', 'Receita bruta R$', 'Receita US$', 'Receita R$', 'COGS US$', 'COGS R$', 'Homem-dia']].concat(A.linhas.map(function (x) { var o = x.o; return [fD(x.data), x.tipo === 'real' ? 'realizada' : 'prevista', o._ct.nome, o._ct.cliente, o.regiao, o.sonda, o.poco, o.tipo, o.revestimento, o.so, Number(o.risco) || 0, o.contingencia ? 'Sim' : 'Não', r4(x.gU), r4(x.gB), r4(x.rU), r4(x.rB), r4(x.cU), r4(x.cB), x.hd || null]; })), [11, 10, 26, 18, 10, 16, 16, 24, 12, 12, 8, 11, 14, 14, 14, 14, 14, 14, 14, 10]);
     var lanc = [['Data', 'Situação', 'Contrato', 'Sonda', 'Poço', 'Operação', 'SO', 'Risco %', 'Tipo', 'Código', 'Descrição', 'Unid.', 'Quantidade', 'Valor/COGS unit. US$', 'Valor/COGS unit. R$', 'Total US$', 'Total R$', 'Risco da linha %']];
     A.linhas.forEach(function (x) {
       var o = x.o, base = x.tipo === 'real' ? o.realizado : (o.previsto || {});
@@ -2132,6 +2303,9 @@ html.emb .kpis,html.emb .qcards{padding:2px 2px 8px}
     if (e.target.id === 'dlg') { fecharDlg(); return; } // clique fora da janela fecha
     if (S.mesPop && !e.target.closest('.mes-f')) { S.mesPop = false; S.mesPasso = 0; if (!t) { render(); return; } } // clique fora fecha o seletor de meses
     if (S.qPop && !e.target.closest('.q-f')) { S.qPop = false; S.qPasso = 0; if (!t) { render(); return; } } // e o de quartos
+    var gp = e.target.closest('[data-gfpop]');
+    if (gp) { S.gfPop = S.gfPop === gp.dataset.gfpop ? null : gp.dataset.gfpop; render(); var q0 = document.querySelector('.gf-q'); if (q0) q0.focus(); return; } // g25: escolher os itens do gráfico
+    if (S.gfPop && !e.target.closest('.gf-pop')) { S.gfPop = null; if (!t) { render(); return; } } // clique fora fecha
     if (!t) return;
     if (t.dataset.mesb != null) {
       var nm = Number(t.dataset.mesb);
@@ -2156,7 +2330,7 @@ html.emb .kpis,html.emb .qcards{padding:2px 2px 8px}
     if (t.dataset.tfsort) { var ps = t.dataset.tfsort.split('|'), stt = estTf(ps[0]), cio = Number(ps[1]); if (stt.s === cio) stt.d = -stt.d; else { stt.s = cio; stt.d = 1; } render(); return; }
     if (t.dataset.tff) { var pf = t.dataset.tff.split('|'); abrirFiltroTab(pf[0], Number(pf[1]), t); return; }
     if (t.dataset.tfclr) { S.tf[t.dataset.tfclr] = {s: null, d: 1, f: {}}; render(); return; }
-    if (t.dataset.gmet) { S.gmet = t.dataset.gmet; try { localStorage.setItem(CHV('gmet'), S.gmet); } catch (x) {} render(); return; }
+    if (t.dataset.gmet) { S.gmet = GMET.some(function (m) { return m[0] === t.dataset.gmet; }) ? t.dataset.gmet : 'ambos'; try { localStorage.setItem(CHV('gmet'), S.gmet); } catch (x) {} render(); return; }
     if (t.dataset.cx != null) { var CM = S.cmp; if (CM.abertos[t.dataset.cx]) delete CM.abertos[t.dataset.cx]; else CM.abertos[t.dataset.cx] = 1; render(); return; }
     if (t.dataset.cxmostrar != null) { S.cmp.mostrar = Number(t.dataset.cxmostrar); render(); return; }
     if (t.dataset.regdel) { removerRegistro(t.dataset.regdel); return; }
@@ -2186,6 +2360,8 @@ html.emb .kpis,html.emb .qcards{padding:2px 2px 8px}
     else if (a === 'regImport') $('#inReg').click();
     else if (a === 'cmpTodos') { S.cmp.sel = S.regs.map(function (r) { return r.data; }).concat(['agora']).filter(function (k) { return k !== S.cmp.base; }); render(); }
     else if (a === 'shAbrir') abrirCompartilhar();
+    else if (a === 'gfTodos' || a === 'gfNenhum') { var gk = t.dataset.gf; if (S.gf[gk]) { if (a === 'gfTodos') S.gf[gk].fora = {}; else { var fo = {}; (gfLista(gk, agregar(filtrar(consolidar()))) || []).forEach(function (it) { fo[it.k] = 1; }); S.gf[gk].fora = fo; } guardarGf(); render(); } }
+    else if (a === 'gfFechar') { S.gfPop = null; render(); }
     else if (a === 'shHtml') compartilhar('html');
     else if (a === 'shZip') compartilhar('zip');
     else if (a === 'shEml') compartilhar('eml');
@@ -2197,6 +2373,8 @@ html.emb .kpis,html.emb .qcards{padding:2px 2px 8px}
     if (t.dataset && t.dataset.f) { S.f[t.dataset.f] = t.value; S.mesPop = S.qPop = false; render(); return; }
     if (t.dataset && t.dataset.tend != null) { S.tend = t.value; try { localStorage.setItem(CHV('tend'), S.tend); } catch (x) {} render(); return; }
     if (t.dataset && t.dataset.a === 'soCons') { S.soComConsumo = t.checked; render(); return; }
+    if (t.dataset && t.dataset.gfsel) { var gx = S.gf[t.dataset.gfsel]; if (gx) { if (t.checked) delete gx.fora[t.dataset.k]; else gx.fora[t.dataset.k] = 1; guardarGf(); render(); } return; } // g25
+    if (t.dataset && t.dataset.gfn != null) { var gy = S.gf[t.dataset.gfn]; if (gy) { gy.n = Number(t.value) || 0; guardarGf(); render(); } return; }
     if (t.dataset && t.dataset.a === 'soMud') { S.cmp.soMud = t.checked; render(); return; }
     if (t.dataset && t.dataset.cmp) { S.cmp[t.dataset.cmp] = t.value; render(); return; }
     if (t.dataset && t.dataset.cmpsel) { var ks = t.dataset.cmpsel, sl = S.cmp.sel.filter(function (k) { return k !== ks; }); if (t.checked) sl.push(ks); S.cmp.sel = sl; render(); return; }
@@ -2207,11 +2385,13 @@ html.emb .kpis,html.emb .qcards{padding:2px 2px 8px}
   document.addEventListener('input', function (e) {
     var t = e.target;
     if (t.classList && t.classList.contains('reg-data')) { atualizarDlg(); return; }
+    if (t.dataset && t.dataset.gfq) { S.gfQ[t.dataset.gfq] = t.value; var qq = t.value.toLowerCase(); document.querySelectorAll('.gf-pop .gf-it').forEach(function (l) { l.style.display = !qq || l.textContent.toLowerCase().indexOf(qq) >= 0 ? '' : 'none'; }); return; } // g25
     if (t.dataset && t.dataset.f === 'busca') { S.f.busca = t.value; var pos = t.selectionStart; render(); var n = document.querySelector('[data-f="busca"]'); if (n) { n.focus(); try { n.setSelectionRange(pos, pos); } catch (x) {} } }
   });
   document.addEventListener('keydown', function (e) {
     if ($('#tfPop') && e.key === 'Escape') { fecharFiltroTab(); return; }
     if ($('#dlg')) { if (e.key === 'Escape') fecharDlg(); else if (e.key === 'Enter' && $('#dlg .reg-data') && e.target.closest && e.target.closest('.dlg-f')) { e.preventDefault(); salvarRegistro(); } return; }
+    if (e.key === 'Escape' && S.gfPop) { S.gfPop = null; render(); return; }
     if (e.key === 'Escape' && (S.mesPop || S.qPop)) { S.mesPop = S.qPop = false; S.mesPasso = S.qPasso = 0; render(); }
   });
   // prévia da seleção final ao passar o cursor (meses e quartos), depois do primeiro clique
@@ -2241,6 +2421,7 @@ html.emb .kpis,html.emb .qcards{padding:2px 2px 8px}
     if (es.f) { S.f = Object.assign(S.f, es.f); if (es.f.tri && !es.f.qIni) S.f.qIni = S.f.qFim = Number(es.f.tri) || 0; delete S.f.tri; }
     ['tab', 'gmet', 'gmodo', 'tend'].forEach(function (k) { if (es[k]) S[k] = es[k]; });
     if (es.graf != null) S.graf = !!es.graf;
+    if (!GMET.some(function (m) { return m[0] === S.gmet; })) S.gmet = 'ambos'; // g25: sem a margem
     if (es.cmp) { S.cmp.base = es.cmp.base || null; S.cmp.sel = es.cmp.sel || []; S.cmp.soMud = !!es.cmp.soMud; }
     document.title = 'EARL — Gerencial (compartilhado)';
   }

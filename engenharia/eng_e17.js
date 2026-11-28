@@ -570,9 +570,7 @@
       className: "eng-ro-rec"
     }, fmtUSD(rec))), engH("span", null, 'COGS', engH("b", {
       className: "eng-ro-cogs"
-    }, fmtUSD(cg))), engH("span", null, 'Margem', engH("b", {
-      className: "eng-ro-mg"
-    }, fmtUSD(rec - cg))), rv && engH("span", {
+    }, fmtUSD(cg))), rv && engH("span", { // e26 (pedido do Hugo): saiu a margem
       className: "eng-ro-real"
     }, 'Realizado', engH("b", null, fmtUSD(rv.rec) + ' · COGS ' + fmtUSD(rv.cogs)))), engH("div", {
       className: "eng-ro-sub"

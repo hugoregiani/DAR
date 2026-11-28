@@ -1907,9 +1907,7 @@
         className: "ec-res-rec"
       }, fmtUSD(tU) + (tB ? ' · ' + fmtBRL(tB) : ''))), engH("span", null, 'COGS ', engH("b", {
         className: "ec-res-cogs"
-      }, fmtUSD(cg.u) + (cg.b ? ' · ' + fmtBRL(cg.b) : ''))), engH("span", null, 'Margem ', engH("b", {
-        className: "ec-res-margem"
-      }, fmtUSD(tU - cg.u) + (tB || cg.b ? ' · ' + fmtBRL(tB - cg.b) : ''))), rr > 0 && engH("em", {
+      }, fmtUSD(cg.u) + (cg.b ? ' · ' + fmtBRL(cg.b) : ''))), rr > 0 && engH("em", { // e26: saiu a margem
         className: "ec-res-risco"
       }, rr >= 100 ? 'Risco 100%: a operação fica mapeada, mas fora da receita e do COGS nas análises.' : 'Risco ' + fmtNum(rr) + '%: entram ' + fmtNum(100 - rr) + '% da receita e do COGS nas análises.'), cg.sem > 0 && engH("em", null, cg.sem + ' material(is) sem COGS cadastrado (Contratos → Custos).'));
     })()), engH("div", {
@@ -2047,7 +2045,7 @@
     var ops = calcs.flatMap(c => c.porOp);
     var lanc = calcs.flatMap(c => c.lanc);
     var rigNm = j => rigFmt((db.rigs || []).find(r => r.id === j.rigId));
-    var abas = [['Operações', [['Data do serviço', 'Contrato', 'Sonda', 'Poço', 'Operação', 'SO', 'Itens', 'Risco %', 'Receita R$', 'Receita US$', 'COGS R$', 'COGS US$', 'Margem US$'], ...ops.map(o => [fmtD(o.data), o.ct.name, rigNm(o.j), o.j.well || '', tipoTxt(o.j) || o.j.tipoOp || '', o.j.salesOrder || '', o.n, o.risco, engR4(o.vB), engR4(o.vU), engR4(o.cB), engR4(o.cU), engR4(o.vU - o.cU)])], [14, 28, 16, 16, 26, 12, 8, 8, 16, 16, 14, 14, 14]]];
+    var abas = [['Operações', [['Data do serviço', 'Contrato', 'Sonda', 'Poço', 'Operação', 'SO', 'Itens', 'Risco %', 'Receita R$', 'Receita US$', 'COGS R$', 'COGS US$'], ...ops.map(o => [fmtD(o.data), o.ct.name, rigNm(o.j), o.j.well || '', tipoTxt(o.j) || o.j.tipoOp || '', o.j.salesOrder || '', o.n, o.risco, engR4(o.vB), engR4(o.vU), engR4(o.cB), engR4(o.cU)])], [14, 28, 16, 16, 26, 12, 8, 8, 16, 16, 14, 14]]];
     if (comItens) calcs.forEach(c => abas.push(['Itens' + (calcs.length > 1 ? ' ' + c.ct.name : ''), [['Item', 'Descrição', 'Unid.', 'Contratado', 'Consumido (total)', 'Saldo', '% usado', 'Valor vigente R$', 'Valor vigente US$', 'Consumido no período', 'Receita R$', 'Receita US$'], ...c.porItem.map(x => [x.i.ref, x.i.desc || '', x.i.unit || '', x.contr, x.c, x.saldo, x.pct != null ? engR4(x.pct) : null, x.p.brl, x.p.usd, x.qP, engR4(x.vB), engR4(x.vU)])], [10, 60, 8, 12, 14, 12, 9, 14, 14, 14, 14, 14]]));
     abas.push(['Lançamentos', [['Data do serviço', 'Contrato', 'Sonda', 'Poço', 'Operação', 'SO', 'Item', 'Descrição', 'Unid.', 'Quantidade', 'Valor R$', 'Valor US$', 'Total R$', 'Total US$'], ...lanc.map(x => [fmtD(x.data), x.ct.name, rigNm(x.j), x.j.well || '', tipoTxt(x.j) || x.j.tipoOp || '', x.j.salesOrder || '', x.ref, x.desc || '', x.unit || '', x.q, x.pB, x.pU, x.vB != null ? engR4(x.vB) : null, x.vU != null ? engR4(x.vU) : null])], [14, 28, 16, 16, 26, 12, 10, 50, 8, 12, 12, 12, 14, 14]]);
     engBaixarXlsx('Consumo e receita - ' + titulo + ' - ' + todayStr(), abas);
@@ -2123,7 +2121,7 @@
     }, "⬇ Excel"));
     var kpis = engH("div", {
       className: "ec-kpis"
-    }, engKpi('Receita em R$', fmtBRL(tB), 'consumo lançado no período', 'ec-kpi-brl'), engKpi('Receita em US$', fmtUSD(tU), calcs.some(c => c.conv) ? 'consumo lançado no período · R$ pelo câmbio do mês' : 'consumo lançado no período', 'ec-kpi-usd'), engKpi('COGS', fmtUSD(cU) + (cB ? ' · ' + fmtBRL(cB) : ''), 'químicas e casing lançados', 'ec-kpi-cogs'), engKpi('Margem em US$', fmtUSD(tU - cU), tU ? fmtNum((tU - cU) / tU * 100) + '% da receita' : 'receita − COGS', 'ec-kpi-margem'), engKpi('Operações com consumo', String(opsCons.length), semCons.length ? semCons.length + ' realizada(s) sem consumo' : 'nenhuma pendente'), semPreco ? engKpi('Lançamentos sem valor', String(semPreco), 'item sem valor no contrato', 'ec-kpi-alerta') : null);
+    }, engKpi('Receita em R$', fmtBRL(tB), 'consumo lançado no período', 'ec-kpi-brl'), engKpi('Receita em US$', fmtUSD(tU), calcs.some(c => c.conv) ? 'consumo lançado no período · R$ pelo câmbio do mês' : 'consumo lançado no período', 'ec-kpi-usd'), engKpi('COGS', fmtUSD(cU) + (cB ? ' · ' + fmtBRL(cB) : ''), 'químicas e casing lançados', 'ec-kpi-cogs'), engKpi('Operações com consumo', String(opsCons.length), semCons.length ? semCons.length + ' realizada(s) sem consumo' : 'nenhuma pendente'), semPreco ? engKpi('Lançamentos sem valor', String(semPreco), 'item sem valor no contrato', 'ec-kpi-alerta') : null);
     var tabOps = engH(React.Fragment, null, engH("div", {
       className: "hm-sec ec-sec"
     }, 'Receita por operação (' + opsCons.length + ')'), engH("div", {
@@ -2522,7 +2520,7 @@
 
   /* ---------------- e16: página inicial com duas abas (pedido do Hugo, 25/11/2026) ----------------
      "Indicadores": o EARL Gerencial inteiro (gerencial/gerencial.html, embutido em ENG_GER_HTML, no "modo embutido")
-     com os contratos deste arquivo — receita e margem, matriz, gráficos, comparar registros, por contrato, itens
+     com os contratos deste arquivo — receita e COGS, matriz, gráficos, comparar registros, por contrato, itens
      PPU, químicas, casing, pessoal, operações, Excel e HTML compartilhado. "Contratos": os cards (abrir o contrato
      para alterar as operações). Quem junta os contratos de várias pessoas importa o "⬇ Exportar dados" de cada uma
      ("⬆ Importar dados") e vê tudo nos Indicadores — não há mais o "Arquivo do gerencial". O quadro pede os dados a
@@ -2571,7 +2569,7 @@
     className: "ec-ger-painel fr-ind"
   }, engH("div", {
     className: "fr-ind-ajuda"
-  }, "Receita, COGS e margem (realizado + previsto, com o risco de cada operação) de ", engH("b", null, engContratos.length + " contrato(s)"), ". Para juntar os contratos de outras pessoas: cada uma usa “⬇ Exportar dados” e você usa “⬆ Importar dados”. Para alterar operações, abra a aba Contratos."), engH("iframe", {
+  }, "Receita e COGS (realizado + previsto, com o risco de cada operação) de ", engH("b", null, engContratos.length + " contrato(s)"), ". Para juntar os contratos de outras pessoas: cada uma usa “⬇ Exportar dados” e você usa “⬆ Importar dados”. Para alterar operações, abra a aba Contratos."), engH("iframe", {
     ref: engGerFrameRef,
     className: "ec-ger-frame",
     title: "Indicadores",
@@ -2593,7 +2591,7 @@
     askConfirm({
       title: 'Arquivar o contrato',
       okLabel: 'Arquivar',
-      msg: engH("span", null, "Arquivar ", engH("b", null, ct.name), "? O card sai da página inicial e o contrato sai da receita e margem. As operações, os consumos e os valores continuam guardados."),
+      msg: engH("span", null, "Arquivar ", engH("b", null, ct.name), "? O card sai da página inicial e o contrato sai dos Indicadores. As operações, os consumos e os valores continuam guardados."),
       hint: 'Para voltar: Contratos → “Mostrar arquivados” → abra o contrato → Desarquivar → Salvar contrato.',
       onOk: () => {
         updateDB(d => ({
