@@ -680,7 +680,12 @@ Pedidos do Hugo (12/11/2026): "No envio do email do Handover preciso que inclua 
   - Janela: "Cópia de: <arquivo aberto>" (`.eng-sh-origem`, `location.pathname`). Sem nenhuma operação, aviso vermelho (`.eng-sh-vazio`): abrir o arquivo do contrato e compartilhar de lá, ou importar.
   - Mensagem do e-mail: "a pré-visualização do Outlook ou do Teams não abre o EARL".
 - **Versão:** `EARL Forecast e24 (base v115)`.
-- **Testes (28/11/2026):** <<RESULTADOS>>
+- **Testes (28/11/2026):** todos sem falha.
+  - Engenharia: engenharia 63, contratos 79, quimicos 36, espaco 12, inventario 54, painel 23, e10 37, e12 50, e13 18, e15 27, e16 30, e17 42, e18 15, e19 57, e22 37, **e23 54** (com a abertura sem JavaScript, o aviso escondido com o programa rodando, "Cópia de:" e o aviso de arquivo sem operações).
+  - Gerencial: 62, 59, 71, 59, 27. BP: 59 (montado de novo com `montar_bp.py`).
+  - Contratos reais (gerados de novo em `$S/ctr/out18`, `--compat` dos V09 de `$S/ctr/out16`, os últimos de contrato entregues): 142; `e2e_atualizacao` V09→V11 42; `e2e_importar` PA→BDII 9, BP→DC 9. `e2e_seguranca`: 85 (com as cópias do e2e_e23, em `$S/e24/copias`).
+  - ClamAV: 0 vírus nos 8 arquivos entregues e nas 3 cópias compartilhadas.
+- **Como abrir (explicado ao Hugo):** no Outlook, "Salvar como" no anexo e dois cliques no arquivo salvo; no Teams, "…" → "Baixar" e dois cliques; se o e-mail bloquear .html, mandar o .zip ("Extrair tudo" antes de abrir).
 - **Entrega V11:** `EARL_Forecast_V11.html`, os 7 `EARL_Forecast_<NOME>_V11.html` (o compartilhar novo também nos arquivos de contrato, onde estão os dados de quem trabalha neles) e este prompt.
 
 ### e23 + Gerencial g23 — "📤 Compartilhar (HTML)" é o próprio arquivo do Forecast, com o nome escolhido — entrega _V10 (27/11/2026)
